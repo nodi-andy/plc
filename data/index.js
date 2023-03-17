@@ -6,8 +6,8 @@
  * ----------------------------------------------------------------------------
  */
 
-//var gateway = `ws://${window.location.hostname}/ws`;
-var gateway = `ws://192.168.1.104/ws`;
+var gateway = `ws://${window.location.hostname}/ws`;
+//var gateway = `ws://192.168.1.104/ws`;
 var websocket;
 window.ws = websocket
 

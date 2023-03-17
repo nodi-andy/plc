@@ -1,11 +1,11 @@
 #include "constant_boolean.h"
 
-ConstantBoolean::ConstantBoolean(int port) {
+BasicBoolean::BasicBoolean() {
     this->setup();
 }
 
 // init the node
-void ConstantBoolean::setup() {
+void BasicBoolean::setup() {
     this->title = "ConstantBoolean";
     this->name = "ConstantBoolean";
     this->desc = "ConstantBoolean";
@@ -15,6 +15,6 @@ void ConstantBoolean::setup() {
     addOutput("value");
 }
 
-void ConstantBoolean::onExecute() {
+void BasicBoolean::onExecute() {
     setOutput(0, value);
 }

@@ -14,14 +14,14 @@ TaskHandle_t Task2;
 
 #define BTN_PIN   0
 #define HTTP_PORT 80
-
+#define MAX_MESSAGE_SIZE 8192
 // Button debouncing
 const uint8_t DEBOUNCE_DELAY = 10; // in milliseconds
 
 // WiFi credentials
 const char *WIFI_SSID = "DHLAN";
 const char *WIFI_PASS = "w123qweasd";
-uint8_t *mapFile = new uint8_t[10240];
+static uint8_t mapFile[MAX_MESSAGE_SIZE];
 Map nodemap;
 // ----------------------------------------------------------------------------
 // Definition of the LED component
@@ -110,15 +110,22 @@ void notifyClients() {
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     AwsFrameInfo *info = (AwsFrameInfo*)arg;
-    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
-            
+    Serial.println("SocketMessage ...");
+    if (info->index + len <= MAX_MESSAGE_SIZE) {
+        memcpy(mapFile + info->index, data, len);
+    } else {
+        Serial.println("Message too large");
+        return;
+    }
+   
+    if (info->index + len == info->len && info->opcode == WS_TEXT) {
+        
         Serial.println("Writing...");
         File file = SPIFFS.open("/map.json", FILE_WRITE);
         const uint8_t *writeData = data;
         file.write(writeData, len);
         file.close();
-        memcpy(mapFile, data, len);
-        mapFile[len] = 0;
+        mapFile[info->len] = 0;
         notifyClients();
         Serial.print("INPUT: ");
         Serial.println((char*)mapFile);
@@ -184,8 +191,6 @@ void Task2code( void * pvParameters ){
             int i = 0;
             for (JsonVariant linkObj : kv.as<JsonArray>()) {
                 idList[i] = linkObj.as<int>();
-                Serial.print("id: ");
-                Serial.println(idList[i]);
                 i++;
             }
             nodemap.addLink(idList[0], idList[1], idList[2], idList[3], idList[4]);

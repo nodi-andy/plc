@@ -21,16 +21,15 @@ void Toggle::setup() {
     }
     if (props.containsKey("inputs")) {
         Serial.print("TOGGLE: ");
-        Serial.println(props["inputs"][1]["link"].as<int>());
-      isNotConnected = props["inputs"][1]["link"].isNull();
+        Serial.println(props["inputs"][0]["link"].as<int>());
+      isNotConnected = props["inputs"][0]["link"].isNull();
     }
     addInput("value1");
-    addInput("value2");
 }
 
 void Toggle::onExecute() {
     if (isNotConnected == false) {
-        value = getInput(1);
+        value = getInput(0);
     }
     digitalWrite(port, value ? HIGH : LOW);
 }

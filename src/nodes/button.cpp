@@ -11,7 +11,10 @@ void Button::setup() {
 
     if (props["properties"].containsKey("port")) {
       port = props["properties"]["port"].as<int>();
-      if (port >= 0) pinMode(port, INPUT);
+      if (port >= 0) {
+        pinMode(port, INPUT);
+        pinMode(port, INPUT_PULLUP);
+      }
     }
 
     Serial.print("PORT: ");

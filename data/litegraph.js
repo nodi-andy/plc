@@ -13,7 +13,7 @@
      */
 
     var LiteGraph = (global.LiteGraph = {
-        VERSION: 0.4,
+        VERSION: 0.1,
 
         CANVAS_GRID_SIZE: 64,
 
@@ -21,7 +21,7 @@
         NODE_TITLE_TEXT_Y: 10,
         NODE_SLOT_HEIGHT: 64,
         NODE_WIDGET_HEIGHT: 20,
-        NODE_WIDTH: 128,
+        NODE_WIDTH: 64,
         NODE_COLLAPSED_RADIUS: 10,
         NODE_COLLAPSED_WIDTH: 80,
         NODE_TITLE_COLOR: "#999",
@@ -42,7 +42,7 @@
         WIDGET_TEXT_COLOR: "#DDD",
         WIDGET_SECONDARY_TEXT_COLOR: "#999",
 
-        LINK_COLOR: "#9A9",
+        LINK_COLOR: "#6B6",
         EVENT_LINK_COLOR: "#A86",
         CONNECTING_LINK_COLOR: "#AFA",
 
@@ -87,6 +87,7 @@
         NO_TITLE: 1,
         TRANSPARENT_TITLE: 2,
         AUTOHIDE_TITLE: 3,
+        CENTRAL_TITLE: 4,
         VERTICAL_LAYOUT: "vertical", // arrange nodes vertically
 
         proxy: null, //used to redirect calls
@@ -796,9 +797,6 @@
         this.stop();
         this.status = LGraph.STATUS_STOPPED;
 
-        this.last_node_id = 0;
-        this.last_link_id = 0;
-
         this._version = -1; //used to detect changes
 
         //safe clear
@@ -1382,6 +1380,14 @@
         }
     };
 
+    LGraph.prototype.getNextID = function() {
+        for(let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
+            if (this._nodes_by_id[i] == null && this.links[i] == null) {
+              return i;
+            }
+        }
+    }
+
     /**
      * Adds a new node instance to this graph
      * @method add
@@ -1408,7 +1414,7 @@
             console.warn(
                 "LiteGraph: there is already a node with this ID, changing it"
             );
-            node.id = ++this.last_node_id;
+            node.id = this.getNextID();
         }
 
         if (this._nodes.length >= LiteGraph.MAX_NUMBER_OF_NODES) {
@@ -1417,10 +1423,8 @@
 
         //give him an id
         if (node.id == null || node.id == -1) {
-            node.id = ++this.last_node_id;
-        } else if (this.last_node_id < node.id) {
-            this.last_node_id = node.id;
-        }
+            node.id =  this.getNextID();
+        } 
 
         node.graph = this;
         this._version++;
@@ -2126,8 +2130,6 @@
         }
 
         var data = {
-            last_node_id: this.last_node_id,
-            last_link_id: this.last_link_id,
             nodes: nodes_info,
             links: links,
             groups: groups_info,
@@ -3583,7 +3585,7 @@
             }
         }
 
-        size[0] = Math.max(input_width + output_width + 10, title_width);
+        size[0] = Math.max(input_width + output_width + 10, 32);
         size[0] = Math.max(size[0], LiteGraph.NODE_WIDTH);
         if (this.widgets && this.widgets.length) {
             size[0] = Math.max(size[0], LiteGraph.NODE_WIDTH * 1.5);
@@ -4271,7 +4273,7 @@
         
 		//create link class
 		link_info = new LLink(
-			++this.graph.last_link_id,
+			this.graph.getNextID(),
 			input.type || output.type,
 			this.id,
 			slot,
@@ -4628,13 +4630,6 @@
             return out;
         }
 
-        //weird feature that never got finished
-        if (is_input && slot_number == -1) {
-            out[0] = this.pos[0] + LiteGraph.NODE_TITLE_HEIGHT * 0.5;
-            out[1] = this.pos[1] + LiteGraph.NODE_TITLE_HEIGHT * 0.5;
-            return out;
-        }
-
         //hard-coded pos
         if (
             is_input &&
@@ -4670,11 +4665,10 @@
         if (is_input) {
             out[0] = this.pos[0];
         } else {
-            out[0] = this.pos[0] + this.size[0] + 1 - offset;
+            out[0] = this.pos[0] + this.size[0];
         }
         out[1] =
-            this.pos[1] +
-            (slot_number + 0.7) * LiteGraph.NODE_SLOT_HEIGHT +
+            this.pos[1] + (slot_number + 0.5) * LiteGraph.NODE_SLOT_HEIGHT +
             (this.constructor.slot_start_y || 0);
         return out;
     };
@@ -5223,13 +5217,13 @@ LGraphNode.prototype.executeAction = function(action)
         this.render_connections_shadows = false; //too much cpu
         this.render_connections_border = true;
         this.render_curved_connections = false;
-        this.render_connection_arrows = true;
+        this.render_connection_arrows = false;
         this.render_collapsed_slots = true;
         this.render_execution_order = false;
         this.render_title_colored = true;
 		this.render_link_tooltip = true;
 
-        this.links_render_mode = LiteGraph.SPLINE_LINK;
+        this.links_render_mode = LiteGraph.STRAIGHT_LINK;
 
         this.mouse = [0, 0]; //mouse in canvas coordinates, where 0,0 is the top-left corner of the blue rectangle
         this.graph_mouse = [0, 0]; //mouse in graph coordinates, where 0,0 is the top-left corner of the blue rectangle
@@ -8231,7 +8225,7 @@ LGraphNode.prototype.executeAction = function(action)
             //DEBUG: show clipping area
             //ctx.fillStyle = "red";
             //ctx.fillRect( this.visible_area[0] + 10, this.visible_area[1] + 10, this.visible_area[2] - 20, this.visible_area[3] - 20);
-            ctx.fillStyle = "#0d1117";
+            ctx.fillStyle = "#abb";
             ctx.fillRect( this.visible_area[0], this.visible_area[1], this.visible_area[2], this.visible_area[3]);
 
             ctx.strokeStyle = "#555";
@@ -8481,11 +8475,6 @@ LGraphNode.prototype.executeAction = function(action)
                                 10
                             );
                         }
-                    } else if (slot_shape === LiteGraph.ARROW_SHAPE) {
-                        ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
-                        ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
-                        ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
-                        ctx.closePath();
                     } else if (slot_shape === LiteGraph.GRID_SHAPE) {
                         ctx.rect(pos[0] - 4, pos[1] - 4, 2, 2);
                         ctx.rect(pos[0] - 1, pos[1] - 4, 2, 2);
@@ -8500,8 +8489,12 @@ LGraphNode.prototype.executeAction = function(action)
                     } else {
 						if(low_quality)
 	                        ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8 ); //faster
-						else
-	                        ctx.arc(pos[0], pos[1], 4, 0, Math.PI * 2);
+						else {
+                            ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
+                            ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
+                            ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
+                            ctx.closePath();
+                        }
                     }
                     ctx.fill();
 
@@ -8580,12 +8573,7 @@ LGraphNode.prototype.executeAction = function(action)
                                 10
                             );
                         }
-                    } else if (slot_shape === LiteGraph.ARROW_SHAPE) {
-                        ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
-                        ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
-                        ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
-                        ctx.closePath();
-                    }  else if (slot_shape === LiteGraph.GRID_SHAPE) {
+                    } else if (slot_shape === LiteGraph.GRID_SHAPE) {
                         ctx.rect(pos[0] - 4, pos[1] - 4, 2, 2);
                         ctx.rect(pos[0] - 1, pos[1] - 4, 2, 2);
                         ctx.rect(pos[0] + 2, pos[1] - 4, 2, 2);
@@ -8599,8 +8587,12 @@ LGraphNode.prototype.executeAction = function(action)
                     } else {
 						if(low_quality)
 	                        ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8 );
-						else
-	                        ctx.arc(pos[0], pos[1], 4, 0, Math.PI * 2);
+						else {
+                            ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
+                            ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
+                            ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
+                            ctx.closePath();
+                        }
                     }
 
                     //trigger
@@ -8681,18 +8673,14 @@ LGraphNode.prototype.executeAction = function(action)
                 }
                 ctx.fillStyle = "#686";
                 ctx.beginPath();
-                if (
-                    slot.type === LiteGraph.EVENT ||
-                    slot.shape === LiteGraph.BOX_SHAPE
-                ) {
+                if (slot.shape === LiteGraph.BOX_SHAPE)
+                {
                     ctx.rect(x - 7 + 0.5, y - 4, 14, 8);
-                } else if (slot.shape === LiteGraph.ARROW_SHAPE) {
+                } else {
                     ctx.moveTo(x + 8, y);
                     ctx.lineTo(x + -4, y - 4);
                     ctx.lineTo(x + -4, y + 4);
                     ctx.closePath();
-                } else {
-                    ctx.arc(x, y, 4, 0, Math.PI * 2);
                 }
                 ctx.fill();
             }
@@ -8707,18 +8695,13 @@ LGraphNode.prototype.executeAction = function(action)
                 ctx.fillStyle = "#686";
                 ctx.strokeStyle = "black";
                 ctx.beginPath();
-                if (
-                    slot.type === LiteGraph.EVENT ||
-                    slot.shape === LiteGraph.BOX_SHAPE
-                ) {
+                if (slot.shape === LiteGraph.BOX_SHAPE) {
                     ctx.rect(x - 7 + 0.5, y - 4, 14, 8);
-                } else if (slot.shape === LiteGraph.ARROW_SHAPE) {
+                } else {
                     ctx.moveTo(x + 6, y);
                     ctx.lineTo(x - 6, y - 4);
                     ctx.lineTo(x - 6, y + 4);
                     ctx.closePath();
-                } else {
-                    ctx.arc(x, y, 4, 0, Math.PI * 2);
                 }
                 ctx.fill();
                 //ctx.stroke();
@@ -8808,7 +8791,7 @@ LGraphNode.prototype.executeAction = function(action)
 
         var title_height = LiteGraph.NODE_TITLE_HEIGHT;
         var low_quality = this.ds.scale < 0.5;
-
+        var title = String(node.getTitle());
         //render node area depending on shape
         var shape =
             node._shape || node.constructor.shape || LiteGraph.ROUND_SHAPE;
@@ -8816,7 +8799,7 @@ LGraphNode.prototype.executeAction = function(action)
         var title_mode = node.constructor.title_mode;
 
         var render_title = true;
-        if (title_mode == LiteGraph.TRANSPARENT_TITLE || title_mode == LiteGraph.NO_TITLE) {
+        if (title_mode == LiteGraph.TRANSPARENT_TITLE || title_mode == LiteGraph.NO_TITLE || title_mode == LiteGraph.CENTRAL_TITLE) {
             render_title = false;
         } else if (title_mode == LiteGraph.AUTOHIDE_TITLE && mouse_over) {
             render_title = true;
@@ -8826,9 +8809,9 @@ LGraphNode.prototype.executeAction = function(action)
 
         var area = tmp_area;
         area[0] = 0; //x
-        area[1] = title_height; //y
+        area[1] = 0; //y
         area[2] = size[0]; //w
-        area[3] = size[1] + title_height; //h
+        area[3] = size[1]; //h
 
         var old_alpha = ctx.globalAlpha;
 
@@ -8999,7 +8982,7 @@ LGraphNode.prototype.executeAction = function(action)
             }
             if (!low_quality) {
                 ctx.font = this.title_text_font;
-                var title = String(node.getTitle());
+                
                 if (title) {
                     if (selected) {
                         ctx.fillStyle = LiteGraph.NODE_SELECTED_TITLE_COLOR;
@@ -9055,7 +9038,13 @@ LGraphNode.prototype.executeAction = function(action)
                 node.onDrawTitle(ctx);
             }
         }
-
+        if (title_mode == LiteGraph.CENTRAL_TITLE) {
+            let fontSize = 30
+            ctx.font = fontSize + "px Arial";
+            ctx.textAlign = "center";
+            ctx.fillStyle = "white";
+            ctx.fillText(title, node.size[0] / 2, (node.size[1] + fontSize) / 2);
+        }
         //render selection marker
         if (selected) {
             if (node.onBounding) {
@@ -9290,7 +9279,7 @@ LGraphNode.prototype.executeAction = function(action)
         end_dir = end_dir || LiteGraph.LEFT;
 
         var dist = distance(a, b);
-
+        ctx.setLineDash([]);
         if (this.render_connections_border && this.ds.scale > 0.6) {
             ctx.lineWidth = this.connections_width + 4;
         }
@@ -14107,7 +14096,6 @@ if (typeof exports != "undefined") {
     exports.LiteGraph = this.LiteGraph;
 }
 
-
 //basic nodes
 (function(global) {
     var LiteGraph = global.LiteGraph;
@@ -14665,7 +14653,7 @@ if (typeof exports != "undefined") {
     };
 
     LiteGraph.GraphInput = GraphInput;
-    LiteGraph.registerNodeType("graph/input", GraphInput);
+    //LiteGraph.registerNodeType("graph/input", GraphInput);
 
     //Output for a subgraph
     function GraphOutput() {
@@ -14798,7 +14786,7 @@ if (typeof exports != "undefined") {
     };
 
     LiteGraph.GraphOutput = GraphOutput;
-    LiteGraph.registerNodeType("graph/output", GraphOutput);
+    //LiteGraph.registerNodeType("graph/output", GraphOutput);
 
     //Constant
     function ConstantNumber() {
@@ -15975,10 +15963,10 @@ if (typeof exports != "undefined") {
 
     //Show value inside the debug console
     function EventCounter() {
-        this.addInput("inc", LiteGraph.ACTION);
-        this.addInput("dec", LiteGraph.ACTION);
-        this.addInput("reset", LiteGraph.ACTION);
-        this.addOutput("change", LiteGraph.EVENT);
+        this.addInput("inc", "boolean");
+        this.addInput("dec", "boolean");
+        this.addInput("reset", "boolean");
+        this.addOutput("change", "boolean");
         this.addOutput("num", "number");
         this.addProperty("doCountExecution", false, "boolean", {name: "Count Executions"});
         this.addWidget("toggle","Count Exec.",this.properties.doCountExecution,"doCountExecution");
@@ -16259,7 +16247,6 @@ if (typeof exports != "undefined") {
     /* Button ****************/
 
     function WidgetButton() {
-        this.addOutput("", LiteGraph.EVENT);
         this.addOutput("", "boolean");
         this.addProperty("text", "B1");
         this.addProperty("port", "");
@@ -16271,7 +16258,7 @@ if (typeof exports != "undefined") {
 
     WidgetButton.title = "Button";
     WidgetButton.desc = "Triggers an event";
-
+    WidgetButton.title_mode = LiteGraph.NO_TITLE;
     WidgetButton.font = "Arial";
     WidgetButton.prototype.onDrawForeground = function(ctx) {
         if (this.flags.collapsed) {
@@ -16344,16 +16331,14 @@ if (typeof exports != "undefined") {
 
     function WidgetToggle() {
         this.addInput("", "boolean");
-        this.addInput("e", LiteGraph.ACTION);
         this.addOutput("v", "boolean");
-        this.addOutput("e", LiteGraph.EVENT);
         this.properties = { font: "", value: false, port: "" };
         this.size = [160, 44];
     }
 
     WidgetToggle.title = "Toggle";
     WidgetToggle.desc = "Toggles between true or false";
-
+    WidgetToggle.title_mode = LiteGraph.NO_TITLE;
     WidgetToggle.prototype.onDrawForeground = function(ctx) {
         if (this.flags.collapsed) {
             return;
@@ -17052,2252 +17037,6 @@ if (typeof exports != "undefined") {
     //LiteGraph.registerNodeType("widget/panel", WidgetPanel);
 })(this);
 
-(function(global) {
-    var LiteGraph = global.LiteGraph;
-
-    function GamepadInput() {
-        this.addOutput("left_x_axis", "number");
-        this.addOutput("left_y_axis", "number");
-        this.addOutput("button_pressed", LiteGraph.EVENT);
-        this.properties = { gamepad_index: 0, threshold: 0.1 };
-
-        this._left_axis = new Float32Array(2);
-        this._right_axis = new Float32Array(2);
-        this._triggers = new Float32Array(2);
-        this._previous_buttons = new Uint8Array(17);
-        this._current_buttons = new Uint8Array(17);
-    }
-
-    GamepadInput.title = "Gamepad";
-    GamepadInput.desc = "gets the input of the gamepad";
-
-    GamepadInput.CENTER = 0;
-    GamepadInput.LEFT = 1;
-    GamepadInput.RIGHT = 2;
-    GamepadInput.UP = 4;
-    GamepadInput.DOWN = 8;
-
-    GamepadInput.zero = new Float32Array(2);
-    GamepadInput.buttons = [
-        "a",
-        "b",
-        "x",
-        "y",
-        "lb",
-        "rb",
-        "lt",
-        "rt",
-        "back",
-        "start",
-        "ls",
-        "rs",
-        "home"
-    ];
-
-    GamepadInput.prototype.onExecute = function() {
-        //get gamepad
-        var gamepad = this.getGamepad();
-        var threshold = this.properties.threshold || 0.0;
-
-        if (gamepad) {
-            this._left_axis[0] =
-                Math.abs(gamepad.xbox.axes["lx"]) > threshold
-                    ? gamepad.xbox.axes["lx"]
-                    : 0;
-            this._left_axis[1] =
-                Math.abs(gamepad.xbox.axes["ly"]) > threshold
-                    ? gamepad.xbox.axes["ly"]
-                    : 0;
-            this._right_axis[0] =
-                Math.abs(gamepad.xbox.axes["rx"]) > threshold
-                    ? gamepad.xbox.axes["rx"]
-                    : 0;
-            this._right_axis[1] =
-                Math.abs(gamepad.xbox.axes["ry"]) > threshold
-                    ? gamepad.xbox.axes["ry"]
-                    : 0;
-            this._triggers[0] =
-                Math.abs(gamepad.xbox.axes["ltrigger"]) > threshold
-                    ? gamepad.xbox.axes["ltrigger"]
-                    : 0;
-            this._triggers[1] =
-                Math.abs(gamepad.xbox.axes["rtrigger"]) > threshold
-                    ? gamepad.xbox.axes["rtrigger"]
-                    : 0;
-        }
-
-        if (this.outputs) {
-            for (var i = 0; i < this.outputs.length; i++) {
-                var output = this.outputs[i];
-                if (!output.links || !output.links.length) {
-                    continue;
-                }
-                var v = null;
-
-                if (gamepad) {
-                    switch (output.name) {
-                        case "left_axis":
-                            v = this._left_axis;
-                            break;
-                        case "right_axis":
-                            v = this._right_axis;
-                            break;
-                        case "left_x_axis":
-                            v = this._left_axis[0];
-                            break;
-                        case "left_y_axis":
-                            v = this._left_axis[1];
-                            break;
-                        case "right_x_axis":
-                            v = this._right_axis[0];
-                            break;
-                        case "right_y_axis":
-                            v = this._right_axis[1];
-                            break;
-                        case "trigger_left":
-                            v = this._triggers[0];
-                            break;
-                        case "trigger_right":
-                            v = this._triggers[1];
-                            break;
-                        case "a_button":
-                            v = gamepad.xbox.buttons["a"] ? 1 : 0;
-                            break;
-                        case "b_button":
-                            v = gamepad.xbox.buttons["b"] ? 1 : 0;
-                            break;
-                        case "x_button":
-                            v = gamepad.xbox.buttons["x"] ? 1 : 0;
-                            break;
-                        case "y_button":
-                            v = gamepad.xbox.buttons["y"] ? 1 : 0;
-                            break;
-                        case "lb_button":
-                            v = gamepad.xbox.buttons["lb"] ? 1 : 0;
-                            break;
-                        case "rb_button":
-                            v = gamepad.xbox.buttons["rb"] ? 1 : 0;
-                            break;
-                        case "ls_button":
-                            v = gamepad.xbox.buttons["ls"] ? 1 : 0;
-                            break;
-                        case "rs_button":
-                            v = gamepad.xbox.buttons["rs"] ? 1 : 0;
-                            break;
-                        case "hat_left":
-                            v = gamepad.xbox.hatmap & GamepadInput.LEFT;
-                            break;
-                        case "hat_right":
-                            v = gamepad.xbox.hatmap & GamepadInput.RIGHT;
-                            break;
-                        case "hat_up":
-                            v = gamepad.xbox.hatmap & GamepadInput.UP;
-                            break;
-                        case "hat_down":
-                            v = gamepad.xbox.hatmap & GamepadInput.DOWN;
-                            break;
-                        case "hat":
-                            v = gamepad.xbox.hatmap;
-                            break;
-                        case "start_button":
-                            v = gamepad.xbox.buttons["start"] ? 1 : 0;
-                            break;
-                        case "back_button":
-                            v = gamepad.xbox.buttons["back"] ? 1 : 0;
-                            break;
-                        case "button_pressed":
-                            for (
-                                var j = 0;
-                                j < this._current_buttons.length;
-                                ++j
-                            ) {
-                                if (
-                                    this._current_buttons[j] &&
-                                    !this._previous_buttons[j]
-                                ) {
-                                    this.triggerSlot(
-                                        i,
-                                        GamepadInput.buttons[j]
-                                    );
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                } else {
-                    //if no gamepad is connected, output 0
-                    switch (output.name) {
-                        case "button_pressed":
-                            break;
-                        case "left_axis":
-                        case "right_axis":
-                            v = GamepadInput.zero;
-                            break;
-                        default:
-                            v = 0;
-                    }
-                }
-                this.setOutputData(i, v);
-            }
-        }
-    };
-
-	GamepadInput.mapping = {a:0,b:1,x:2,y:3,lb:4,rb:5,lt:6,rt:7,back:8,start:9,ls:10,rs:11 };
-	GamepadInput.mapping_array = ["a","b","x","y","lb","rb","lt","rt","back","start","ls","rs"];
-
-    GamepadInput.prototype.getGamepad = function() {
-        var getGamepads =
-            navigator.getGamepads ||
-            navigator.webkitGetGamepads ||
-            navigator.mozGetGamepads;
-        if (!getGamepads) {
-            return null;
-        }
-        var gamepads = getGamepads.call(navigator);
-        var gamepad = null;
-
-        this._previous_buttons.set(this._current_buttons);
-
-        //pick the first connected
-        for (var i = this.properties.gamepad_index; i < 4; i++) {
-            if (!gamepads[i]) {
-                continue;
-            }
-            gamepad = gamepads[i];
-
-            //xbox controller mapping
-            var xbox = this.xbox_mapping;
-            if (!xbox) {
-                xbox = this.xbox_mapping = {
-                    axes: [],
-                    buttons: {},
-                    hat: "",
-                    hatmap: GamepadInput.CENTER
-                };
-            }
-
-            xbox.axes["lx"] = gamepad.axes[0];
-            xbox.axes["ly"] = gamepad.axes[1];
-            xbox.axes["rx"] = gamepad.axes[2];
-            xbox.axes["ry"] = gamepad.axes[3];
-            xbox.axes["ltrigger"] = gamepad.buttons[6].value;
-            xbox.axes["rtrigger"] = gamepad.buttons[7].value;
-            xbox.hat = "";
-            xbox.hatmap = GamepadInput.CENTER;
-
-            for (var j = 0; j < gamepad.buttons.length; j++) {
-                this._current_buttons[j] = gamepad.buttons[j].pressed;
-
-				if(j < 12)
-				{
-					xbox.buttons[ GamepadInput.mapping_array[j] ] = gamepad.buttons[j].pressed;
-					if(gamepad.buttons[j].was_pressed)
-						this.trigger( GamepadInput.mapping_array[j] + "_button_event" );
-				}
-				else //mapping of XBOX
-					switch ( j ) //I use a switch to ensure that a player with another gamepad could play
-					{
-						case 12:
-							if (gamepad.buttons[j].pressed) {
-								xbox.hat += "up";
-								xbox.hatmap |= GamepadInput.UP;
-							}
-							break;
-						case 13:
-							if (gamepad.buttons[j].pressed) {
-								xbox.hat += "down";
-								xbox.hatmap |= GamepadInput.DOWN;
-							}
-							break;
-						case 14:
-							if (gamepad.buttons[j].pressed) {
-								xbox.hat += "left";
-								xbox.hatmap |= GamepadInput.LEFT;
-							}
-							break;
-						case 15:
-							if (gamepad.buttons[j].pressed) {
-								xbox.hat += "right";
-								xbox.hatmap |= GamepadInput.RIGHT;
-							}
-							break;
-						case 16:
-							xbox.buttons["home"] = gamepad.buttons[j].pressed;
-							break;
-						default:
-					}
-            }
-            gamepad.xbox = xbox;
-            return gamepad;
-        }
-    };
-
-    GamepadInput.prototype.onDrawBackground = function(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
-        //render gamepad state?
-        var la = this._left_axis;
-        var ra = this._right_axis;
-        ctx.strokeStyle = "#88A";
-        ctx.strokeRect(
-            (la[0] + 1) * 0.5 * this.size[0] - 4,
-            (la[1] + 1) * 0.5 * this.size[1] - 4,
-            8,
-            8
-        );
-        ctx.strokeStyle = "#8A8";
-        ctx.strokeRect(
-            (ra[0] + 1) * 0.5 * this.size[0] - 4,
-            (ra[1] + 1) * 0.5 * this.size[1] - 4,
-            8,
-            8
-        );
-        var h = this.size[1] / this._current_buttons.length;
-        ctx.fillStyle = "#AEB";
-        for (var i = 0; i < this._current_buttons.length; ++i) {
-            if (this._current_buttons[i]) {
-                ctx.fillRect(0, h * i, 6, h);
-            }
-        }
-    };
-
-    GamepadInput.prototype.onGetOutputs = function() {
-        return [
-            ["left_axis", "vec2"],
-            ["right_axis", "vec2"],
-            ["left_x_axis", "number"],
-            ["left_y_axis", "number"],
-            ["right_x_axis", "number"],
-            ["right_y_axis", "number"],
-            ["trigger_left", "number"],
-            ["trigger_right", "number"],
-            ["a_button", "number"],
-            ["b_button", "number"],
-            ["x_button", "number"],
-            ["y_button", "number"],
-            ["lb_button", "number"],
-            ["rb_button", "number"],
-            ["ls_button", "number"],
-            ["rs_button", "number"],
-            ["start_button", "number"],
-            ["back_button", "number"],
-            ["a_button_event", LiteGraph.EVENT ],
-            ["b_button_event", LiteGraph.EVENT ],
-            ["x_button_event", LiteGraph.EVENT ],
-            ["y_button_event", LiteGraph.EVENT ],
-            ["lb_button_event", LiteGraph.EVENT ],
-            ["rb_button_event", LiteGraph.EVENT ],
-            ["ls_button_event", LiteGraph.EVENT ],
-            ["rs_button_event", LiteGraph.EVENT ],
-            ["start_button_event", LiteGraph.EVENT ],
-            ["back_button_event", LiteGraph.EVENT ],
-            ["hat_left", "number"],
-            ["hat_right", "number"],
-            ["hat_up", "number"],
-            ["hat_down", "number"],
-            ["hat", "number"],
-            ["button_pressed", LiteGraph.EVENT]
-        ];
-    };
-
-    //LiteGraph.registerNodeType("input/gamepad", GamepadInput);
-
-})(this);
-
-(function(global) {
-    var LiteGraph = global.LiteGraph;
-
-    //Converter
-    function Converter() {
-        this.addInput("in", 0);
-		this.addOutput("out", 0);
-        this.size = [80, 30];
-    }
-
-    Converter.title = "Converter";
-    Converter.desc = "type A to type B";
-
-    Converter.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-
-        if (this.outputs) {
-            for (var i = 0; i < this.outputs.length; i++) {
-                var output = this.outputs[i];
-                if (!output.links || !output.links.length) {
-                    continue;
-                }
-
-                var result = null;
-                switch (output.name) {
-                    case "number":
-                        result = v.length ? v[0] : parseFloat(v);
-                        break;
-                    case "vec2":
-                    case "vec3":
-                    case "vec4":
-                        var result = null;
-                        var count = 1;
-                        switch (output.name) {
-                            case "vec2":
-                                count = 2;
-                                break;
-                            case "vec3":
-                                count = 3;
-                                break;
-                            case "vec4":
-                                count = 4;
-                                break;
-                        }
-
-                        var result = new Float32Array(count);
-                        if (v.length) {
-                            for (
-                                var j = 0;
-                                j < v.length && j < result.length;
-                                j++
-                            ) {
-                                result[j] = v[j];
-                            }
-                        } else {
-                            result[0] = parseFloat(v);
-                        }
-                        break;
-                }
-                this.setOutputData(i, result);
-            }
-        }
-    };
-
-    Converter.prototype.onGetOutputs = function() {
-        return [
-            ["number", "number"],
-            ["vec2", "vec2"],
-            ["vec3", "vec3"],
-            ["vec4", "vec4"]
-        ];
-    };
-
-    //LiteGraph.registerNodeType("math/converter", Converter);
-
-    //Bypass
-    function Bypass() {
-        this.addInput("in");
-        this.addOutput("out");
-        this.size = [80, 30];
-    }
-
-    Bypass.title = "Bypass";
-    Bypass.desc = "removes the type";
-
-    Bypass.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        this.setOutputData(0, v);
-    };
-
-    //LiteGraph.registerNodeType("math/bypass", Bypass);
-
-    
-
-    function MathRange() {
-        this.addInput("in", "number", { locked: true });
-        this.addOutput("out", "number", { locked: true });
-        this.addOutput("clamped", "number", { locked: true });
-
-        this.addProperty("in", 0);
-        this.addProperty("in_min", 0);
-        this.addProperty("in_max", 1);
-        this.addProperty("out_min", 0);
-        this.addProperty("out_max", 1);
-
-        this.size = [120, 50];
-    }
-
-    MathRange.title = "Range";
-    MathRange.desc = "Convert a number from one range to another";
-
-    MathRange.prototype.getTitle = function() {
-        if (this.flags.collapsed) {
-            return (this._last_v || 0).toFixed(2);
-        }
-        return this.title;
-    };
-
-    MathRange.prototype.onExecute = function() {
-        if (this.inputs) {
-            for (var i = 0; i < this.inputs.length; i++) {
-                var input = this.inputs[i];
-                var v = this.getInputData(i);
-                if (v === undefined) {
-                    continue;
-                }
-                this.properties[input.name] = v;
-            }
-        }
-
-        var v = this.properties["in"];
-        if (v === undefined || v === null || v.constructor !== Number) {
-            v = 0;
-        }
-
-        var in_min = this.properties.in_min;
-        var in_max = this.properties.in_max;
-        var out_min = this.properties.out_min;
-        var out_max = this.properties.out_max;
-		/*
-		if( in_min > in_max )
-		{
-			in_min = in_max;
-			in_max = this.properties.in_min;
-		}
-		if( out_min > out_max )
-		{
-			out_min = out_max;
-			out_max = this.properties.out_min;
-		}
-		*/
-
-        this._last_v = ((v - in_min) / (in_max - in_min)) * (out_max - out_min) + out_min;
-        this.setOutputData(0, this._last_v);
-        this.setOutputData(1, Math.clamp( this._last_v, out_min, out_max ));
-    };
-
-    MathRange.prototype.onDrawBackground = function(ctx) {
-        //show the current value
-        if (this._last_v) {
-            this.outputs[0].label = this._last_v.toFixed(3);
-        } else {
-            this.outputs[0].label = "?";
-        }
-    };
-
-    MathRange.prototype.onGetInputs = function() {
-        return [
-            ["in_min", "number"],
-            ["in_max", "number"],
-            ["out_min", "number"],
-            ["out_max", "number"]
-        ];
-    };
-
-    //LiteGraph.registerNodeType("math/range", MathRange);
-
-    function MathRand() {
-        this.addOutput("value", "number");
-        this.addProperty("min", 0);
-        this.addProperty("max", 1);
-        this.size = [80, 30];
-    }
-
-    MathRand.title = "Rand";
-    MathRand.desc = "Random number";
-
-    MathRand.prototype.onExecute = function() {
-        if (this.inputs) {
-            for (var i = 0; i < this.inputs.length; i++) {
-                var input = this.inputs[i];
-                var v = this.getInputData(i);
-                if (v === undefined) {
-                    continue;
-                }
-                this.properties[input.name] = v;
-            }
-        }
-
-        var min = this.properties.min;
-        var max = this.properties.max;
-        this._last_v = Math.random() * (max - min) + min;
-        this.setOutputData(0, this._last_v);
-    };
-
-    MathRand.prototype.onDrawBackground = function(ctx) {
-        //show the current value
-        this.outputs[0].label = (this._last_v || 0).toFixed(3);
-    };
-
-    MathRand.prototype.onGetInputs = function() {
-        return [["min", "number"], ["max", "number"]];
-    };
-
-    //LiteGraph.registerNodeType("math/rand", MathRand);
-
-    //basic continuous noise
-    function MathNoise() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.addProperty("min", 0);
-        this.addProperty("max", 1);
-        this.addProperty("smooth", true);
-        this.addProperty("seed", 0);
-        this.addProperty("octaves", 1);
-        this.addProperty("persistence", 0.8);
-        this.addProperty("speed", 1);
-        this.size = [90, 30];
-    }
-
-    MathNoise.title = "Noise";
-    MathNoise.desc = "Random number with temporal continuity";
-    MathNoise.data = null;
-
-    MathNoise.getValue = function(f, smooth) {
-        if (!MathNoise.data) {
-            MathNoise.data = new Float32Array(1024);
-            for (var i = 0; i < MathNoise.data.length; ++i) {
-                MathNoise.data[i] = Math.random();
-            }
-        }
-        f = f % 1024;
-        if (f < 0) {
-            f += 1024;
-        }
-        var f_min = Math.floor(f);
-        var f = f - f_min;
-        var r1 = MathNoise.data[f_min];
-        var r2 = MathNoise.data[f_min == 1023 ? 0 : f_min + 1];
-        if (smooth) {
-            f = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
-        }
-        return r1 * (1 - f) + r2 * f;
-    };
-
-    MathNoise.prototype.onExecute = function() {
-        var f = this.getInputData(0) || 0;
-		var iterations = this.properties.octaves || 1;
-		var r = 0;
-		var amp = 1;
-		var seed = this.properties.seed || 0;
-		f += seed;
-		var speed = this.properties.speed || 1;
-		var total_amp = 0;
-		for(var i = 0; i < iterations; ++i)
-		{
-			r += MathNoise.getValue(f * (1+i) * speed, this.properties.smooth) * amp;
-			total_amp += amp;
-			amp *= this.properties.persistence;
-			if(amp < 0.001)
-				break;
-		}
-		r /= total_amp;
-        var min = this.properties.min;
-        var max = this.properties.max;
-        this._last_v = r * (max - min) + min;
-        this.setOutputData(0, this._last_v);
-    };
-
-    MathNoise.prototype.onDrawBackground = function(ctx) {
-        //show the current value
-        this.outputs[0].label = (this._last_v || 0).toFixed(3);
-    };
-
-    //LiteGraph.registerNodeType("math/noise", MathNoise);
-
-    //generates spikes every random time
-    function MathSpikes() {
-        this.addOutput("out", "number");
-        this.addProperty("min_time", 1);
-        this.addProperty("max_time", 2);
-        this.addProperty("duration", 0.2);
-        this.size = [90, 30];
-        this._remaining_time = 0;
-        this._blink_time = 0;
-    }
-
-    MathSpikes.title = "Spikes";
-    MathSpikes.desc = "spike every random time";
-
-    MathSpikes.prototype.onExecute = function() {
-        var dt = this.graph.elapsed_time; //in secs
-
-        this._remaining_time -= dt;
-        this._blink_time -= dt;
-
-        var v = 0;
-        if (this._blink_time > 0) {
-            var f = this._blink_time / this.properties.duration;
-            v = 1 / (Math.pow(f * 8 - 4, 4) + 1);
-        }
-
-        if (this._remaining_time < 0) {
-            this._remaining_time =
-                Math.random() *
-                    (this.properties.max_time - this.properties.min_time) +
-                this.properties.min_time;
-            this._blink_time = this.properties.duration;
-            this.boxcolor = "#FFF";
-        } else {
-            this.boxcolor = "#000";
-        }
-        this.setOutputData(0, v);
-    };
-
-    //LiteGraph.registerNodeType("math/spikes", MathSpikes);
-
-    //Math clamp
-    function MathClamp() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.size = [80, 30];
-        this.addProperty("min", 0);
-        this.addProperty("max", 1);
-    }
-
-    MathClamp.title = "Clamp";
-    MathClamp.desc = "Clamp number between min and max";
-    //MathClamp.filter = "shader";
-
-    MathClamp.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-        v = Math.max(this.properties.min, v);
-        v = Math.min(this.properties.max, v);
-        this.setOutputData(0, v);
-    };
-
-    MathClamp.prototype.getCode = function(lang) {
-        var code = "";
-        if (this.isInputConnected(0)) {
-            code +=
-                "clamp({{0}}," +
-                this.properties.min +
-                "," +
-                this.properties.max +
-                ")";
-        }
-        return code;
-    };
-
-    //LiteGraph.registerNodeType("math/clamp", MathClamp);
-
-    //Math ABS
-    function MathLerp() {
-        this.properties = { f: 0.5 };
-        this.addInput("A", "number");
-        this.addInput("B", "number");
-
-        this.addOutput("out", "number");
-    }
-
-    MathLerp.title = "Lerp";
-    MathLerp.desc = "Linear Interpolation";
-
-    MathLerp.prototype.onExecute = function() {
-        var v1 = this.getInputData(0);
-        if (v1 == null) {
-            v1 = 0;
-        }
-        var v2 = this.getInputData(1);
-        if (v2 == null) {
-            v2 = 0;
-        }
-
-        var f = this.properties.f;
-
-        var _f = this.getInputData(2);
-        if (_f !== undefined) {
-            f = _f;
-        }
-
-        this.setOutputData(0, v1 * (1 - f) + v2 * f);
-    };
-
-    MathLerp.prototype.onGetInputs = function() {
-        return [["f", "number"]];
-    };
-
-    //LiteGraph.registerNodeType("math/lerp", MathLerp);
-
-    //Math ABS
-    function MathAbs() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.size = [80, 30];
-    }
-
-    MathAbs.title = "Abs";
-    MathAbs.desc = "Absolute";
-
-    MathAbs.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-        this.setOutputData(0, Math.abs(v));
-    };
-
-    //LiteGraph.registerNodeType("math/abs", MathAbs);
-
-    //Math Floor
-    function MathFloor() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.size = [80, 30];
-    }
-
-    MathFloor.title = "Floor";
-    MathFloor.desc = "Floor number to remove fractional part";
-
-    MathFloor.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-        this.setOutputData(0, Math.floor(v));
-    };
-
-    //LiteGraph.registerNodeType("math/floor", MathFloor);
-
-    //Math frac
-    function MathFrac() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.size = [80, 30];
-    }
-
-    MathFrac.title = "Frac";
-    MathFrac.desc = "Returns fractional part";
-
-    MathFrac.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-        this.setOutputData(0, v % 1);
-    };
-
-    //LiteGraph.registerNodeType("math/frac", MathFrac);
-
-    //Math Floor
-    function MathSmoothStep() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.size = [80, 30];
-        this.properties = { A: 0, B: 1 };
-    }
-
-    MathSmoothStep.title = "Smoothstep";
-    MathSmoothStep.desc = "Smoothstep";
-
-    MathSmoothStep.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v === undefined) {
-            return;
-        }
-
-        var edge0 = this.properties.A;
-        var edge1 = this.properties.B;
-
-        // Scale, bias and saturate x to 0..1 range
-        v = Math.clamp((v - edge0) / (edge1 - edge0), 0.0, 1.0);
-        // Evaluate polynomial
-        v = v * v * (3 - 2 * v);
-
-        this.setOutputData(0, v);
-    };
-
-    //LiteGraph.registerNodeType("math/smoothstep", MathSmoothStep);
-
-    //Math scale
-    function MathScale() {
-        this.addInput("in", "number", { label: "" });
-        this.addOutput("out", "number", { label: "" });
-        this.size = [80, 30];
-        this.addProperty("factor", 1);
-    }
-
-    MathScale.title = "Scale";
-    MathScale.desc = "v * factor";
-
-    MathScale.prototype.onExecute = function() {
-        var value = this.getInputData(0);
-        if (value != null) {
-            this.setOutputData(0, value * this.properties.factor);
-        }
-    };
-
-    //LiteGraph.registerNodeType("math/scale", MathScale);
-
-	//Gate
-	function Gate() {
-		this.addInput("v","boolean");
-		this.addInput("A");
-		this.addInput("B");
-		this.addOutput("out");
-	}
-
-	Gate.title = "Gate";
-	Gate.desc = "if v is true, then outputs A, otherwise B";
-
-	Gate.prototype.onExecute = function() {
-		var v = this.getInputData(0);
-		this.setOutputData(0, this.getInputData( v ? 1 : 2 ));
-	};
-
-	//LiteGraph.registerNodeType("math/gate", Gate);
-
-
-    //Math Average
-    function MathAverageFilter() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.size = [80, 30];
-        this.addProperty("samples", 10);
-        this._values = new Float32Array(10);
-        this._current = 0;
-    }
-
-    MathAverageFilter.title = "Average";
-    MathAverageFilter.desc = "Average Filter";
-
-    MathAverageFilter.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            v = 0;
-        }
-
-        var num_samples = this._values.length;
-
-        this._values[this._current % num_samples] = v;
-        this._current += 1;
-        if (this._current > num_samples) {
-            this._current = 0;
-        }
-
-        var avr = 0;
-        for (var i = 0; i < num_samples; ++i) {
-            avr += this._values[i];
-        }
-
-        this.setOutputData(0, avr / num_samples);
-    };
-
-    MathAverageFilter.prototype.onPropertyChanged = function(name, value) {
-        if (value < 1) {
-            value = 1;
-        }
-        this.properties.samples = Math.round(value);
-        var old = this._values;
-
-        this._values = new Float32Array(this.properties.samples);
-        if (old.length <= this._values.length) {
-            this._values.set(old);
-        } else {
-            this._values.set(old.subarray(0, this._values.length));
-        }
-    };
-
-    //LiteGraph.registerNodeType("math/average", MathAverageFilter);
-
-    //Math
-    function MathTendTo() {
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
-        this.addProperty("factor", 0.1);
-        this.size = [80, 30];
-        this._value = null;
-    }
-
-    MathTendTo.title = "TendTo";
-    MathTendTo.desc = "moves the output value always closer to the input";
-
-    MathTendTo.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            v = 0;
-        }
-        var f = this.properties.factor;
-        if (this._value == null) {
-            this._value = v;
-        } else {
-            this._value = this._value * (1 - f) + v * f;
-        }
-        this.setOutputData(0, this._value);
-    };
-
-    //LiteGraph.registerNodeType("math/tendTo", MathTendTo);
-
-    //Math operation
-    function MathOperation() {
-        this.addInput("A", "number,array,object");
-        this.addInput("B", "number");
-        this.addOutput("=", "number");
-        this.addProperty("A", 1);
-        this.addProperty("B", 1);
-        this.addProperty("OP", "+", "enum", { values: MathOperation.values });
-		this._func = function(A,B) { return A + B; };
-		this._result = []; //only used for arrays
-    }
-
-    MathOperation.values = ["+", "-", "*", "/", "%", "^", "max", "min"];
-
-	MathOperation.title = "Operation";
-    MathOperation.desc = "Easy math operators";
-    MathOperation["@OP"] = {
-        type: "enum",
-        title: "operation",
-        values: MathOperation.values
-    };
-    MathOperation.size = [100, 60];
-
-    MathOperation.prototype.getTitle = function() {
-		if(this.properties.OP == "max" || this.properties.OP == "min")
-			return this.properties.OP + "(A,B)";
-        return "A " + this.properties.OP + " B";
-    };
-
-    MathOperation.prototype.setValue = function(v) {
-        if (typeof v == "string") {
-            v = parseFloat(v);
-        }
-        this.properties["value"] = v;
-    };
-
-    MathOperation.prototype.onPropertyChanged = function(name, value)
-	{
-		if (name != "OP")
-			return;
-        switch (this.properties.OP) {
-            case "+": this._func = function(A,B) { return A + B; }; break;
-            case "-": this._func = function(A,B) { return A - B; }; break;
-            case "x":
-            case "X":
-            case "*": this._func = function(A,B) { return A * B; }; break;
-            case "/": this._func = function(A,B) { return A / B; }; break;
-            case "%": this._func = function(A,B) { return A % B; }; break;
-            case "^": this._func = function(A,B) { return Math.pow(A, B); }; break;
-            case "max": this._func = function(A,B) { return Math.max(A, B); }; break;
-            case "min": this._func = function(A,B) { return Math.min(A, B); }; break;
-			default: 
-				console.warn("Unknown operation: " + this.properties.OP);
-				this._func = function(A) { return A; };
-				break;
-        }
-	}
-
-    MathOperation.prototype.onExecute = function() {
-        var A = this.getInputData(0);
-        var B = this.getInputData(1);
-        if ( A != null ) {
-			if( A.constructor === Number )
-	            this.properties["A"] = A;
-        } else {
-            A = this.properties["A"];
-        }
-
-        if (B != null) {
-            this.properties["B"] = B;
-        } else {
-            B = this.properties["B"];
-        }
-
-		var result;
-		if(A.constructor === Number)
-		{
-	        result = 0;
-			result = this._func(A,B);
-		}
-		else if(A.constructor === Array)
-		{
-			result = this._result;
-			result.length = A.length;
-			for(var i = 0; i < A.length; ++i)
-				result[i] = this._func(A[i],B);
-		}
-		else
-		{
-			result = {};
-			for(var i in A)
-				result[i] = this._func(A[i],B);
-		}
-	    this.setOutputData(0, result);
-    };
-
-    MathOperation.prototype.onDrawBackground = function(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
-        ctx.font = "40px Arial";
-        ctx.fillStyle = "#666";
-        ctx.textAlign = "center";
-        ctx.fillText(
-            this.properties.OP,
-            this.size[0] * 0.5,
-            (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5
-        );
-        ctx.textAlign = "left";
-    };
-
-    //LiteGraph.registerNodeType("math/operation", MathOperation);
-
-    LiteGraph.registerSearchboxExtra("math/operation", "MAX", {
-        properties: {OP:"max"},
-        title: "MAX()"
-    });
-
-    LiteGraph.registerSearchboxExtra("math/operation", "MIN", {
-        properties: {OP:"min"},
-        title: "MIN()"
-    });
-
-
-    //Math compare
-    function MathCompare() {
-        this.addInput("A", "number");
-        this.addInput("B", "number");
-        this.addOutput("A==B", "boolean");
-        this.addOutput("A!=B", "boolean");
-        this.addProperty("A", 0);
-        this.addProperty("B", 0);
-    }
-
-    MathCompare.title = "Compare";
-    MathCompare.desc = "compares between two values";
-
-    MathCompare.prototype.onExecute = function() {
-        var A = this.getInputData(0);
-        var B = this.getInputData(1);
-        if (A !== undefined) {
-            this.properties["A"] = A;
-        } else {
-            A = this.properties["A"];
-        }
-
-        if (B !== undefined) {
-            this.properties["B"] = B;
-        } else {
-            B = this.properties["B"];
-        }
-
-        for (var i = 0, l = this.outputs.length; i < l; ++i) {
-            var output = this.outputs[i];
-            if (!output.links || !output.links.length) {
-                continue;
-            }
-            var value;
-            switch (output.name) {
-                case "A==B":
-                    value = A == B;
-                    break;
-                case "A!=B":
-                    value = A != B;
-                    break;
-                case "A>B":
-                    value = A > B;
-                    break;
-                case "A<B":
-                    value = A < B;
-                    break;
-                case "A<=B":
-                    value = A <= B;
-                    break;
-                case "A>=B":
-                    value = A >= B;
-                    break;
-            }
-            this.setOutputData(i, value);
-        }
-    };
-
-    MathCompare.prototype.onGetOutputs = function() {
-        return [
-            ["A==B", "boolean"],
-            ["A!=B", "boolean"],
-            ["A>B", "boolean"],
-            ["A<B", "boolean"],
-            ["A>=B", "boolean"],
-            ["A<=B", "boolean"]
-        ];
-    };
-
-    //LiteGraph.registerNodeType("math/compare", MathCompare);
-
-    LiteGraph.registerSearchboxExtra("math/compare", "==", {
-        outputs: [["A==B", "boolean"]],
-        title: "A==B"
-    });
-    LiteGraph.registerSearchboxExtra("math/compare", "!=", {
-        outputs: [["A!=B", "boolean"]],
-        title: "A!=B"
-    });
-    LiteGraph.registerSearchboxExtra("math/compare", ">", {
-        outputs: [["A>B", "boolean"]],
-        title: "A>B"
-    });
-    LiteGraph.registerSearchboxExtra("math/compare", "<", {
-        outputs: [["A<B", "boolean"]],
-        title: "A<B"
-    });
-    LiteGraph.registerSearchboxExtra("math/compare", ">=", {
-        outputs: [["A>=B", "boolean"]],
-        title: "A>=B"
-    });
-    LiteGraph.registerSearchboxExtra("math/compare", "<=", {
-        outputs: [["A<=B", "boolean"]],
-        title: "A<=B"
-    });
-
-    function MathCondition() {
-        this.addInput("A", "number");
-        this.addInput("B", "number");
-        this.addOutput("true", "boolean");
-        this.addOutput("false", "boolean");
-        this.addProperty("A", 1);
-        this.addProperty("B", 1);
-        this.addProperty("OP", ">", "enum", { values: MathCondition.values });
-		this.addWidget("combo","Cond.",this.properties.OP,{ property: "OP", values: MathCondition.values } );
-
-        this.size = [80, 60];
-    }
-
-    MathCondition.values = [">", "<", "==", "!=", "<=", ">=", "||", "&&" ];
-    MathCondition["@OP"] = {
-        type: "enum",
-        title: "operation",
-        values: MathCondition.values
-    };
-
-    MathCondition.title = "Condition";
-    MathCondition.desc = "evaluates condition between A and B";
-
-    MathCondition.prototype.getTitle = function() {
-        return "A " + this.properties.OP + " B";
-    };
-
-    MathCondition.prototype.onExecute = function() {
-        var A = this.getInputData(0);
-        if (A === undefined) {
-            A = this.properties.A;
-        } else {
-            this.properties.A = A;
-        }
-
-        var B = this.getInputData(1);
-        if (B === undefined) {
-            B = this.properties.B;
-        } else {
-            this.properties.B = B;
-        }
-
-        var result = true;
-        switch (this.properties.OP) {
-            case ">":
-                result = A > B;
-                break;
-            case "<":
-                result = A < B;
-                break;
-            case "==":
-                result = A == B;
-                break;
-            case "!=":
-                result = A != B;
-                break;
-            case "<=":
-                result = A <= B;
-                break;
-            case ">=":
-                result = A >= B;
-                break;
-            case "||":
-                result = A || B;
-                break;
-            case "&&":
-                result = A && B;
-                break;
-        }
-
-        this.setOutputData(0, result);
-        this.setOutputData(1, !result);
-    };
-
-    //LiteGraph.registerNodeType("math/condition", MathCondition);
-
-
-    function MathBranch() {
-        this.addInput("in", 0);
-        this.addInput("cond", "boolean");
-        this.addOutput("true", 0);
-        this.addOutput("false", 0);
-        this.size = [80, 60];
-    }
-
-    MathBranch.title = "Branch";
-    MathBranch.desc = "If condition is true, outputs IN in true, otherwise in false";
-
-    MathBranch.prototype.onExecute = function() {
-        var V = this.getInputData(0);
-        var cond = this.getInputData(1);
-
-		if(cond)
-		{
-			this.setOutputData(0, V);
-			this.setOutputData(1, null);
-		}
-		else
-		{
-			this.setOutputData(0, null);
-			this.setOutputData(1, V);
-		}
-	}
-
-    //LiteGraph.registerNodeType("math/branch", MathBranch);
-
-
-    function MathAccumulate() {
-        this.addInput("inc", "number");
-        this.addOutput("total", "number");
-        this.addProperty("increment", 1);
-        this.addProperty("value", 0);
-    }
-
-    MathAccumulate.title = "Accumulate";
-    MathAccumulate.desc = "Increments a value every time";
-
-    MathAccumulate.prototype.onExecute = function() {
-        if (this.properties.value === null) {
-            this.properties.value = 0;
-        }
-
-        var inc = this.getInputData(0);
-        if (inc !== null) {
-            this.properties.value += inc;
-        } else {
-            this.properties.value += this.properties.increment;
-        }
-        this.setOutputData(0, this.properties.value);
-    };
-
-    //LiteGraph.registerNodeType("math/accumulate", MathAccumulate);
-
-    //Math Trigonometry
-    function MathTrigonometry() {
-        this.addInput("v", "number");
-        this.addOutput("sin", "number");
-
-        this.addProperty("amplitude", 1);
-        this.addProperty("offset", 0);
-        this.bgImageUrl = "nodes/imgs/icon-sin.png";
-    }
-
-    MathTrigonometry.title = "Trigonometry";
-    MathTrigonometry.desc = "Sin Cos Tan";
-    //MathTrigonometry.filter = "shader";
-
-    MathTrigonometry.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            v = 0;
-        }
-        var amplitude = this.properties["amplitude"];
-        var slot = this.findInputSlot("amplitude");
-        if (slot != -1) {
-            amplitude = this.getInputData(slot);
-        }
-        var offset = this.properties["offset"];
-        slot = this.findInputSlot("offset");
-        if (slot != -1) {
-            offset = this.getInputData(slot);
-        }
-
-        for (var i = 0, l = this.outputs.length; i < l; ++i) {
-            var output = this.outputs[i];
-            var value;
-            switch (output.name) {
-                case "sin":
-                    value = Math.sin(v);
-                    break;
-                case "cos":
-                    value = Math.cos(v);
-                    break;
-                case "tan":
-                    value = Math.tan(v);
-                    break;
-                case "asin":
-                    value = Math.asin(v);
-                    break;
-                case "acos":
-                    value = Math.acos(v);
-                    break;
-                case "atan":
-                    value = Math.atan(v);
-                    break;
-            }
-            this.setOutputData(i, amplitude * value + offset);
-        }
-    };
-
-    MathTrigonometry.prototype.onGetInputs = function() {
-        return [["v", "number"], ["amplitude", "number"], ["offset", "number"]];
-    };
-
-    MathTrigonometry.prototype.onGetOutputs = function() {
-        return [
-            ["sin", "number"],
-            ["cos", "number"],
-            ["tan", "number"],
-            ["asin", "number"],
-            ["acos", "number"],
-            ["atan", "number"]
-        ];
-    };
-
-    //LiteGraph.registerNodeType("math/trigonometry", MathTrigonometry);
-
-    LiteGraph.registerSearchboxExtra("math/trigonometry", "SIN()", {
-        outputs: [["sin", "number"]],
-        title: "SIN()"
-    });
-    LiteGraph.registerSearchboxExtra("math/trigonometry", "COS()", {
-        outputs: [["cos", "number"]],
-        title: "COS()"
-    });
-    LiteGraph.registerSearchboxExtra("math/trigonometry", "TAN()", {
-        outputs: [["tan", "number"]],
-        title: "TAN()"
-    });
-
-    //math library for safe math operations without eval
-    function MathFormula() {
-        this.addInput("x", "number");
-        this.addInput("y", "number");
-        this.addOutput("", "number");
-        this.properties = { x: 1.0, y: 1.0, formula: "x+y" };
-        this.code_widget = this.addWidget(
-            "text",
-            "F(x,y)",
-            this.properties.formula,
-            function(v, canvas, node) {
-                node.properties.formula = v;
-            }
-        );
-        this.addWidget("toggle", "allow", LiteGraph.allow_scripts, function(v) {
-            LiteGraph.allow_scripts = v;
-        });
-        this._func = null;
-    }
-
-    MathFormula.title = "Formula";
-    MathFormula.desc = "Compute formula";
-    MathFormula.size = [160, 100];
-
-    MathAverageFilter.prototype.onPropertyChanged = function(name, value) {
-        if (name == "formula") {
-            this.code_widget.value = value;
-        }
-    };
-
-    MathFormula.prototype.onExecute = function() {
-        if (!LiteGraph.allow_scripts) {
-            return;
-        }
-
-        var x = this.getInputData(0);
-        var y = this.getInputData(1);
-        if (x != null) {
-            this.properties["x"] = x;
-        } else {
-            x = this.properties["x"];
-        }
-
-        if (y != null) {
-            this.properties["y"] = y;
-        } else {
-            y = this.properties["y"];
-        }
-
-        var f = this.properties["formula"];
-
-        var value;
-        try {
-            if (!this._func || this._func_code != this.properties.formula) {
-                this._func = new Function(
-                    "x",
-                    "y",
-                    "TIME",
-                    "return " + this.properties.formula
-                );
-                this._func_code = this.properties.formula;
-            }
-            value = this._func(x, y, this.graph.globaltime);
-            this.boxcolor = null;
-        } catch (err) {
-            this.boxcolor = "red";
-        }
-        this.setOutputData(0, value);
-    };
-
-    MathFormula.prototype.getTitle = function() {
-        return this._func_code || "Formula";
-    };
-
-    MathFormula.prototype.onDrawBackground = function() {
-        var f = this.properties["formula"];
-        if (this.outputs && this.outputs.length) {
-            this.outputs[0].label = f;
-        }
-    };
-
-    //LiteGraph.registerNodeType("math/formula", MathFormula);
-
-    function Math3DVec2ToXY() {
-        this.addInput("vec2", "vec2");
-        this.addOutput("x", "number");
-        this.addOutput("y", "number");
-    }
-
-    Math3DVec2ToXY.title = "Vec2->XY";
-    Math3DVec2ToXY.desc = "vector 2 to components";
-
-    Math3DVec2ToXY.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-
-        this.setOutputData(0, v[0]);
-        this.setOutputData(1, v[1]);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec2-to-xy", Math3DVec2ToXY);
-
-    function Math3DXYToVec2() {
-        this.addInputs([["x", "number"], ["y", "number"]]);
-        this.addOutput("vec2", "vec2");
-        this.properties = { x: 0, y: 0 };
-        this._data = new Float32Array(2);
-    }
-
-    Math3DXYToVec2.title = "XY->Vec2";
-    Math3DXYToVec2.desc = "components to vector2";
-
-    Math3DXYToVec2.prototype.onExecute = function() {
-        var x = this.getInputData(0);
-        if (x == null) {
-            x = this.properties.x;
-        }
-        var y = this.getInputData(1);
-        if (y == null) {
-            y = this.properties.y;
-        }
-
-        var data = this._data;
-        data[0] = x;
-        data[1] = y;
-
-        this.setOutputData(0, data);
-    };
-
-    //LiteGraph.registerNodeType("math3d/xy-to-vec2", Math3DXYToVec2);
-
-    function Math3DVec3ToXYZ() {
-        this.addInput("vec3", "vec3");
-        this.addOutput("x", "number");
-        this.addOutput("y", "number");
-        this.addOutput("z", "number");
-    }
-
-    Math3DVec3ToXYZ.title = "Vec3->XYZ";
-    Math3DVec3ToXYZ.desc = "vector 3 to components";
-
-    Math3DVec3ToXYZ.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-
-        this.setOutputData(0, v[0]);
-        this.setOutputData(1, v[1]);
-        this.setOutputData(2, v[2]);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec3-to-xyz", Math3DVec3ToXYZ);
-
-    function Math3DXYZToVec3() {
-        this.addInputs([["x", "number"], ["y", "number"], ["z", "number"]]);
-        this.addOutput("vec3", "vec3");
-        this.properties = { x: 0, y: 0, z: 0 };
-        this._data = new Float32Array(3);
-    }
-
-    Math3DXYZToVec3.title = "XYZ->Vec3";
-    Math3DXYZToVec3.desc = "components to vector3";
-
-    Math3DXYZToVec3.prototype.onExecute = function() {
-        var x = this.getInputData(0);
-        if (x == null) {
-            x = this.properties.x;
-        }
-        var y = this.getInputData(1);
-        if (y == null) {
-            y = this.properties.y;
-        }
-        var z = this.getInputData(2);
-        if (z == null) {
-            z = this.properties.z;
-        }
-
-        var data = this._data;
-        data[0] = x;
-        data[1] = y;
-        data[2] = z;
-
-        this.setOutputData(0, data);
-    };
-
-    //LiteGraph.registerNodeType("math3d/xyz-to-vec3", Math3DXYZToVec3);
-
-    function Math3DVec4ToXYZW() {
-        this.addInput("vec4", "vec4");
-        this.addOutput("x", "number");
-        this.addOutput("y", "number");
-        this.addOutput("z", "number");
-        this.addOutput("w", "number");
-    }
-
-    Math3DVec4ToXYZW.title = "Vec4->XYZW";
-    Math3DVec4ToXYZW.desc = "vector 4 to components";
-
-    Math3DVec4ToXYZW.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-
-        this.setOutputData(0, v[0]);
-        this.setOutputData(1, v[1]);
-        this.setOutputData(2, v[2]);
-        this.setOutputData(3, v[3]);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec4-to-xyzw", Math3DVec4ToXYZW);
-
-    function Math3DXYZWToVec4() {
-        this.addInputs([
-            ["x", "number"],
-            ["y", "number"],
-            ["z", "number"],
-            ["w", "number"]
-        ]);
-        this.addOutput("vec4", "vec4");
-        this.properties = { x: 0, y: 0, z: 0, w: 0 };
-        this._data = new Float32Array(4);
-    }
-
-    Math3DXYZWToVec4.title = "XYZW->Vec4";
-    Math3DXYZWToVec4.desc = "components to vector4";
-
-    Math3DXYZWToVec4.prototype.onExecute = function() {
-        var x = this.getInputData(0);
-        if (x == null) {
-            x = this.properties.x;
-        }
-        var y = this.getInputData(1);
-        if (y == null) {
-            y = this.properties.y;
-        }
-        var z = this.getInputData(2);
-        if (z == null) {
-            z = this.properties.z;
-        }
-        var w = this.getInputData(3);
-        if (w == null) {
-            w = this.properties.w;
-        }
-
-        var data = this._data;
-        data[0] = x;
-        data[1] = y;
-        data[2] = z;
-        data[3] = w;
-
-        this.setOutputData(0, data);
-    };
-
-    //LiteGraph.registerNodeType("math3d/xyzw-to-vec4", Math3DXYZWToVec4);
-
-})(this);
-
-(function(global) {
-    var LiteGraph = global.LiteGraph;
-
-
-	function Math3DMat4()
-	{
-        this.addInput("T", "vec3");
-        this.addInput("R", "vec3");
-        this.addInput("S", "vec3");
-        this.addOutput("mat4", "mat4");
-		this.properties = {
-			"T":[0,0,0],
-			"R":[0,0,0],
-			"S":[1,1,1],
-			R_in_degrees: true
-		};
-		this._result = mat4.create();
-		this._must_update = true;
-	}
-
-	Math3DMat4.title = "mat4";
-	Math3DMat4.temp_quat = new Float32Array([0,0,0,1]);
-	Math3DMat4.temp_mat4 = new Float32Array(16);
-	Math3DMat4.temp_vec3 = new Float32Array(3);
-
-	Math3DMat4.prototype.onPropertyChanged = function(name, value)
-	{
-		this._must_update = true;
-	}
-
-	Math3DMat4.prototype.onExecute = function()
-	{
-		var M = this._result;
-		var Q = Math3DMat4.temp_quat;
-		var temp_mat4 = Math3DMat4.temp_mat4;
-		var temp_vec3 = Math3DMat4.temp_vec3;
-
-		var T = this.getInputData(0);
-		var R = this.getInputData(1);
-		var S = this.getInputData(2);
-
-		if( this._must_update || T || R || S )
-		{
-			T = T || this.properties.T;
-			R = R || this.properties.R;
-			S = S || this.properties.S;
-			mat4.identity( M );
-			mat4.translate( M, M, T );
-			if(this.properties.R_in_degrees)
-			{
-				temp_vec3.set( R );
-				vec3.scale(temp_vec3,temp_vec3,DEG2RAD);
-				quat.fromEuler( Q, temp_vec3 );
-			}
-			else
-				quat.fromEuler( Q, R );
-			mat4.fromQuat( temp_mat4, Q );
-			mat4.multiply( M, M, temp_mat4 );
-			mat4.scale( M, M, S );
-		}
-
-		this.setOutputData(0, M);		
-	}
-
-    //LiteGraph.registerNodeType("math3d/mat4", Math3DMat4);
-
-    //Math 3D operation
-    function Math3DOperation() {
-        this.addInput("A", "number,vec3");
-        this.addInput("B", "number,vec3");
-        this.addOutput("=", "number,vec3");
-        this.addProperty("OP", "+", "enum", { values: Math3DOperation.values });
-		this._result = vec3.create();
-    }
-
-    Math3DOperation.values = ["+", "-", "*", "/", "%", "^", "max", "min","dot","cross"];
-
-    LiteGraph.registerSearchboxExtra("math3d/operation", "CROSS()", {
-        properties: {"OP":"cross"},
-        title: "CROSS()"
-    });
-
-    LiteGraph.registerSearchboxExtra("math3d/operation", "DOT()", {
-        properties: {"OP":"dot"},
-        title: "DOT()"
-    });
-
-	Math3DOperation.title = "Operation";
-    Math3DOperation.desc = "Easy math 3D operators";
-    Math3DOperation["@OP"] = {
-        type: "enum",
-        title: "operation",
-        values: Math3DOperation.values
-    };
-    Math3DOperation.size = [100, 60];
-
-    Math3DOperation.prototype.getTitle = function() {
-		if(this.properties.OP == "max" || this.properties.OP == "min" )
-			return this.properties.OP + "(A,B)";
-        return "A " + this.properties.OP + " B";
-    };
-
-    Math3DOperation.prototype.onExecute = function() {
-        var A = this.getInputData(0);
-        var B = this.getInputData(1);
-		if(A == null || B == null)
-			return;
-		if(A.constructor === Number)
-			A = [A,A,A];
-		if(B.constructor === Number)
-			B = [B,B,B];
-
-        var result = this._result;
-        switch (this.properties.OP) {
-            case "+":
-                result = vec3.add(result,A,B);
-                break;
-            case "-":
-                result = vec3.sub(result,A,B);
-                break;
-            case "x":
-            case "X":
-            case "*":
-                result = vec3.mul(result,A,B);
-                break;
-            case "/":
-                result = vec3.div(result,A,B);
-                break;
-            case "%":
-                result[0] = A[0]%B[0];
-                result[1] = A[1]%B[1];
-                result[2] = A[2]%B[2];
-                break;
-            case "^":
-                result[0] = Math.pow(A[0],B[0]);
-                result[1] = Math.pow(A[1],B[1]);
-                result[2] = Math.pow(A[2],B[2]);
-                break;
-            case "max":
-                result[0] = Math.max(A[0],B[0]);
-                result[1] = Math.max(A[1],B[1]);
-                result[2] = Math.max(A[2],B[2]);
-                break;
-            case "min":
-                result[0] = Math.min(A[0],B[0]);
-                result[1] = Math.min(A[1],B[1]);
-                result[2] = Math.min(A[2],B[2]);
-            case "dot":
-                result = vec3.dot(A,B);
-                break;
-            case "cross":
-                vec3.cross(result,A,B);
-                break;
-            default:
-                console.warn("Unknown operation: " + this.properties.OP);
-        }
-        this.setOutputData(0, result);
-    };
-
-    Math3DOperation.prototype.onDrawBackground = function(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
-        ctx.font = "40px Arial";
-        ctx.fillStyle = "#666";
-        ctx.textAlign = "center";
-        ctx.fillText(
-            this.properties.OP,
-            this.size[0] * 0.5,
-            (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5
-        );
-        ctx.textAlign = "left";
-    };
-
-    //LiteGraph.registerNodeType("math3d/operation", Math3DOperation);
-
-    function Math3DVec3Scale() {
-        this.addInput("in", "vec3");
-        this.addInput("f", "number");
-        this.addOutput("out", "vec3");
-        this.properties = { f: 1 };
-        this._data = new Float32Array(3);
-    }
-
-    Math3DVec3Scale.title = "vec3_scale";
-    Math3DVec3Scale.desc = "scales the components of a vec3";
-
-    Math3DVec3Scale.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-        var f = this.getInputData(1);
-        if (f == null) {
-            f = this.properties.f;
-        }
-
-        var data = this._data;
-        data[0] = v[0] * f;
-        data[1] = v[1] * f;
-        data[2] = v[2] * f;
-        this.setOutputData(0, data);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec3-scale", Math3DVec3Scale);
-
-    function Math3DVec3Length() {
-        this.addInput("in", "vec3");
-        this.addOutput("out", "number");
-    }
-
-    Math3DVec3Length.title = "vec3_length";
-    Math3DVec3Length.desc = "returns the module of a vector";
-
-    Math3DVec3Length.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-        var dist = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-        this.setOutputData(0, dist);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec3-length", Math3DVec3Length);
-
-    function Math3DVec3Normalize() {
-        this.addInput("in", "vec3");
-        this.addOutput("out", "vec3");
-        this._data = new Float32Array(3);
-    }
-
-    Math3DVec3Normalize.title = "vec3_normalize";
-    Math3DVec3Normalize.desc = "returns the vector normalized";
-
-    Math3DVec3Normalize.prototype.onExecute = function() {
-        var v = this.getInputData(0);
-        if (v == null) {
-            return;
-        }
-        var dist = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-        var data = this._data;
-        data[0] = v[0] / dist;
-        data[1] = v[1] / dist;
-        data[2] = v[2] / dist;
-
-        this.setOutputData(0, data);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec3-normalize", Math3DVec3Normalize);
-
-    function Math3DVec3Lerp() {
-        this.addInput("A", "vec3");
-        this.addInput("B", "vec3");
-        this.addInput("f", "vec3");
-        this.addOutput("out", "vec3");
-        this.properties = { f: 0.5 };
-        this._data = new Float32Array(3);
-    }
-
-    Math3DVec3Lerp.title = "vec3_lerp";
-    Math3DVec3Lerp.desc = "returns the interpolated vector";
-
-    Math3DVec3Lerp.prototype.onExecute = function() {
-        var A = this.getInputData(0);
-        if (A == null) {
-            return;
-        }
-        var B = this.getInputData(1);
-        if (B == null) {
-            return;
-        }
-        var f = this.getInputOrProperty("f");
-
-        var data = this._data;
-        data[0] = A[0] * (1 - f) + B[0] * f;
-        data[1] = A[1] * (1 - f) + B[1] * f;
-        data[2] = A[2] * (1 - f) + B[2] * f;
-
-        this.setOutputData(0, data);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec3-lerp", Math3DVec3Lerp);
-
-    function Math3DVec3Dot() {
-        this.addInput("A", "vec3");
-        this.addInput("B", "vec3");
-        this.addOutput("out", "number");
-    }
-
-    Math3DVec3Dot.title = "vec3_dot";
-    Math3DVec3Dot.desc = "returns the dot product";
-
-    Math3DVec3Dot.prototype.onExecute = function() {
-        var A = this.getInputData(0);
-        if (A == null) {
-            return;
-        }
-        var B = this.getInputData(1);
-        if (B == null) {
-            return;
-        }
-
-        var dot = A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
-        this.setOutputData(0, dot);
-    };
-
-    //LiteGraph.registerNodeType("math3d/vec3-dot", Math3DVec3Dot);
-
-    //if glMatrix is installed...
-    if (global.glMatrix) {
-        function Math3DQuaternion() {
-            this.addOutput("quat", "quat");
-            this.properties = { x: 0, y: 0, z: 0, w: 1, normalize: false };
-            this._value = quat.create();
-        }
-
-        Math3DQuaternion.title = "Quaternion";
-        Math3DQuaternion.desc = "quaternion";
-
-        Math3DQuaternion.prototype.onExecute = function() {
-            this._value[0] = this.getInputOrProperty("x");
-            this._value[1] = this.getInputOrProperty("y");
-            this._value[2] = this.getInputOrProperty("z");
-            this._value[3] = this.getInputOrProperty("w");
-            if (this.properties.normalize) {
-                quat.normalize(this._value, this._value);
-            }
-            this.setOutputData(0, this._value);
-        };
-
-        Math3DQuaternion.prototype.onGetInputs = function() {
-            return [
-                ["x", "number"],
-                ["y", "number"],
-                ["z", "number"],
-                ["w", "number"]
-            ];
-        };
-
-        //LiteGraph.registerNodeType("math3d/quaternion", Math3DQuaternion);
-
-        function Math3DRotation() {
-            this.addInputs([["degrees", "number"], ["axis", "vec3"]]);
-            this.addOutput("quat", "quat");
-            this.properties = { angle: 90.0, axis: vec3.fromValues(0, 1, 0) };
-
-            this._value = quat.create();
-        }
-
-        Math3DRotation.title = "Rotation";
-        Math3DRotation.desc = "quaternion rotation";
-
-        Math3DRotation.prototype.onExecute = function() {
-            var angle = this.getInputData(0);
-            if (angle == null) {
-                angle = this.properties.angle;
-            }
-            var axis = this.getInputData(1);
-            if (axis == null) {
-                axis = this.properties.axis;
-            }
-
-            var R = quat.setAxisAngle(this._value, axis, angle * 0.0174532925);
-            this.setOutputData(0, R);
-        };
-
-        //LiteGraph.registerNodeType("math3d/rotation", Math3DRotation);
-
-
-        function MathEulerToQuat() {
-            this.addInput("euler", "vec3");
-            this.addOutput("quat", "quat");
-            this.properties = { euler:[0,0,0], use_yaw_pitch_roll: false };
-			this._degs = vec3.create();
-            this._value = quat.create();
-        }
-
-        MathEulerToQuat.title = "Euler->Quat";
-        MathEulerToQuat.desc = "Converts euler angles (in degrees) to quaternion";
-
-        MathEulerToQuat.prototype.onExecute = function() {
-            var euler = this.getInputData(0);
-            if (euler == null) {
-                euler = this.properties.euler;
-            }
-			vec3.scale( this._degs, euler, DEG2RAD );
-			if(this.properties.use_yaw_pitch_roll)
-				this._degs = [this._degs[2],this._degs[0],this._degs[1]];
-            var R = quat.fromEuler(this._value, this._degs);
-            this.setOutputData(0, R);
-        };
-
-        //LiteGraph.registerNodeType("math3d/euler_to_quat", MathEulerToQuat);
-
-        function MathQuatToEuler() {
-            this.addInput(["quat", "quat"]);
-            this.addOutput("euler", "vec3");
-			this._value = vec3.create();
-        }
-
-        MathQuatToEuler.title = "Euler->Quat";
-        MathQuatToEuler.desc = "Converts rotX,rotY,rotZ in degrees to quat";
-
-        MathQuatToEuler.prototype.onExecute = function() {
-            var q = this.getInputData(0);
-			if(!q)
-				return;
-            var R = quat.toEuler(this._value, q);
-			vec3.scale( this._value, this._value, DEG2RAD );
-            this.setOutputData(0, this._value);
-        };
-
-        //LiteGraph.registerNodeType("math3d/quat_to_euler", MathQuatToEuler);
-
-
-        //Math3D rotate vec3
-        function Math3DRotateVec3() {
-            this.addInputs([["vec3", "vec3"], ["quat", "quat"]]);
-            this.addOutput("result", "vec3");
-            this.properties = { vec: [0, 0, 1] };
-        }
-
-        Math3DRotateVec3.title = "Rot. Vec3";
-        Math3DRotateVec3.desc = "rotate a point";
-
-        Math3DRotateVec3.prototype.onExecute = function() {
-            var vec = this.getInputData(0);
-            if (vec == null) {
-                vec = this.properties.vec;
-            }
-            var quat = this.getInputData(1);
-            if (quat == null) {
-                this.setOutputData(vec);
-            } else {
-                this.setOutputData(
-                    0,
-                    vec3.transformQuat(vec3.create(), vec, quat)
-                );
-            }
-        };
-
-        //LiteGraph.registerNodeType("math3d/rotate_vec3", Math3DRotateVec3);
-
-        function Math3DMultQuat() {
-            this.addInputs([["A", "quat"], ["B", "quat"]]);
-            this.addOutput("A*B", "quat");
-
-            this._value = quat.create();
-        }
-
-        Math3DMultQuat.title = "Mult. Quat";
-        Math3DMultQuat.desc = "rotate quaternion";
-
-        Math3DMultQuat.prototype.onExecute = function() {
-            var A = this.getInputData(0);
-            if (A == null) {
-                return;
-            }
-            var B = this.getInputData(1);
-            if (B == null) {
-                return;
-            }
-
-            var R = quat.multiply(this._value, A, B);
-            this.setOutputData(0, R);
-        };
-
-        //LiteGraph.registerNodeType("math3d/mult-quat", Math3DMultQuat);
-
-        function Math3DQuatSlerp() {
-            this.addInputs([
-                ["A", "quat"],
-                ["B", "quat"],
-                ["factor", "number"]
-            ]);
-            this.addOutput("slerp", "quat");
-            this.addProperty("factor", 0.5);
-
-            this._value = quat.create();
-        }
-
-        Math3DQuatSlerp.title = "Quat Slerp";
-        Math3DQuatSlerp.desc = "quaternion spherical interpolation";
-
-        Math3DQuatSlerp.prototype.onExecute = function() {
-            var A = this.getInputData(0);
-            if (A == null) {
-                return;
-            }
-            var B = this.getInputData(1);
-            if (B == null) {
-                return;
-            }
-            var factor = this.properties.factor;
-            if (this.getInputData(2) != null) {
-                factor = this.getInputData(2);
-            }
-
-            var R = quat.slerp(this._value, A, B, factor);
-            this.setOutputData(0, R);
-        };
-
-        //LiteGraph.registerNodeType("math3d/quat-slerp", Math3DQuatSlerp);
-
-
-        //Math3D rotate vec3
-        function Math3DRemapRange() {
-            this.addInput("vec3", "vec3");
-            this.addOutput("remap", "vec3");
-			this.addOutput("clamped", "vec3");
-            this.properties = { clamp: true, range_min: [-1, -1, 0], range_max: [1, 1, 0], target_min: [-1,-1,0], target_max:[1,1,0] };
-			this._value = vec3.create();
-			this._clamped = vec3.create();
-        }
-
-        Math3DRemapRange.title = "Remap Range";
-        Math3DRemapRange.desc = "remap a 3D range";
-
-        Math3DRemapRange.prototype.onExecute = function() {
-            var vec = this.getInputData(0);
-			if(vec)
-				this._value.set(vec);
-			var range_min = this.properties.range_min;
-			var range_max = this.properties.range_max;
-			var target_min = this.properties.target_min;
-			var target_max = this.properties.target_max;
-
-			//swap to avoid errors
-			/*
-			if(range_min > range_max)
-			{
-				range_min = range_max;
-				range_max = this.properties.range_min;
-			}
-
-			if(target_min > target_max)
-			{
-				target_min = target_max;
-				target_max = this.properties.target_min;
-			}
-			*/
-
-			for(var i = 0; i < 3; ++i)
-			{
-				var r = range_max[i] - range_min[i];
-				this._clamped[i] = Math.clamp( this._value[i], range_min[i], range_max[i] );
-				if(r == 0)
-				{
-					this._value[i] = (target_min[i] + target_max[i]) * 0.5;
-					continue;
-				}
-
-				var n = (this._value[i] - range_min[i]) / r;
-				if(this.properties.clamp)
-					n = Math.clamp(n,0,1);
-				var t = target_max[i] - target_min[i];
-				this._value[i] = target_min[i] + n * t;
-			}
-
-			this.setOutputData(0,this._value);
-			this.setOutputData(1,this._clamped);
-        };
-
-        //LiteGraph.registerNodeType("math3d/remap_range", Math3DRemapRange);
-
-
-
-    } //glMatrix
-	else if (LiteGraph.debug)
-		console.warn("No glmatrix found, some Math3D nodes may not work");
-
-})(this);
-
 //basic nodes
 (function(global) {
     var LiteGraph = global.LiteGraph;
@@ -19505,16 +17244,13 @@ if (typeof exports != "undefined") {
     
     function logicAnd(){
         this.properties = { };
-        let inpA = this.addInput("a", "boolean");
-        inpA.shape = LiteGraph.ARROW_SHAPE;
-        let inpB = this.addInput("b", "boolean");
-        inpB.shape = LiteGraph.ARROW_SHAPE;
-        let out = this.addOutput("out", "boolean");
-        out.shape = LiteGraph.ARROW_SHAPE;
+        this.addInput("a", "boolean");
+        this.addInput("b", "boolean");
+        this.addOutput("out", "boolean");
     }
     logicAnd.title = "AND";
     logicAnd.desc = "Return true if all inputs are true";
-    logicAnd.title_mode = LiteGraph.NO_TITLE;
+    logicAnd.title_mode = LiteGraph.CENTRAL_TITLE;
     logicAnd.prototype.onExecute = function() {
         ret = true;
         for (inX in this.inputs){
@@ -19542,6 +17278,7 @@ if (typeof exports != "undefined") {
     }
     logicOr.title = "OR";
     logicOr.desc = "Return true if at least one input is true";
+    logicOr.title_mode = LiteGraph.CENTRAL_TITLE;
     logicOr.prototype.onExecute = function() {
         ret = false;
         for (inX in this.inputs){
@@ -19567,6 +17304,7 @@ if (typeof exports != "undefined") {
     }
     logicNot.title = "NOT";
     logicNot.desc = "Return the logical negation";
+    logicNot.title_mode = LiteGraph.CENTRAL_TITLE;
     logicNot.prototype.onExecute = function() {
         var ret = !this.getInputData(0);
         this.setOutputData(0, ret);
