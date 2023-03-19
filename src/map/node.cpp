@@ -8,11 +8,11 @@ void Node::addOutput(std::string name) {
     outputs.push_back(0);
 }
 
-int Node::getInput(int name) {
+int* Node::getInput(int name) {
     return inputs[name];
 };
 
-int Node::getOutput(int name) {
+int* Node::getOutput(int name) {
     if (name >= 0 && name < outputs.size()) {
         return outputs[name];
     } else {
@@ -21,11 +21,11 @@ int Node::getOutput(int name) {
     }
 };
 
-void Node::setInput(int name, int val) {
+void Node::setInput(int name, int* val) {
     inputs[name] = val;
 };
 
-void Node::setOutput(int name, int val) {
+void Node::setOutput(int name, int* val) {
     if (name >= 0 && name < outputs.size()) {
         outputs[name] = val;
     } 

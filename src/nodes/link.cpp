@@ -1,17 +1,17 @@
 #include "link.h"
 
 Link::Link(Node* from, int src, Node* to, int dst) {
-    this->from = from;
-    this->to = to;
-    this->src = src;
-    this->dst = dst;
-    this->setup();
+    from = from;
+    to = to;
+    src = src;
+    dst = dst;
+    setup();
 }
 
 // init the node
 void Link::setup() {
-    this->title = "Link";
-    this->desc = "Connect nodes";
+    title = "Link";
+    desc = "Connect nodes";
     addInput("src");
     addOutput("dst");
 }
@@ -19,6 +19,6 @@ void Link::setup() {
 void Link::onExecute() {
     if (this->from == NULL) return;
     if (this->to == NULL) return;
-    this->value = this->from->getOutput(this->src);
-    this->to->setInput(this->dst, this->value);
+    int* v = from->getOutput(src);
+    to->setInput(this->dst, v);
 }

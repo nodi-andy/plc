@@ -1,37 +1,38 @@
 #include "counter.h"
 
 Counter::Counter() {
-    this->setup();
+    setup();
 }
 
 // init the node
 void Counter::setup() {
-    this->title = "Counter";
-    this->desc = "Read input";
-    this->name = "events/counter";
+    title = "Counter";
+    desc = "Read input";
+    name = "events/counter";
 
-    this->value = 0;
+    value = 0;
     addInput("increment");
+    addInput("decrement");
     addInput("reset");
     addOutput("change");
     addOutput("value");
-    this->lastIncInput = this->getInput(0);
+    lastIncInput = *getInput(0);
 }
 
 void Counter::onExecute() {
-    int newIncInput = this->getInput(0);
-    if (this->lastIncInput == 0 && newIncInput > 0) {
-        this->value++;
+    int newIncInput = *getInput(0);
+    if (lastIncInput == 0 && newIncInput > 0) {
+        value++;
         Serial.print("Increment: ");
-        Serial.println(this->value);
+        Serial.println(value);
     }
-    this->lastIncInput = newIncInput;
-    this->setOutput(0, this->value);
+    lastIncInput = newIncInput;
+    setOutput(0, &value);
 
-    int newResetInput = this->getInput(1);
-    if (this->lastResetInput == 0 && newResetInput > 0) {
-        this->value = 0;
+    int newResetInput = *getInput(2);
+    if (lastResetInput == 0 && newResetInput > 0) {
+        value = 0;
         Serial.print("Reset");
     }
-    this->lastResetInput = newResetInput;
+    lastResetInput = newResetInput;
 }

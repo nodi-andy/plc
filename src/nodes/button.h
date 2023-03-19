@@ -16,6 +16,11 @@ class Button : public Node
     }
     void setup();
     void onExecute();
+
+    private:
+    int defaultOutput = 1;
+    int* input;
+    int* output;
 };
 
 static bool buttonRegistered = []() {

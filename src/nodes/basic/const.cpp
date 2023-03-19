@@ -6,15 +6,16 @@ BasicConst::BasicConst() {
 
 // init the node
 void BasicConst::setup() {
-    this->title = "ConstantBoolean";
-    this->name = "ConstantBoolean";
-    this->desc = "ConstantBoolean";
+    this->title = "Const";
+    this->name = "Const";
+    this->desc = "Const";
     if(props["properties"].containsKey("value") > 0 ) {
-      value = props["properties"]["value"].as<bool>();
+      value = props["properties"]["value"].as<int>();
     }
     addOutput("value");
 }
 
 void BasicConst::onExecute() {
-    setOutput(0, value);
+    output = &value;
+    setOutput(0, output);
 }

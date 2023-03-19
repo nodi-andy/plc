@@ -12,10 +12,9 @@ void LogicNot::setup() {
 
     addInput("a");
     addOutput("v");
-    this->lastIncInput = this->getInput(0);
 }
 
 void LogicNot::onExecute() {
-    int a = this->getInput(0);
-    this->setOutput(0, !a);
+    value = !(*this->getInput(0));
+    this->setOutput(0, &value);
 }

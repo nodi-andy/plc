@@ -30,6 +30,7 @@ void Map::addNode(JsonObject json)
     Serial.println(type.c_str());
 
     Node* newNode = RegistryManager::getInstance().createNode(type);
+    newNode->setup();
     if (newNode != nullptr) {
         newNode->props = json;
         newNode->id = json["id"].as<int>();

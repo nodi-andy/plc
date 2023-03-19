@@ -24,12 +24,19 @@ void Button::setup() {
 }
 
 void Button::onExecute() {
+  bool isNotConnected;
+  if (props.containsKey("inputs")) {
+    isNotConnected = props["inputs"][0]["link"].isNull();
+  }
+  if (isNotConnected) input = &defaultOutput;
+  else input = getInput(0);
+
   if (port >= 0) {
     if (digitalRead(port) == 0)
-      value = 1;
+      output = input;
     else
-      value = 0;
+      output = 0;
     //if (value == 0)  Serial.println("Button pressed");
-    setOutput(0, value);
+    setOutput(0, output);
   }
 }

@@ -16,10 +16,6 @@ class LogicNot : public Node
 
     void setup();
     void onExecute();
-
-    private:
-    int lastIncInput;
-    int lastResetInput;
 };
 
 static bool counterRegistered = []() {

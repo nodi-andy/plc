@@ -17,7 +17,7 @@
 
         CANVAS_GRID_SIZE: 64,
 
-        NODE_TITLE_HEIGHT: 16,
+        NODE_TITLE_HEIGHT: 24,
         NODE_TITLE_TEXT_Y: 10,
         NODE_SLOT_HEIGHT: 64,
         NODE_WIDGET_HEIGHT: 20,
@@ -747,6 +747,8 @@
         };
     }
 
+    
+
     //*********************************************************************************
     // LGraph CLASS
     //*********************************************************************************
@@ -763,18 +765,18 @@
      * @param {Object} o data from previous serialization [optional]
      */
 
+    
     function LGraph(o) {
         if (LiteGraph.debug) {
             console.log("Graph created");
         }
         this.list_of_graphcanvas = null;
         this.clear();
-
         if (o) {
             this.configure(o);
         }
     }
-
+    
     global.LGraph = LiteGraph.LGraph = LGraph;
 
     //default supported types
@@ -5155,7 +5157,7 @@ LGraphNode.prototype.executeAction = function(action)
      */
     function LGraphCanvas(canvas, graph, options) {
         this.options = options = options || {};
-
+        LGraphCanvas.active_canvas = this
         //if(graph === undefined)
         //	throw ("No graph assigned");
 
@@ -11248,9 +11250,6 @@ LGraphNode.prototype.executeAction = function(action)
 
         var input = dialog.querySelector("input");
         if (input) {
-            input.addEventListener("blur", function(e) {
-                this.focus();
-            });
             input.addEventListener("keydown", function(e) {
                 if (e.keyCode == 38) {
                     //UP
@@ -11343,11 +11342,11 @@ LGraphNode.prototype.executeAction = function(action)
 
         var left = ( event ? event.clientX : (rect.left + rect.width * 0.5) ) - 80;
         var top = ( event ? event.clientY : (rect.top + rect.height * 0.5) ) - 20;
-        dialog.style.left = left + "px";
-        dialog.style.top = top + "px";
+        //dialog.style.left = left + "px";
+        //dialog.style.top = top + "px";
 
 		//To avoid out of screen problems
-		if(event.layerY > (rect.height - 200)) 
+		if(event?.layerY > (rect.height - 200)) 
             helper.style.maxHeight = (rect.height - event.layerY - 20) + "px";
 
 		/*
@@ -11384,9 +11383,8 @@ LGraphNode.prototype.executeAction = function(action)
 					graphcanvas.graph.beforeChange();
                     var node = LiteGraph.createNode(name);
                     if (node) {
-                        node.pos = graphcanvas.convertEventToCanvasOffset(
-                            event
-                        );
+                        node.pos = [(graphcanvas.visible_area[0] + graphcanvas.visible_area[2]) / 2,
+                                    (graphcanvas.visible_area[1] + graphcanvas.visible_area[3]) / 2];
                         graphcanvas.graph.add(node, false);
                     }
 
@@ -11486,7 +11484,7 @@ LGraphNode.prototype.executeAction = function(action)
                 }
             }
 
-            dialog.close();
+            //dialog.close();
         }
 
         function changeSelection(forward) {
@@ -14790,15 +14788,17 @@ if (typeof exports != "undefined") {
 
     //Constant
     function ConstantNumber() {
+        this.addInput("value", "number");
         this.addOutput("value", "number");
         this.addProperty("value", 1.0);
-        this.widget = this.addWidget("number","value",1,"value");
+        this.widget = this.addWidget("number","",1,"value");
         this.widgets_up = true;
-        this.size = [180, 30];
+        this.size = [128, 64];
     }
 
     ConstantNumber.title = "Const Number";
     ConstantNumber.desc = "Constant number";
+    ConstantNumber.title_mode = LiteGraph.NO_TITLE;
 
     ConstantNumber.prototype.onExecute = function() {
         this.setOutputData(0, parseFloat(this.properties["value"]));
@@ -14824,18 +14824,19 @@ if (typeof exports != "undefined") {
     LiteGraph.registerNodeType("basic/const", ConstantNumber);
 
     function ConstantBoolean() {
+        this.addInput("bool", "boolean");
         this.addOutput("bool", "boolean");
         this.addProperty("value", true);
-        this.widget = this.addWidget("toggle","value",true,"value");
+        this.widget = this.addWidget("toggle","",true,"value");
         this.serialize_widgets = true;
         this.widgets_up = true;
-        this.size = [140, 30];
+        this.size = [128, 64];
     }
 
     ConstantBoolean.title = "Const Boolean";
     ConstantBoolean.desc = "Constant boolean";
     ConstantBoolean.prototype.getTitle = ConstantNumber.prototype.getTitle;
-
+    ConstantBoolean.title_mode = LiteGraph.NO_TITLE;
     ConstantBoolean.prototype.onExecute = function() {
         this.setOutputData(0, this.properties["value"]);
     };
@@ -14852,6 +14853,123 @@ if (typeof exports != "undefined") {
 	}
 
     LiteGraph.registerNodeType("basic/boolean", ConstantBoolean);
+
+    //Math operation
+    function MathOperation() {
+        this.addInput("A", "number,array,object");
+        this.addInput("B", "number");
+        this.addOutput("=", "number");
+        this.addProperty("A", 1);
+        this.addProperty("B", 1);
+        this.addProperty("OP", "+", "enum", { values: MathOperation.values });
+		this._func = function(A,B) { return A + B; };
+		this._result = []; //only used for arrays
+    }
+
+    MathOperation.values = ["+", "-", "*", "/", "%", "^", "max", "min"];
+
+	MathOperation.title = "Operation";
+    MathOperation.desc = "Easy math operators";
+    MathOperation.title_mode = LiteGraph.NO_TITLE;
+
+    MathOperation["@OP"] = {
+        type: "enum",
+        title: "operation",
+        values: MathOperation.values
+    };
+    MathOperation.size = [128, 128];
+
+    MathOperation.prototype.getTitle = function() {
+		if(this.properties.OP == "max" || this.properties.OP == "min")
+			return this.properties.OP + "(A,B)";
+        return "A " + this.properties.OP + " B";
+    };
+
+    MathOperation.prototype.setValue = function(v) {
+        if (typeof v == "string") {
+            v = parseFloat(v);
+        }
+        this.properties["value"] = v;
+    };
+
+    MathOperation.prototype.onPropertyChanged = function(name, value)
+	{
+		if (name != "OP")
+			return;
+        switch (this.properties.OP) {
+            case "+": this._func = function(A,B) { return A + B; }; break;
+            case "-": this._func = function(A,B) { return A - B; }; break;
+            case "x":
+            case "X":
+            case "*": this._func = function(A,B) { return A * B; }; break;
+            case "/": this._func = function(A,B) { return A / B; }; break;
+            case "%": this._func = function(A,B) { return A % B; }; break;
+            case "^": this._func = function(A,B) { return Math.pow(A, B); }; break;
+            case "max": this._func = function(A,B) { return Math.max(A, B); }; break;
+            case "min": this._func = function(A,B) { return Math.min(A, B); }; break;
+			default: 
+				console.warn("Unknown operation: " + this.properties.OP);
+				this._func = function(A) { return A; };
+				break;
+        }
+	}
+
+    MathOperation.prototype.onExecute = function() {
+        var A = this.getInputData(0);
+        var B = this.getInputData(1);
+        if ( A != null ) {
+			if( A.constructor === Number )
+	            this.properties["A"] = A;
+        } else {
+            A = this.properties["A"];
+        }
+
+        if (B != null) {
+            this.properties["B"] = B;
+        } else {
+            B = this.properties["B"];
+        }
+
+		var result;
+		if(A.constructor === Number)
+		{
+	        result = 0;
+			result = this._func(A,B);
+		}
+		else if(A.constructor === Array)
+		{
+			result = this._result;
+			result.length = A.length;
+			for(var i = 0; i < A.length; ++i)
+				result[i] = this._func(A[i],B);
+		}
+		else
+		{
+			result = {};
+			for(var i in A)
+				result[i] = this._func(A[i],B);
+		}
+	    this.setOutputData(0, result);
+    };
+
+    MathOperation.prototype.onDrawBackground = function(ctx) {
+        if (this.flags.collapsed) {
+            return;
+        }
+
+        ctx.font = "40px Arial";
+        ctx.fillStyle = "#666";
+        ctx.textAlign = "center";
+        ctx.fillText(
+            this.properties.OP,
+            this.size[0] * 0.5,
+            (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5
+        );
+        ctx.textAlign = "left";
+    };
+
+    LiteGraph.registerNodeType("math/operation", MathOperation);
+
 
     function ConstantString() {
         this.addOutput("string", "string");
@@ -15638,16 +15756,17 @@ if (typeof exports != "undefined") {
     
     
     function GenericCompare() {
-        this.addInput("A", 0);
-        this.addInput("B", 0);
-        this.addOutput("true", "boolean");
-        this.addOutput("false", "boolean");
+        this.addInput("", 0);
+        this.addInput("", 0);
+        this.addOutput("true", "number");
+        this.addOutput("false", "number");
         this.addProperty("A", 1);
         this.addProperty("B", 1);
         this.addProperty("OP", "==", "enum", { values: GenericCompare.values });
 		this.addWidget("combo","Op.",this.properties.OP,{ property: "OP", values: GenericCompare.values } );
 
-        this.size = [80, 60];
+        this.size = [128, 128];
+        this.widgets_up = true;
     }
 
     GenericCompare.values = ["==", "!="]; //[">", "<", "==", "!=", "<=", ">=", "||", "&&" ];
@@ -15657,8 +15776,9 @@ if (typeof exports != "undefined") {
         values: GenericCompare.values
     };
 
-    GenericCompare.title = "Compare *";
+    GenericCompare.title = "Comparator";
     GenericCompare.desc = "evaluates condition between A and B";
+    GenericCompare.title_mode = LiteGraph.NO_TITLE;
 
     GenericCompare.prototype.getTitle = function() {
         return "*A " + this.properties.OP + " *B";
@@ -15731,7 +15851,7 @@ if (typeof exports != "undefined") {
         this.setOutputData(1, !result);
     };
 
-    LiteGraph.registerNodeType("basic/CompareValues", GenericCompare);
+    LiteGraph.registerNodeType("logic/comparator", GenericCompare);
     
 })(this);
 
@@ -15963,18 +16083,19 @@ if (typeof exports != "undefined") {
 
     //Show value inside the debug console
     function EventCounter() {
-        this.addInput("inc", "boolean");
-        this.addInput("dec", "boolean");
-        this.addInput("reset", "boolean");
-        this.addOutput("change", "boolean");
+        this.addInput("inc", "number");
+        this.addInput("dec", "number");
+        this.addInput("reset", "number");
         this.addOutput("num", "number");
-        this.addProperty("doCountExecution", false, "boolean", {name: "Count Executions"});
-        this.addWidget("toggle","Count Exec.",this.properties.doCountExecution,"doCountExecution");
+        //this.addProperty("doCountExecution", false, "boolean", {name: "Count Executions"});
+        //this.addWidget("toggle","Count Exec.",this.properties.doCountExecution,"doCountExecution");
         this.num = 0;
+        this.size = [128, 196];
     }
 
     EventCounter.title = "Counter";
     EventCounter.desc = "Counts events";
+    EventCounter.title_mode = LiteGraph.NO_TITLE;
 
     EventCounter.prototype.getTitle = function() {
         if (this.flags.collapsed) {
@@ -16015,6 +16136,63 @@ if (typeof exports != "undefined") {
     };
 
     LiteGraph.registerNodeType("events/counter", EventCounter);
+
+    //Show value inside the debug console
+    function Stepper() {
+        this.addInput("speed", "number");
+        this.addInput("pos", "number");
+        this.addInput("reset", "number");
+        this.addOutput("speed", "number");
+        this.addOutput("pos", "number");
+        this.addProperty("stepperPort", 0, "number", {name: "Stepper Port"});
+        this.num = 0;
+        this.size = [128, 196];
+
+    }
+
+    Stepper.title = "Stepper";
+    Stepper.desc = "Stepper";
+    Stepper.title_mode = LiteGraph.NO_TITLE;
+
+    Stepper.prototype.getTitle = function() {
+        if (this.flags.collapsed) {
+            return String(this.num);
+        }
+        return this.title;
+    };
+
+    Stepper.prototype.onAction = function(action, param, options) {
+        var v = this.num;
+        if (action == "inc") {
+            this.num += 1;
+        } else if (action == "dec") {
+            this.num -= 1;
+        } else if (action == "reset") {
+            this.num = 0;
+        }
+        if (this.num != v) {
+            this.trigger("change", this.num);
+        }
+    };
+
+    Stepper.prototype.onDrawBackground = function(ctx) {
+        if (this.flags.collapsed) {
+            return;
+        }
+        ctx.fillStyle = "#AAA";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.num, this.size[0] * 0.5, this.size[1] * 0.5);
+    };
+
+    Stepper.prototype.onExecute = function() {
+        if(this.properties.doCountExecution){
+            this.num += 1;
+        }
+        this.setOutputData(1, this.num);
+    };
+
+    LiteGraph.registerNodeType("widget/stepper", Stepper);
 
     //Show value inside the debug console
     function DelayEvent() {
@@ -16247,12 +16425,13 @@ if (typeof exports != "undefined") {
     /* Button ****************/
 
     function WidgetButton() {
-        this.addOutput("", "boolean");
+        this.addInput("", "number");
+        this.addOutput("", "number");
         this.addProperty("text", "B1");
         this.addProperty("port", "");
         this.addProperty("font_size", 30);
         this.addProperty("message", "");
-        this.size = [164, 84];
+        this.size = [64, 64];
         this.clicked = false;
     }
 
@@ -16330,13 +16509,13 @@ if (typeof exports != "undefined") {
     LiteGraph.registerNodeType("widget/button", WidgetButton);
 
     function WidgetToggle() {
-        this.addInput("", "boolean");
-        this.addOutput("v", "boolean");
+        this.addInput("", "number");
+        this.addOutput("", "number");
         this.properties = { font: "", value: false, port: "" };
-        this.size = [160, 44];
+        this.size = [64, 64];
     }
 
-    WidgetToggle.title = "Toggle";
+    WidgetToggle.title = " ";
     WidgetToggle.desc = "Toggles between true or false";
     WidgetToggle.title_mode = LiteGraph.NO_TITLE;
     WidgetToggle.prototype.onDrawForeground = function(ctx) {
@@ -17244,9 +17423,9 @@ if (typeof exports != "undefined") {
     
     function logicAnd(){
         this.properties = { };
-        this.addInput("a", "boolean");
-        this.addInput("b", "boolean");
-        this.addOutput("out", "boolean");
+        this.addInput("", "number");
+        this.addInput("", "number");
+        this.addOutput("", "number");
     }
     logicAnd.title = "AND";
     logicAnd.desc = "Return true if all inputs are true";
@@ -17271,10 +17450,9 @@ if (typeof exports != "undefined") {
     
     function logicOr(){
         this.properties = { };
-        let inpA = this.addInput("a", "boolean");
-        inpA.shape = LiteGraph.ARROW_SHAPE;
-        this.addInput("b", "boolean");
-        this.addOutput("out", "boolean");
+        this.addInput("", "number");
+        this.addInput("", "number");
+        this.addOutput("", "number");
     }
     logicOr.title = "OR";
     logicOr.desc = "Return true if at least one input is true";
@@ -17299,8 +17477,8 @@ if (typeof exports != "undefined") {
     
     function logicNot(){
         this.properties = { };
-        this.addInput("in", "boolean");
-        this.addOutput("out", "boolean");
+        this.addInput("", "number");
+        this.addOutput("", "number");
     }
     logicNot.title = "NOT";
     logicNot.desc = "Return the logical negation";

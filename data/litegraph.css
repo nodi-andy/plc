@@ -199,7 +199,6 @@ html, body {
 
 .litegraph.litesearchbox .helper {
     overflow: auto;
-    max-height: 200px;
     margin-top: 2px;
 }
 
@@ -618,7 +617,6 @@ html, body {
 
 .graphdialog .helper {
     overflow: auto;
-    max-height: 200px;
 }
 
 .graphdialog .help-item {

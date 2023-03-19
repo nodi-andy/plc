@@ -17,7 +17,7 @@ void Toggle::setup() {
       if (port >= 0) pinMode(port, OUTPUT);
     }
     if (props["properties"].containsKey("value")) {
-      value = props["properties"]["value"].as<bool>();
+      value = props["properties"]["value"].as<int>();
     }
     if (props.containsKey("inputs")) {
         Serial.print("TOGGLE: ");
@@ -28,8 +28,9 @@ void Toggle::setup() {
 }
 
 void Toggle::onExecute() {
-    if (isNotConnected == false) {
-        value = getInput(0);
+    int* input = getInput(0);
+    if (input) {
+      value = *input;
+      digitalWrite(port, value ? HIGH : LOW);
     }
-    digitalWrite(port, value ? HIGH : LOW);
 }

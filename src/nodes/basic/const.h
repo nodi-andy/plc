@@ -19,6 +19,7 @@ class BasicConst : public Node
 
     private:
     int value;
+    int* output;
 };
 
 static bool counterRegistered = []() {

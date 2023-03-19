@@ -23,15 +23,15 @@ class Node
         virtual void onExecute();
         void addInput(std::string name);
         void addOutput(std::string name);
-        void setInput(int name, int val);
-        int getOutput(int name);
+        void setInput(int name, int* val);
+        int* getOutput(int name);
         static std::unordered_map<std::string, Node*> nodeReg;
 
     protected:
-        std::vector<int> inputs;
-        std::vector<int> outputs;
-        int getInput(int name);
-        void setOutput(int name, int val);
+        std::vector<int*> inputs;
+        std::vector<int*> outputs;
+        int* getInput(int name);
+        void setOutput(int name, int* val);
 };
 
 class RegistryManager {
