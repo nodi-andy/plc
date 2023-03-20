@@ -49,3 +49,13 @@ The following image shows the result:
 
 ![image](https://user-images.githubusercontent.com/19575988/226485050-dcea0894-c195-4a8a-ac60-4a712d056e47.png)
 
+
+## Create a logic circuit
+1. Add a AND gate (logic/and) and another button
+1. Assign the port number of the new button (e.g. 19). Note that this port shall be available as input port
+1. Create following circuit
+1. Connect a simple button between the new port (e.g.19) and GND:
+
+![image](https://user-images.githubusercontent.com/19575988/226487773-96bfc14f-9e38-4068-bce4-273e687a883e.png)
+
+Pressing the on-board button and the new button will turn the led on. There is no need for additional hardware.
