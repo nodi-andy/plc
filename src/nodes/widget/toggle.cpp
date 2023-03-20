@@ -27,6 +27,6 @@ void Toggle::onExecute() {
       value = *input;
       digitalWrite(port, value ? HIGH : LOW);
     } else {
-      digitalWrite(port, LOW);
+      digitalWrite(port, value);
     }
 }
