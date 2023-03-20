@@ -33,4 +33,5 @@ void Bit::onExecute() {
     if (port) {
       digitalWrite(port, value ? HIGH : LOW);
     }
+    setOutput(0, &value);
 }

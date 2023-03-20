@@ -1,7 +1,6 @@
 #include "and.h"
 
 LogicAnd::LogicAnd() {
-    setup();
 }
 
 // init the node
@@ -16,6 +15,13 @@ void LogicAnd::setup() {
 }
 
 void LogicAnd::onExecute() {
-    value = *getInput(0) && *getInput(1);
-    this->setOutput(0, &value);
+    value = 0;
+    int *inpA = getInput(0);
+    int *inpB = getInput(1);
+    if (inpA && inpB) {
+        value = *inpA && *inpB;
+        setOutput(0, &value);
+    } else {
+        setOutput(0, 0);
+    }
 }

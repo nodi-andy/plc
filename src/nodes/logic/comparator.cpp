@@ -1,14 +1,13 @@
 #include "comparator.h"
 
 Comparator::Comparator() {
-    this->setup();
 }
 
 // init the node
 void Comparator::setup() {
-    this->title = "IsEq";
-    this->desc = "Read input";
-    this->name = "logic/and";
+    title = "IsEq";
+    desc = "Read input";
+    name = "logic/and";
 
     addInput("a");
     addInput("b");

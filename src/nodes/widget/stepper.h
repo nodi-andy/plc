@@ -21,12 +21,19 @@ class Stepper : public Node
     private:
     int targetSpeed;
     int speed;
-    int dir;
-    int targetPos;
-    int pos;
+    static bool moveForced;
+    static int dir;
+    static int targetPos;
+    static int pos;
     hw_timer_t *My_timer;
+    static void IRAM_ATTR onTimer();
 
 };
+
+int Stepper::targetPos = 0;
+int Stepper::dir = 0;
+int Stepper::pos = 0;
+bool Stepper::moveForced = false;
 
 static bool stepperRegistered = []() {
     RegistryManager::getInstance().registerNode(new Stepper());

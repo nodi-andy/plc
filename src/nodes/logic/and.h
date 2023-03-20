@@ -22,7 +22,7 @@ class LogicAnd : public Node
     int lastResetInput;
 };
 
-static bool counterRegistered = []() {
+static bool LogicAndRegistered = []() {
     RegistryManager::getInstance().registerNode(new LogicAnd());
     return true;
 }();

@@ -3,10 +3,12 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
+
+#include "custom.h"
 #include "nodes/widget/toggle.h"
 #include "nodes/widget/button.h"
 #include "nodes/math/counter.h"
-#include "nodes/math/math_op.h"
+#include "nodes/math/operation.h"
 #include "nodes/link.h"
 #include "map/map.h"
 
@@ -19,8 +21,8 @@ TaskHandle_t Task2;
 const uint8_t DEBOUNCE_DELAY = 10; // in milliseconds
 
 // WiFi credentials
-const char *WIFI_SSID = "DHLAN";
-const char *WIFI_PASS = "w123qweasd";
+const char *WIFI_SSID = WIFI_NAME;
+const char *WIFI_PASS = WIFI_PW;
 static uint8_t mapFile[MAX_MESSAGE_SIZE];
 Map nodemap;
 // ----------------------------------------------------------------------------

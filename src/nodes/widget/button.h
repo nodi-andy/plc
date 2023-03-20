@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "../../map/node.h"
 
-enum ButtonIO { VALUE }; 
 // Button digital input
 class Button : public Node
 {
@@ -18,7 +17,8 @@ class Button : public Node
     void onExecute();
 
     private:
-    int defaultOutput = 1;
+    int defaultPressed;
+    int defaultReleased;
     int* input;
     int* output;
 };

@@ -9398,9 +9398,20 @@ LGraphNode.prototype.executeAction = function(action)
                 } else {
                     end_y -= 10;
                 }
+                let originType = "";
+                let targetType = "";
+                if (link) {
+                    originType = window.canvas.graph._nodes_by_id[link.target_id]?.type;
+                    targetType = window.canvas.graph._nodes_by_id[link.origin_id]?.type;
+                }
                 ctx.lineTo(start_x, start_y);
-                ctx.lineTo((start_x + end_x) * 0.5, start_y);
-                ctx.lineTo((start_x + end_x) * 0.5, end_y);
+                if (targetType == "basic/junction" || originType == "basic/junction") {
+                    ctx.lineTo(end_x, start_y);
+                    ctx.lineTo(end_x, end_y);
+                } else {
+                    ctx.lineTo((start_x + end_x) * 0.5, start_y);
+                    ctx.lineTo((start_x + end_x) * 0.5, end_y);
+                }
                 ctx.lineTo(end_x, end_y);
                 ctx.lineTo(b[0], b[1]);
             } else {
@@ -10611,7 +10622,7 @@ LGraphNode.prototype.executeAction = function(action)
         var destType = false;
 		if (node_right && node_right.outputs && node_right.outputs[link.target_slot]) destType = node_right.inputs[link.target_slot].type;
 		
-		var options = ["Add Node",null,"Delete",null];
+		var options = ["Add Junction", null, "Add Node",null,"Delete",null];
 		
 		
         var menu = new LiteGraph.ContextMenu(options, {
@@ -10622,6 +10633,8 @@ LGraphNode.prototype.executeAction = function(action)
 
         function inner_clicked(v,options,e) {
             switch (v) {
+                case "Add Junction":
+
                 case "Add Node":
 					LGraphCanvas.onMenuAdd(null, null, e, menu, function(node){
 						// console.debug("node autoconnect");
@@ -14823,6 +14836,31 @@ if (typeof exports != "undefined") {
 
     LiteGraph.registerNodeType("basic/const", ConstantNumber);
 
+    //Constant
+    function Junction() {
+        this.addInput("", "number");
+        this.addOutput("", "number");
+        this.size = [64, 64];
+    }
+
+    Junction.title = "Const Number";
+    Junction.desc = "Constant number";
+    Junction.title_mode = LiteGraph.NO_TITLE;
+
+    Junction.prototype.onExecute = function() {
+        this.setOutputData(0, parseFloat(this.properties["value"]));
+    };
+
+    Junction.prototype.getTitle = function() {
+        if (this.flags.collapsed) {
+            return this.properties.value;
+        }
+        return this.title;
+    };
+
+
+    LiteGraph.registerNodeType("basic/junction", Junction);
+
     function ConstantBoolean() {
         this.addInput("bool", "boolean");
         this.addOutput("bool", "boolean");
@@ -14830,7 +14868,7 @@ if (typeof exports != "undefined") {
         this.widget = this.addWidget("toggle","",true,"value");
         this.serialize_widgets = true;
         this.widgets_up = true;
-        this.size = [128, 64];
+        this.size = [64, 64];
     }
 
     ConstantBoolean.title = "Const Boolean";
@@ -16164,7 +16202,9 @@ if (typeof exports != "undefined") {
         this.addInput("reset", "number");
         this.addOutput("speed", "number");
         this.addOutput("pos", "number");
-        this.addProperty("stepperPort", 0, "number", {name: "Stepper Port"});
+        this.addProperty("step port", 0, "number", {name: "Step Port"});
+        this.addProperty("dir port", 0, "number", {name: "Direction Port"});
+        this.addProperty("default speed", 20000, "number", {name: "Default speed"});
         this.num = 0;
         this.size = [128, 196];
 
@@ -16449,8 +16489,8 @@ if (typeof exports != "undefined") {
         this.addOutput("", "number");
         this.addProperty("text", "B1");
         this.addProperty("port", "");
-        this.addProperty("font_size", 30);
-        this.addProperty("message", "");
+        this.addProperty("pressed", "1");
+        this.addProperty("released", "0");
         this.size = [64, 64];
         this.clicked = false;
     }
@@ -16464,31 +16504,19 @@ if (typeof exports != "undefined") {
             return;
         }
         var margin = 10;
-        ctx.fillStyle = "black";
-        ctx.fillRect(
-            margin + 1,
-            margin + 1,
-            this.size[0] - margin * 2,
-            this.size[1] - margin * 2
-        );
-        ctx.fillStyle = "#AAF";
-        ctx.fillRect(
-            margin - 1,
-            margin - 1,
-            this.size[0] - margin * 2,
-            this.size[1] - margin * 2
-        );
-        ctx.fillStyle = this.clicked
-            ? "white"
-            : this.mouseOver
-            ? "#668"
-            : "#334";
-        ctx.fillRect(
-            margin,
-            margin,
-            this.size[0] - margin * 2,
-            this.size[1] - margin * 2
-        );
+        if (this.clicked == false ) {
+            ctx.fillStyle = "black";
+            ctx.fillRect(
+                margin + 2,
+                margin + 2,
+                this.size[0] - margin * 2,
+                this.size[1] - margin * 2
+            );
+        }
+        if (this.clicked) margin += 2;
+
+        ctx.fillStyle = "gray";
+        ctx.fillRect(margin, margin, this.size[0] - margin * 2, this.size[1] - margin * 2);
 
         if (this.properties.text || this.properties.text === 0) {
             var font_size = this.properties.font_size || 30;
@@ -16506,10 +16534,10 @@ if (typeof exports != "undefined") {
 
     WidgetButton.prototype.onMouseDown = function(e, local_pos) {
         if (
-            local_pos[0] > 1 &&
-            local_pos[1] > 1 &&
-            local_pos[0] < this.size[0] - 2 &&
-            local_pos[1] < this.size[1] - 2
+            local_pos[0] > 10 &&
+            local_pos[1] > 10 &&
+            local_pos[0] < this.size[0] - 10 &&
+            local_pos[1] < this.size[1] - 10
         ) {
             this.clicked = true;
             this.setOutputData(1, this.clicked);
@@ -16582,10 +16610,10 @@ if (typeof exports != "undefined") {
 
     WidgetToggle.prototype.onMouseDown = function(e, local_pos) {
         if (
-            local_pos[0] > 1 &&
-            local_pos[1] > 1 &&
-            local_pos[0] < this.size[0] - 2 &&
-            local_pos[1] < this.size[1] - 2
+            local_pos[0] > 10 &&
+            local_pos[1] > 10 &&
+            local_pos[0] < this.size[0] - 10 &&
+            local_pos[1] < this.size[1] - 10
         ) {
             this.properties.value = !this.properties.value;
             this.graph._version++;
@@ -17236,124 +17264,6 @@ if (typeof exports != "undefined") {
     //LiteGraph.registerNodeType("widget/panel", WidgetPanel);
 })(this);
 
-//basic nodes
-(function(global) {
-    var LiteGraph = global.LiteGraph;
-
-    function toString(a) {
-		if(a && a.constructor === Object)
-		{
-			try
-			{
-				return JSON.stringify(a);
-			}
-			catch (err)
-			{
-				return String(a);
-			}
-		}
-        return String(a);
-    }
-
-    //LiteGraph.wrapFunctionAsNode("string/toString", toString, [""], "string");
-
-    function compare(a, b) {
-        return a == b;
-    }
-
-    //LiteGraph.wrapFunctionAsNode("string/compare",compare,["string", "string"],"boolean");
-
-    function concatenate(a, b) {
-        if (a === undefined) {
-            return b;
-        }
-        if (b === undefined) {
-            return a;
-        }
-        return a + b;
-    }
-
-    //LiteGraph.wrapFunctionAsNode("string/concatenate",concatenate,["string", "string"],"string"   );
-
-    function contains(a, b) {
-        if (a === undefined || b === undefined) {
-            return false;
-        }
-        return a.indexOf(b) != -1;
-    }
-
-    //LiteGraph.wrapFunctionAsNode("string/contains",contains,["string", "string"],"boolean");
-
-    function toUpperCase(a) {
-        if (a != null && a.constructor === String) {
-            return a.toUpperCase();
-        }
-        return a;
-    }
-
-    //LiteGraph.wrapFunctionAsNode("string/toUpperCase",toUpperCase,["string"],"string");
-
-    function split(str, separator) {
-		if(separator == null)
-			separator = this.properties.separator;
-        if (str == null )
-	        return [];
-		if( str.constructor === String )
-			return str.split(separator || " ");
-		else if( str.constructor === Array )
-		{
-			var r = [];
-			for(var i = 0; i < str.length; ++i){
-                if (typeof str[i] == "string")
-				    r[i] = str[i].split(separator || " ");
-            }
-			return r;
-		}
-        return null;
-    }
-
-    //LiteGraph.wrapFunctionAsNode("string/split",split,["string,array", "string"],"array",{ separator: "," });
-
-    function toFixed(a) {
-        if (a != null && a.constructor === Number) {
-            return a.toFixed(this.properties.precision);
-        }
-        return a;
-    }
-
-    //LiteGraph.wrapFunctionAsNode("string/toFixed",toFixed,["number"],"string",{ precision: 0 });
-
-
-    function StringToTable() {
-        this.addInput("", "string");
-        this.addOutput("table", "table");
-        this.addOutput("rows", "number");
-        this.addProperty("value", "");
-        this.addProperty("separator", ",");
-		this._table = null;
-    }
-
-    StringToTable.title = "toTable";
-    StringToTable.desc = "Splits a string to table";
-
-    StringToTable.prototype.onExecute = function() {
-        var input = this.getInputData(0);
-		if(!input)
-			return;
-		var separator = this.properties.separator || ",";
-		if(input != this._str || separator != this._last_separator )
-		{
-			this._last_separator = separator;
-			this._str = input;
-			this._table = input.split("\n").map(function(a){ return a.trim().split(separator)});
-		}
-        this.setOutputData(0, this._table );
-        this.setOutputData(1, this._table ? this._table.length : 0 );
-    };
-
-    //LiteGraph.registerNodeType("string/toTable", StringToTable);
-
-})(this);
 
 (function(global) {
     var LiteGraph = global.LiteGraph;
@@ -17388,43 +17298,6 @@ if (typeof exports != "undefined") {
 
     LiteGraph.registerNodeType("routing/selector", Selector);
 
-    function Sequence() {
-        this.properties = {
-            sequence: "A,B,C"
-        };
-        this.addInput("index", "number");
-        this.addInput("seq");
-        this.addOutput("out");
-
-        this.index = 0;
-        this.values = this.properties.sequence.split(",");
-    }
-
-    Sequence.title = "Sequence";
-    Sequence.desc = "select one element from a sequence from a string";
-
-    Sequence.prototype.onPropertyChanged = function(name, value) {
-        if (name == "sequence") {
-            this.values = value.split(",");
-        }
-    };
-
-    Sequence.prototype.onExecute = function() {
-        var seq = this.getInputData(1);
-        if (seq && seq != this.current_sequence) {
-            this.values = seq.split(",");
-            this.current_sequence = seq;
-        }
-        var index = this.getInputData(0);
-        if (index == null) {
-            index = 0;
-        }
-        this.index = index = Math.round(index) % this.values.length;
-
-        this.setOutputData(0, this.values[index]);
-    };
-
-    //LiteGraph.registerNodeType("logic/sequence", Sequence);
 	
     
     function logicAnd(){
@@ -17495,420 +17368,4 @@ if (typeof exports != "undefined") {
     };
     LiteGraph.registerNodeType("logic/NOT", logicNot);
     
-    
-    function logicCompare(){
-        this.properties = { };
-        this.addInput("a", "boolean");
-        this.addInput("b", "boolean");
-        this.addOutput("out", "boolean");
-    }
-    logicCompare.title = "bool == bool";
-    logicCompare.desc = "Compare for logical equality";
-    logicCompare.prototype.onExecute = function() {
-        last = null;
-        ret = true;
-        for (inX in this.inputs){
-            if (last === null) last = this.getInputData(inX);
-            else
-                if (last != this.getInputData(inX)){
-                    ret = false;
-                    break;
-                }
-        }
-        this.setOutputData(0, ret);
-    };
-    logicCompare.prototype.onGetInputs = function() {
-        return [
-            ["bool", "boolean"]
-        ];
-    };
-    //LiteGraph.registerNodeType("logic/CompareBool", logicCompare);
-    
-    
-    function logicBranch(){
-        this.properties = { };
-        this.addInput("onTrigger", LiteGraph.ACTION);
-        this.addInput("condition", "boolean");
-        this.addOutput("true", LiteGraph.EVENT);
-        this.addOutput("false", LiteGraph.EVENT);
-        this.mode = LiteGraph.ON_TRIGGER;
-    }
-    logicBranch.title = "Branch";
-    logicBranch.desc = "Branch execution on condition";
-    logicBranch.prototype.onExecute = function(param, options) {
-        var condtition = this.getInputData(1);
-        if (condtition){
-            this.triggerSlot(0);
-        }else{
-            this.triggerSlot(1);
-        }
-    };
-    //LiteGraph.registerNodeType("logic/IF", logicBranch);
 })(this);
-
-//event related nodes
-(function(global) {
-    var LiteGraph = global.LiteGraph;
-
-    function LGWebSocket() {
-        this.size = [60, 20];
-        this.addInput("send", LiteGraph.ACTION);
-        this.addOutput("received", LiteGraph.EVENT);
-        this.addInput("in", 0);
-        this.addOutput("out", 0);
-        this.properties = {
-            url: "",
-            room: "lgraph", //allows to filter messages,
-            only_send_changes: true
-        };
-        this._ws = null;
-        this._last_sent_data = [];
-        this._last_received_data = [];
-    }
-
-    LGWebSocket.title = "WebSocket";
-    LGWebSocket.desc = "Send data through a websocket";
-
-    LGWebSocket.prototype.onPropertyChanged = function(name, value) {
-        if (name == "url") {
-            this.connectSocket();
-        }
-    };
-
-    LGWebSocket.prototype.onExecute = function() {
-        if (!this._ws && this.properties.url) {
-            this.connectSocket();
-        }
-
-        if (!this._ws || this._ws.readyState != WebSocket.OPEN) {
-            return;
-        }
-
-        var room = this.properties.room;
-        var only_changes = this.properties.only_send_changes;
-
-        for (var i = 1; i < this.inputs.length; ++i) {
-            var data = this.getInputData(i);
-            if (data == null) {
-                continue;
-            }
-            var json;
-            try {
-                json = JSON.stringify({
-                    type: 0,
-                    room: room,
-                    channel: i,
-                    data: data
-                });
-            } catch (err) {
-                continue;
-            }
-            if (only_changes && this._last_sent_data[i] == json) {
-                continue;
-            }
-
-            this._last_sent_data[i] = json;
-            this._ws.send(json);
-        }
-
-        for (var i = 1; i < this.outputs.length; ++i) {
-            this.setOutputData(i, this._last_received_data[i]);
-        }
-
-        if (this.boxcolor == "#AFA") {
-            this.boxcolor = "#6C6";
-        }
-    };
-
-    LGWebSocket.prototype.connectSocket = function() {
-        var that = this;
-        var url = this.properties.url;
-        if (url.substr(0, 2) != "ws") {
-            url = "ws://" + url;
-        }
-        this._ws = new WebSocket(url);
-        this._ws.onopen = function() {
-            console.log("ready");
-            that.boxcolor = "#6C6";
-        };
-        this._ws.onmessage = function(e) {
-            that.boxcolor = "#AFA";
-            var data = JSON.parse(e.data);
-            if (data.room && data.room != that.properties.room) {
-                return;
-            }
-            if (data.type == 1) {
-                if (
-                    data.data.object_class &&
-                    LiteGraph[data.data.object_class]
-                ) {
-                    var obj = null;
-                    try {
-                        obj = new LiteGraph[data.data.object_class](data.data);
-                        that.triggerSlot(0, obj);
-                    } catch (err) {
-                        return;
-                    }
-                } else {
-                    that.triggerSlot(0, data.data);
-                }
-            } else {
-                that._last_received_data[data.channel || 0] = data.data;
-            }
-        };
-        this._ws.onerror = function(e) {
-            console.log("couldnt connect to websocket");
-            that.boxcolor = "#E88";
-        };
-        this._ws.onclose = function(e) {
-            console.log("connection closed");
-            that.boxcolor = "#000";
-        };
-    };
-
-    LGWebSocket.prototype.send = function(data) {
-        if (!this._ws || this._ws.readyState != WebSocket.OPEN) {
-            return;
-        }
-        this._ws.send(JSON.stringify({ type: 1, msg: data }));
-    };
-
-    LGWebSocket.prototype.onAction = function(action, param) {
-        if (!this._ws || this._ws.readyState != WebSocket.OPEN) {
-            return;
-        }
-        this._ws.send({
-            type: 1,
-            room: this.properties.room,
-            action: action,
-            data: param
-        });
-    };
-
-    LGWebSocket.prototype.onGetInputs = function() {
-        return [["in", 0]];
-    };
-
-    LGWebSocket.prototype.onGetOutputs = function() {
-        return [["out", 0]];
-    };
-
-    //LiteGraph.registerNodeType("network/websocket", LGWebSocket);
-
-    //It is like a websocket but using the SillyServer.js server that bounces packets back to all clients connected:
-    //For more information: https://github.com/jagenjo/SillyServer.js
-
-    function LGSillyClient() {
-        //this.size = [60,20];
-        this.room_widget = this.addWidget(
-            "text",
-            "Room",
-            "lgraph",
-            this.setRoom.bind(this)
-        );
-        this.addWidget(
-            "button",
-            "Reconnect",
-            null,
-            this.connectSocket.bind(this)
-        );
-
-        this.addInput("send", LiteGraph.ACTION);
-        this.addOutput("received", LiteGraph.EVENT);
-        this.addInput("in", 0);
-        this.addOutput("out", 0);
-        this.properties = {
-            url: "tamats.com:55000",
-            room: "lgraph",
-            only_send_changes: true
-        };
-
-        this._server = null;
-        this.connectSocket();
-        this._last_sent_data = [];
-        this._last_received_data = [];
-
-		if(typeof(SillyClient) == "undefined")
-			console.warn("remember to add SillyClient.js to your project: https://tamats.com/projects/sillyserver/src/sillyclient.js");
-    }
-
-    LGSillyClient.title = "SillyClient";
-    LGSillyClient.desc = "Connects to SillyServer to broadcast messages";
-
-    LGSillyClient.prototype.onPropertyChanged = function(name, value) {
-        if (name == "room") {
-            this.room_widget.value = value;
-        }
-        this.connectSocket();
-    };
-
-    LGSillyClient.prototype.setRoom = function(room_name) {
-        this.properties.room = room_name;
-        this.room_widget.value = room_name;
-        this.connectSocket();
-    };
-
-    //force label names
-    LGSillyClient.prototype.onDrawForeground = function() {
-        for (var i = 1; i < this.inputs.length; ++i) {
-            var slot = this.inputs[i];
-            slot.label = "in_" + i;
-        }
-        for (var i = 1; i < this.outputs.length; ++i) {
-            var slot = this.outputs[i];
-            slot.label = "out_" + i;
-        }
-    };
-
-    LGSillyClient.prototype.onExecute = function() {
-        if (!this._server || !this._server.is_connected) {
-            return;
-        }
-
-        var only_send_changes = this.properties.only_send_changes;
-
-        for (var i = 1; i < this.inputs.length; ++i) {
-            var data = this.getInputData(i);
-			var prev_data = this._last_sent_data[i];
-            if (data != null) {
-                if (only_send_changes)
-				{	
-					var is_equal = true;
-					if( data && data.length && prev_data && prev_data.length == data.length && data.constructor !== String)
-					{
-						for(var j = 0; j < data.length; ++j)
-							if( prev_data[j] != data[j] )
-							{
-								is_equal = false;
-								break;
-							}
-					}
-					else if(this._last_sent_data[i] != data)
-						is_equal = false;
-					if(is_equal)
-							continue;
-                }
-                this._server.sendMessage({ type: 0, channel: i, data: data });
-				if( data.length && data.constructor !== String )
-				{
-					if( this._last_sent_data[i] )
-					{
-						this._last_sent_data[i].length = data.length;
-						for(var j = 0; j < data.length; ++j)
-							this._last_sent_data[i][j] = data[j];
-					}
-					else //create
-					{
-						if(data.constructor === Array)
-							this._last_sent_data[i] = data.concat();
-						else
-							this._last_sent_data[i] = new data.constructor( data );
-					}
-				}
-				else
-	                this._last_sent_data[i] = data; //should be cloned
-            }
-        }
-
-        for (var i = 1; i < this.outputs.length; ++i) {
-            this.setOutputData(i, this._last_received_data[i]);
-        }
-
-        if (this.boxcolor == "#AFA") {
-            this.boxcolor = "#6C6";
-        }
-    };
-
-    LGSillyClient.prototype.connectSocket = function() {
-        var that = this;
-        if (typeof SillyClient == "undefined") {
-            if (!this._error) {
-                console.error(
-                    "SillyClient node cannot be used, you must include SillyServer.js"
-                );
-            }
-            this._error = true;
-            return;
-        }
-
-        this._server = new SillyClient();
-        this._server.on_ready = function() {
-            console.log("ready");
-            that.boxcolor = "#6C6";
-        };
-        this._server.on_message = function(id, msg) {
-            var data = null;
-            try {
-                data = JSON.parse(msg);
-            } catch (err) {
-                return;
-            }
-
-            if (data.type == 1) {
-                //EVENT slot
-                if (
-                    data.data.object_class &&
-                    LiteGraph[data.data.object_class]
-                ) {
-                    var obj = null;
-                    try {
-                        obj = new LiteGraph[data.data.object_class](data.data);
-                        that.triggerSlot(0, obj);
-                    } catch (err) {
-                        return;
-                    }
-                } else {
-                    that.triggerSlot(0, data.data);
-                }
-            } //for FLOW slots
-            else {
-                that._last_received_data[data.channel || 0] = data.data;
-            }
-            that.boxcolor = "#AFA";
-        };
-        this._server.on_error = function(e) {
-            console.log("couldnt connect to websocket");
-            that.boxcolor = "#E88";
-        };
-        this._server.on_close = function(e) {
-            console.log("connection closed");
-            that.boxcolor = "#000";
-        };
-
-        if (this.properties.url && this.properties.room) {
-            try {
-                this._server.connect(this.properties.url, this.properties.room);
-            } catch (err) {
-                console.error("SillyServer error: " + err);
-                this._server = null;
-                return;
-            }
-            this._final_url = this.properties.url + "/" + this.properties.room;
-        }
-    };
-
-    LGSillyClient.prototype.send = function(data) {
-        if (!this._server || !this._server.is_connected) {
-            return;
-        }
-        this._server.sendMessage({ type: 1, data: data });
-    };
-
-    LGSillyClient.prototype.onAction = function(action, param) {
-        if (!this._server || !this._server.is_connected) {
-            return;
-        }
-        this._server.sendMessage({ type: 1, action: action, data: param });
-    };
-
-    LGSillyClient.prototype.onGetInputs = function() {
-        return [["in", 0]];
-    };
-
-    LGSillyClient.prototype.onGetOutputs = function() {
-        return [["out", 0]];
-    };
-
-    //LiteGraph.registerNodeType("network/sillyclient", LGSillyClient);
-})(this);
-

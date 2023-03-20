@@ -17,6 +17,16 @@ void Button::setup() {
       }
     }
 
+    defaultPressed = 1;
+    if (props["properties"].containsKey("pressed")) {
+      defaultPressed = props["properties"]["pressed"].as<int>();
+    }
+
+    defaultReleased = 0;
+    if (props["properties"].containsKey("released")) {
+      defaultReleased = props["properties"]["released"].as<int>();
+    }
+
     Serial.print("> Setup Button, PORT: ");
     Serial.println(port);
     addInput("input");
@@ -25,18 +35,22 @@ void Button::setup() {
 }
 
 void Button::onExecute() {
-  input = getInput(0);
-  if (!input) {
-    input = &defaultOutput;
-  }
-
+  output = 0;
   if (port >= 0) {
-    if (digitalRead(port) == 0) {
-      output = input;
-      Serial.println("Button pressed");
+    input = getInput(0);
+    if (input) {
+      if (digitalRead(port) == 0) {
+        output = input;
+      } else {
+        output = 0;
+      }
+    } else {
+      if (digitalRead(port) == 0) {
+        output = &defaultPressed;
+      } else {
+        output = &defaultReleased;
+      }
     }
-    else
-      output = 0;
-    setOutput(0, output);
   }
+  setOutput(0, output);
 }

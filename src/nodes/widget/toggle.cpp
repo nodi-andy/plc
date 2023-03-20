@@ -22,8 +22,8 @@ void Toggle::setup() {
 void Toggle::onExecute() {
     int* input = getInput(0);
     if (input) {
-      Serial.print("Toggle: ");
-      Serial.println(*input);
+      //Serial.print("Toggle: ");
+      //Serial.println(*input);
       value = *input;
       digitalWrite(port, value ? HIGH : LOW);
     } else {
