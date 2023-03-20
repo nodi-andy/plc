@@ -22,7 +22,7 @@ To get started with Conucon PLC, follow these steps:
 8. Check the serial monitor for the IP address of your ESP32 (192.168.x.y), and type this address in your browser.
 
 You should now see the home screen with the toolbox:
-![image](https://user-images.githubusercontent.com/19575988/226483575-d08071e0-56ef-4dff-9901-b49b5f7c6bd9.png)
+![image](https://user-images.githubusercontent.com/19575988/226483575-d08071e0-56ef-4dff-9901-b49b5f7c6bd9.png | width=320)
 
 ## Adding blocks
 To add your first block:
@@ -47,7 +47,7 @@ To add your first block:
 
 The following image shows the result:
 
-![image](https://user-images.githubusercontent.com/19575988/226485050-dcea0894-c195-4a8a-ac60-4a712d056e47.png)
+![image](https://user-images.githubusercontent.com/19575988/226485050-dcea0894-c195-4a8a-ac60-4a712d056e47.png | width=320)
 
 
 ## Create a logic circuit
@@ -56,6 +56,9 @@ The following image shows the result:
 1. Create following circuit
 1. Connect a simple button between the new port (e.g.19) and GND:
 
-![image](https://user-images.githubusercontent.com/19575988/226487773-96bfc14f-9e38-4068-bce4-273e687a883e.png)
+![image](https://user-images.githubusercontent.com/19575988/226487773-96bfc14f-9e38-4068-bce4-273e687a883e.png | width=320)
 
 Pressing the on-board button and the new button will turn the led on. There is no need for additional hardware.
+Create complex circuit using other logic blocks
+
+![image](https://user-images.githubusercontent.com/19575988/226489351-d69562fd-92a5-4989-8da4-26ad10537bf9.png | width=320)
