@@ -11,14 +11,15 @@ To get started with Conucon PLC, follow these steps:
 
 
 
-``cp src/custom_edit_me.h src/custom.h``
+
 1. Clone the repository from GitHub ``git clone https://github.com/nodi-andy/plc``
-1. Install platformIO
-1. Set your local WiFi name and password in `src/custom.h`.
-1. Set your board in `platformio.ini`. Here, `esp32doit-devkit-v1` is used.
-1. Select `esp32doit-devkit-v1` > `Platform` > `Upload Filesystem image` from the PlatformIO menu.
-1. Select `esp32doit-devkit-v1` > `General` > `Upload and Monitor` from the PlatformIO menu.
-1. Check the serial monitor for the IP address of your ESP32 (192.168.x.y), and type this address in your browser.
+2. Copy custom file: ``cp src/custom_edit_me.h src/custom.h``
+3. Install platformIO
+4. Set your local WiFi name and password in `src/custom.h`.
+5. Set your board in `platformio.ini`. Here, `esp32doit-devkit-v1` is used.
+6. Select `esp32doit-devkit-v1` > `Platform` > `Upload Filesystem image` from the PlatformIO menu.
+7. Select `esp32doit-devkit-v1` > `General` > `Upload and Monitor` from the PlatformIO menu.
+8. Check the serial monitor for the IP address of your ESP32 (192.168.x.y), and type this address in your browser.
 
 You should now see the home screen with the toolbox:
 ![image](https://user-images.githubusercontent.com/19575988/226483575-d08071e0-56ef-4dff-9901-b49b5f7c6bd9.png)
@@ -36,13 +37,13 @@ To add your first block:
 ![image](https://user-images.githubusercontent.com/19575988/226484676-56ec907a-3cb7-420c-95fb-651981efb0b9.png)
 
 ## Connecting the blocks
-- Create a button (`widget/button`) using the same method as before.
-- Set the port of the button on `0` in the same menu described above
-- Port `0` is connected to the default button on esp32
-- Connect the output of button in the function block diagram to the input of toggle
-- This will overwrite the toggle default value and the toggle will take the value of button
-- Write the code using middle mouse button. Note that one button on the esp32 board is the reset/boot button; press the other button.
-- The on-board LED will go on and off after you press and release the button.
+1. Create a button (`widget/button`) using the same method as before.
+1. Set the port of the button on `0` in the same menu described above
+1. Port `0` is connected to the default button on esp32
+1. Connect the output of button in the function block diagram to the input of toggle
+1. This will overwrite the toggle default value and the toggle will take the value of button
+1. Write the code using middle mouse button. Note that one button on the esp32 board is the reset/boot button; press the other button.
+1. The on-board LED will go on and off after you press and release the button.
 
 The following image shows the result:
 
