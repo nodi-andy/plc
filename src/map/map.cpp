@@ -24,10 +24,6 @@ void Map::addNode(JsonObject json)
     std::string type = json["type"].as<const char*>();
     Serial.println("");
     Serial.print("> Parse JSON: ");
-    Serial.print("ID: ");
-    Serial.print(json["id"].as<int>());
-    Serial.print(" : ");
-    Serial.println(type.c_str());
 
     Node* newNode = RegistryManager::getInstance().createNode(type);
     newNode->setup();
@@ -46,7 +42,11 @@ void Map::addNode(JsonObject json)
 
 void Map::addLinkToList(int id, Node* newNode)
 {
+    newNode->id = id;
     links[id] = newNode;
+    Serial.println("addLinkToList: ");
+    Serial.print(id);
+
     newNode->setup();
     Serial.println("> Link added");
 }

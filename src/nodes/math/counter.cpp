@@ -16,7 +16,7 @@ void Counter::setup() {
     addInput("reset");
     addOutput("change");
     addOutput("value");
-    lastIncInput = *getInput(0);
+    //lastIncInput = *getInput(0);
 }
 
 void Counter::onExecute() {

@@ -1,9 +1,6 @@
 #include "toggle.h"
 
-Toggle::Toggle(int portNr) {
-    port = portNr;
-    pinMode(port, OUTPUT);
-    setup();
+Toggle::Toggle() {
 }
 
 // init the node
@@ -19,18 +16,17 @@ void Toggle::setup() {
     if (props["properties"].containsKey("value")) {
       value = props["properties"]["value"].as<int>();
     }
-    if (props.containsKey("inputs")) {
-        Serial.print("TOGGLE: ");
-        Serial.println(props["inputs"][0]["link"].as<int>());
-      isNotConnected = props["inputs"][0]["link"].isNull();
-    }
-    addInput("value1");
+    addInput("input");
 }
 
 void Toggle::onExecute() {
     int* input = getInput(0);
     if (input) {
+      Serial.print("Toggle: ");
+      Serial.println(*input);
       value = *input;
       digitalWrite(port, value ? HIGH : LOW);
+    } else {
+      digitalWrite(port, LOW);
     }
 }

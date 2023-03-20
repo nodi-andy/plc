@@ -1,24 +1,46 @@
 #include "link.h"
 
-Link::Link(Node* from, int src, Node* to, int dst) {
-    from = from;
-    to = to;
-    src = src;
-    dst = dst;
-    setup();
+Link::Link(Node* fromNode, int srcPort, Node* toNode, int dstPort) {
+    from = fromNode;
+    to = toNode;
+    src = srcPort;
+    dst = dstPort;
+    Serial.print("> Link::Link: ");
+    Serial.print(id);
+    Serial.print(" From:");
+    Serial.print(from->id);
+    Serial.print(" Src Port:");
+    Serial.print(src);
+    Serial.print(" To:");
+    Serial.print(to->id);
+    Serial.print(" Port:");
+    Serial.print(dst);
 }
 
 // init the node
 void Link::setup() {
     title = "Link";
     desc = "Connect nodes";
-    addInput("src");
-    addOutput("dst");
 }
 
 void Link::onExecute() {
-    if (this->from == NULL) return;
-    if (this->to == NULL) return;
+    if (from == NULL) return;
+    if (to == NULL) return;
     int* v = from->getOutput(src);
-    to->setInput(this->dst, v);
+    /*Serial.println("");
+    Serial.print("> Run link: ");
+    Serial.print(id);
+    Serial.print(" From:");
+    Serial.print(from->id);
+    Serial.print(" Src Port:");
+    Serial.print(src);
+    Serial.print(" To:");
+    Serial.print(to->id);
+    Serial.print(" Port:");
+    Serial.print(dst);
+    if (v) {
+      Serial.println("Value:");
+      Serial.print(*v);
+    }*/
+    to->setInput(dst, v);
 }

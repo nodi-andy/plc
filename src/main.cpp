@@ -3,10 +3,10 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
-#include "nodes/toggle.h"
-#include "nodes/button.h"
-#include "nodes/counter.h"
-#include "nodes/math_op.h"
+#include "nodes/widget/toggle.h"
+#include "nodes/widget/button.h"
+#include "nodes/math/counter.h"
+#include "nodes/math/math_op.h"
 #include "nodes/link.h"
 #include "map/map.h"
 
@@ -99,12 +99,6 @@ void initWebServer() {
 // ----------------------------------------------------------------------------
 
 void notifyClients() {
-    /*const uint8_t size = JSON_OBJECT_SIZE(1);
-    StaticJsonDocument<size> json;
-    json["status"] = onboard_led.on ? "on" : "off";
-
-    char buffer[17];
-    size_t len = serializeJson(json, buffer);*/
     ws.textAll(mapFile, strlen((const char*)mapFile));
 }
 
@@ -124,8 +118,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         File file = SPIFFS.open("/map.json", FILE_WRITE);
         const uint8_t *writeData = data;
         file.write(writeData, len);
-        file.close();
         mapFile[info->len] = 0;
+        file.close();
         notifyClients();
         Serial.print("INPUT: ");
         Serial.println((char*)mapFile);
@@ -206,12 +200,14 @@ void Task2code( void * pvParameters ){
     
     if (nodemap.state == mapState::RUN) {
         for (auto n : nodemap.nodes) {
-        n.second->onExecute();
-        //delay(100);
+            if (n.second) {
+                n.second->onExecute();
+            }
         }
         for (auto n : nodemap.links) {
-        n.second->onExecute();
-        //delay(100);
+            if (n.second) {
+                n.second->onExecute();
+            }
         }
     }
   } 
@@ -250,12 +246,11 @@ void setup() {
                     &Task2,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
 
-    nodemap.clear();
+    /*nodemap.clear();
     Button* b = new Button();
-    //Node* b = RegistryManager::getInstance().createNode("widget/button");
-    //b->props["port"] = "0";
+    b->props["port"] = "0";
     nodemap.addNode(1, b);
-    //nodemap.addNode(2, new Toggle(BUILTIN_LED));
+    nodemap.addNode(2, new Toggle());*/
     //nodemap.addNode(3, new Counter());
     
     //MathOp* isEq = new MathOp(MathOpVariants::IsEq);
@@ -265,7 +260,7 @@ void setup() {
     //nodemap.addLink(5, 1, 0, 3, 0);
     //nodemap.addLink(6, 3, 0, 4, 0);
     //nodemap.addLink(7, 4, 0, 3, 1);
-    nodemap.report();
+    //nodemap.report();
 
 /*
     nodemap.clear();

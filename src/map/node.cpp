@@ -22,7 +22,12 @@ int* Node::getOutput(int name) {
 };
 
 void Node::setInput(int name, int* val) {
-    inputs[name] = val;
+    if (name >= 0 && name < inputs.size()) {
+        inputs[name] = val;
+        //Serial.println(*val);
+    }else {
+        Serial.println("ERR: Input index out ouf bounds");
+    }
 };
 
 void Node::setOutput(int name, int* val) {

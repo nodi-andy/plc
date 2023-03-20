@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../map/node.h"
+#include "../../map/node.h"
 
 enum ButtonIO { VALUE }; 
 // Button digital input

@@ -7,7 +7,7 @@
 class Link : public Node
 {
     public:
-    Link(Node* from, int src, Node* to, int dst);
+    Link(Node* fromNode, int srcPort, Node* toNode, int dstPort);
     virtual Link* createInstance() const override {
         return new Link(*this); // Create a new instance of the Link object
     }
@@ -17,7 +17,7 @@ class Link : public Node
     void setup();
     void onExecute();
 
-    private:
+    //private:
     Node* from;
     Node* to;
     int src;

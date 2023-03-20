@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../map/node.h"
+#include "../../map/node.h"
 
 // Inc/dec/reset an integer
 class Counter : public Node

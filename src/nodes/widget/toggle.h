@@ -1,13 +1,12 @@
 #include <Arduino.h>
-#include "../map/node.h"
+#include "../../map/node.h"
 
 
 //Toggle a bit
 class Toggle : public Node
 {
     public:
-    ~Toggle(){};
-    Toggle(int portNr = -1);
+    Toggle();
     bool isNotConnected = false;
     virtual std::string getType() const override {
         return "widget/toggle";

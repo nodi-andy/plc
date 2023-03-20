@@ -14854,6 +14854,26 @@ if (typeof exports != "undefined") {
 
     LiteGraph.registerNodeType("basic/boolean", ConstantBoolean);
 
+    function DFlipFlop() {
+        this.addInput("set", "number");
+        this.addInput("reset", "number");
+        this.addOutput("d", "number");
+        this.properties = { font: "", value: false, port: "" };
+        this.size = [64, 128];
+    }
+
+    DFlipFlop.title = "D-FlipFlop";
+    DFlipFlop.desc = "D-FlipFlop";
+    DFlipFlop.title_mode = LiteGraph.NO_TITLE;
+    DFlipFlop.prototype.onExecute = function() {
+    };
+
+	DFlipFlop.prototype.onAction = function(action)
+	{
+		this.setValue( !this.properties.value );
+	}
+
+    LiteGraph.registerNodeType("data/bit", DFlipFlop);
     //Math operation
     function MathOperation() {
         this.addInput("A", "number,array,object");
@@ -17339,31 +17359,17 @@ if (typeof exports != "undefined") {
     var LiteGraph = global.LiteGraph;
 
     function Selector() {
-        this.addInput("sel", "number");
         this.addInput("A");
         this.addInput("B");
-        this.addInput("C");
-        this.addInput("D");
+        this.addInput("sel", "number");
         this.addOutput("out");
 
         this.selected = 0;
     }
 
-    Selector.title = "Selector";
+    Selector.title = "SEL";
     Selector.desc = "selects an output";
-
-    Selector.prototype.onDrawBackground = function(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-        ctx.fillStyle = "#AFB";
-        var y = (this.selected + 1) * LiteGraph.NODE_SLOT_HEIGHT + 6;
-        ctx.beginPath();
-        ctx.moveTo(50, y);
-        ctx.lineTo(50, y + LiteGraph.NODE_SLOT_HEIGHT);
-        ctx.lineTo(34, y + LiteGraph.NODE_SLOT_HEIGHT * 0.5);
-        ctx.fill();
-    };
+    Selector.title_mode = LiteGraph.CENTRAL_TITLE;
 
     Selector.prototype.onExecute = function() {
         var sel = this.getInputData(0);
@@ -17380,7 +17386,7 @@ if (typeof exports != "undefined") {
         return [["E", 0], ["F", 0], ["G", 0], ["H", 0]];
     };
 
-    //LiteGraph.registerNodeType("logic/selector", Selector);
+    LiteGraph.registerNodeType("routing/selector", Selector);
 
     function Sequence() {
         this.properties = {

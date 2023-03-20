@@ -17,26 +17,26 @@ void Button::setup() {
       }
     }
 
-    Serial.print("PORT: ");
+    Serial.print("> Setup Button, PORT: ");
     Serial.println(port);
-    addOutput("value");
-    Serial.println("-> Button setup done.");
+    addInput("input");
+    addOutput("output");
+    Serial.println("> Button setup done.");
 }
 
 void Button::onExecute() {
-  bool isNotConnected;
-  if (props.containsKey("inputs")) {
-    isNotConnected = props["inputs"][0]["link"].isNull();
+  input = getInput(0);
+  if (!input) {
+    input = &defaultOutput;
   }
-  if (isNotConnected) input = &defaultOutput;
-  else input = getInput(0);
 
   if (port >= 0) {
-    if (digitalRead(port) == 0)
+    if (digitalRead(port) == 0) {
       output = input;
+      Serial.println("Button pressed");
+    }
     else
       output = 0;
-    //if (value == 0)  Serial.println("Button pressed");
     setOutput(0, output);
   }
 }

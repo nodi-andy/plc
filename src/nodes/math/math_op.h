@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../map/node.h"
+#include "../../map/node.h"
 
 enum MathOpVariants { IsEq, IsGT, IsLT, Add };
 // Inc/dec/reset an nteger
