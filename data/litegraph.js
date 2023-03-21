@@ -16193,7 +16193,7 @@ if (typeof exports != "undefined") {
         this.setOutputData(1, this.num);
     };
 
-    LiteGraph.registerNodeType("events/counter", EventCounter);
+    LiteGraph.registerNodeType("math/counter", EventCounter);
 
     //Show value inside the debug console
     function Stepper() {

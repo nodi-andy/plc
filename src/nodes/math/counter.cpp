@@ -20,19 +20,27 @@ void Counter::setup() {
 }
 
 void Counter::onExecute() {
-    int newIncInput = *getInput(0);
-    if (lastIncInput == 0 && newIncInput > 0) {
-        value++;
-        Serial.print("Increment: ");
-        Serial.println(value);
+    int *newIncInput = getInput(0);
+    if (newIncInput && (lastIncInput != *newIncInput)) {
+        value += *newIncInput;
+        //Serial.print("Increment: ");
+        //Serial.println(value);
+        lastIncInput = *newIncInput;
     }
-    lastIncInput = newIncInput;
-    setOutput(0, &value);
 
-    int newResetInput = *getInput(2);
-    if (lastResetInput == 0 && newResetInput > 0) {
-        value = 0;
-        Serial.print("Reset");
+    int *newDecInput = getInput(1);
+    if (newIncInput && (lastDecInput != *newDecInput)) {
+        value -= *newDecInput;
+        //Serial.print("Increment: ");
+        //Serial.println(value);
+        lastDecInput = *newDecInput;
     }
-    lastResetInput = newResetInput;
+
+    int *newResetInput = getInput(2);
+    if (newResetInput && (lastResetInput != *newResetInput) ) {
+        value = 0;
+        //Serial.print("Reset");
+        lastResetInput = *newResetInput;
+    }
+    setOutput(0, &value);
 }

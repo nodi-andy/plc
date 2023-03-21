@@ -14,6 +14,12 @@ void LogicNot::setup() {
 }
 
 void LogicNot::onExecute() {
-    value = !(*getInput(0));
-    setOutput(0, &value);
+    value = 0;
+    int *inpA = getInput(0);
+    if (inpA) {
+        value = !(*inpA);
+        setOutput(0, &value);
+    } else {
+        setOutput(0, 0);
+    }
 }

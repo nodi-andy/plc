@@ -11,7 +11,7 @@ class Counter : public Node
         return new Counter(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "events/counter";
+        return "math/counter";
     }
 
     void setup();
@@ -19,6 +19,7 @@ class Counter : public Node
 
     private:
     int lastIncInput;
+    int lastDecInput;
     int lastResetInput;
 };
 
