@@ -1,11 +1,11 @@
-#include "junction.h"
+#include "bit.h"
 
-Junction::Junction() {
+Bit::Bit() {
 }
 
 // init the node
-void Junction::setup() {
-    title = "Junction";
+void Bit::setup() {
+    title = "Bit";
     name = "Toggle";
     desc = "Show value of input";
 
@@ -17,10 +17,21 @@ void Junction::setup() {
       value = props["properties"]["value"].as<int>();
     }
     addInput("set");
+    addInput("reset");
     addOutput("d");
 }
 
-void Junction::onExecute() {
-    int* input = getInput(0);
-    setOutput(0, input);
+void Bit::onExecute() {
+    int* inputSet = getInput(0);
+    if (inputSet) {
+      value = 1;
+    }
+    int* inputReset = getInput(1);
+    if (inputReset) {
+      value = 0;
+    }
+    if (port) {
+      digitalWrite(port, value ? HIGH : LOW);
+    }
+    setOutput(0, &value);
 }

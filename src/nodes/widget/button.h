@@ -17,9 +17,12 @@ class Button : public Node
     void onExecute();
 
     private:
+    int defaultDown;
     int defaultPressed;
+    int defaultUp;
     int defaultReleased;
     int* input;
+    int state;
     int* output;
 };
 

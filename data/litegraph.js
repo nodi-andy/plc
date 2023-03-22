@@ -14834,7 +14834,7 @@ if (typeof exports != "undefined") {
         this.outputs[0].label = this.properties["value"].toFixed(3);
     };
 
-    LiteGraph.registerNodeType("basic/const", ConstantNumber);
+    LiteGraph.registerNodeType("data/number", ConstantNumber);
 
     //Constant
     function Junction() {
@@ -14868,7 +14868,7 @@ if (typeof exports != "undefined") {
         this.widget = this.addWidget("toggle","",true,"value");
         this.serialize_widgets = true;
         this.widgets_up = true;
-        this.size = [64, 64];
+        this.size = [128, 64];
     }
 
     ConstantBoolean.title = "Const Boolean";
@@ -14890,7 +14890,7 @@ if (typeof exports != "undefined") {
 		this.setValue( !this.properties.value );
 	}
 
-    LiteGraph.registerNodeType("basic/boolean", ConstantBoolean);
+    LiteGraph.registerNodeType("data/boolean", ConstantBoolean);
 
     function DFlipFlop() {
         this.addInput("set", "number");
@@ -14911,7 +14911,7 @@ if (typeof exports != "undefined") {
 		this.setValue( !this.properties.value );
 	}
 
-    LiteGraph.registerNodeType("data/bit", DFlipFlop);
+    //LiteGraph.registerNodeType("data/bit", DFlipFlop);
     //Math operation
     function MathOperation() {
         this.addInput("A", "number,array,object");
@@ -14924,7 +14924,7 @@ if (typeof exports != "undefined") {
 		this._result = []; //only used for arrays
     }
 
-    MathOperation.values = ["+", "-", "*", "/", "%", "^", "max", "min"];
+    MathOperation.values = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">=", "%", "^", "max", "min"];
 
 	MathOperation.title = "Operation";
     MathOperation.desc = "Easy math operators";
@@ -15909,7 +15909,7 @@ if (typeof exports != "undefined") {
         this.setOutputData(1, !result);
     };
 
-    LiteGraph.registerNodeType("logic/comparator", GenericCompare);
+    //LiteGraph.registerNodeType("logic/comparator", GenericCompare);
     
 })(this);
 
@@ -16202,8 +16202,9 @@ if (typeof exports != "undefined") {
         this.addInput("reset", "number");
         this.addOutput("speed", "number");
         this.addOutput("pos", "number");
-        this.addProperty("step port", 0, "number", {name: "Step Port"});
-        this.addProperty("dir port", 0, "number", {name: "Direction Port"});
+        this.addProperty("step port", 27, "number", {name: "Step Port"});
+        this.addProperty("dir port", 14, "number", {name: "Direction Port"});
+        this.addProperty("enable port", 32, "number", {name: "Enable Port"});
         this.addProperty("default speed", 20000, "number", {name: "Default speed"});
         this.num = 0;
         this.size = [128, 196];
@@ -16489,7 +16490,9 @@ if (typeof exports != "undefined") {
         this.addOutput("", "number");
         this.addProperty("text", "B1");
         this.addProperty("port", "");
+        this.addProperty("down", "1");
         this.addProperty("pressed", "1");
+        this.addProperty("up", "0");
         this.addProperty("released", "0");
         this.size = [64, 64];
         this.clicked = false;
@@ -17296,7 +17299,7 @@ if (typeof exports != "undefined") {
         return [["E", 0], ["F", 0], ["G", 0], ["H", 0]];
     };
 
-    LiteGraph.registerNodeType("routing/selector", Selector);
+    LiteGraph.registerNodeType("control/selector", Selector);
 
 	
     

@@ -11,7 +11,7 @@ class BasicBoolean : public Node
         return new BasicBoolean(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "basic/boolean";
+        return "data/boolean";
     }
 
     void setup();

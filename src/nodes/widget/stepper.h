@@ -21,6 +21,9 @@ class Stepper : public Node
     private:
     int targetSpeed;
     int speed;
+    static int dirPort;
+    static int stepPort;
+    int enablePort;
     static bool moveForced;
     static int dir;
     static int targetPos;
@@ -34,6 +37,8 @@ int Stepper::targetPos = 0;
 int Stepper::dir = 0;
 int Stepper::pos = 0;
 bool Stepper::moveForced = false;
+int Stepper::stepPort = 0;
+int Stepper::dirPort = 0;
 
 static bool stepperRegistered = []() {
     RegistryManager::getInstance().registerNode(new Stepper());

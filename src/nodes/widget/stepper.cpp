@@ -1,9 +1,5 @@
 #include "stepper.h"
 
-#define STEP   27
-#define DIR    14
-#define ENABLE 32
-
 Stepper::Stepper() {
 }
 
@@ -16,9 +12,24 @@ void Stepper::setup() {
     title = "Counter";
     desc = "Read input";
     name = "widget/stepper";
+    stepPort = 27;
+    dirPort = 14;
+    enablePort = 32;
+    if(props["properties"].containsKey("step port") > 0 ) {
+      stepPort = props["properties"]["step port"].as<int>();
+    }
+    
+    if(props["properties"].containsKey("dir port") > 0 ) {
+      dirPort = props["properties"]["dir port"].as<int>();
+    }
+
+    if(props["properties"].containsKey("enable port") > 0 ) {
+      enablePort = props["properties"]["enable port"].as<int>();
+    }
 
     pos = 0;
     moveForced = false;
+
 
     addInput("speed");
     addInput("pos");
@@ -29,12 +40,12 @@ void Stepper::setup() {
     My_timer = NULL;
 
     // initialize the control pins for the A4988 driver
-    pinMode(STEP, OUTPUT);
+    pinMode(stepPort, OUTPUT);
     pinMode(2, OUTPUT);
-    pinMode(DIR, OUTPUT);
-    pinMode(ENABLE, OUTPUT);
-    digitalWrite(ENABLE, 0);
-    digitalWrite(DIR, 1);
+    pinMode(dirPort, OUTPUT);
+    pinMode(enablePort, OUTPUT);
+    digitalWrite(enablePort, 0);
+    digitalWrite(dirPort, 1);
     
     My_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(My_timer, &Stepper::onTimer, true);
@@ -71,10 +82,10 @@ void Stepper::onTimer() {
     Serial.print(" INTR POS: ");
     Serial.println(pos);*/
     dir = targetPos > pos;
-    digitalWrite(DIR, dir);
+    digitalWrite(dirPort, dir);
     if (targetPos != pos || moveForced) {
-        digitalWrite(STEP, !digitalRead(STEP));
-        if (digitalRead(STEP)) {
+        digitalWrite(stepPort, !digitalRead(stepPort));
+        if (digitalRead(stepPort)) {
             if (dir) pos++;
             else pos--;
         }

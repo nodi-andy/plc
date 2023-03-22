@@ -12,18 +12,37 @@ void Operation::setup() {
       myVariant = props["properties"]["OP"].as<std::string>();
     }
 
+    if (props["properties"].containsKey("A")) {
+      defaultA = props["properties"]["A"].as<int>();
+    }
+
+    if (props["properties"].containsKey("B")) {
+      defaultB = props["properties"]["B"].as<int>();
+    }
+
     addInput("value1");
     addInput("value2");
     addOutput("result");
 }
 
 void Operation::onExecute() {
-    if (myVariant == "=") {
-        //Serial.print(this->getInput("value1"));
-        //Serial.println(this->getInput("value2"));
-        //value = (*getInput(0) == *getInput(1));
-        //setOutput(0, &value);
-    } else if (myVariant == "+") {
+    value = 0;
+    int *inpA = getInput(0);
+    int *inpB = getInput(1);
 
+    if (inpA == 0) inpA = &defaultA;
+    if (inpB == 0) inpB = &defaultB;
+
+    if (myVariant == "==") {
+        value = (*inpA == *inpB);
+    } else if (myVariant == "+") {
+        value = *inpA + *inpB;
+        //Serial.print("OP+: ");
+        //Serial.println(value);
+    } else if (myVariant == "-") {
+        value = *inpA - *inpB;
+    } else if (myVariant == ">") {
+        value = *inpA > *inpB;
     }
+    setOutput(0, &value);
 }

@@ -18,6 +18,8 @@ class Operation : public Node
 
     private:
     std::string myVariant;
+    int defaultA;
+    int defaultB;
 };
 
 static bool MathOpRegistered = []() {

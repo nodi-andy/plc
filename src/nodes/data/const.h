@@ -11,7 +11,7 @@ class BasicConst : public Node
         return new BasicConst(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "basic/const";
+        return "data/variable";
     }
 
     void setup();

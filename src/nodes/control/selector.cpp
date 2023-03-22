@@ -22,13 +22,19 @@ void Selector::onExecute() {
     int* inpSelect = getInput(2);
     if (inpSelect) {
         if (true == *inpSelect) {
-            this->setOutput(0, inpA);
+            setOutput(0, inpA);
             //Serial.println("Selector A");
         } else if (false == *inpSelect) {
-            this->setOutput(0, inpB);
+            setOutput(0, inpB);
             //Serial.println("Selector B");
         }
     } else {
-        this->setOutput(0, 0);
+        if (inpA) {
+            setOutput(0, inpA);
+        } else if (inpB) {
+            setOutput(0, inpB);
+        } else {
+            this->setOutput(0, 0);
+        }
     }
 }
