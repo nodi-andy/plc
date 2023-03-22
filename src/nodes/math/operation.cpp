@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "operation.h"
 
 // Mathematical Operation
@@ -41,8 +42,28 @@ void Operation::onExecute() {
         //Serial.println(value);
     } else if (myVariant == "-") {
         value = *inpA - *inpB;
+    } else if (myVariant == "*") {
+        value = (*inpA) * (*inpB);
+    } else if (myVariant == "/") {
+        if ((*inpB) != 0) {
+            value = (*inpA) / (*inpB);
+        }
     } else if (myVariant == ">") {
         value = *inpA > *inpB;
+    } else if (myVariant == "<") {
+        value = *inpA < *inpB;
+    } else if (myVariant == ">=") {
+        value = *inpA >= *inpB;
+    } else if (myVariant == "<=") {
+        value = *inpA > *inpB;
+    } else if (myVariant == "%") {
+        value = *inpA % *inpB;
+    } else if (myVariant == "^") {
+        value = *inpA ^ *inpB;
+    } else if (myVariant == "max") {
+        value = std::max(*inpA, *inpB);
+    } else if (myVariant == "min") {
+        value = std::min(*inpA, *inpB);
     }
     setOutput(0, &value);
 }
