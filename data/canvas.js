@@ -3769,11 +3769,13 @@ export default class LGraphCanvas {
             }
             ctx.stroke();
 
+            
+            /*
             //bg
             if (this.render_canvas_border) {
                 ctx.strokeStyle = "#235";
                 ctx.strokeRect(0, 0, canvas.width, canvas.height);
-            }
+            }*/
 
             if (this.render_connections_shadows) {
                 ctx.shadowColor = "#000";
@@ -4002,7 +4004,7 @@ export default class LGraphCanvas {
 
                     //render name
                     if (render_text) {
-                        var text = slot.label != null ? slot.label : slot.name;
+                        var text = slot.label;
                         if (text) {
                             ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
                             if (horizontal || slot.dir == LiteGraph.UP) {
@@ -4105,7 +4107,7 @@ export default class LGraphCanvas {
 
                     //render output name
                     if (render_text) {
-                        var text = slot.label != null ? slot.label : slot.name;
+                        text = slot.label;
                         if (text) {
                             ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
                             if (horizontal || slot.dir == LiteGraph.DOWN) {
@@ -4870,7 +4872,7 @@ export default class LGraphCanvas {
         ctx.fillStyle = ctx.strokeStyle = color;
         ctx.stroke();
         //end line shape
-        var pos = this.computeConnectionPoint(a, b, 0.5, start_dir, end_dir, link);
+        var pos = this.computeConnectionPoint([start_x, start_y], [end_x, end_y], 0.5, start_dir, end_dir, link);
         if (link && link._pos) {
             link._pos[0] = pos[0];
             link._pos[1] = pos[1];

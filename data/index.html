@@ -9,14 +9,18 @@
 <canvas id='mycanvas' width='100%' height='100%'></canvas>
 <script type="module">
 	import { LGraph } from "./litegraph.js"
-window.graph = new LGraph();
+	window.graph = new LGraph();
 
-window.canvas = new LGraphCanvas("#mycanvas", graph);
+	window.canvas = new LGraphCanvas("#mycanvas", graph);
 
-graph.start()
-canvas.showSearchBox();
+	graph.start()
+	canvas.showSearchBox();
 
-window.addEventListener('resize', function () { canvas.resize() })
+	window.addEventListener('resize', function () { canvas.resize() })
+
+	import WidgetButton from "./nodes/widget/button.js"
+	import Stepper from "./nodes/widget/stepper.js"
+	import WidgetToggle from "./nodes/widget/toggle.js"
 
 </script>
 </body>

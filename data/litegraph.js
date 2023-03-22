@@ -2,7 +2,6 @@ import LGraphCanvas from "./canvas.js"
 import LLink from "./link.js"
 import LGraphNode from "./node.js"
 
-
 /**
  * The Global Scope. It contains all the registered node classes.
  *
@@ -10,6 +9,8 @@ import LGraphNode from "./node.js"
  * @constructor
  */
 var global = window;
+//basic nodes
+
 
 export var LiteGraph = (global.LiteGraph = {
     VERSION: 0.1,
@@ -2213,60 +2214,6 @@ LGraph.STATUS_RUNNING = 2;
 global.LGraph = LiteGraph.LGraph = LGraph;
 LiteGraph.LLink = LLink;
 
-// *************************************************************
-//   Node CLASS                                          *******
-// *************************************************************
-
-/*
-title: string
-pos: [x,y]
-size: [x,y]
-
-input|output: every connection
-    +  { name:string, type:string, pos: [x,y]=Optional, direction: "input"|"output", links: Array });
-
-general properties:
-    + clip_area: if you render outside the node, it will be clipped
-    + unsafe_execution: not allowed for safe execution
-    + skip_repeated_outputs: when adding new outputs, it wont show if there is one already connected
-    + resizable: if set to false it wont be resizable with the mouse
-    + horizontal: slots are distributed horizontally
-    + widgets_start_y: widgets start at y distance from the top of the node
-
-flags object:
-    + collapsed: if it is collapsed
-
-supported callbacks:
-    + onAdded: when added to graph (warning: this is called BEFORE the node is configured when loading)
-    + onRemoved: when removed from graph
-    + onStart:	when the graph starts playing
-    + onStop:	when the graph stops playing
-    + onDrawForeground: render the inside widgets inside the node
-    + onDrawBackground: render the background area inside the node (only in edit mode)
-    + onMouseDown
-    + onMouseMove
-    + onMouseUp
-    + onMouseEnter
-    + onMouseLeave
-    + onExecute: execute the node
-    + onPropertyChanged: when a property is changed in the panel (return true to skip default behaviour)
-    + onGetInputs: returns an array of possible inputs
-    + onGetOutputs: returns an array of possible outputs
-    + onBounding: in case this node has a bigger bounding than the node itself (the callback receives the bounding as [x,y,w,h])
-    + onDblClick: double clicked in the node
-    + onInputDblClick: input slot double clicked (can be used to automatically create a node connected)
-    + onOutputDblClick: output slot double clicked (can be used to automatically create a node connected)
-    + onConfigure: called after the node has been configured
-    + onSerialize: to add extra info when serializing (the callback receives the object that should be filled with the data)
-    + onSelected
-    + onDeselected
-    + onDropItem : DOM item dropped over the node
-    + onDropFile : file dropped over the node
-    + onConnectInput : if returns false the incoming connection will be canceled
-    + onConnectionsChange : a connection changed (new one or removed) (LiteGraph.INPUT or LiteGraph.OUTPUT, slot, true if connected, link_info, input_info )
-    + onAction: action slot triggered
-    + getExtraMenuOptions: to add option to context menu
-*/
 
 
 global.LGraphNode = LiteGraph.LGraphNode = LGraphNode;
@@ -3334,9 +3281,7 @@ if (typeof exports != "undefined") {
 exports.LiteGraph = this.LiteGraph;
 }
 
-//basic nodes
 
-var LiteGraph = global.LiteGraph;
 
 //Constant
 class Time {
@@ -5294,10 +5239,10 @@ EventBranch.desc = "If condition is true, outputs triggers true, otherwise false
 class EventCounter extends LGraphNode{
     constructor() {
         super();
-        this.addInput("inc", "number");
-        this.addInput("dec", "number");
-        this.addInput("reset", "number");
-        this.addOutput("num", "number");
+        this.addInput("inc", "number", "", "inc");
+        this.addInput("dec", "number", "", "dec");
+        this.addInput("reset", "number", "", "reset");
+        this.addOutput("num", "number", "", "num");
         //this.addProperty("doCountExecution", false, "boolean", {name: "Count Executions"});
         //this.addWidget("toggle","Count Exec.",this.properties.doCountExecution,"doCountExecution");
         this.num = 0;
@@ -5345,62 +5290,7 @@ EventCounter.title_mode = LiteGraph.NO_TITLE;
 
 LiteGraph.registerNodeType("math/counter", EventCounter);
 
-//Show value inside the debug console
-class Stepper extends LGraphNode{
-    constructor() {
-        super();
-        this.addInput("speed", "number");
-        this.addInput("pos", "number");
-        this.addInput("reset", "number");
-        this.addOutput("speed", "number");
-        this.addOutput("pos", "number");
-        this.addProperty("step port", 27, "number", { name: "Step Port" });
-        this.addProperty("dir port", 14, "number", { name: "Direction Port" });
-        this.addProperty("enable port", 32, "number", { name: "Enable Port" });
-        this.addProperty("default speed", 20000, "number", { name: "Default speed" });
-        this.num = 0;
-        this.size = [128, 196];
 
-    }
-    onAction(action, param, options) {
-        var v = this.num;
-        if (action == "inc") {
-            this.num += 1;
-        } else if (action == "dec") {
-            this.num -= 1;
-        } else if (action == "reset") {
-            this.num = 0;
-        }
-        if (this.num != v) {
-            this.trigger("change", this.num);
-        }
-    }
-    onDrawBackground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-        ctx.fillStyle = "#AAA";
-        ctx.font = "20px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(this.num, this.size[0] * 0.5, this.size[1] * 0.5);
-    }
-    onExecute() {
-        if (this.properties.doCountExecution) {
-            this.num += 1;
-        }
-        this.setOutputData(1, this.num);
-    }
-}
-
-Stepper.title = "Stepper";
-Stepper.desc = "Stepper";
-Stepper.title_mode = LiteGraph.NO_TITLE;
-
-
-
-
-
-LiteGraph.registerNodeType("widget/stepper", Stepper);
 
 //Show value inside the debug console
 class DelayEvent {
@@ -5629,150 +5519,6 @@ DataStore.desc = "Stores data and only changes when event is received";
 
 var LiteGraph = global.LiteGraph;
 
-/* Button ****************/
-
-class WidgetButton extends LGraphNode{
-    constructor() {
-        super();
-        this.addInput("", "number");
-        this.addOutput("", "number");
-        this.addProperty("text", "B1");
-        this.addProperty("port", "");
-        this.addProperty("down", "1");
-        this.addProperty("pressed", "1");
-        this.addProperty("up", "0");
-        this.addProperty("released", "0");
-        this.size = [64, 64];
-        this.clicked = false;
-    }
-    onDrawForeground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-        var margin = 10;
-        if (this.clicked == false) {
-            ctx.fillStyle = "black";
-            ctx.fillRect(
-                margin + 2,
-                margin + 2,
-                this.size[0] - margin * 2,
-                this.size[1] - margin * 2
-            );
-        }
-        if (this.clicked)
-            margin += 2;
-
-        ctx.fillStyle = "gray";
-        ctx.fillRect(margin, margin, this.size[0] - margin * 2, this.size[1] - margin * 2);
-
-        if (this.properties.text || this.properties.text === 0) {
-            var font_size = this.properties.font_size || 30;
-            ctx.textAlign = "center";
-            ctx.fillStyle = this.clicked ? "black" : "white";
-            ctx.font = font_size + "px " + WidgetButton.font;
-            ctx.fillText(
-                this.properties.text,
-                this.size[0] * 0.5,
-                this.size[1] * 0.5 + font_size * 0.3
-            );
-            ctx.textAlign = "left";
-        }
-    }
-    onMouseDown(e, local_pos) {
-        if (local_pos[0] > 10 &&
-            local_pos[1] > 10 &&
-            local_pos[0] < this.size[0] - 10 &&
-            local_pos[1] < this.size[1] - 10) {
-            this.clicked = true;
-            this.setOutputData(1, this.clicked);
-            this.triggerSlot(0, this.properties.message);
-            return true;
-        }
-    }
-    onExecute() {
-        this.setOutputData(1, this.clicked);
-    }
-    onMouseUp(e) {
-        this.clicked = false;
-    }
-}
-
-WidgetButton.title = "Button";
-WidgetButton.desc = "Triggers an event";
-WidgetButton.title_mode = LiteGraph.NO_TITLE;
-WidgetButton.font = "Arial";
-
-LiteGraph.registerNodeType("widget/button", WidgetButton);
-
-
-class WidgetToggle extends LGraphNode{
-    constructor() {
-        super();
-        this.addInput("", "number");
-        this.addOutput("", "number");
-        this.properties = { font: "", value: false, port: "" };
-        this.size = [64, 64];
-    }
-    onDrawForeground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
-        var size = this.size[1] * 0.5;
-        var margin = 0.25;
-        var h = this.size[1] * 0.8;
-        ctx.font = this.properties.font || (size * 0.8).toFixed(0) + "px Arial";
-        var w = ctx.measureText(this.title).width;
-        var x = (this.size[0] - (w + size)) * 0.5;
-
-        ctx.fillStyle = "#AAA";
-        ctx.fillRect(x, h - size, size, size);
-
-        ctx.fillStyle = this.properties.value ? "#AEF" : "#000";
-        ctx.fillRect(
-            x + size * margin,
-            h - size + size * margin,
-            size * (1 - margin * 2),
-            size * (1 - margin * 2)
-        );
-
-        ctx.textAlign = "left";
-        ctx.fillStyle = "#AAA";
-        ctx.fillText(this.title, size * 1.2 + x, h * 0.85);
-        ctx.textAlign = "left";
-    }
-    onAction(action) {
-        this.properties.value = !this.properties.value;
-        this.trigger("e", this.properties.value);
-    }
-    onExecute() {
-        var v = this.getInputData(0);
-        if (v != null) {
-            this.properties.value = v;
-        }
-        this.setOutputData(0, this.properties.value);
-    }
-    onMouseDown(e, local_pos) {
-        if (local_pos[0] > 10 &&
-            local_pos[1] > 10 &&
-            local_pos[0] < this.size[0] - 10 &&
-            local_pos[1] < this.size[1] - 10) {
-            this.properties.value = !this.properties.value;
-            this.graph._version++;
-            this.trigger("e", this.properties.value);
-            return true;
-        }
-    }
-}
-
-WidgetToggle.title = " ";
-WidgetToggle.desc = "Toggles between true or false";
-WidgetToggle.title_mode = LiteGraph.NO_TITLE;
-
-
-
-
-LiteGraph.registerNodeType("widget/toggle", WidgetToggle);
 
 /* Number ****************/
 
