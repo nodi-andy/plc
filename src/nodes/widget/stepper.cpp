@@ -54,7 +54,7 @@ void Stepper::setup() {
     timerAlarmEnable(My_timer);
 }
 
-void Stepper::onExecute() {
+int Stepper::onExecute() {
     moveForced = false;
 
     int *newSpeed = getInput(0);
@@ -74,6 +74,7 @@ void Stepper::onExecute() {
 
     setOutput(0, &speed);
     setOutput(1, &pos);
+    return 0;
 }
 
 void Stepper::onTimer() {

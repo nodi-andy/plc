@@ -40,7 +40,7 @@ void Node::setup()
 {
 
 }
-void Node::onExecute()
+int Node::onExecute()
 {
     
 }

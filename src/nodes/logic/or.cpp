@@ -15,7 +15,7 @@ void LogicOr::setup() {
     addOutput("v");
 }
 
-void LogicOr::onExecute() {
+int LogicOr::onExecute() {
     value = 0;
     int *inpA = getInput(0);
     int *inpB = getInput(1);
@@ -25,4 +25,5 @@ void LogicOr::onExecute() {
     } else {
         setOutput(0, 0);
     }
+    return 0;
 }

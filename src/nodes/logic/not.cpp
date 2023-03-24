@@ -13,7 +13,7 @@ void LogicNot::setup() {
     addOutput("v");
 }
 
-void LogicNot::onExecute() {
+int LogicNot::onExecute() {
     value = 0;
     int *inpA = getInput(0);
     if (inpA) {
@@ -22,4 +22,5 @@ void LogicNot::onExecute() {
     } else {
         setOutput(0, 0);
     }
+    return 0;
 }

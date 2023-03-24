@@ -15,7 +15,7 @@ class Link : public Node
         return "link";
     }
     void setup();
-    void onExecute();
+    int onExecute();
 
     //private:
     Node* from;

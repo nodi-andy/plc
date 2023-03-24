@@ -14,7 +14,7 @@ class Comparator : public Node
     }
 
     void setup();
-    void onExecute();
+    int onExecute();
 
 };
 

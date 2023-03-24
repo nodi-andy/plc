@@ -15,7 +15,7 @@ class Toggle : public Node
         return new Toggle(*this); // Create a new instance of the Toggle object
     }
     void setup();
-    void onExecute();
+    int onExecute();
 };
 
 static bool toogleRegistered = []() {

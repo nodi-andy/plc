@@ -14,7 +14,7 @@ class Button : public Node
         return new Button(*this); // Create a new instance of the Button object
     }
     void setup();
-    void onExecute();
+    int onExecute();
 
     private:
     int defaultDown;
@@ -22,7 +22,6 @@ class Button : public Node
     int defaultUp;
     int defaultReleased;
     int* input;
-    int state;
     int* output;
 };
 

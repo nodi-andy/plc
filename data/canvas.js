@@ -6705,7 +6705,7 @@ export default class LGraphCanvas {
     }
     // TODO refactor, theer are different dialog, some uses createDialog, some dont
     createDialog(html, options) {
-        def_options = { checkForInput: false, closeOnLeave: true, closeOnLeave_checkModified: true };
+        var def_options = { checkForInput: false, closeOnLeave: true, closeOnLeave_checkModified: true };
         options = Object.assign(def_options, options || {});
 
         var dialog = document.createElement("div");
@@ -6742,7 +6742,7 @@ export default class LGraphCanvas {
         if (options.checkForInput) {
             var aI = [];
             var focused = false;
-            if (aI = dialog.querySelectorAll("input")) {
+            if (aI == dialog.querySelectorAll("input")) {
                 aI.forEach(function (iX) {
                     iX.addEventListener("keydown", function (e) {
                         dialog.modified();

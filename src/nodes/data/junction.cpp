@@ -20,7 +20,8 @@ void Junction::setup() {
     addOutput("d");
 }
 
-void Junction::onExecute() {
+int Junction::onExecute() {
     int* input = getInput(0);
     setOutput(0, input);
+    return 0;
 }

@@ -23,9 +23,9 @@ void Link::setup() {
     desc = "Connect nodes";
 }
 
-void Link::onExecute() {
-    if (from == NULL) return;
-    if (to == NULL) return;
+int Link::onExecute() {
+    if (from == NULL) return 0;
+    if (to == NULL) return 0;
     int* v = from->getOutput(src);
     /*Serial.println("");
     Serial.print("> Run link: ");
@@ -43,4 +43,5 @@ void Link::onExecute() {
       Serial.print(*v);
     }*/
     to->setInput(dst, v);
+    return 0;
 }

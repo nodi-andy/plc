@@ -16,7 +16,7 @@ void Selector::setup() {
     addOutput("v");
 }
 
-void Selector::onExecute() {
+int Selector::onExecute() {
     int* inpA = getInput(0);
     int* inpB = getInput(1);
     int* inpSelect = getInput(2);
@@ -37,4 +37,5 @@ void Selector::onExecute() {
             this->setOutput(0, 0);
         }
     }
+    return 0;
 }

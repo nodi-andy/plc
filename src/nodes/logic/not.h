@@ -15,7 +15,7 @@ class LogicNot : public Node
     }
 
     void setup();
-    void onExecute();
+    int onExecute();
 };
 
 static bool counterRegistered = []() {

@@ -14,7 +14,7 @@ void LogicAnd::setup() {
     addOutput("v");
 }
 
-void LogicAnd::onExecute() {
+int LogicAnd::onExecute() {
     value = 0;
     int *inpA = getInput(0);
     int *inpB = getInput(1);
@@ -24,4 +24,5 @@ void LogicAnd::onExecute() {
     } else {
         setOutput(0, 0);
     }
+    return 0;
 }

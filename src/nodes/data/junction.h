@@ -14,7 +14,7 @@ class Junction : public Node
         return new Junction(*this); // Create a new instance of the Toggle object
     }
     void setup();
-    void onExecute();
+    int onExecute();
 };
 
 static bool bitRegistered = []() {

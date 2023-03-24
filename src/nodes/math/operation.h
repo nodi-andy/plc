@@ -14,7 +14,7 @@ class Operation : public Node
         return new Operation(*this); // Create a new instance of the MathOp object
     }
     void setup();
-    void onExecute();
+    int onExecute();
 
     private:
     std::string myVariant;

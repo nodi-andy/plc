@@ -18,10 +18,11 @@ void Bit::setup() {
     }
     addInput("set");
     addInput("reset");
+    addInput("toggle");
     addOutput("d");
 }
 
-void Bit::onExecute() {
+int Bit::onExecute() {
     int* inputSet = getInput(0);
     if (inputSet) {
       if (*inputSet) {
@@ -30,12 +31,20 @@ void Bit::onExecute() {
     }
     int* inputReset = getInput(1);
     if (inputReset) {
-      if (*inputSet) {
+      if (*inputReset) {
         value = 0;
+      }
+    }
+
+    int* inputToggle = getInput(2);
+    if (inputToggle) {
+      if (*inputToggle) {
+        value = !value;
       }
     }
     if (port) {
       digitalWrite(port, value ? HIGH : LOW);
     }
     setOutput(0, &value);
+    return 0;
 }

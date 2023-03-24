@@ -15,7 +15,7 @@ class LogicOr : public Node
     }
 
     void setup();
-    void onExecute();
+    int onExecute();
 
     private:
     int lastIncInput;

@@ -19,7 +19,7 @@ void Counter::setup() {
     //lastIncInput = *getInput(0);
 }
 
-void Counter::onExecute() {
+int Counter::onExecute() {
     int *newIncInput = getInput(0);
     if (newIncInput) {
         value += *newIncInput;
@@ -42,4 +42,5 @@ void Counter::onExecute() {
         //Serial.print("Reset");
     }
     setOutput(0, &value);
+    return 0;
 }

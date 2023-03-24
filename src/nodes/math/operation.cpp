@@ -26,7 +26,7 @@ void Operation::setup() {
     addOutput("result");
 }
 
-void Operation::onExecute() {
+int Operation::onExecute() {
     value = 0;
     int *inpA = getInput(0);
     int *inpB = getInput(1);
@@ -66,4 +66,5 @@ void Operation::onExecute() {
         value = std::min(*inpA, *inpB);
     }
     setOutput(0, &value);
+    return 0;
 }

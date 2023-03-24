@@ -1,11 +1,3 @@
-/**
- * ----------------------------------------------------------------------------
- * ESP32 Remote Control with WebSocket
- * ----------------------------------------------------------------------------
- * © 2020 Stéphane Calderoni
- * ----------------------------------------------------------------------------
- */
-
 var gateway = `ws://${window.location.hostname}/ws`;
 //var gateway = `ws://192.168.1.104/ws`;
 var websocket;
@@ -45,8 +37,14 @@ function onClose(event) {
 
 function onMessage(event) {
     let data = JSON.parse(event.data);
-    window.graph.configure(data.save, false);
-    window.graph.start();
+    if (data.save) {
+      window.graph.configure(data.save, false);
+      window.graph.start();
+    }
+
+    if (data.update) {
+        window.graph._nodes_by_id[data.update.id].state = data.update.state;
+    }
     //document.getElementById('led').className = data.status;
 }
 

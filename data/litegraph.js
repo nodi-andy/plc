@@ -4023,28 +4023,6 @@ ConstantBoolean.prototype.setValue = ConstantNumber.prototype.setValue;
 LiteGraph.registerNodeType("data/boolean", ConstantBoolean);
 
 
-class DFlipFlop extends LGraphNode{
-    constructor() {
-        super();
-        this.addInput("set", "number");
-        this.addInput("reset", "number");
-        this.addOutput("d", "number");
-        this.properties = { font: "", value: false, port: "" };
-        this.size = [64, 128];
-    }
-    onExecute() {
-    }
-    onAction(action) {
-        this.setValue(!this.properties.value);
-    }
-}
-
-DFlipFlop.title = "D-FlipFlop";
-DFlipFlop.desc = "D-FlipFlop";
-DFlipFlop.title_mode = LiteGraph.NO_TITLE;
-
-LiteGraph.registerNodeType("data/bit", DFlipFlop);
-
 //Math operation
 class MathOperation extends LGraphNode {
     constructor() {
@@ -5346,74 +5324,7 @@ DelayEvent.desc = "Delays one event";
 //LiteGraph.registerNodeType("events/delay", DelayEvent);
 
 //Show value inside the debug console
-class TimerEvent {
-    constructor() {
-        this.addProperty("interval", 1000);
-        this.addProperty("event", "tick");
-        this.addOutput("on_tick", LiteGraph.EVENT);
-        this.time = 0;
-        this.last_interval = 1000;
-        this.triggered = false;
-    }
-    onStart() {
-        this.time = 0;
-    }
-    getTitle() {
-        return "Timer: " + this.last_interval.toString() + "ms";
-    }
-    onDrawBackground() {
-        this.boxcolor = this.triggered
-            ? TimerEvent.on_color
-            : TimerEvent.off_color;
-        this.triggered = false;
-    }
-    onExecute() {
-        var dt = this.graph.elapsed_time * 1000; //in ms
 
-        var trigger = this.time == 0;
-
-        this.time += dt;
-        this.last_interval = Math.max(
-            1,
-            this.getInputOrProperty("interval") | 0
-        );
-
-        if (!trigger &&
-            (this.time < this.last_interval || isNaN(this.last_interval))) {
-            if (this.inputs && this.inputs.length > 1 && this.inputs[1]) {
-                this.setOutputData(1, false);
-            }
-            return;
-        }
-
-        this.triggered = true;
-        this.time = this.time % this.last_interval;
-        this.trigger("on_tick", this.properties.event);
-        if (this.inputs && this.inputs.length > 1 && this.inputs[1]) {
-            this.setOutputData(1, true);
-        }
-    }
-    onGetInputs() {
-        return [["interval", "number"]];
-    }
-    onGetOutputs() {
-        return [["tick", "boolean"]];
-    }
-}
-
-TimerEvent.title = "Timer";
-TimerEvent.desc = "Sends an event every N milliseconds";
-
-
-
-TimerEvent.on_color = "#AAA";
-TimerEvent.off_color = "#222";
-
-
-
-
-
-//LiteGraph.registerNodeType("events/timer", TimerEvent);
 
 
 

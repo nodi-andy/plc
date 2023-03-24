@@ -2367,7 +2367,7 @@ export default class LGraphNode {
          **/
     collapse(force) {
         this.graph._version++;
-        if (this.constructor.collapsable === false && !force) {
+        /*if (this.constructor.collapsable === false && !force) {
             return;
         }
         if (!this.flags.collapsed) {
@@ -2375,7 +2375,7 @@ export default class LGraphNode {
         } else {
             this.flags.collapsed = false;
         }
-        this.setDirtyCanvas(true, true);
+        this.setDirtyCanvas(true, true);*/
     }
     /**
          * Forces the node to do not move or realign on Z

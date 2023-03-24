@@ -44,10 +44,18 @@ export default class WidgetToggle extends LGraphNode{
         this.properties.value = !this.properties.value;
         this.trigger("e", this.properties.value);
     }
+
     onExecute() {
+        let pstate = this.properties.value;
         var v = this.getInputData(0);
         if (v != null) {
-            this.properties.value = v;
+            //this.properties.value = v;
+        }
+
+        this.properties.value = this.state;
+
+        if (pstate != this.properties.value) {
+            this.setDirtyCanvas(true, true);
         }
         this.setOutputData(0, this.properties.value);
     }

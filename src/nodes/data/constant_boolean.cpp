@@ -15,6 +15,7 @@ void BasicBoolean::setup() {
     addOutput("value");
 }
 
-void BasicBoolean::onExecute() {
+int BasicBoolean::onExecute() {
     setOutput(0, &value);
+    return 0;
 }

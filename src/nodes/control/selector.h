@@ -15,7 +15,7 @@ class Selector : public Node
     }
 
     void setup();
-    void onExecute();
+    int onExecute();
 
 };
 

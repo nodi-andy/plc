@@ -14,7 +14,7 @@ class Bit : public Node
         return new Bit(*this); // Create a new instance of the Toggle object
     }
     void setup();
-    void onExecute();
+    int onExecute();
 };
 
 static bool bitRegistered = []() {

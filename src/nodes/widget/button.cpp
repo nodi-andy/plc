@@ -10,10 +10,12 @@ void Button::setup() {
     desc = "Read input";
 
     if (props["properties"].containsKey("port")) {
-      port = props["properties"]["port"].as<int>();
-      if (port >= 0) {
-        pinMode(port, INPUT);
-        pinMode(port, INPUT_PULLUP);
+      if (props["properties"]["port"].as<std::string>().length() > 0 ) {
+        port = props["properties"]["port"].as<int>();
+        if (port >= 0) {
+          pinMode(port, INPUT);
+          pinMode(port, INPUT_PULLUP);
+        }
       }
     }
 
@@ -46,7 +48,8 @@ void Button::setup() {
     Serial.println(">>> Button setup done.");
 }
 
-void Button::onExecute() {
+int Button::onExecute() {
+  int ret = 0;
   output = 0;
   if (port >= 0) {
     input = getInput(0);
@@ -81,8 +84,9 @@ void Button::onExecute() {
         Serial.println(*output);
       }
     }
+    ret = (state != newState);
     state = newState;
-
   }
   setOutput(0, output);
+  return ret;
 }

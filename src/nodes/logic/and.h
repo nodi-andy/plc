@@ -15,7 +15,7 @@ class LogicAnd : public Node
     }
 
     void setup();
-    void onExecute();
+    int onExecute();
 
     private:
     int lastIncInput;

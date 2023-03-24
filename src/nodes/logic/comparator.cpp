@@ -14,7 +14,8 @@ void Comparator::setup() {
     addOutput("v");
 }
 
-void Comparator::onExecute() {
+int Comparator::onExecute() {
     value = (*getInput(0) == *getInput(1));
     this->setOutput(0, &value);
+    return 0;
 }

@@ -23,21 +23,14 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onDrawForeground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
         var margin = 10;
-        if (this.clicked == false) {
-            ctx.fillStyle = "black";
-            ctx.fillRect(
-                margin + 2,
-                margin + 2,
-                this.size[0] - margin * 2,
-                this.size[1] - margin * 2
-            );
-        }
-        if (this.clicked)
+        
+        if (this.clicked) {
             margin += 2;
+        } else {
+            ctx.fillStyle = "black";
+            ctx.fillRect(margin + 2, margin + 2, this.size[0] - margin * 2, this.size[1] - margin * 2);
+        }
 
         ctx.fillStyle = "gray";
         ctx.fillRect(margin, margin, this.size[0] - margin * 2, this.size[1] - margin * 2);
@@ -47,11 +40,7 @@ export default class WidgetButton extends LGraphNode{
             ctx.textAlign = "center";
             ctx.fillStyle = this.clicked ? "black" : "white";
             ctx.font = font_size + "px " + WidgetButton.font;
-            ctx.fillText(
-                this.properties.text,
-                this.size[0] * 0.5,
-                this.size[1] * 0.5 + font_size * 0.3
-            );
+            ctx.fillText(this.properties.text, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
             ctx.textAlign = "left";
         }
     }
@@ -60,10 +49,18 @@ export default class WidgetButton extends LGraphNode{
         if (local_pos[0] > 10 && local_pos[1] > 10 && local_pos[0] < this.size[0] - 10 && local_pos[1] < this.size[1] - 10) {
             this.clicked = true;
             this.setOutputData("out", 1);
+            return true;
         }
+        return false;
     }
 
     onExecute() {
+        let click = this.clicked;
+        if (this.state == 1) this.clicked = false;
+        else if (this.state == 0) this.clicked = true;
+        if (click != this.clicked) {
+            this.setDirtyCanvas(true, true);
+        }
         this.setOutputData(1, this.clicked);
     }
 

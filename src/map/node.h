@@ -19,8 +19,10 @@ class Node
         int id;
         int value;
         int port = -1;
+        int state = 0;
+        int pstate = 0;
         virtual void setup();
-        virtual void onExecute();
+        virtual int onExecute();
         void addInput(std::string name);
         void addOutput(std::string name);
         void setInput(int name, int* val);

@@ -16,7 +16,7 @@ void BasicConst::setup() {
     addOutput("value");
 }
 
-void BasicConst::onExecute() {
+int BasicConst::onExecute() {
     int* input = getInput(0);
     if (input) {
         value = *input;
@@ -27,4 +27,5 @@ void BasicConst::onExecute() {
     /*Serial.print("Value: ");
     Serial.println(*output);*/
     setOutput(0, output);
+    return 0;
 }

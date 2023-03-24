@@ -203,7 +203,10 @@ void Task2code( void * pvParameters ){
     if (nodemap.state == mapState::RUN) {
         for (auto n : nodemap.nodes) {
             if (n.second) {
-                n.second->onExecute();
+                if (n.second->onExecute()) {
+                    std::string msg = "{\"update\": {\"id\":" + std::to_string(n.second->id) + ", \"state\":" + std::to_string(n.second->state) + "}}";
+                    ws.textAll(msg.c_str(), msg.length());
+                }
             }
         }
         for (auto n : nodemap.links) {
