@@ -13,13 +13,12 @@ To get started with Conucon PLC, follow these steps:
 
 
 1. Clone the repository from GitHub ``git clone https://github.com/nodi-andy/plc``
-2. Copy custom file: ``cp src/custom_edit_me.h src/custom.h``
-3. Install platformIO
-4. Set your local WiFi name and password in `src/custom.h`.
-5. Set your board in `platformio.ini`. Here, `esp32doit-devkit-v1` is used.
-6. Select `esp32doit-devkit-v1` > `Platform` > `Upload Filesystem image` from the PlatformIO menu.
-7. Select `esp32doit-devkit-v1` > `General` > `Upload and Monitor` from the PlatformIO menu.
-8. Check the serial monitor for the IP address of your ESP32 (192.168.x.y), and type this address in your browser.
+1. Copy custom file: ``cp src/custom_edit_me.h src/custom.h``
+1. Install platformIO
+1. Select `esp32doit-devkit-v1` > `Platform` > `Upload Filesystem image` from the PlatformIO menu.
+1. Select `esp32doit-devkit-v1` > `General` > `Upload and Monitor` from the PlatformIO menu.
+1. Connect to the wifi "noditron" 
+1. Type 192.168.4.1 in your browser
 
 You should now see the home screen with the toolbox:
 

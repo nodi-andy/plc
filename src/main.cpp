@@ -1,30 +1,31 @@
 #include <Arduino.h>
 #include <SPIFFS.h>
-#include <WiFi.h>
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
+#include <Preferences.h>
 
-#include "custom.h"
-#include "nodes/widget/toggle.h"
-#include "nodes/widget/button.h"
-#include "nodes/math/counter.h"
-#include "nodes/math/operation.h"
-#include "nodes/link.h"
 #include "map/map.h"
 
 TaskHandle_t Task2;
 
 #define BTN_PIN   0
+#define TRIGGER_PIN 18
 #define HTTP_PORT 80
 #define MAX_MESSAGE_SIZE 8192
 // Button debouncing
 const uint8_t DEBOUNCE_DELAY = 10; // in milliseconds
 
-// WiFi credentials
-const char *WIFI_SSID = WIFI_NAME;
-const char *WIFI_PASS = WIFI_PW;
 static uint8_t mapFile[MAX_MESSAGE_SIZE];
 Map nodemap;
+
+// wifimanager can run in a blocking mode or a non blocking mode
+// Be sure to know how to process loops with no delay() if using non blocking
+bool wm_nonblocking = false; // change to true to use non blocking
+WiFiManager wm; 
+WiFiManagerParameter custom_field; // global param ( for non blocking w params )
+Preferences preferences;
+
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -64,39 +65,6 @@ void initSPIFFS() {
 }
 
 // ----------------------------------------------------------------------------
-// Connecting to the WiFi network
-// ----------------------------------------------------------------------------
-
-void initWiFi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
-  while (WiFi.status() != WL_CONNECTED) {
-      Serial.print(".");
-      delay(500);
-  }
-  Serial.printf("Connected %s\n", WiFi.localIP().toString().c_str());
-}
-
-// ----------------------------------------------------------------------------
-// Web server initialization
-// ----------------------------------------------------------------------------
-
-String processor(const String &var) {
-    return String(var == "STATE" && onboard_led.on ? "on" : "off");
-}
-
-void onRootRequest(AsyncWebServerRequest *request) {
-  request->send(SPIFFS, "/index.html", "text/html", false, processor);
-}
-
-void initWebServer() {
-    server.on("/", onRootRequest);
-    server.serveStatic("/", SPIFFS, "/");
-    server.begin();
-}
-
-// ----------------------------------------------------------------------------
 // WebSocket initialization
 // ----------------------------------------------------------------------------
 
@@ -129,6 +97,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     }
 }
 
+
+
+
 void onEvent(AsyncWebSocket       *server,
              AsyncWebSocketClient *client,
              AwsEventType          type,
@@ -153,15 +124,93 @@ void onEvent(AsyncWebSocket       *server,
     }
 }
 
-void initWebSocket() {
-    ws.onEvent(onEvent);
-    server.addHandler(&ws);
+// ----------------------------------------------------------------------------
+// Web server initialization
+// ----------------------------------------------------------------------------
+
+String processor(const String &var) {
+    return String(var == "STATE" && onboard_led.on ? "on" : "off");
 }
 
+void onRootRequest(AsyncWebServerRequest *request) {
+  request->send(SPIFFS, "/index.html", "text/html", false, processor);
+}
+
+void initWebServer() {
+    ws.onEvent(onEvent);
+    server.addHandler(&ws);
+    Serial.println("Starting web server...");
+    server.on("/", onRootRequest);
+    server.serveStatic("/", SPIFFS, "/");
+    server.begin();
+}
+// ----------------------------------------------------------------------------
+// Connecting to the WiFi network
+// ----------------------------------------------------------------------------
+
+void initWiFi() {
+    // custom menu via array or vector
+    // 
+    // menu tokens, "wifi","wifinoscan","info","param","close","sep","erase","restart","exit" (sep is seperator) (if param is in menu, params will not show up in wifi page!)
+    // const char* menu[] = {"wifi","info","param","sep","restart","exit"}; 
+    // wm.setMenu(menu,6);
+    std::vector<const char *> menu = {"wifi","info","param","sep","restart","exit"};
+    wm.setMenu(menu);
+ 
+    wm.setClass("invert"); // set dark theme
+    
+    char wifiMode = preferences.getChar("WIFI_MODE", 'A');
+    pinMode(TRIGGER_PIN, INPUT_PULLUP);
+    Serial.print("Selected wifi mode: ");
+    Serial.println(wifiMode);
+    // AP MODE, Config
+    if ( digitalRead(TRIGGER_PIN) == LOW || (wm.getWiFiIsSaved() == false && wifiMode == 'S')) {
+        
+        Serial.println("WiFi Config Portal loading...");
+        wm.setHostname("noditron");
+        WiFi.mode(WIFI_STA);
+        
+        // set configportal timeout
+        wm.setConfigPortalTimeout(120);
+
+        if (!wm.startConfigPortal("noditron")) {
+            Serial.println("failed to connect and hit timeout");
+            delay(3000);
+            //reset and try again, or maybe put it to deep sleep
+            ESP.restart();
+            delay(5000);
+        }
+
+        //if you get here you have connected to the WiFi
+        Serial.println("connected...yeey :)");
+    } else if (wm.getWiFiIsSaved() == false && wifiMode == 'A') {
+        Serial.println("Access point loading...");
+        WiFi.softAPsetHostname("noditron");
+        WiFi.mode(WIFI_AP);
+        WiFi.softAP("noditron");
+        initWebServer();
+        Serial.print("AP Created with IP Gateway ");
+        Serial.println(WiFi.softAPIP());
+    }  else {
+        // STA MODE
+        Serial.println("Station loading...");
+        wm.setHostname("noditron");
+        WiFi.mode(WIFI_STA);
+        wm.autoConnect();
+        initWebServer();
+        Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
+        while (WiFi.status() != WL_CONNECTED) {
+            Serial.print("WiFi Error");
+            delay(500);
+        }
+        Serial.printf("Connected %s\n", WiFi.localIP().toString().c_str());
+    }
+
+}
 
 //Task2code: blinks an LED every 1000 ms
 void Task2code( void * pvParameters ){
-  Serial.print("Task1 running on core ");
+  Serial.print("noditron task running on task2 ");
   Serial.println(xPortGetCoreID());
 
   for(;;){
@@ -224,12 +273,11 @@ void Task2code( void * pvParameters ){
 void setup() {
 
     Serial.begin(115200);
-    delay(100);
-
+    preferences.begin("noditron", false); 
     initSPIFFS();
     initWiFi();
-    initWebSocket();
-    initWebServer();
+    preferences.end();
+
 
     File file = SPIFFS.open("/map.json");
     if(!file){
