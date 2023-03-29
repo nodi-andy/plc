@@ -42,6 +42,10 @@ int Link::onExecute() {
       Serial.println("Value:");
       Serial.print(*v);
     }*/
-    to->setInput(dst, v);
+    if (to->multipleInput) {
+        to->addInput(v);
+    } else {
+        to->setInput(dst, v);
+    }
     return 0;
 }

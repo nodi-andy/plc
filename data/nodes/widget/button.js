@@ -6,6 +6,7 @@ export default class WidgetButton extends LGraphNode{
     static desc = "Triggers an event";
     static title_mode = LiteGraph.NO_TITLE;
     static font = "Arial";
+    static type = "widget/button";
 
     constructor() {
         super();
@@ -15,8 +16,9 @@ export default class WidgetButton extends LGraphNode{
         this.addProperty("port", "");
         this.addProperty("down", "1");
         this.addProperty("pressed", "1");
-        this.addProperty("up", "0");
-        this.addProperty("released", "0");
+        this.addProperty("up", "");
+        this.addProperty("released", "");
+        this.addProperty("color", "gray");
         this.size = [64, 64];
         this.clicked = false;
 
@@ -32,7 +34,7 @@ export default class WidgetButton extends LGraphNode{
             ctx.fillRect(margin + 2, margin + 2, this.size[0] - margin * 2, this.size[1] - margin * 2);
         }
 
-        ctx.fillStyle = "gray";
+        ctx.fillStyle = this.properties.color;
         ctx.fillRect(margin, margin, this.size[0] - margin * 2, this.size[1] - margin * 2);
 
         if (this.properties.text || this.properties.text === 0) {
@@ -69,4 +71,4 @@ export default class WidgetButton extends LGraphNode{
     }
 }
 
-LiteGraph.registerNodeType("widget/button", WidgetButton);
+LiteGraph.registerNodeType(WidgetButton.type, WidgetButton);

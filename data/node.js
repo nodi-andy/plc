@@ -1847,24 +1847,11 @@ export default class LGraphNode {
             }
         }
 
-        //if there is something already plugged there, disconnect
-        if (target_node.inputs[target_slot] && target_node.inputs[target_slot].link != null) {
+        //if there is something already plugged there, disconnect: except junction
+        if (target_node.inputs[target_slot] && target_node.inputs[target_slot].link != null && target_node.constructor.type !== "control/junction") {
             this.graph.beforeChange();
             target_node.disconnectInput(target_slot, { doProcessChange: false });
             changed = true;
-        }
-        if (output.links !== null && output.links.length) {
-            switch (output.type) {
-                case window.LiteGraph.EVENT:
-                    if (!window.LiteGraph.allow_multi_output_for_events) {
-                        this.graph.beforeChange();
-                        this.disconnectOutput(slot, false, { doProcessChange: false }); // Input(target_slot, {doProcessChange: false});
-                        changed = true;
-                    }
-                    break;
-                default:
-                    break;
-            }
         }
 
         //create link class

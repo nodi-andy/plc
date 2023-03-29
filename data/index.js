@@ -44,6 +44,7 @@ function onMessage(event) {
 
     if (data.update) {
         window.graph._nodes_by_id[data.update.id].state = data.update.state;
+        window.graph._nodes_by_id[data.update.id].value = data.update.value;
     }
     //document.getElementById('led').className = data.status;
 }

@@ -8,7 +8,7 @@ class Junction : public Node
     public:
     Junction();
     virtual std::string getType() const override {
-        return "basic/junction";
+        return "control/junction";
     }
     virtual Junction* createInstance() const override {
         return new Junction(*this); // Create a new instance of the Toggle object

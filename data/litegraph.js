@@ -152,17 +152,16 @@ export var LiteGraph = (global.LiteGraph = {
         if (!base_class.prototype) {
             throw "Cannot register a simple object, it must be a class with a prototype";
         }
-        base_class.type = type;
 
         if (LiteGraph.debug) {
             console.log("Node registered: " + type);
         }
 
-        var categories = type.split("/");
+        var categories = base_class.type.split("/");
         var classname = base_class.name;
 
-        var pos = type.lastIndexOf("/");
-        base_class.category = type.substr(0, pos);
+        var pos = base_class.type.lastIndexOf("/");
+        base_class.category = base_class.type.substr(0, pos);
 
         if (!base_class.title) {
             base_class.title = classname;
@@ -238,10 +237,10 @@ export var LiteGraph = (global.LiteGraph = {
             this.Nodes[classname] = base_class;
         }
         if (LiteGraph.onNodeTypeRegistered) {
-            LiteGraph.onNodeTypeRegistered(type, base_class);
+            LiteGraph.onNodeTypeRegistered(base_class.type, base_class);
         }
         if (prev && LiteGraph.onNodeTypeReplaced) {
-            LiteGraph.onNodeTypeReplaced(type, base_class, prev);
+            LiteGraph.onNodeTypeReplaced(base_class.type, base_class, prev);
         }
 
         //warnings
@@ -438,8 +437,6 @@ export var LiteGraph = (global.LiteGraph = {
         } else {
             node = new base_class(title);
         }
-
-        node.type = type;
 
         if (!node.title && title) {
             node.title = title;
@@ -3925,6 +3922,8 @@ LiteGraph.GraphOutput = GraphOutput;
 
 //Constant
 class ConstantNumber extends LGraphNode{
+    static type = "data/number";
+
     constructor() {
         super();
         this.addInput("value", "number");
@@ -3957,45 +3956,15 @@ ConstantNumber.desc = "Constant number";
 ConstantNumber.title_mode = LiteGraph.NO_TITLE;
 
 
-LiteGraph.registerNodeType("data/number", ConstantNumber);
-
-//Constant
-class Junction extends LGraphNode {
-    constructor() {
-        super();
-        let inp = this.addInput("", "number");
-        inp.pos = [16,16]
-        inp.shape = LiteGraph.CIRCLE_SHAPE;
-        
-        let outp = this.addOutput("", "number");
-        outp.pos = [16,16]
-        outp.shape = LiteGraph.CIRCLE_SHAPE;
-
-        this.size = [32, 32];
-        this._shape = LiteGraph.CIRCLE_SHAPE;
-        Junction.title = "Const Number";
-        Junction.desc = "Constant number";
-        Junction.title_mode = LiteGraph.NO_TITLE;
-        Junction.fixsize = [32, 32];
-    }
-    onExecute() {
-        this.setOutputData(0, parseFloat(this.properties["value"]));
-    }
-    getTitle() {
-        if (this.flags.collapsed) {
-            return this.properties.value;
-        }
-        return this.title;
-    }
-}
+LiteGraph.registerNodeType("", ConstantNumber);
 
 
-LiteGraph.registerNodeType("basic/junction", Junction);
 
 class ConstantBoolean extends LGraphNode {
     static title = "Const Boolean";
     static desc = "Constant boolean";
     static title_mode = LiteGraph.NO_TITLE;
+    static type = "data/boolean";
 
     constructor() {
         super();
@@ -4020,11 +3989,12 @@ class ConstantBoolean extends LGraphNode {
 
 ConstantBoolean.prototype.getTitle = ConstantNumber.prototype.getTitle;
 ConstantBoolean.prototype.setValue = ConstantNumber.prototype.setValue;
-LiteGraph.registerNodeType("data/boolean", ConstantBoolean);
+//LiteGraph.registerNodeType("data/boolean", ConstantBoolean);
 
 
 //Math operation
 class MathOperation extends LGraphNode {
+    static type = "math/operation";
     constructor() {
         super();
         this.addInput("A", "number,array,object");
@@ -5214,59 +5184,7 @@ EventBranch.desc = "If condition is true, outputs triggers true, otherwise false
 //LiteGraph.registerNodeType("events/branch", EventBranch);
 
 //Show value inside the debug console
-class EventCounter extends LGraphNode{
-    constructor() {
-        super();
-        this.addInput("inc", "number", "", "inc");
-        this.addInput("dec", "number", "", "dec");
-        this.addInput("reset", "number", "", "reset");
-        this.addOutput("num", "number", "", "num");
-        //this.addProperty("doCountExecution", false, "boolean", {name: "Count Executions"});
-        //this.addWidget("toggle","Count Exec.",this.properties.doCountExecution,"doCountExecution");
-        this.num = 0;
-        this.size = [128, 196];
-    }
-    getTitle() {
-        if (this.flags.collapsed) {
-            return String(this.num);
-        }
-        return this.title;
-    }
-    onAction(action, param, options) {
-        var v = this.num;
-        if (action == "inc") {
-            this.num += 1;
-        } else if (action == "dec") {
-            this.num -= 1;
-        } else if (action == "reset") {
-            this.num = 0;
-        }
-        if (this.num != v) {
-            this.trigger("change", this.num);
-        }
-    }
-    onDrawBackground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-        ctx.fillStyle = "#AAA";
-        ctx.font = "20px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(this.num, this.size[0] * 0.5, this.size[1] * 0.5);
-    }
-    onExecute() {
-        if (this.properties.doCountExecution) {
-            this.num += 1;
-        }
-        this.setOutputData(1, this.num);
-    }
-}
 
-EventCounter.title = "Counter";
-EventCounter.desc = "Counts events";
-EventCounter.title_mode = LiteGraph.NO_TITLE;
-
-LiteGraph.registerNodeType("math/counter", EventCounter);
 
 
 
@@ -6081,42 +5999,8 @@ WidgetPanel.widgets = [{ name: "update", text: "Update", type: "button" }];
 
 var LiteGraph = global.LiteGraph;
 
-class Selector extends LGraphNode{
-    constructor() {
-        super();
-        this.addInput("A");
-        this.addInput("B");
-        this.addInput("sel", "number");
-        this.addOutput("out");
-
-        this.selected = 0;
-    }
-    onExecute() {
-        var sel = this.getInputData(0);
-        if (sel == null || sel.constructor !== Number)
-            sel = 0;
-        this.selected = sel = Math.round(sel) % (this.inputs.length - 1);
-        var v = this.getInputData(sel + 1);
-        if (v !== undefined) {
-            this.setOutputData(0, v);
-        }
-    }
-    onGetInputs() {
-        return [["E", 0], ["F", 0], ["G", 0], ["H", 0]];
-    }
-}
-
-Selector.title = "SEL";
-Selector.desc = "selects an output";
-Selector.title_mode = LiteGraph.CENTRAL_TITLE;
-
-
-
-LiteGraph.registerNodeType("control/selector", Selector);
-
-
-
 class logicAnd extends LGraphNode{
+    static type = "logic/AND";
     constructor() {
         super();
         this.properties = {};
@@ -6147,6 +6031,7 @@ LiteGraph.registerNodeType("logic/AND", logicAnd);
 
 
 class logicOr extends LGraphNode{
+    static type = "logic/OR";
     constructor() {
         super();
         this.properties = {};
@@ -6177,6 +6062,7 @@ LiteGraph.registerNodeType("logic/OR", logicOr);
 
 
 class logicNot extends LGraphNode{
+    static type = "logic/NOT";
     constructor() {
         super();
         this.properties = {};

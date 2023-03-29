@@ -5,6 +5,8 @@ export default class Stepper extends LGraphNode{
     static title = "Stepper";
     static desc = "Stepper";
     static title_mode = LiteGraph.NO_TITLE;
+    static type = "widget/stepper";
+    
     constructor() {
         super();
         this.addInput("speed", "number", "", "speed");

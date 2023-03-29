@@ -8,10 +8,11 @@ Button::Button(int portNr) {
 void Button::setup() {
     title = "Button";
     desc = "Read input";
+    JsonObject jsonProp = props["properties"];
 
-    if (props["properties"].containsKey("port")) {
-      if (props["properties"]["port"].as<std::string>().length() > 0 ) {
-        port = props["properties"]["port"].as<int>();
+    if (jsonProp.containsKey("port")) {
+      if (jsonProp["port"].as<std::string>().length() > 0 ) {
+        port = jsonProp["port"].as<int>();
         if (port >= 0) {
           pinMode(port, INPUT);
           pinMode(port, INPUT_PULLUP);
@@ -19,27 +20,52 @@ void Button::setup() {
       }
     }
 
-    defaultPressed = 1;
-    if (props["properties"].containsKey("pressed")) {
-      defaultPressed = props["properties"]["pressed"].as<int>();
-    }
-
-    defaultDown = 1;
-    if (props["properties"].containsKey("down")) {
-      defaultDown = props["properties"]["down"].as<int>();
-    }
-
+    defaultPressedVal = 0;
+    defaultDownVal = 0;
+    defaultReleasedVal = 0;
+    defaultUpVal = 0;
+    defaultPressed = 0;
+    defaultDown = 0;
     defaultReleased = 0;
-    if (props["properties"].containsKey("released")) {
-      defaultReleased = props["properties"]["released"].as<int>();
-    }
-
     defaultUp = 0;
-    if (props["properties"].containsKey("up")) {
-      defaultUp = props["properties"]["up"].as<int>();
+
+    if (jsonProp.containsKey("pressed")) {
+      if (jsonProp["pressed"].as<std::string>().length() > 0 ) {
+        defaultPressedVal = jsonProp["pressed"].as<int>();
+        defaultPressed = &defaultPressedVal;
+      } else {
+        defaultPressed = 0;
+      }
     }
 
-    state = defaultUp;
+    if (jsonProp.containsKey("down")) {
+      if (jsonProp["down"].as<std::string>().length() > 0 ) {
+        defaultDownVal = jsonProp["down"].as<int>();
+        defaultDown = &defaultDownVal;
+      } else {
+        defaultDown = 0;
+      }
+    }
+
+    if (jsonProp.containsKey("released")) {
+      if (jsonProp["released"].as<std::string>().length() > 0 ) {
+        defaultReleasedVal = jsonProp["released"].as<int>();
+        defaultReleased = &defaultReleasedVal;
+      } else {
+        defaultReleased = 0;
+      }
+    }
+
+    if (jsonProp.containsKey("up")) {
+      if (jsonProp["up"].as<std::string>().length() > 0 ) {
+        defaultUpVal = jsonProp["up"].as<int>();
+        defaultUp = &defaultUpVal;
+      } else {
+        defaultUp = 0;
+      }
+    }
+
+    state = 0;
 
     Serial.print(">>> Setup Button, PORT: ");
     Serial.println(port);
@@ -56,32 +82,36 @@ int Button::onExecute() {
 
     int newState = digitalRead(port);
     if (input) {
-      if (newState == 0 && state == 0 && defaultPressed) {
+      if (newState == 0 && state == 0 && defaultPressed && *defaultPressed) {
         output = input;
-      } if (newState == 0 && state == 1 && defaultDown) {
+      } if (newState == 0 && state == 1 && defaultDown && *defaultDown) {
         output = input;
         Serial.print("Button EdgeDown: ");
         Serial.println(*output);
-      } if (newState == 1 && state == 0 && defaultUp) {
+      } if (newState == 1 && state == 0 && defaultUp && *defaultUp) {
         output = input;
-      } if (newState == 1 && state == 1 && defaultReleased) {
+      } if (newState == 1 && state == 1 && defaultReleased && *defaultReleased) {
         output = input;
         Serial.print("Button EdgeUp: ");
         Serial.println(*output);
       }
     } else {
       if (newState == 0 && state == 0) {
-        output = &defaultPressed;
+        output = defaultPressed;
       } if (newState == 0 && state == 1) {
-        output = &defaultDown;
-        Serial.print("Button EdgeDown: ");
-        Serial.println(*output);
+        output = defaultDown;
+        if (output) {
+          Serial.print("Button EdgeDown: ");
+          Serial.println(*output);
+        }
       } if (newState == 1 && state == 1) {
-        output = &defaultReleased;
+        output = defaultReleased;
       } if (newState == 1 && state == 0) {
-        output = &defaultUp;
-        Serial.print("Button EdgeUp: ");
-        Serial.println(*output);
+        output = defaultUp;
+        if (output) {
+          Serial.print("Button EdgeUp: ");
+          Serial.println(*output);
+        }
       }
     }
     ret = (state != newState);

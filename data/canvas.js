@@ -4606,85 +4606,74 @@ export default class LGraphCanvas {
         ctx.strokeStyle = "#AAA";
         ctx.globalAlpha = this.editor_alpha;
         //for every node
-        var nodes = this.graph._nodes;
-        for (var n = 0, l = nodes.length; n < l; ++n) {
-            var node = nodes[n];
-            //for every input (we render just inputs because it is easier as every slot can only have one input)
-            if (!node.inputs || !node.inputs.length) {
+        var links = this.graph.links;
+        for (var linkKey in links) {
+            var link = links[linkKey];
+            if (!link) {
                 continue;
             }
 
-            for (var i = 0; i < node.inputs.length; ++i) {
-                var input = node.inputs[i];
-                if (!input || input.link == null) {
-                    continue;
-                }
-                var link_id = input.link;
-                var link = this.graph.links[link_id];
-                if (!link) {
-                    continue;
-                }
+            //find link info
+            var start_node = this.graph.getNodeById(link.origin_id);
+            var end_node = this.graph.getNodeById(link.target_id);
+            if (start_node == null) {
+                continue;
+            }
+            var start_node_slot = link.origin_slot;
+            var end_node_slot = link.target_slot;
+            var start_node_slotpos = null;
+            if (start_node_slot == -1) {
+                start_node_slotpos = [
+                    start_node.pos[0] + 10,
+                    start_node.pos[1] + 10
+                ];
+            } else {
+                start_node_slotpos = start_node.getConnectionPos(
+                    false,
+                    start_node_slot,
+                    tempA
+                );
+            }
+            var end_node_slotpos = end_node.getConnectionPos(true, end_node_slot, tempB);
 
-                //find link info
-                var start_node = this.graph.getNodeById(link.origin_id);
-                if (start_node == null) {
-                    continue;
-                }
-                var start_node_slot = link.origin_slot;
-                var start_node_slotpos = null;
-                if (start_node_slot == -1) {
-                    start_node_slotpos = [
-                        start_node.pos[0] + 10,
-                        start_node.pos[1] + 10
-                    ];
-                } else {
-                    start_node_slotpos = start_node.getConnectionPos(
-                        false,
-                        start_node_slot,
-                        tempA
-                    );
-                }
-                var end_node_slotpos = node.getConnectionPos(true, i, tempB);
+            //compute link bounding
+            link_bounding[0] = start_node_slotpos[0];
+            link_bounding[1] = start_node_slotpos[1];
+            link_bounding[2] = end_node_slotpos[0] - start_node_slotpos[0];
+            link_bounding[3] = end_node_slotpos[1] - start_node_slotpos[1];
+            if (link_bounding[2] < 0) {
+                link_bounding[0] += link_bounding[2];
+                link_bounding[2] = Math.abs(link_bounding[2]);
+            }
+            if (link_bounding[3] < 0) {
+                link_bounding[1] += link_bounding[3];
+                link_bounding[3] = Math.abs(link_bounding[3]);
+            }
 
-                //compute link bounding
-                link_bounding[0] = start_node_slotpos[0];
-                link_bounding[1] = start_node_slotpos[1];
-                link_bounding[2] = end_node_slotpos[0] - start_node_slotpos[0];
-                link_bounding[3] = end_node_slotpos[1] - start_node_slotpos[1];
-                if (link_bounding[2] < 0) {
-                    link_bounding[0] += link_bounding[2];
-                    link_bounding[2] = Math.abs(link_bounding[2]);
-                }
-                if (link_bounding[3] < 0) {
-                    link_bounding[1] += link_bounding[3];
-                    link_bounding[3] = Math.abs(link_bounding[3]);
-                }
+            //skip links outside of the visible area of the canvas
+            if (!Math.overlapBounding(link_bounding, margin_area)) {
+                continue;
+            }
 
-                //skip links outside of the visible area of the canvas
-                if (!Math.overlapBounding(link_bounding, margin_area)) {
-                    continue;
-                }
+            var start_slot = start_node.outputs[start_node_slot];
+            var end_slot = end_node.inputs[end_node_slot];
+            if (!start_slot || !end_slot) {
+                continue;
+            }
+            var start_dir = start_slot.dir ||
+                (start_node.horizontal ? LiteGraph.DOWN : LiteGraph.RIGHT);
+            var end_dir = end_slot.dir ||
+                (end_node.horizontal ? LiteGraph.UP : LiteGraph.LEFT);
 
-                var start_slot = start_node.outputs[start_node_slot];
-                var end_slot = node.inputs[i];
-                if (!start_slot || !end_slot) {
-                    continue;
-                }
-                var start_dir = start_slot.dir ||
-                    (start_node.horizontal ? LiteGraph.DOWN : LiteGraph.RIGHT);
-                var end_dir = end_slot.dir ||
-                    (node.horizontal ? LiteGraph.UP : LiteGraph.LEFT);
+            this.renderLink(ctx, start_node_slotpos, end_node_slotpos, link, false, 0, null, start_dir, end_dir);
 
-                this.renderLink(ctx, start_node_slotpos, end_node_slotpos, link, false, 0, null, start_dir, end_dir);
-
-                //event triggered rendered on top
-                if (link && link._last_time && now - link._last_time < 1000) {
-                    var f = 2.0 - (now - link._last_time) * 0.002;
-                    var tmp = ctx.globalAlpha;
-                    ctx.globalAlpha = tmp * f;
-                    this.renderLink(ctx, start_node_slotpos, end_node_slotpos, link, true, f, "white", start_dir, end_dir);
-                    ctx.globalAlpha = tmp;
-                }
+            //event triggered rendered on top
+            if (link && link._last_time && now - link._last_time < 1000) {
+                var f = 2.0 - (now - link._last_time) * 0.002;
+                var tmp = ctx.globalAlpha;
+                ctx.globalAlpha = tmp * f;
+                this.renderLink(ctx, start_node_slotpos, end_node_slotpos, link, true, f, "white", start_dir, end_dir);
+                ctx.globalAlpha = tmp;
             }
         }
         ctx.globalAlpha = 1;
@@ -4828,17 +4817,17 @@ export default class LGraphCanvas {
                 let originType = "";
                 let targetType = "";
                 if (link) {
-                    originType = window.canvas.graph._nodes_by_id[link.target_id]?.type;
-                    targetType = window.canvas.graph._nodes_by_id[link.origin_id]?.type;
+                    originType = window.canvas.graph._nodes_by_id[link.target_id]?.constructor.type;
+                    targetType = window.canvas.graph._nodes_by_id[link.origin_id]?.constructor.type;
                 }
-                if (targetType != "basic/junction") {
+                if (targetType != "control/junction") {
                     if (start_dir == LiteGraph.RIGHT) {
                         start_x += 32;
                     } else {
                         start_y += 32;
                     }
                 }
-                if (originType != "basic/junction") {
+                if (originType != "control/junction") {
                     if (end_dir == LiteGraph.LEFT) {
                         end_x -= 32;
                     } else {
@@ -4846,7 +4835,7 @@ export default class LGraphCanvas {
                     }
                 }
                 ctx.lineTo(start_x, start_y);
-                if (targetType == "basic/junction" || originType == "basic/junction") {
+                if (targetType == "control/junction" || originType == "control/junction") {
                     ctx.lineTo(end_x, start_y);
                     ctx.lineTo(end_x, end_y);
                 } else {
@@ -4980,7 +4969,7 @@ export default class LGraphCanvas {
             originType = window.canvas.graph._nodes_by_id[link.target_id]?.type;
             targetType = window.canvas.graph._nodes_by_id[link.origin_id]?.type;
         } 
-        if (originType == "basic/junction" || targetType == "basic/junction") {
+        if (originType == "control/junction" || targetType == "control/junction") {
             if (Math.abs(a[0] - b[0]) >  Math.abs(a[1] - b[1])) {
                 x = (a[0] + b[0]) / 2;
                 y = a[1];
@@ -6769,36 +6758,6 @@ export default class LGraphCanvas {
                 dialog.parentNode.removeChild(dialog);
             }
         };
-
-        var dialogCloseTimer = null;
-        var prevent_timeout = false;
-        dialog.addEventListener("mouseleave", function (e) {
-            if (prevent_timeout)
-                return;
-            if (options.closeOnLeave || LiteGraph.dialog_close_on_mouse_leave)
-                if (!dialog.is_modified && LiteGraph.dialog_close_on_mouse_leave)
-                    dialogCloseTimer = setTimeout(dialog.close, LiteGraph.dialog_close_on_mouse_leave_delay); //dialog.close();
-        });
-        dialog.addEventListener("mouseenter", function (e) {
-            if (options.closeOnLeave || LiteGraph.dialog_close_on_mouse_leave)
-                if (dialogCloseTimer)
-                    clearTimeout(dialogCloseTimer);
-        });
-        var selInDia = dialog.querySelectorAll("select");
-        if (selInDia) {
-            // if filtering, check focus changed to comboboxes and prevent closing
-            selInDia.forEach(function (selIn) {
-                selIn.addEventListener("click", function (e) {
-                    prevent_timeout++;
-                });
-                selIn.addEventListener("blur", function (e) {
-                    prevent_timeout = 0;
-                });
-                selIn.addEventListener("change", function (e) {
-                    prevent_timeout = -1;
-                });
-            });
-        }
 
         return dialog;
     }

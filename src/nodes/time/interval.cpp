@@ -89,5 +89,5 @@ int Interval::onExecute() {
   state = newState;
 
   setOutput(0, output);
-  return ret;
+  return 0; // do not update interval in browser
 }

@@ -30,6 +30,10 @@ void Node::setInput(int name, int* val) {
     }
 };
 
+void Node::addInput(int* val) {
+    inputs.push_back(val);
+};
+
 void Node::setOutput(int name, int* val) {
     if (name >= 0 && name < outputs.size()) {
         outputs[name] = val;
@@ -42,5 +46,5 @@ void Node::setup()
 }
 int Node::onExecute()
 {
-    
+    return 0;
 }

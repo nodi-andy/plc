@@ -72,6 +72,15 @@ int Stepper::onExecute() {
         //Serial.println(targetPos);
     }
 
+
+    int *newReset = getInput(2);
+    if (newReset) {
+        reset = *newReset;
+        pos = 0;
+        targetPos = 0;
+        //Serial.print("TargetPos: ");
+        //Serial.println(targetPos);
+    }
     setOutput(0, &speed);
     setOutput(1, &pos);
     return 0;

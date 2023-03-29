@@ -27,6 +27,7 @@ class Stepper : public Node
     static bool moveForced;
     static int dir;
     static int targetPos;
+    static int reset;
     static int pos;
     hw_timer_t *My_timer;
     static void IRAM_ATTR onTimer();
@@ -34,6 +35,7 @@ class Stepper : public Node
 };
 
 int Stepper::targetPos = 0;
+int Stepper::reset = 0;
 int Stepper::dir = 0;
 int Stepper::pos = 0;
 bool Stepper::moveForced = false;

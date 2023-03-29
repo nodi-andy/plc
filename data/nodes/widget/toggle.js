@@ -5,11 +5,12 @@ export default class WidgetToggle extends LGraphNode{
     static title = " ";
     static desc = "Toggles between true or false";
     static title_mode = LiteGraph.NO_TITLE;
+    static type = "widget/toggle";
     constructor() {
         super();
         this.addInput("inp", "number");
         this.addOutput("outp", "number");
-        this.properties = { font: "", value: false, port: "" };
+        this.properties = { font: "", value: false, port: "", color : "#AEF" };
         this.size = [64, 64];
     }
     onDrawForeground(ctx) {
@@ -27,7 +28,7 @@ export default class WidgetToggle extends LGraphNode{
         ctx.fillStyle = "#AAA";
         ctx.fillRect(x, h - size, size, size);
 
-        ctx.fillStyle = this.properties.value ? "#AEF" : "#000";
+        ctx.fillStyle = this.properties.value ? this.properties.color : "#000";
         ctx.fillRect(
             x + size * margin,
             h - size + size * margin,

@@ -17,12 +17,16 @@ class Button : public Node
     int onExecute();
 
     private:
-    int defaultDown;
-    int defaultPressed;
-    int defaultUp;
-    int defaultReleased;
-    int* input;
-    int* output;
+    int defaultDownVal;
+    int defaultPressedVal;
+    int defaultUpVal;
+    int defaultReleasedVal;
+    int *defaultDown;
+    int *defaultPressed;
+    int *defaultUp;
+    int *defaultReleased;
+    int *input;
+    int *output;
 };
 
 static bool buttonRegistered = []() {

@@ -253,7 +253,7 @@ void Task2code( void * pvParameters ){
         for (auto n : nodemap.nodes) {
             if (n.second) {
                 if (n.second->onExecute()) {
-                    std::string msg = "{\"update\": {\"id\":" + std::to_string(n.second->id) + ", \"state\":" + std::to_string(n.second->state) + "}}";
+                    std::string msg = "{\"update\": {\"id\":" + std::to_string(n.second->id) + ", \"state\":" + std::to_string(n.second->state) + ", \"value\":" + std::to_string(n.second->value) + "}}";
                     ws.textAll(msg.c_str(), msg.length());
                 }
             }
@@ -264,6 +264,7 @@ void Task2code( void * pvParameters ){
             }
         }
     }
+    vTaskDelay(10);
   } 
 }
 // ----------------------------------------------------------------------------

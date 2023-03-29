@@ -16,7 +16,7 @@ void Toggle::setup() {
     if (props["properties"].containsKey("value")) {
       value = props["properties"]["value"].as<int>();
     }
-    state = pstate = value;
+    state = newstate = value;
     addInput("input");
 }
 
@@ -24,16 +24,16 @@ int Toggle::onExecute() {
     int ret = 0;
     int* input = getInput(0);
     if (input) {
-      state = *input;
+      newstate = *input;
     } else {
-      state = value;
+      newstate = value;
     }
-    digitalWrite(port, state);
-    ret = (pstate != state);
+    digitalWrite(port, newstate);
+    ret = (newstate != state);
     if (ret) {
       Serial.print("Toggle: ");
-      Serial.println(state);
+      Serial.println(newstate);
     }
-    pstate = state;
+    state = newstate;
     return ret;
 }

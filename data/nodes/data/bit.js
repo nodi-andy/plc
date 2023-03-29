@@ -5,6 +5,7 @@ export default class DFlipFlop extends LGraphNode {
     static title = "D-FlipFlop";
     static desc = "D-FlipFlop";
     static title_mode = LiteGraph.NO_TITLE;
+    static type = "data/bit";
     constructor() {
         super();
         this.addInput("set", "number", "", "set");

@@ -7,6 +7,7 @@ export default class Interval extends LGraphNode {
     static title_mode = LiteGraph.NO_TITLE;
     static on_color = "#AAA";
     static off_color = "#222";
+    static type = "time/interval";
 
     constructor() {
         super();

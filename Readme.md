@@ -9,9 +9,6 @@ With Conucon PLC, you can create complex IoT projects with ease. The platform is
 
 To get started with Conucon PLC, follow these steps:
 
-
-
-
 1. Clone the repository from GitHub ``git clone https://github.com/nodi-andy/plc``
 1. Copy custom file: ``cp src/custom_edit_me.h src/custom.h``
 1. Install platformIO
