@@ -38,9 +38,9 @@ void Button::setup() {
       }
     }
 
-    if (jsonProp.containsKey("down")) {
-      if (jsonProp["down"].as<std::string>().length() > 0 ) {
-        defaultDownVal = jsonProp["down"].as<int>();
+    if (jsonProp.containsKey("pressing")) {
+      if (jsonProp["pressing"].as<std::string>().length() > 0 ) {
+        defaultDownVal = jsonProp["pressing"].as<int>();
         defaultDown = &defaultDownVal;
       } else {
         defaultDown = 0;
@@ -56,9 +56,9 @@ void Button::setup() {
       }
     }
 
-    if (jsonProp.containsKey("up")) {
-      if (jsonProp["up"].as<std::string>().length() > 0 ) {
-        defaultUpVal = jsonProp["up"].as<int>();
+    if (jsonProp.containsKey("releasing")) {
+      if (jsonProp["releasing"].as<std::string>().length() > 0 ) {
+        defaultUpVal = jsonProp["releasing"].as<int>();
         defaultUp = &defaultUpVal;
       } else {
         defaultUp = 0;

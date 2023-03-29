@@ -501,11 +501,7 @@ export default class LGraphCanvas {
 
         return false;
     }
-    static onShowMenuNodeProperties(value,
-        options,
-        e,
-        prev_menu,
-        node) {
+    static onShowMenuNodeProperties(value, options, e, prev_menu, node) {
         if (!node || !node.properties) {
             return;
         }
@@ -531,7 +527,8 @@ export default class LGraphCanvas {
                     "<span class='property_value'>" +
                     value +
                     "</span>",
-                value: i
+                value: i,
+                callback: inner_clicked
             });
         }
         if (!entries.length) {
@@ -1699,12 +1696,6 @@ export default class LGraphCanvas {
                         } else {
                             this.selected_group.recomputeInsideNodes();
                         }
-                    }
-
-                    if (is_double_click && !this.read_only && this.allow_searchbox) {
-                        this.showSearchBox(e);
-                        e.preventDefault();
-                        e.stopPropagation();
                     }
 
                     clicking_canvas_bg = true;
@@ -6251,8 +6242,8 @@ export default class LGraphCanvas {
                     graphcanvas.graph.beforeChange();
                     var node = LiteGraph.createNode(name);
                     if (node) {
-                        node.pos = [(graphcanvas.visible_area[0] + graphcanvas.visible_area[2]) / 2,
-                        (graphcanvas.visible_area[1] + graphcanvas.visible_area[3]) / 2];
+                        node.setPos((graphcanvas.visible_area[0] + graphcanvas.visible_area[2]) / 2,
+                                    (graphcanvas.visible_area[1] + graphcanvas.visible_area[3]) / 2);
                         graphcanvas.graph.add(node, false);
                     }
 
@@ -7354,6 +7345,8 @@ export default class LGraphCanvas {
 
         return options;
     }
+
+
     //called by processContextMenu to extract the menu list
     getNodeMenuOptions(node) {
         var options = null;
@@ -7373,22 +7366,6 @@ export default class LGraphCanvas {
                     has_submenu: true,
                     disabled: true,
                     callback: LGraphCanvas.showMenuNodeOptionalOutputs
-                },
-                null,
-                {
-                    content: "Properties",
-                    has_submenu: true,
-                    callback: LGraphCanvas.onShowMenuNodeProperties
-                },
-                null,
-                {
-                    content: "Title",
-                    callback: LGraphCanvas.onShowPropertyEditor
-                },
-                {
-                    content: "Mode",
-                    has_submenu: true,
-                    callback: LGraphCanvas.onMenuNodeMode
                 }
             ];
             if (node.resizable !== false) {
@@ -7396,12 +7373,29 @@ export default class LGraphCanvas {
                     content: "Resize", callback: LGraphCanvas.onMenuResizeNode
                 });
             }
+
+            for (var i in node.properties) {
+                var value = node.properties[i] !== undefined ? node.properties[i] : " ";
+                if (typeof value == "object")
+                    value = JSON.stringify(value);
+                var info = node.getPropertyInfo(i);
+                if (info.type == "enum" || info.type == "combo")
+                    value = LGraphCanvas.getPropertyPrintableValue(value, info.values);
+    
+                //value could contain invalid html characters, clean that
+                value = LGraphCanvas.decodeHTML(value);
+                options.push({
+                    content: "<span class='property_name'>" + (info.label ? info.label : i) + "</span>" +
+                             "<input class='property_value' value='" + value + "'></input>",
+                    value: i,
+                    clickable: false,
+                    allow_html: true,
+                    node: node
+                });
+            }
+
             options.push(
-                {
-                    content: "Collapse",
-                    callback: LGraphCanvas.onMenuNodeCollapse
-                },
-                { content: "Pin", callback: LGraphCanvas.onMenuNodePin },
+                //{ content: "Pin", callback: LGraphCanvas.onMenuNodePin },
                 {
                     content: "Colors",
                     has_submenu: true,
@@ -7543,7 +7537,7 @@ export default class LGraphCanvas {
                 //on node
                 menu_info = this.getNodeMenuOptions(node);
             } else {
-                menu_info = this.getCanvasMenuOptions();
+               /* menu_info = this.getCanvasMenuOptions();
                 var group = this.graph.getGroupOnPos(
                     event.canvasX,
                     event.canvasY
@@ -7559,7 +7553,7 @@ export default class LGraphCanvas {
                             options: this.getGroupMenuOptions(group)
                         }
                     });
-                }
+                }*/
             }
         }
 

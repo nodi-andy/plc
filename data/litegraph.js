@@ -2776,7 +2776,14 @@ class ContextMenu {
         } else {
             element.innerHTML = value && value.title ? value.title : name;
             element.value = value;
-
+            if (element.childNodes[1]) {
+                element.childNodes[1].node = options.extra;
+                element.childNodes[1].node_prop = value.value;
+                element.childNodes[1].addEventListener('blur', function(event) {
+                    this.node.properties[this.node_prop] = event.target.value;
+                    console.log('Input edited and focus lost:', event.target.value);
+                });
+            }
             if (value) {
                 if (value.disabled) {
                     disabled = true;
@@ -2800,7 +2807,7 @@ class ContextMenu {
         }
 
         this.root.appendChild(element);
-        if (!disabled) {
+        if (!disabled && (value?.clickable == null || value?.clickable === true)) {
             element.addEventListener("click", inner_onclick);
         }
         if (options.autoopen) {

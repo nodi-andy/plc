@@ -66,7 +66,7 @@ export default class LGraphNode {
         this.size = [window.LiteGraph.NODE_WIDTH, 60];
         this.graph = null;
 
-        this._pos = new Float32Array(10, 10);
+        this._pos = [0, 0];
 
         Object.defineProperty(this, "pos", {
             set: function (v) {
@@ -2381,5 +2381,11 @@ export default class LGraphNode {
             (x + this.pos[0]) * graphcanvas.scale + graphcanvas.offset[0],
             (y + this.pos[1]) * graphcanvas.scale + graphcanvas.offset[1]
         ];
+    }
+
+    setPos(x, y) {
+        this._pos[0] = x;
+        this._pos[1] = y;
+        this.alignToGrid();
     }
 }
