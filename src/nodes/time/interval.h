@@ -16,9 +16,9 @@ class Interval : public Node
     int onExecute();
 
     private:
-    int defaultDown;
+    int defaultPressing;
     int defaultPressed;
-    int defaultUp;
+    int defaultReleasing;
     int defaultReleased;
     int defaultTOn;
     int defaultTOff;

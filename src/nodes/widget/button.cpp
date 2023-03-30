@@ -25,9 +25,9 @@ void Button::setup() {
     defaultReleasedVal = 0;
     defaultUpVal = 0;
     defaultPressed = 0;
-    defaultDown = 0;
+    defaultPressing = 0;
     defaultReleased = 0;
-    defaultUp = 0;
+    defaultReleasing = 0;
 
     if (jsonProp.containsKey("pressed")) {
       if (jsonProp["pressed"].as<std::string>().length() > 0 ) {
@@ -41,9 +41,9 @@ void Button::setup() {
     if (jsonProp.containsKey("pressing")) {
       if (jsonProp["pressing"].as<std::string>().length() > 0 ) {
         defaultDownVal = jsonProp["pressing"].as<int>();
-        defaultDown = &defaultDownVal;
+        defaultPressing = &defaultDownVal;
       } else {
-        defaultDown = 0;
+        defaultPressing = 0;
       }
     }
 
@@ -59,9 +59,9 @@ void Button::setup() {
     if (jsonProp.containsKey("releasing")) {
       if (jsonProp["releasing"].as<std::string>().length() > 0 ) {
         defaultUpVal = jsonProp["releasing"].as<int>();
-        defaultUp = &defaultUpVal;
+        defaultReleasing = &defaultUpVal;
       } else {
-        defaultUp = 0;
+        defaultReleasing = 0;
       }
     }
 
@@ -84,11 +84,11 @@ int Button::onExecute() {
     if (input) {
       if (newState == 0 && state == 0 && defaultPressed && *defaultPressed) {
         output = input;
-      } if (newState == 0 && state == 1 && defaultDown && *defaultDown) {
+      } if (newState == 0 && state == 1 && defaultPressing && *defaultPressing) {
         output = input;
         Serial.print("Button EdgeDown: ");
         Serial.println(*output);
-      } if (newState == 1 && state == 0 && defaultUp && *defaultUp) {
+      } if (newState == 1 && state == 0 && defaultReleasing && *defaultReleasing) {
         output = input;
       } if (newState == 1 && state == 1 && defaultReleased && *defaultReleased) {
         output = input;
@@ -99,7 +99,7 @@ int Button::onExecute() {
       if (newState == 0 && state == 0) {
         output = defaultPressed;
       } if (newState == 0 && state == 1) {
-        output = defaultDown;
+        output = defaultPressing;
         if (output) {
           Serial.print("Button EdgeDown: ");
           Serial.println(*output);
@@ -107,7 +107,7 @@ int Button::onExecute() {
       } if (newState == 1 && state == 1) {
         output = defaultReleased;
       } if (newState == 1 && state == 0) {
-        output = defaultUp;
+        output = defaultReleasing;
         if (output) {
           Serial.print("Button EdgeUp: ");
           Serial.println(*output);

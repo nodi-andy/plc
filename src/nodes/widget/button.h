@@ -21,9 +21,9 @@ class Button : public Node
     int defaultPressedVal;
     int defaultUpVal;
     int defaultReleasedVal;
-    int *defaultDown;
+    int *defaultPressing;
     int *defaultPressed;
-    int *defaultUp;
+    int *defaultReleasing;
     int *defaultReleased;
     int *input;
     int *output;

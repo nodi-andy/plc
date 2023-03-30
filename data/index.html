@@ -7,6 +7,64 @@
 </head>
 <body style='width:100%; height:100%'>
 <canvas id='mycanvas' width='100%' height='100%'></canvas>
+<div class="menu-container">
+	<div id="addButton" class="menu-button">➕</div>
+	<div id="remButton" class="menu-button">❌</div>
+	<!-- <div class="menu-button">⤞</div> -->
+	<div id="burnButton" class="menu-button">🚀</div>
+  </div>
+  <script>
+	// Get all the button divs
+	const buttons = document.querySelectorAll('.menu-button');
+
+	// Loop through each button div and add an event listener to it
+	buttons.forEach(button => {
+	  button.addEventListener('mousedown', () => {
+		// Remove the "active" class from all button divs
+		buttons.forEach(button => button.classList.remove('active'));
+
+		// Add the "active" class to the clicked button div
+		button.classList.add('active');
+	  });
+	  button.addEventListener('mouseup', () => {
+		// Remove the "active" class from all button divs
+		///buttons.forEach(button => button.classList.remove('active'));
+
+		// Add the "active" class to the clicked button div
+		button.classList.remove('active');
+	  });
+	});
+
+	document.getElementById("addButton").onclick = () => {
+		document.getElementById("toolBox").style.display = "block";
+	}
+	document.getElementById("remButton").onclick = () => {
+
+        var graph = window.graph;
+        graph.beforeChange();
+
+
+        var fApplyMultiNode = function (node) {
+            if (node.removable === false) {
+                return;
+            }
+            graph.remove(node);
+        };
+
+        var graphcanvas = LGraphCanvas.active_canvas;
+            for (var i in graphcanvas.selected_nodes) {
+                fApplyMultiNode(graphcanvas.selected_nodes[i]);
+            }
+
+        graph.afterChange();
+		if (graphcanvas.selected_nodes && graphcanvas.selected_nodes[0]) {
+        	graphcanvas.selected_nodes[0].setDirtyCanvas(true, true);
+		}
+	}
+	document.getElementById("burnButton").onclick = () => {
+		saveMap();
+	}
+  </script>
 <script type="module">
 	import { LGraph } from "./litegraph.js"
 	window.graph = new LGraph();

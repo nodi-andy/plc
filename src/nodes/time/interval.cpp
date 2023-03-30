@@ -25,9 +25,9 @@ void Interval::setup() {
       defaultPressed = props["properties"]["pressed"].as<int>();
     }
 
-    defaultDown = 1;
-    if (props["properties"].containsKey("down")) {
-      defaultDown = props["properties"]["down"].as<int>();
+    defaultPressing = 1;
+    if (props["properties"].containsKey("pressing")) {
+      defaultPressing = props["properties"]["pressing"].as<int>();
     }
 
     defaultReleased = 0;
@@ -35,12 +35,12 @@ void Interval::setup() {
       defaultReleased = props["properties"]["released"].as<int>();
     }
 
-    defaultUp = 0;
-    if (props["properties"].containsKey("up")) {
-      defaultUp = props["properties"]["up"].as<int>();
+    defaultReleasing = 0;
+    if (props["properties"].containsKey("releasing")) {
+      defaultReleasing = props["properties"]["releasing"].as<int>();
     }
 
-    state = defaultUp;
+    state = defaultReleasing;
 
     Serial.print(">>> Setup Interval");
     addInput("ton");
@@ -59,13 +59,13 @@ int Interval::onExecute() {
 //    input = getInput(0);
   if (state == 0 && now - lastTick >= toff) {
       lastTick = now;
-      output = &defaultUp;
+      output = &defaultReleasing;
       Serial.print("Interval EdgeUp: ");
       Serial.println(newState);
       newState = 1;
   } else if (state == 1 && now - lastTick >= ton) {
       lastTick = now;
-      output = &defaultDown;
+      output = &defaultPressing;
       Serial.print("Interval EdgeDown: ");
       Serial.println(newState);
       newState = 0;

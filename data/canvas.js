@@ -2337,12 +2337,6 @@ export default class LGraphCanvas {
                     ]);
                 }
             }
-        } else if (e.which == 2) {
-            //middle button
-            //trace("middle");
-            this.dirty_canvas = true;
-            this.dragging_canvas = false;
-            saveMap();
         } else if (e.which == 3) {
             //right button
             //trace("right");
@@ -6019,6 +6013,7 @@ export default class LGraphCanvas {
         var root_document = canvas.ownerDocument || document;
 
         var dialog = document.createElement("div");
+        dialog.id = "toolBox";
         dialog.className = "litegraph litesearchbox graphdialog rounded";
         dialog.innerHTML = "<span class='name'>Search</span> <input autofocus type='text' class='value rounded'/>";
         if (options.do_type_filter) {
@@ -6026,6 +6021,7 @@ export default class LGraphCanvas {
             dialog.innerHTML += "<select class='slot_out_type_filter'><option value=''></option></select>";
         }
         dialog.innerHTML += "<div class='helper'></div>";
+        dialog.style.display = "none";
 
         if (root_document.fullscreenElement)
             root_document.fullscreenElement.appendChild(dialog);
@@ -6543,6 +6539,7 @@ export default class LGraphCanvas {
                 }
                 help.addEventListener("click", function (e) {
                     select(unescape(this.dataset["type"]));
+                    document.getElementById("toolBox").style.display = "none";
                 });
                 helper.appendChild(help);
             }

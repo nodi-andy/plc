@@ -176,6 +176,8 @@ html, body {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.5);
     padding-top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .litegraph.litesearchbox input,
@@ -680,3 +682,38 @@ border-radius: 20px;
 cursor: pointer;
 }
   
+  /* Style for the button divs */
+  .menu-button {
+    padding: 10px;
+    background-color: #ddd;
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    width: 48px;
+    height: 48px;
+    font-size: 32;
+  }
+
+  /* Style for the button divs on hover */
+  .menu-button:hover {
+    background-color: #bbb;
+  }
+
+  /* Style for the button divs when clicked */
+  .menu-button.active {
+    background-color: #555;
+    color: #fff;
+  }
+
+  /* Style for the menu container */
+  .menu-container {
+    position: fixed;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+  }
