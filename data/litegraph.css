@@ -20,10 +20,11 @@ html, body {
 .litegraph.litecontextmenu {
     font-family: Tahoma, sans-serif;
     position: fixed;
-    top: 100px;
-    left: 100px;
+    top: 10px;
+    right: 0px;
     min-width: 100px;
     color: #aaf;
+    width: fit-content;
     padding: 0;
     box-shadow: 0 0 10px black !important;
     background-color: #2e2e2e !important;
@@ -698,6 +699,27 @@ cursor: pointer;
     height: 48px;
     font-size: 32;
   }
+
+  /* Styles for high-DPI screens */
+@media only screen and (-webkit-min-device-pixel-ratio: 2),
+    only screen and (min--moz-device-pixel-ratio: 2),
+    only screen and (min-resolution: 192dpi),
+    only screen and (min-resolution: 2dppx) {
+    .menu-button {
+        width: 96px;
+        height: 96px;
+        font-size: 64;
+    }
+    .litegraph.litesearchbox {
+        font-family: Tahoma, sans-serif;
+        font-size: 64;
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding-top: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
 
   /* Style for the button divs on hover */
   .menu-button:hover {

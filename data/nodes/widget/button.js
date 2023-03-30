@@ -66,7 +66,7 @@ export default class WidgetButton extends LGraphNode{
         this.setOutputData(1, this.clicked);
     }
 
-    onMouseUp(e) {
+    onMouseUp(/*e*/) {
         this.clicked = false;
     }
 }

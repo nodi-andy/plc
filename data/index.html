@@ -6,14 +6,19 @@
 	<script type="module" src="litegraph.js"></script>
 </head>
 <body style='width:100%; height:100%'>
-<canvas id='mycanvas' width='100%' height='100%'></canvas>
-<div class="menu-container">
-	<div id="addButton" class="menu-button">➕</div>
-	<div id="remButton" class="menu-button">❌</div>
-	<!-- <div class="menu-button">⤞</div> -->
+	<canvas id='mycanvas' width='100%' height='100%'></canvas>
+	<div class="menu-container">
+		<div id="addButton" class="menu-button">➕</div>
+		<div id="remButton" class="menu-button">❌</div>
+		<!-- <div class="menu-button">⤞</div> -->
+		<div id="saveButton" class="menu-button">💾</div>
+	<div id="editButton" class="menu-button">📝</div>
 	<div id="burnButton" class="menu-button">🚀</div>
-  </div>
-  <script>
+</div>
+<script type="module">
+	import { LGraph } from "./litegraph.js"
+	window.graph = new LGraph();
+	window.canvas = new LGraphCanvas("#mycanvas", graph);
 	// Get all the button divs
 	const buttons = document.querySelectorAll('.menu-button');
 
@@ -64,12 +69,12 @@
 	document.getElementById("burnButton").onclick = () => {
 		saveMap();
 	}
-  </script>
-<script type="module">
-	import { LGraph } from "./litegraph.js"
-	window.graph = new LGraph();
-
-	window.canvas = new LGraphCanvas("#mycanvas", graph);
+	document.getElementById("saveButton").onclick = () => {
+		localStorage.setItem( "noditron", JSON.stringify( graph.serialize() )); 
+	}
+	document.getElementById("editButton").onclick = () => {
+		window.canvas.processContextMenu();
+	}
 
 	graph.start()
 	canvas.showSearchBox();

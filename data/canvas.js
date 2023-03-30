@@ -4601,7 +4601,7 @@ export default class LGraphCanvas {
             //find link info
             var start_node = this.graph.getNodeById(link.origin_id);
             var end_node = this.graph.getNodeById(link.target_id);
-            if (start_node == null) {
+            if (start_node == null || end_node == null) {
                 continue;
             }
             var start_node_slot = link.origin_slot;
@@ -4650,14 +4650,14 @@ export default class LGraphCanvas {
             var end_dir = end_slot.dir ||
                 (end_node.horizontal ? LiteGraph.UP : LiteGraph.LEFT);
 
-            this.renderLink(ctx, start_node_slotpos, end_node_slotpos, link, false, 0, null, start_dir, end_dir);
+            link.render(ctx, start_node_slotpos, end_node_slotpos, false, 0, null, start_dir, end_dir);
 
             //event triggered rendered on top
             if (link && link._last_time && now - link._last_time < 1000) {
                 var f = 2.0 - (now - link._last_time) * 0.002;
                 var tmp = ctx.globalAlpha;
                 ctx.globalAlpha = tmp * f;
-                this.renderLink(ctx, start_node_slotpos, end_node_slotpos, link, true, f, "white", start_dir, end_dir);
+                link.render(ctx, start_node_slotpos, end_node_slotpos, true, f, "white", start_dir, end_dir);
                 ctx.globalAlpha = tmp;
             }
         }
@@ -4951,8 +4951,8 @@ export default class LGraphCanvas {
         }
         let originType, targetType;
         if (link) {
-            originType = window.canvas.graph._nodes_by_id[link.target_id]?.type;
-            targetType = window.canvas.graph._nodes_by_id[link.origin_id]?.type;
+            originType = window.canvas.graph._nodes_by_id[link.target_id]?.constructor.type;
+            targetType = window.canvas.graph._nodes_by_id[link.origin_id]?.constructor.type;
         } 
         if (originType == "control/junction" || targetType == "control/junction") {
             if (Math.abs(a[0] - b[0]) >  Math.abs(a[1] - b[1])) {
@@ -7442,12 +7442,6 @@ export default class LGraphCanvas {
                 callback: LGraphCanvas.onMenuNodeToSubgraph
             });
 
-        options.push(null, {
-            content: "Remove",
-            disabled: !(node.removable !== false && !node.block_delete),
-            callback: LGraphCanvas.onMenuNodeRemove
-        });
-
         if (node.graph && node.graph.onGetNodeMenuOptions) {
             node.graph.onGetNodeMenuOptions(options, node);
         }
@@ -7475,6 +7469,12 @@ export default class LGraphCanvas {
         return o;
     }
     processContextMenu(node, event) {
+
+        if (node == null) node =  this.selected_nodes[Object.keys(this.selected_nodes)[0]]; // get the first node
+        if (node == null) return;
+        if (event == null) {
+            event = {canvasX: 0, canvasY: 0}
+        };
         var that = this;
         var canvas = LGraphCanvas.active_canvas;
         var ref_window = canvas.getCanvasWindow();

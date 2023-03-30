@@ -2725,8 +2725,10 @@ class ContextMenu {
             }
         }
 
-        root.style.left = left + "px";
-        root.style.top = top + "px";
+        if (options.event?.clientX) {
+            root.style.left = left + "px";
+            root.style.top = top + "px";
+        }
 
         if (options.scale) {
             root.style.transform = "scale(" + options.scale + ")";
