@@ -50,7 +50,7 @@ export default class WidgetButton extends LGraphNode{
     onMouseDown(e, local_pos) {
         if (local_pos[0] > 10 && local_pos[1] > 10 && local_pos[0] < this.size[0] - 10 && local_pos[1] < this.size[1] - 10) {
             this.clicked = true;
-            this.setOutputData("out", 1);
+            this.setOutputData(0, this.properties.pressed);
             return true;
         }
         return false;
@@ -68,6 +68,7 @@ export default class WidgetButton extends LGraphNode{
 
     onMouseUp(/*e*/) {
         this.clicked = false;
+        this.setOutputData(0, this.properties.released);
     }
 }
 

@@ -995,6 +995,8 @@ class LGraph {
                 }
             }
 
+
+
             if (this.onAfterExecute) {
                 this.onAfterExecute();
             }
@@ -1030,7 +1032,12 @@ class LGraph {
                 this.stop();
             }
         }
-
+        for(let linkID in this.links) {
+            let link = this.links[linkID];
+            let fromNode = this._nodes_by_id[link.origin_id].outputs[link.origin_slot]._data;
+            this._nodes_by_id[link.target_id].inputs[link.target_slot]._data = fromNode;
+            
+        }
         var now = LiteGraph.getTime();
         var elapsed = now - start;
         if (elapsed == 0) {

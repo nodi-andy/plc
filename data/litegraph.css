@@ -686,7 +686,7 @@ cursor: pointer;
   /* Style for the button divs */
   .menu-button {
     padding: 10px;
-    background-color: #ddd;
+    background-color: rgb(196, 196, 196);
     border: 1px solid #aaa;
     border-radius: 5px;
     margin-bottom: 5px;

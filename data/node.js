@@ -367,7 +367,7 @@ export default class LGraphNode {
         //store data in the output itself in case we want to debug
         output_info._data = data;
 
-        //if there are connections, pass the data to the connections
+        /*//if there are connections, pass the data to the connections
         if (this.outputs[slot].links) {
             for (var i = 0; i < this.outputs[slot].links.length; i++) {
                 var link_id = this.outputs[slot].links[i];
@@ -375,7 +375,7 @@ export default class LGraphNode {
                 if (link)
                     link.data = data;
             }
-        }
+        }*/
     }
     /**
          * sets the output data type, useful when you want to be able to overwrite the data type
@@ -420,31 +420,7 @@ export default class LGraphNode {
         if (slot >= this.inputs.length || this.inputs[slot].link == null) {
             return;
         }
-
-        var link_id = this.inputs[slot].link;
-        var link = this.graph.links[link_id];
-        if (!link) {
-            //bug: weird case but it happens sometimes
-            return null;
-        }
-
-        if (!force_update) {
-            return link.data;
-        }
-
-        //special case: used to extract data from the incoming connection before the graph has been executed
-        var node = this.graph.getNodeById(link.origin_id);
-        if (!node) {
-            return link.data;
-        }
-
-        if (node.updateOutputData) {
-            node.updateOutputData(link.origin_slot);
-        } else if (node.onExecute) {
-            node.onExecute();
-        }
-
-        return link.data;
+        return this.inputs[slot]._data;
     }
     /**
          * Retrieves the input data type (in case this supports multiple input types)
