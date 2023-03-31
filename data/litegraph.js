@@ -1,7 +1,6 @@
 import LGraphCanvas from "./canvas.js"
 import LLink from "./link.js"
 import LGraphNode from "./node.js"
-
 /**
  * The Global Scope. It contains all the registered node classes.
  *
@@ -3937,42 +3936,7 @@ LiteGraph.GraphOutput = GraphOutput;
 //LiteGraph.registerNodeType("graph/output", GraphOutput);
 
 //Constant
-class ConstantNumber extends LGraphNode{
-    static type = "data/number";
 
-    constructor() {
-        super();
-        this.addInput("value", "number");
-        this.addOutput("value", "number");
-        this.addProperty("value", 1.0);
-        this.widget = this.addWidget("number", "", 1, "value");
-        this.widgets_up = true;
-        this.size = [128, 64];
-    }
-    onExecute() {
-        this.setOutputData(0, parseFloat(this.properties["value"]));
-    }
-    getTitle() {
-        if (this.flags.collapsed) {
-            return this.properties.value;
-        }
-        return this.title;
-    }
-    setValue(v) {
-        this.setProperty("value", v);
-    }
-    onDrawBackground(ctx) {
-        //show the current value
-        this.outputs[0].label = this.properties["value"].toFixed(3);
-    }
-}
-
-ConstantNumber.title = "Const Number";
-ConstantNumber.desc = "Constant number";
-ConstantNumber.title_mode = LiteGraph.NO_TITLE;
-
-
-LiteGraph.registerNodeType("", ConstantNumber);
 
 
 
@@ -4003,8 +3967,8 @@ class ConstantBoolean extends LGraphNode {
     }
 }
 
-ConstantBoolean.prototype.getTitle = ConstantNumber.prototype.getTitle;
-ConstantBoolean.prototype.setValue = ConstantNumber.prototype.setValue;
+ConstantBoolean.prototype.getTitle = "ConstantNumber.prototype.getTitle";
+ConstantBoolean.prototype.setValue = "ConstantNumber.prototype.setValue";
 //LiteGraph.registerNodeType("data/boolean", ConstantBoolean);
 
 
@@ -4074,12 +4038,6 @@ class MathOperation extends LGraphNode {
             result = 0;
             result = this._func(A, B);
         }
-        else if (A.constructor === Array) {
-            result = this._result;
-            result.length = A.length;
-            for (var i = 0; i < A.length; ++i)
-                result[i] = this._func(A[i], B);
-        }
 
         else {
             result = {};
@@ -4145,10 +4103,10 @@ class ConstantString {
 ConstantString.title = "Const String";
 ConstantString.desc = "Constant string";
 
-ConstantString.prototype.getTitle = ConstantNumber.prototype.getTitle;
+ConstantString.prototype.getTitle = "ConstantNumber.prototype.getTitle";
 
 
-ConstantString.prototype.setValue = ConstantNumber.prototype.setValue;
+ConstantString.prototype.setValue = "ConstantNumber.prototype.setValue";
 
 
 //LiteGraph.registerNodeType("basic/string", ConstantString);
@@ -4260,7 +4218,7 @@ ConstantFile["@type"] = { type: "enum", values: ["text","arraybuffer","blob","js
 
 
 
-ConstantFile.prototype.setValue = ConstantNumber.prototype.setValue;
+ConstantFile.prototype.setValue = "ConstantNumber.prototype.setValue";
 
 
 
@@ -4299,7 +4257,7 @@ ConstantData.desc = "Constant Data";
 
 
 
-ConstantData.prototype.setValue = ConstantNumber.prototype.setValue;
+ConstantData.prototype.setValue = "ConstantNumber.prototype.setValue";
 
 //LiteGraph.registerNodeType("basic/data", ConstantData);
 
@@ -4352,7 +4310,7 @@ ConstantArray.desc = "Constant Array";
 
 
 
-ConstantArray.prototype.setValue = ConstantNumber.prototype.setValue;
+ConstantArray.prototype.setValue = "ConstantNumber.prototype.setValue";
 
 //LiteGraph.registerNodeType("basic/array", ConstantArray);
 
