@@ -35,15 +35,15 @@ class EventCounter extends LGraphNode{
     }
     onExecute() {
         let pvalue = this.value;
-        let inc = this.getInputData(0);
-        let dec = this.getInputData(1);
-        let res = this.getInputData(2);
+        let inc = parseInt(this.getInputData(0));
+        let dec = parseInt(this.getInputData(1));
+        let res = parseInt(this.getInputData(2));
         
         if (inc) {
-            this.value += 1;
+            this.value += inc;
         }
         if (dec) {
-            this.value -= 1;
+            this.value -= dec;
         }
         if (res) {
             this.value = 0;

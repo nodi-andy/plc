@@ -46,19 +46,15 @@ export default class WidgetToggle extends LGraphNode{
             ctx.textAlign = "left";
         }
     }
-    onAction(action) {
-        if (this.properties.value == 1) this.properties.value == 0;
-        else this.properties.value == 1;
-        this.trigger("e", this.properties.value);
-    }
 
     onExecute() {
         let pstate = this.properties.value;
-        var v = this.getInputData(0);
-        if (v != null || v?.length != 0) {
-            this.properties.value = v;
+        if (this.inputs[0].link != null) {
+            var v = this.getInputData(0);
+            if (v != null || v?.length != 0) {
+                this.properties.value = v;
+            }
         }
-
         if (pstate != this.properties.value) {
             this.setDirtyCanvas(true, true);
         }
