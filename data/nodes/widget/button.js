@@ -27,7 +27,7 @@ export default class WidgetButton extends LGraphNode{
     onDrawForeground(ctx) {
         var margin = 10;
         
-        if (this.clicked) {
+        if (this.clicked == 1) {
             margin += 2;
         } else {
             ctx.fillStyle = "black";
@@ -49,26 +49,36 @@ export default class WidgetButton extends LGraphNode{
 
     onMouseDown(e, local_pos) {
         if (local_pos[0] > 10 && local_pos[1] > 10 && local_pos[0] < this.size[0] - 10 && local_pos[1] < this.size[1] - 10) {
-            this.clicked = true;
-            this.setOutputData(0, this.properties.pressed);
+
+            this.clicked = 1;
+            this.newState = 1;
             return true;
         }
         return false;
     }
 
     onExecute() {
-        let click = this.clicked;
-        if (this.state == 1) this.clicked = false;
-        else if (this.state == 0) this.clicked = true;
-        if (click != this.clicked) {
+        this.output = null;
+
+        if (this.newState == 0 && this.state == 0) {
+            this.output = this.properties.released;
+        } if (this.newState == 0 && this.state == 1) {
+            this.output = this.properties.releasing;
+        } if (this.newState == 1 && this.state == 1) {
+            this.output = this.properties.pressed;
+        } if (this.newState == 1 && this.state == 0) {
+            this.output = this.properties.pressing;
+        }
+        if (this.state != this.newState) {
             this.setDirtyCanvas(true, true);
         }
-        this.setOutputData(1, this.clicked);
+        this.state = this.newState;
+        this.setOutputData(0, this.output);
     }
 
     onMouseUp(/*e*/) {
-        this.clicked = false;
-        this.setOutputData(0, this.properties.released);
+        this.clicked = 0;
+        this.newState = 0;
     }
 }
 

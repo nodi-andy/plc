@@ -24,19 +24,6 @@ class EventCounter extends LGraphNode{
         }
         return this.title;
     }
-    onAction(action, param, options) {
-        var v = this.value;
-        if (action == "inc") {
-            this.value += 1;
-        } else if (action == "dec") {
-            this.value -= 1;
-        } else if (action == "reset") {
-            this.value = 0;
-        }
-        if (this.value != v) {
-            this.trigger("change", this.value);
-        }
-    }
     onDrawBackground(ctx) {
         if (this.flags.collapsed) {
             return;
@@ -47,10 +34,25 @@ class EventCounter extends LGraphNode{
         ctx.fillText(this.value, this.size[0] * 0.5, this.size[1] * 0.5);
     }
     onExecute() {
-        if (this.properties.doCountExecution) {
+        let pvalue = this.value;
+        let inc = this.getInputData(0);
+        let dec = this.getInputData(1);
+        let res = this.getInputData(2);
+        
+        if (inc) {
             this.value += 1;
         }
-        this.setOutputData(1, this.value);
+        if (dec) {
+            this.value -= 1;
+        }
+        if (res) {
+            this.value = 0;
+        }
+        if (pvalue != this.value) {
+            this.setDirtyCanvas(true, true);
+        }
+        
+        this.setOutputData(0, this.value);
     }
 }
 

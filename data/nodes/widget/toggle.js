@@ -10,7 +10,7 @@ export default class WidgetToggle extends LGraphNode{
         super();
         this.addInput("inp", "number");
         this.addOutput("outp", "number");
-        this.properties = { font: "", value: false, port: "", color : "#AEF" };
+        this.properties = { font: "", value: 0, port: "", color : "#AEF" };
         this.size = [64, 64];
     }
     onDrawForeground(ctx) {
@@ -20,36 +20,42 @@ export default class WidgetToggle extends LGraphNode{
 
         var size = this.size[1] * 0.5;
         var margin = 0.25;
-        var h = this.size[1] * 0.8;
-        ctx.font = this.properties.font || (size * 0.8).toFixed(0) + "px Arial";
-        var w = ctx.measureText(this.title).width;
+        var y = this.size[1] * 0.25;
+        var w = 0;
+        if (this.title.trim().length) {
+            ctx.font = this.properties.font || (size * 0.8).toFixed(0) + "px Arial";
+            w = ctx.measureText(this.title).width;
+        }
         var x = (this.size[0] - (w + size)) * 0.5;
 
         ctx.fillStyle = "#AAA";
-        ctx.fillRect(x, h - size, size, size);
+        ctx.fillRect(x, y, size, size);
 
         ctx.fillStyle = this.properties.value ? this.properties.color : "#000";
         ctx.fillRect(
             x + size * margin,
-            h - size + size * margin,
+            y + size * margin,
             size * (1 - margin * 2),
             size * (1 - margin * 2)
         );
 
-        ctx.textAlign = "left";
-        ctx.fillStyle = "#AAA";
-        ctx.fillText(this.title, size * 1.2 + x, h * 0.85);
-        ctx.textAlign = "left";
+        if (this.title.trim().length) {
+            ctx.textAlign = "left";
+            ctx.fillStyle = "#AAA";
+            ctx.fillText(this.title, size * 1.2 + x, y * 0.85);
+            ctx.textAlign = "left";
+        }
     }
     onAction(action) {
-        this.properties.value = !this.properties.value;
+        if (this.properties.value == 1) this.properties.value == 0;
+        else this.properties.value == 1;
         this.trigger("e", this.properties.value);
     }
 
     onExecute() {
         let pstate = this.properties.value;
         var v = this.getInputData(0);
-        if (v != null) {
+        if (v != null || v?.length != 0) {
             this.properties.value = v;
         }
 

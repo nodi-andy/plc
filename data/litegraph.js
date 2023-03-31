@@ -1003,10 +1003,10 @@ class LGraph {
         } else {
             try {
                 //iterations
-                for (var i = 0; i < num; i++) {
-                    for (var j = 0; j < limit; ++j) {
-                        var node = nodes[j];
-                        if (node.mode == LiteGraph.ALWAYS && node.onExecute) {
+                for (i = 0; i < num; i++) {
+                    for (j = 0; j < limit; ++j) {
+                        node = nodes[j];
+                        if (node.onExecute) {
                             node.onExecute();
                         }
                     }
@@ -6015,35 +6015,6 @@ WidgetPanel.widgets = [{ name: "update", text: "Update", type: "button" }];
 
 var LiteGraph = global.LiteGraph;
 
-class logicAnd extends LGraphNode{
-    static type = "logic/AND";
-    constructor() {
-        super();
-        this.properties = {};
-        this.addInput("", "number");
-        this.addInput("", "number");
-        this.addOutput("", "number");
-    }
-    onExecute() {
-        let ret = true;
-        for (let inX in this.inputs) {
-            if (!this.getInputData(inX)) {
-                ret = false;
-                break;
-            }
-        }
-        this.setOutputData(0, ret);
-    }
-    onGetInputs() {
-        return [
-            ["and", "boolean"]
-        ];
-    }
-}
-logicAnd.title = "AND";
-logicAnd.desc = "Return true if all inputs are true";
-logicAnd.title_mode = LiteGraph.CENTRAL_TITLE;
-LiteGraph.registerNodeType("logic/AND", logicAnd);
 
 
 class logicOr extends LGraphNode{
