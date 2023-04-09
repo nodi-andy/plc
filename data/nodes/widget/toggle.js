@@ -52,7 +52,10 @@ export default class WidgetToggle extends LGraphNode{
         if (this.inputs[0].link != null) {
             var v = this.getInputData(0);
             if (v != null || v?.length != 0) {
-                this.properties.value = parseInt(v);
+                if (v === true)
+                    this.properties.value = 1;
+                else 
+                    this.properties.value = parseInt(v);
             }
         }
         if (pstate != this.properties.value) {

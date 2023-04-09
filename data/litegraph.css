@@ -739,3 +739,8 @@ cursor: pointer;
     left: 10px;
     transform: translateY(-50%);
   }
+
+  .disabled {
+    pointer-events: none;
+    background-color: #666;
+  }

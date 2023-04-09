@@ -1,4 +1,3 @@
-import { LiteGraph } from "../../litegraph.js";
 import WidgetToggle from "../widget/toggle.js";
 
 export default class NodiBoxRed extends WidgetToggle {
@@ -10,4 +9,3 @@ export default class NodiBoxRed extends WidgetToggle {
     }
 }
 
-LiteGraph.registerNodeType("nodi.box/redLED", NodiBoxRed);

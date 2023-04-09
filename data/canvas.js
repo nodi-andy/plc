@@ -121,6 +121,7 @@ export default class LGraphCanvas {
         this.round_radius = 8;
 
         this.current_node = null;
+        this.current_node_cbs = []
         this.node_widget = null; //used for widgets
         this.over_link_center = null;
         this.last_mouse_position = [0, 0];
@@ -144,6 +145,18 @@ export default class LGraphCanvas {
 
         this.autoresize = options.autoresize;
     }
+
+    set current_node(node) {
+        this._current_node = node;
+        for(let cb in this.current_node_cbs) {
+            this.current_node_cbs[cb]();
+        }
+    }
+
+    get current_node() {
+        return this._current_node;
+    }
+
     static getFileExtension(url) {
         var question = url.indexOf("?");
         if (question != -1) {
@@ -1373,6 +1386,7 @@ export default class LGraphCanvas {
         this.block_click = true;
         this.last_mouseclick = 0;
     }
+
     processMouseDown(e) {
 
         if (this.set_canvas_dirty_on_mouse_event)
@@ -1408,6 +1422,7 @@ export default class LGraphCanvas {
         }
 
         var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes, 5);
+
         var skip_dragging = false;
         var skip_action = false;
         var now = LiteGraph.getTime();
@@ -2827,13 +2842,13 @@ export default class LGraphCanvas {
          * selects a given node (or adds it to the current selection)
          * @method selectNode
          **/
-    selectNode(node,
-        add_to_current_selection) {
+    selectNode(node, add_to_current_selection) {
         if (node == null) {
             this.deselectAllNodes();
         } else {
             this.selectNodes([node], add_to_current_selection);
         }
+        this.current_node = node;
     }
     /**
          * selects several nodes (or adds them to the current selection)
@@ -3795,7 +3810,6 @@ export default class LGraphCanvas {
          **/
     drawNode(node, ctx) {
         var glow = false;
-        this.current_node = node;
 
         var color = node.color || node.constructor.color || LiteGraph.NODE_DEFAULT_COLOR;
         var bgcolor = node.bgcolor || node.constructor.bgcolor || LiteGraph.NODE_DEFAULT_BGCOLOR;
@@ -6545,6 +6559,7 @@ export default class LGraphCanvas {
             }
         }
 
+        dialog.refresh = refreshHelper;
         return dialog;
     }
     showEditPropertyValue(node, property, options) {

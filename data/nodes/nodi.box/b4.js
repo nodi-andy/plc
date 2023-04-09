@@ -1,5 +1,4 @@
 import WidgetButton from "../widget/button.js";
-import { LiteGraph } from "../../litegraph.js";
 
 export default class NodiBoxB4 extends WidgetButton{
     constructor() {
@@ -10,5 +9,3 @@ export default class NodiBoxB4 extends WidgetButton{
         this.type = WidgetButton.type;
     }
 }
-
-LiteGraph.registerNodeType("nodi.box/B4", NodiBoxB4);

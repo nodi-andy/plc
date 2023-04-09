@@ -6005,24 +6005,4 @@ logicOr.desc = "Return true if at least one input is true";
 logicOr.title_mode = LiteGraph.CENTRAL_TITLE;
 LiteGraph.registerNodeType("logic/OR", logicOr);
 
-
-class logicNot extends LGraphNode{
-    static type = "logic/NOT";
-    constructor() {
-        super();
-        this.properties = {};
-        this.addInput("", "number");
-        this.addOutput("", "number");
-    }
-    onExecute() {
-        var ret = !this.getInputData(0);
-        this.setOutputData(0, ret);
-    }
-}
-logicNot.title = "NOT";
-logicNot.desc = "Return the logical negation";
-logicNot.title_mode = LiteGraph.CENTRAL_TITLE;
-LiteGraph.registerNodeType("logic/NOT", logicNot);
-
-
 export { LGraph };

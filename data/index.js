@@ -1,3 +1,11 @@
+import { LiteGraph } from "./litegraph.js";
+import NodiBoxB1 from "./nodes/nodi.box/b1.js";
+import NodiBoxB2 from "./nodes/nodi.box/b2.js";
+import NodiBoxB3 from "./nodes/nodi.box/b3.js";
+import NodiBoxB4 from "./nodes/nodi.box/b4.js";
+import NodiBoxRed from "./nodes/nodi.box/red.js";
+import NodiBoxYellow from "./nodes/nodi.box/yellow.js";
+
 var gateway = `ws://${window.location.hostname}/ws`;
 //var gateway = `ws://192.168.1.104/ws`;
 var websocket;
@@ -27,6 +35,15 @@ function initWebSocket() {
 }
 
 function onOpen(event) {
+    LiteGraph.registerNodeType("nodi.box/B1", NodiBoxB1);
+    LiteGraph.registerNodeType("nodi.box/B2", NodiBoxB2);
+    LiteGraph.registerNodeType("nodi.box/B3", NodiBoxB3);
+    LiteGraph.registerNodeType("nodi.box/B4", NodiBoxB4);
+    LiteGraph.registerNodeType("nodi.box/redLED", NodiBoxRed);
+    LiteGraph.registerNodeType("nodi.box/yellowLED", NodiBoxYellow);
+
+    window.toolbox.refresh();
+    window.burnButton.classList.remove("disabled");
     console.log('Connection opened');
 }
 
