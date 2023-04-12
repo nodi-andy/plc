@@ -51,5 +51,3 @@ export default class Stepper extends LGraphNode{
         this.setOutputData(1, this.num);
     }
 }
-
-LiteGraph.registerNodeType("widget/stepper", Stepper);

@@ -20,7 +20,6 @@ export default class Interval extends LGraphNode {
         this.addInput("ton", "number", "", "tOn");
         this.addInput("toff", "number", "", "tOff");
         this.addOutput("tick", "number", "", "tick");
-        this.time = 0;
         this.last_on = 0;
         this.last_off = 0;
         this.triggered = false;
@@ -42,6 +41,7 @@ export default class Interval extends LGraphNode {
     }
 
     onExecute() {
+        if (this.state == null) this.state = 0;
         var now = LiteGraph.getTime();
 
         var dON = now - this.last_on;
@@ -72,15 +72,7 @@ export default class Interval extends LGraphNode {
         }
         this.state = this.newState;
         this.setOutputData(0, this.output);
-        console.log(this.output);
-    }
-
-    onGetInputs() {
-        return [["interval", "number"]];
-    }
-
-    onGetOutputs() {
-        return [["tick", "boolean"]];
+        //console.log(this.output);
     }
 }
 

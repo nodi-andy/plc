@@ -13,6 +13,7 @@ export default class WidgetToggle extends LGraphNode{
         this.properties = { font: "", value: 0, port: "", color : "#AEF" };
         this.size = [64, 64];
     }
+
     onDrawForeground(ctx) {
         if (this.flags.collapsed) {
             return;
@@ -48,21 +49,21 @@ export default class WidgetToggle extends LGraphNode{
     }
 
     onExecute() {
-        let pstate = this.properties.value;
-        if (this.inputs[0].link != null) {
+        if (this.inputs[0].link == null) {
+            this.properties.value = 0
+        } else {
             var v = this.getInputData(0);
-            if (v != null || v?.length != 0) {
+            if (v != null) {
                 if (v === true)
                     this.properties.value = 1;
                 else 
                     this.properties.value = parseInt(v);
             }
         }
-        if (pstate != this.properties.value) {
-            this.setDirtyCanvas(true, true);
-        }
+        this.setDirtyCanvas(true, true);
         this.setOutputData(0, this.properties.value);
     }
+    
     onMouseDown(e, local_pos) {
         if (local_pos[0] > 10 &&
             local_pos[1] > 10 &&

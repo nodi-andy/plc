@@ -14,14 +14,17 @@ export default class WidgetButton extends LGraphNode{
         this.addOutput("outp", "number");
         this.addProperty("text", "B1");
         this.addProperty("port", "");
-        this.addProperty("pressing", "");
-        this.addProperty("pressed", "1");
-        this.addProperty("releasing", "");
-        this.addProperty("released", "");
+        this.addProperty("pressing", 1);
+        this.addProperty("pressed", null);
+        this.addProperty("releasing", 0);
+        this.addProperty("released", null);
         this.addProperty("color", "gray");
         this.size = [64, 64];
         this.clicked = false;
-
+        for(let input of this.inputs) {
+            input._data = null;
+        }
+        this.onMouseUp();
     }
 
     onDrawForeground(ctx) {
@@ -54,12 +57,13 @@ export default class WidgetButton extends LGraphNode{
             this.newState = 1;
             return true;
         }
+        this.setDirtyCanvas(true);
+
         return false;
     }
 
     onExecute() {
         this.output = null;
-
         if (this.newState == 0 && this.state == 0) {
             this.output = this.properties.released;
         } if (this.newState == 0 && this.state == 1) {
@@ -69,16 +73,34 @@ export default class WidgetButton extends LGraphNode{
         } if (this.newState == 1 && this.state == 0) {
             this.output = this.properties.pressing;
         }
-        if (this.state != this.newState) {
-            this.setDirtyCanvas(true, true);
+        
+        this.setDirtyCanvas(true, true);
+        if (this.output != null) {
+            if (this.inputs[0].link == null) {
+                this.setOutputData(0, this.output);
+            } else {
+                if (this.inputs[0]._data == null) {
+                    this.setOutputData(0, undefined);
+                } else {
+                    this.setOutputData(0, this.inputs[0]._data);
+                }
+            }
+            for(let input of this.inputs) {
+                input._data = null;
+            }
         }
         this.state = this.newState;
-        this.setOutputData(0, this.output);
+    }
+
+    onAfterExecute() {
+        // do not remove input
     }
 
     onMouseUp(/*e*/) {
         this.clicked = 0;
         this.newState = 0;
+        this.setDirtyCanvas(true);
+
     }
 }
 

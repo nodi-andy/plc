@@ -12,9 +12,10 @@ export default class WidgetNumber extends LGraphNode {
     constructor() {
         super();
         this.addInput("set", "number", "", "");
-        this.addOutput("", "number");
-        this.size = [80, 60];
-        this.properties = { min: -1000, max: 1000, value: 1, step: 1 };
+        this.addOutput("copy", "number");
+        this.addProperty("value", 0, "number");
+        this.addProperty("const", false, "boolean")
+        this.size = [64, 64];
         this.old_y = -1;
         this._remainder = 0;
         this._precision = 0;
@@ -50,13 +51,28 @@ export default class WidgetNumber extends LGraphNode {
         );
     }
     onExecute() {
-        if (this.inputs[0].link != null) {
-            this.properties.value = this.getInputData(0);
+        let val = this.getInputData(0);
+        if (this.inputs[0].link == null) {
+            if (this.properties.const === false && val != null) {
+                this.properties.value = val 
+            }
+            this.setOutputData(0, this.properties.value);
+        } else {
+            if (val != null && val !== "") {
+                if (this.properties.const === false) {
+                    this.properties.value = val 
+                }
+                this.setOutputData(0, this.properties.value);
+            }
         }
-        this.setOutputData(0, this.properties.value);
+    }
+    onAfterExecute() {
+        for(let input of this.inputs) {
+            input._data = null;
+        }
     }
     onPropertyChanged(name, value) {
-        var t = (this.properties.step + "").split(".");
+        var t = (1 + "").split(".");
         this._precision = t.length > 1 ? t[1].length : 0;
     }
     onMouseDown(e, pos) {
@@ -67,7 +83,7 @@ export default class WidgetNumber extends LGraphNode {
         this.old_y = e.canvasY;
         this.captureInput(true);
         this.mouse_captured = true;
-
+        this.setDirtyCanvas(true);
         return true;
     }
     onMouseMove(e) {
@@ -89,9 +105,7 @@ export default class WidgetNumber extends LGraphNode {
         steps = steps | 0;
 
         var v = Math.clamp(
-            this.properties.value + steps * this.properties.step,
-            this.properties.min,
-            this.properties.max
+            this.properties.value + steps * 1,
         );
         this.properties.value = v;
         this.graph._version++;
@@ -101,9 +115,7 @@ export default class WidgetNumber extends LGraphNode {
         if (e.click_time < 200) {
             var steps = pos[1] > this.size[1] * 0.5 ? -1 : 1;
             this.properties.value = Math.clamp(
-                this.properties.value + steps * this.properties.step,
-                this.properties.min,
-                this.properties.max
+                this.properties.value + steps * 1,
             );
             this.graph._version++;
             this.setDirtyCanvas(true);
@@ -113,6 +125,8 @@ export default class WidgetNumber extends LGraphNode {
             this.mouse_captured = false;
             this.captureInput(false);
         }
+        this.setDirtyCanvas(true);
+
     }
 }
 

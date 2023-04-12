@@ -5,6 +5,7 @@ import NodiBoxB3 from "./nodes/nodi.box/b3.js";
 import NodiBoxB4 from "./nodes/nodi.box/b4.js";
 import NodiBoxRed from "./nodes/nodi.box/red.js";
 import NodiBoxYellow from "./nodes/nodi.box/yellow.js";
+import Stepper from "./nodes/nodi.box/stepper.js";
 
 var gateway = `ws://${window.location.hostname}/ws`;
 //var gateway = `ws://192.168.1.104/ws`;
@@ -41,6 +42,7 @@ function onOpen(event) {
     LiteGraph.registerNodeType("nodi.box/B4", NodiBoxB4);
     LiteGraph.registerNodeType("nodi.box/redLED", NodiBoxRed);
     LiteGraph.registerNodeType("nodi.box/yellowLED", NodiBoxYellow);
+    LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
 
     window.toolbox.refresh();
     window.burnButton.classList.remove("disabled");

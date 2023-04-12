@@ -3,10 +3,15 @@ import { LiteGraph } from "../../litegraph.js";
 
 class Junction extends LGraphNode {
     static type = "control/junction";
+    static title = "Junction";
+    static desc = "Junction";
+    static title_mode = LiteGraph.NO_TITLE;
+    static fixsize = [32, 32];
 
     constructor() {
         super();
-        let inp = this.addInput("", "number");
+        let inp = this.addInput("in", "number");
+        this.addProperty("in", 0);
         inp.pos = [16,16]
         inp.shape = LiteGraph.CIRCLE_SHAPE;
         
@@ -16,13 +21,12 @@ class Junction extends LGraphNode {
 
         this.size = [32, 32];
         this._shape = LiteGraph.CIRCLE_SHAPE;
-        Junction.title = "Const Number";
-        Junction.desc = "Constant number";
-        Junction.title_mode = LiteGraph.NO_TITLE;
-        Junction.fixsize = [32, 32];
     }
     onExecute() {
-        this.setOutputData(0, parseFloat(this.properties["value"]));
+        let input = this.getInputData(0);
+        if (input != null) {
+            this.setOutputData(0, input);
+        }
     }
     getTitle() {
         if (this.flags.collapsed) {

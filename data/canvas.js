@@ -381,10 +381,10 @@ export default class LGraphCanvas {
 
             if (v.value) {
                 node.graph.beforeChange();
-                node.addInput(v.value[0], v.value[1], v.value[2]);
+                let newInput = node.addInput(v.value[0], v.value[1], v.value[2], v.value[3]);
 
                 if (node.onNodeInputAdd) { // callback to the node when adding a slot
-                    node.onNodeInputAdd(v.value);
+                    node.onNodeInputAdd(newInput);
                 }
                 node.setDirtyCanvas(true, true);
                 node.graph.afterChange();
@@ -683,9 +683,9 @@ export default class LGraphCanvas {
         }
 
         function setValue(value) {
-            if (item.type == "Number") {
+            if (item.type == "number") {
                 value = Number(value);
-            } else if (item.type == "Boolean") {
+            } else if (item.type == "boolean") {
                 value = Boolean(value);
             }
             node[property] = value;
@@ -1821,10 +1821,10 @@ export default class LGraphCanvas {
         this.last_mouseclick = LiteGraph.getTime();
         this.last_mouse_dragging = true;
 
-        /*
-    if( (this.dirty_canvas || this.dirty_bgcanvas) && this.rendering_timer_id == null)
-        this.draw();
-    */
+        
+        if( (this.dirty_canvas || this.dirty_bgcanvas) && this.rendering_timer_id == null)
+            this.draw();
+        
         this.graph.change();
 
         //this is to ensure to defocus(blur) if a text input element is on focus
@@ -2359,10 +2359,10 @@ export default class LGraphCanvas {
             this.dragging_canvas = false;
         }
 
-        /*
-        if((this.dirty_canvas || this.dirty_bgcanvas) && this.rendering_timer_id == null)
-        this.draw();
-        */
+        //if((this.dirty_canvas || this.dirty_bgcanvas) && this.rendering_timer_id == null) {
+            this.draw();
+        //}
+
         if (is_primary) {
             this.pointer_is_down = false;
             this.pointer_is_double = false;

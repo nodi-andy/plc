@@ -138,6 +138,9 @@ export var LiteGraph = (global.LiteGraph = {
     release_link_on_empty_shows_menu: false, //[true!] dragging a link to empty space will open a menu, add from list, search or defaults
     
     pointerevents_method: "mouse", // "mouse"|"pointer" use mouse for retrocompatibility issues? (none found @ now)
+
+    alphabet : [],
+
     // TODO implement pointercancel, gotpointercapture, lostpointercapture, (pointerover, pointerout if necessary)
 
     /**
@@ -727,6 +730,10 @@ export var LiteGraph = (global.LiteGraph = {
     }
 });
 
+
+for (let i = 65; i <= 90; i++) {
+    LiteGraph.alphabet.push(String.fromCharCode(i));
+}
 //timer that works everywhere
 if (typeof performance != "undefined") {
     LiteGraph.getTime = performance.now.bind(performance);
@@ -1015,6 +1022,19 @@ class LGraph {
                         this.onExecuteStep();
                     }
                 }
+                for (i = 0; i < num; i++) {
+                    for (j = 0; j < limit; ++j) {
+                        node = nodes[j];
+                        if (node.onAfterExecute) {
+                            node.onAfterExecute();
+                        } else {
+                            for(let input of node.inputs) {
+                                input._data = null;
+                            }
+                        }
+                    }
+                }
+
 
                 if (this.onAfterExecute) {
                     this.onAfterExecute();
@@ -1033,9 +1053,14 @@ class LGraph {
         }
         for(let linkID in this.links) {
             let link = this.links[linkID];
-            let fromNode = this._nodes_by_id[link.origin_id].outputs[link.origin_slot]._data;
-            this._nodes_by_id[link.target_id].inputs[link.target_slot]._data = fromNode;
+            let dataFromNode = this._nodes_by_id[link.origin_id].outputs[link.origin_slot]._data;
+            let data = this._nodes_by_id[link.target_id].inputs[link.target_slot]._data;
+            if (dataFromNode !== null && data == null) this._nodes_by_id[link.target_id].inputs[link.target_slot]._data = dataFromNode;
             
+        }
+        for(let linkID in this.links) {
+            let link = this.links[linkID];
+            this._nodes_by_id[link.origin_id].outputs[link.origin_slot]._data = null;
         }
         var now = LiteGraph.getTime();
         var elapsed = now - start;
@@ -1051,155 +1076,7 @@ class LGraph {
         this.nodes_actioning = [];
         this.nodes_executedAction = [];
     }
-    /**
-         * Updates the graph execution order according to relevance of the nodes (nodes with only outputs have more relevance than
-         * nodes with only inputs.
-         * @method updateExecutionOrder
-         */
-    updateExecutionOrder() {
-        this._nodes_in_order = this.computeExecutionOrder(false);
-        this._nodes_executable = [];
-        for (var i = 0; i < this._nodes_in_order.length; ++i) {
-            if (this._nodes_in_order[i].onExecute) {
-                this._nodes_executable.push(this._nodes_in_order[i]);
-            }
-        }
-    }
-    //This is more internal, it computes the executable nodes in order and returns it
-    computeExecutionOrder(only_onExecute,
-        set_level) {
-        var L = [];
-        var S = [];
-        var M = {};
-        var visited_links = {}; //to avoid repeating links
-        var remaining_links = {}; //to a
 
-
-        //search for the nodes without inputs (starting nodes)
-        for (var i = 0, l = this._nodes.length; i < l; ++i) {
-            var node = this._nodes[i];
-            if (only_onExecute && !node.onExecute) {
-                continue;
-            }
-
-            M[node.id] = node; //add to pending nodes
-
-            var num = 0; //num of input connections
-            if (node.inputs) {
-                for (var j = 0, l2 = node.inputs.length; j < l2; j++) {
-                    if (node.inputs[j] && node.inputs[j].link != null) {
-                        num += 1;
-                    }
-                }
-            }
-
-            if (num == 0) {
-                //is a starting node
-                S.push(node);
-                if (set_level) {
-                    node._level = 1;
-                }
-            } //num of input links
-            else {
-                if (set_level) {
-                    node._level = 0;
-                }
-                remaining_links[node.id] = num;
-            }
-        }
-
-        while (true) {
-            if (S.length == 0) {
-                break;
-            }
-
-            //get an starting node
-            var node = S.shift();
-            L.push(node); //add to ordered list
-            delete M[node.id]; //remove from the pending nodes
-
-            if (!node.outputs) {
-                continue;
-            }
-
-            //for every output
-            for (var i = 0; i < node.outputs.length; i++) {
-                var output = node.outputs[i];
-                //not connected
-                if (output == null ||
-                    output.links == null ||
-                    output.links.length == 0) {
-                    continue;
-                }
-
-                //for every connection
-                for (var j = 0; j < output.links.length; j++) {
-                    var link_id = output.links[j];
-                    var link = this.links[link_id];
-                    if (!link) {
-                        continue;
-                    }
-
-                    //already visited link (ignore it)
-                    if (visited_links[link.id]) {
-                        continue;
-                    }
-
-                    var target_node = this.getNodeById(link.target_id);
-                    if (target_node == null) {
-                        visited_links[link.id] = true;
-                        continue;
-                    }
-
-                    if (set_level &&
-                        (!target_node._level ||
-                            target_node._level <= node._level)) {
-                        target_node._level = node._level + 1;
-                    }
-
-                    visited_links[link.id] = true; //mark as visited
-                    remaining_links[target_node.id] -= 1; //reduce the number of links remaining
-                    if (remaining_links[target_node.id] == 0) {
-                        S.push(target_node);
-                    } //if no more links, then add to starters array
-                }
-            }
-        }
-
-        //the remaining ones (loops)
-        for (var i in M) {
-            L.push(M[i]);
-        }
-
-        if (L.length != this._nodes.length && LiteGraph.debug) {
-            console.warn("something went wrong, nodes missing");
-        }
-
-        var l = L.length;
-
-        //save order number in the node
-        for (var i = 0; i < l; ++i) {
-            L[i].order = i;
-        }
-
-        //sort now by priority
-        L = L.sort(function (A, B) {
-            var Ap = A.constructor.priority || A.priority || 0;
-            var Bp = B.constructor.priority || B.priority || 0;
-            if (Ap == Bp) {
-                //if same priority, sort by order
-                return A.order - B.order;
-            }
-            return Ap - Bp; //sort by priority
-        });
-
-        //save order number in the node, again...
-        for (var i = 0; i < l; ++i) {
-            L[i].order = i;
-        }
-
-        return L;
-    }
     /**
          * Returns all the nodes that could affect this one (ancestors) by crawling all the inputs recursively.
          * It doesn't include the node itself
@@ -1234,49 +1111,7 @@ class LGraph {
         });
         return ancestors;
     }
-    /**
-         * Positions every node in a more readable manner
-         * @method arrange
-         */
-    arrange(margin, layout) {
-        margin = margin || 100;
 
-        var nodes = this.computeExecutionOrder(false, true);
-        var columns = [];
-        for (var i = 0; i < nodes.length; ++i) {
-            var node = nodes[i];
-            var col = node._level || 1;
-            if (!columns[col]) {
-                columns[col] = [];
-            }
-            columns[col].push(node);
-        }
-
-        var x = margin;
-
-        for (var i = 0; i < columns.length; ++i) {
-            var column = columns[i];
-            if (!column) {
-                continue;
-            }
-            var max_size = 100;
-            var y = margin + LiteGraph.NODE_TITLE_HEIGHT;
-            for (var j = 0; j < column.length; ++j) {
-                var node = column[j];
-                node.pos[0] = (layout == LiteGraph.VERTICAL_LAYOUT) ? y : x;
-                node.pos[1] = (layout == LiteGraph.VERTICAL_LAYOUT) ? x : y;
-                var max_size_index = (layout == LiteGraph.VERTICAL_LAYOUT) ? 1 : 0;
-                if (node.size[max_size_index] > max_size) {
-                    max_size = node.size[max_size_index];
-                }
-                var node_size_index = (layout == LiteGraph.VERTICAL_LAYOUT) ? 0 : 1;
-                y += node.size[node_size_index] + margin + LiteGraph.NODE_TITLE_HEIGHT;
-            }
-            x += max_size + margin;
-        }
-
-        this.setDirtyCanvas(true, true);
-    }
     /**
          * Returns the amount of time the graph has been running in milliseconds
          * @method getTime
@@ -1409,10 +1244,6 @@ class LGraph {
             node.alignToGrid();
         }
 
-        if (!skip_compute_order) {
-            this.updateExecutionOrder();
-        }
-
         if (this.onNodeAdded) {
             this.onNodeAdded(node);
         }
@@ -1511,7 +1342,6 @@ class LGraph {
         this.afterChange(); //sure? - almost sure is wrong
         this.change();
 
-        this.updateExecutionOrder();
     }
     /**
          * Returns a node by its id.
@@ -1653,7 +1483,6 @@ class LGraph {
                 newnode.outputs = node.outputs.concat();
             }
         }
-        this.updateExecutionOrder();
     }
     // ********** GLOBALS *****************
     onAction(action, param, options) {
@@ -1951,7 +1780,6 @@ class LGraph {
         this.sendActionToCanvas("onAfterChange", this);
     }
     connectionChange(node, link_info) {
-        this.updateExecutionOrder();
         if (this.onConnectionChange) {
             this.onConnectionChange(node);
         }
@@ -2157,8 +1985,6 @@ class LGraph {
                 this.add(group);
             }
         }
-
-        this.updateExecutionOrder();
 
         this.extra = data.extra || {};
 
@@ -2788,7 +2614,8 @@ class ContextMenu {
                 element.childNodes[1].node = options.extra;
                 element.childNodes[1].node_prop = value.value;
                 element.childNodes[1].addEventListener('blur', function(event) {
-                    this.node.properties[this.node_prop] = event.target.value;
+                    if (event.target.value == "") event.target.value = "null"
+                    this.node.properties[this.node_prop] = JSON.parse(event.target.value);
                     console.log('Input edited and focus lost:', event.target.value);
                 });
             }
@@ -3936,147 +3763,6 @@ LiteGraph.GraphOutput = GraphOutput;
 //LiteGraph.registerNodeType("graph/output", GraphOutput);
 
 //Constant
-
-
-
-
-class ConstantBoolean extends LGraphNode {
-    static title = "Const Boolean";
-    static desc = "Constant boolean";
-    static title_mode = LiteGraph.NO_TITLE;
-    static type = "data/boolean";
-
-    constructor() {
-        super();
-        this.addInput("bool", "boolean");
-        this.addOutput("bool", "boolean");
-        this.addProperty("value", true);
-        this.widget = this.addWidget("toggle", "", true, "value");
-        this.serialize_widgets = true;
-        this.widgets_up = true;
-        this.size = [128, 64];
-    }
-    onExecute() {
-        this.setOutputData(0, this.properties["value"]);
-    }
-    onGetInputs() {
-        return [["toggle", LiteGraph.ACTION]];
-    }
-    onAction(action) {
-        this.setValue(!this.properties.value);
-    }
-}
-
-ConstantBoolean.prototype.getTitle = "ConstantNumber.prototype.getTitle";
-ConstantBoolean.prototype.setValue = "ConstantNumber.prototype.setValue";
-//LiteGraph.registerNodeType("data/boolean", ConstantBoolean);
-
-
-//Math operation
-class MathOperation extends LGraphNode {
-    static type = "math/operation";
-    constructor() {
-        super();
-        this.addInput("A", "number,array,object");
-        this.addInput("B", "number");
-        this.addOutput("=", "number");
-        this.addProperty("A", 1);
-        this.addProperty("B", 1);
-        this.addProperty("OP", "+", "enum", { values: MathOperation.values });
-        this._func = function (A, B) { return A + B; };
-        this._result = []; //only used for arrays
-    }
-    getTitle() {
-        if (this.properties.OP == "max" || this.properties.OP == "min")
-            return this.properties.OP + "(A,B)";
-        return "A " + this.properties.OP + " B";
-    }
-    setValue(v) {
-        if (typeof v == "string") {
-            v = parseFloat(v);
-        }
-        this.properties["value"] = v;
-    }
-    onPropertyChanged(name, value) {
-        if (name != "OP")
-            return;
-        switch (this.properties.OP) {
-            case "+": this._func = function (A, B) { return A + B; }; break;
-            case "-": this._func = function (A, B) { return A - B; }; break;
-            case "x":
-            case "X":
-            case "*": this._func = function (A, B) { return A * B; }; break;
-            case "/": this._func = function (A, B) { return A / B; }; break;
-            case "%": this._func = function (A, B) { return A % B; }; break;
-            case "^": this._func = function (A, B) { return Math.pow(A, B); }; break;
-            case "max": this._func = function (A, B) { return Math.max(A, B); }; break;
-            case "min": this._func = function (A, B) { return Math.min(A, B); }; break;
-            default:
-                console.warn("Unknown operation: " + this.properties.OP);
-                this._func = function (A) { return A; };
-                break;
-        }
-    }
-    onExecute() {
-        var A = this.getInputData(0);
-        var B = this.getInputData(1);
-        if (A != null) {
-            if (A.constructor === Number)
-                this.properties["A"] = A;
-        } else {
-            A = this.properties["A"];
-        }
-
-        if (B != null) {
-            this.properties["B"] = B;
-        } else {
-            B = this.properties["B"];
-        }
-
-        var result;
-        if (A.constructor === Number) {
-            result = 0;
-            result = this._func(A, B);
-        }
-
-        else {
-            result = {};
-            for (var i in A)
-                result[i] = this._func(A[i], B);
-        }
-        this.setOutputData(0, result);
-    }
-    onDrawBackground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
-        ctx.font = "40px Arial";
-        ctx.fillStyle = "#666";
-        ctx.textAlign = "center";
-        ctx.fillText(
-            this.properties.OP,
-            this.size[0] * 0.5,
-            (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5
-        );
-        ctx.textAlign = "left";
-    }
-}
-
-MathOperation.values = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">=", "%", "^", "max", "min"];
-
-MathOperation.title = "Operation";
-MathOperation.desc = "Easy math operators";
-MathOperation.title_mode = LiteGraph.NO_TITLE;
-
-MathOperation["@OP"] = {
-    type: "enum",
-    title: "operation",
-    values: MathOperation.values
-};
-MathOperation.size = [128, 128];
-
-LiteGraph.registerNodeType("math/operation", MathOperation);
 
 
 class ConstantString {
@@ -5974,35 +5660,5 @@ WidgetPanel.widgets = [{ name: "update", text: "Update", type: "button" }];
 var LiteGraph = global.LiteGraph;
 
 
-
-class logicOr extends LGraphNode{
-    static type = "logic/OR";
-    constructor() {
-        super();
-        this.properties = {};
-        this.addInput("", "number");
-        this.addInput("", "number");
-        this.addOutput("", "number");
-    }
-    onExecute() {
-        let ret = false;
-        for (let inX in this.inputs) {
-            if (this.getInputData(inX)) {
-                ret = true;
-                break;
-            }
-        }
-        this.setOutputData(0, ret);
-    }
-    onGetInputs() {
-        return [
-            ["or", "boolean"]
-        ];
-    }
-}
-logicOr.title = "OR";
-logicOr.desc = "Return true if at least one input is true";
-logicOr.title_mode = LiteGraph.CENTRAL_TITLE;
-LiteGraph.registerNodeType("logic/OR", logicOr);
 
 export { LGraph };

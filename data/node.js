@@ -414,11 +414,11 @@ export default class LGraphNode {
          */
     getInputData(slot, force_update) {
         if (!this.inputs) {
-            return;
+            return null;
         } //undefined;
 
         if (slot >= this.inputs.length || this.inputs[slot].link == null) {
-            return;
+            return null;
         }
         return this.inputs[slot]._data;
     }
@@ -943,6 +943,10 @@ export default class LGraphNode {
         this.properties[name] = default_value;
         return o;
     }
+
+    removeProperty(name) {
+        delete this.properties[name];
+    }
     //connections
     /**
          * add a new output slot to use in this node
@@ -1116,6 +1120,7 @@ export default class LGraphNode {
         if (this.onInputRemoved) {
             this.onInputRemoved(slot, slot_info[0]);
         }
+        this.removeProperty(slot_info[0].name);
         this.setDirtyCanvas(true, true);
     }
     /**
