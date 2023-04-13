@@ -1,10 +1,10 @@
 import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
-class Filter extends LGraphNode{
-    static type = "control/filter";
-    static title = "Filter";
-    static desc = "Filters input";
+class Router extends LGraphNode{
+    static type = "control/router";
+    static title = "Router";
+    static desc = "Route input to specific output";
     static title_mode = LiteGraph.NO_TITLE;
 
     constructor() {
@@ -32,4 +32,4 @@ class Filter extends LGraphNode{
     }
 }
 
-LiteGraph.registerNodeType(Filter.type, Filter);
+LiteGraph.registerNodeType(Router.type, Router);

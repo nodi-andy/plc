@@ -33,16 +33,16 @@ export default class FileDialog {
   }
 
   updateList() {
-    this.files = this.parseJson(this.storage.files);
-    if (Object.keys(this.files).length > 0) {
-      this.curFileName = Object.keys(this.files)[0]
-      this.curFile = this.files[this.curFileName]
-    }
-
+  this.files = this.parseJson(this.storage.files);
     if (this.files == null) {
       this.files = {}
       this.files[this.curFileName] ={}
+      this.storage.setItem("selected", this.curFileName);
       this.saveToStorage();
+    }
+    if (Object.keys(this.files).length > 0) {
+      this.curFileName = Object.keys(this.files)[0]
+      this.curFile = this.files[this.curFileName]
     }
     this.storage.selected = this.curFileName
     this.modal.innerHTML = `

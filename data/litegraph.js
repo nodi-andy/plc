@@ -162,8 +162,8 @@ export var LiteGraph = (global.LiteGraph = {
         var categories = base_class.type.split("/");
         var classname = base_class.name;
 
-        var pos = base_class.type.lastIndexOf("/");
-        base_class.category = base_class.type.substr(0, pos);
+        base_class.category = categories[0]
+        base_class.elementName = categories[1]
 
         if (!base_class.title) {
             base_class.title = classname;

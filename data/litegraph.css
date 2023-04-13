@@ -695,8 +695,6 @@ cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
-    width: 48px;
-    height: 48px;
     font-size: 32;
   }
 
@@ -746,7 +744,7 @@ cursor: pointer;
   }
 
   /* FileDialog.css */
-.modal {
+.modal-dialog {
     position: fixed;
     top: 0;
     left: 0;
@@ -759,7 +757,7 @@ cursor: pointer;
     z-index: 9999;
   }
   
-  .modal-content {
+  .modal-dialog-content {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -773,7 +771,7 @@ cursor: pointer;
     padding: 10px;
   }
   
-  .modal-header {
+  .modal-dialog-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -783,7 +781,7 @@ cursor: pointer;
     padding: 0 10px;
   }
   
-  .modal-header h2 {
+  .modal-dialog-header h2 {
     margin: 0;
   }
   
@@ -800,7 +798,7 @@ cursor: pointer;
     cursor: pointer;
   }
   
-  .modal-body {
+  .modal-dialog-body {
     display: flex;
     flex: 1;
     padding: 10px;
@@ -824,3 +822,14 @@ cursor: pointer;
     margin-left: 10px;
   }
   
+.tabs .indicator{
+    background-color: darkcyan !important;
+}
+
+.tabs .tab a:hover, .tabs .tab a.active {
+    background-color: grey !important;
+}
+
+.col.s1 > .btn {
+    width: 100%;
+ }
