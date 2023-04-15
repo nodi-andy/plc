@@ -7,479 +7,94 @@
 	<link rel="stylesheet" type="text/css" href="litegraph.css">
   <script src="https://unpkg.com/react@latest/umd/react.development.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
-
   <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.development.js" crossorigin="anonymous"></script>
-    
   <script src="https://unpkg.com/babel-standalone@latest/babel.min.js" crossorigin="anonymous"></script>
-  <!-- Fonts to support Material Design -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
-  <!-- Icons to support Material Design -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 	<script type="text/javascript" src="math.js"></script>
-	<script type="module" src="index.js"></script>
+	<script type="module" src="websocket.js"></script>
 	<script type="module" src="litegraph.js"></script>
-	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
 </head>
 
 <body style='width:100%; height:100%'>
 	
 	<canvas id='mycanvas' width='100%' height='100%'></canvas>
+  <div id="root">React is loading...</div>
+
   <script type = "module">
-    window.nodes = {Math: ["add", "sub"], Logic: ["and", "or"], Route: ["select", "split"]}
-    window.nodes.addNode = (name) => {console.log(name)}
-  </script>
-  <div id="root"></div>
-  <!--
-	<div class="menu-container">
-		<div title = "Add new node" id="addButton" href="#modal1" class="menu-button modal-trigger">
-			<svg width="48px" height="48px" viewBox="-2.4 -2.4 28.80 28.80" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#000000" stroke-width="1.488" transform="rotate(0)"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="0.144"></g><g id="SVGRepo_iconCarrier"> <g id="style=bulk"> <g id="add"> <path id="rectangle" d="M1.25 7.25C1.25 3.93629 3.93629 1.25 7.25 1.25H16.75C20.0637 1.25 22.75 3.93629 22.75 7.25V16.75C22.75 20.0637 20.0637 22.75 16.75 22.75H7.25C3.93629 22.75 1.25 20.0637 1.25 16.75V7.25Z" fill="#BFBFBF"></path> <path id="vector (Stroke)" fill-rule="evenodd" clip-rule="evenodd" d="M12.0248 6.32349C12.3578 6.32349 12.6277 6.59345 12.6277 6.92646L12.6277 16.8281C12.6277 17.1611 12.3577 17.431 12.0247 17.431C11.6917 17.431 11.4218 17.1611 11.4218 16.8281L11.4218 6.92645C11.4218 6.59344 11.6918 6.32349 12.0248 6.32349Z" fill="#000000"></path> <path id="vector (Stroke)_2" fill-rule="evenodd" clip-rule="evenodd" d="M17.8486 12.0044C17.8486 12.3553 17.5641 12.6398 17.2132 12.6398L6.77865 12.6398C6.42771 12.6398 6.14323 12.3553 6.14323 12.0043C6.14323 11.6534 6.42772 11.3689 6.77865 11.3689L17.2132 11.369C17.5641 11.369 17.8486 11.6535 17.8486 12.0044Z" fill="#000000"></path> </g> </g> </g></svg>
-		</div>
-		<div title = "Remove the node"  id="remButton" class="menu-button disabled">
-			<svg width="48px" height="48px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#ff0000" stroke-width="1.08"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g id="style=bulk"> <g id="close"> <path id="rectangle" d="M1.25 7.25C1.25 3.93629 3.93629 1.25 7.25 1.25H16.75C20.0637 1.25 22.75 3.93629 22.75 7.25V16.75C22.75 20.0637 20.0637 22.75 16.75 22.75H7.25C3.93629 22.75 1.25 20.0637 1.25 16.75V7.25Z" fill="#BFBFBF"></path> <path id="vector (Stroke)" fill-rule="evenodd" clip-rule="evenodd" d="M7.18298 7.18298C7.42696 6.93901 7.82253 6.93901 8.06651 7.18298L16.817 15.9335C17.061 16.1775 17.061 16.573 16.817 16.817C16.573 17.061 16.1775 17.061 15.9335 16.817L7.18298 8.06651C6.93901 7.82253 6.93901 7.42696 7.18298 7.18298Z" fill="#ff0000"></path> <path id="vector (Stroke)_2" fill-rule="evenodd" clip-rule="evenodd" d="M16.817 7.18299C17.061 7.42697 17.061 7.82254 16.817 8.06652L8.0665 16.817C7.82252 17.061 7.42695 17.061 7.18298 16.817C6.939 16.573 6.93901 16.1775 7.18299 15.9335L15.9335 7.18298C16.1775 6.939 16.573 6.93901 16.817 7.18299Z" fill="#ff0000"></path> </g> </g> </g></svg>
-		</div>
-		<div title = "Show node properties"  id="editButton" class="menu-button disabled">
-			<svg width="48px" height="48px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M20.8506 12.0002V6.50992C20.8506 4.48846 19.2118 2.84973 17.1904 2.84973H6.5098C4.48833 2.84973 2.84961 4.48845 2.84961 6.50992V17.4905C2.84961 19.512 4.48833 21.1507 6.5098 21.1507H11.8501" stroke="#1C1C1C" stroke-width="1.69904" stroke-linecap="round"></path> <path d="M7.00269 12H10.0018"  stroke-width="1.69904" stroke-linecap="round"></path> <path d="M7.00269 8.0022H12.9993" stroke="#1C1C1C" stroke-width="1.69904" stroke-linecap="round"></path> <path d="M20.79 15.8827L18.8369 13.8971C18.6389 13.6957 18.3177 13.6957 18.1196 13.8971L14.3632 17.716C14.2545 17.8266 14.201 17.9813 14.2177 18.1368L14.4325 20.1323C14.4455 20.2525 14.5388 20.3474 14.657 20.3605L16.6198 20.5789C16.7727 20.5959 16.9249 20.5415 17.0337 20.431L20.79 16.612C20.9881 16.4106 20.9881 16.0841 20.79 15.8827Z" stroke="#DF1463" stroke-width="1.69904" stroke-linecap="round"></path> </g></svg>
-		</div>
-
-		<div title = "Save nodework to local memory" id="saveButton" class="menu-button">
-			<svg width="48px" height="48px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="m 8 0 c -0.550781 0 -1 0.449219 -1 1 v 8.585938 l -1.292969 -1.292969 c -0.1875 -0.1875 -0.441406 -0.292969 -0.707031 -0.292969 s -0.519531 0.105469 -0.707031 0.292969 c -0.390625 0.390625 -0.390625 1.023437 0 1.414062 l 3 3 c 0.390625 0.390625 1.023437 0.390625 1.414062 0 l 3 -3 c 0.390625 -0.390625 0.390625 -1.023437 0 -1.414062 s -1.023437 -0.390625 -1.414062 0 l -1.292969 1.292969 v -8.585938 c 0 -0.550781 -0.449219 -1 -1 -1 z m -7 14 v 2 h 14 v -2 z m 0 0" fill="#2e3436"></path> </g></svg>
-		</div>
-		<div title = "Save nodework as a new file" id="saveAsButton" class="menu-button">
-			<svg width="48px" height="48px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="m 4.5 0 c -0.277344 0 -0.5 0.222656 -0.5 0.5 v 1 c 0 0.277344 0.222656 0.5 0.5 0.5 h 1 c 0.277344 0 0.5 -0.222656 0.5 -0.5 v -1 c 0 -0.277344 -0.222656 -0.5 -0.5 -0.5 z m 3 0 c -0.277344 0 -0.5 0.222656 -0.5 0.5 v 1 c 0 0.277344 0.222656 0.5 0.5 0.5 h 1 c 0.277344 0 0.5 -0.222656 0.5 -0.5 v -1 c 0 -0.277344 -0.222656 -0.5 -0.5 -0.5 z m 3 0 c -0.277344 0 -0.5 0.222656 -0.5 0.5 v 1 c 0 0.277344 0.222656 0.5 0.5 0.5 h 1 c 0.277344 0 0.5 -0.222656 0.5 -0.5 v -1 c 0 -0.277344 -0.222656 -0.5 -0.5 -0.5 z m -3.5 3 v 6.585938 l -1.292969 -1.292969 c -0.1875 -0.1875 -0.441406 -0.292969 -0.707031 -0.292969 s -0.519531 0.105469 -0.707031 0.292969 c -0.390625 0.390625 -0.390625 1.023437 0 1.414062 l 3 3 c 0.390625 0.390625 1.023437 0.390625 1.414062 0 l 3 -3 c 0.390625 -0.390625 0.390625 -1.023437 0 -1.414062 s -1.023437 -0.390625 -1.414062 0 l -1.292969 1.292969 v -6.585938 z m -6 11 v 2 h 14 v -2 z m 0 0" fill="#2e3436"></path> </g></svg>
-		</div>
-		<div title = "Load nodework from local memory" id="loadButton" class="menu-button">
-			<svg width="48px" height="48px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g fill="#2e3436"> <path d="m 3 1 c -1.644531 0 -3 1.355469 -3 3 v 8 c 0 1.644531 1.355469 3 3 3 h 8.882812 c 0.832032 0 1.578126 -0.402344 2.054688 -0.9375 c 0.472656 -0.53125 0.738281 -1.167969 0.910156 -1.800781 l 0.972656 -2.609375 c 0.390626 -1.449219 -0.09375 -2.652344 -0.820312 -3.167969 c -0.484375 -0.34375 -0.714844 -0.292969 -1 -0.324219 v -1.160156 c 0 -0.855469 -0.558594 -1.589844 -1.09375 -1.828125 c -0.53125 -0.238281 -1.011719 -0.167969 -1.011719 -0.167969 l 0.105469 -0.003906 h -3.585938 l -1.707031 -1.707031 c -0.1875 -0.1875 -0.441406 -0.292969 -0.707031 -0.292969 z m 0 2 h 2.585938 l 1.707031 1.707031 c 0.1875 0.1875 0.441406 0.292969 0.707031 0.292969 h 4 c 0.035156 0 0.070312 -0.003906 0.105469 -0.007812 c 0 0 0.019531 0.019531 -0.011719 0.003906 c -0.035156 -0.011719 -0.09375 -0.25 -0.09375 0.003906 v 2 c 0 0.550781 0.449219 1 1 1 c 1 0 1.046875 0.703125 0.886719 1.128906 l -0.972657 2.609375 c -0.117187 0.4375 -0.296874 0.800781 -0.472656 0.996094 c -0.175781 0.199219 -0.285156 0.265625 -0.558594 0.265625 h -8.882812 c -0.570312 0 -1 -0.429688 -1 -1 v -8 c 0 -0.570312 0.46875 -0.792969 1 -1 z m 0 0"></path> <path d="m 7 6 l 0.042969 0.003906 c -0.914063 -0.042968 -1.75 0.390625 -2.195313 0.96875 c -0.710937 1.222656 -1.15625 2.277344 -1.800781 3.71875 c -0.171875 0.523438 0.117187 1.089844 0.640625 1.261719 c 0.527344 0.171875 1.09375 -0.117187 1.261719 -0.640625 c 0.488281 -1.011719 0.921875 -1.816406 1.339843 -2.808594 c 0.210938 -0.503906 0.703126 -0.492187 0.898438 -0.503906 h 5.8125 c 0.550781 0 1 -0.449219 1 -1 s -0.449219 -1 -1 -1 z m 0 0"></path> </g> </g></svg>
-		</div>
-		<div title = "Send nodework to the IoT" id="burnButton" class="menu-button disabled">
-			<svg fill="#000000" width="48px" height="48px" viewBox="0 0 32 32" id="icon" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><defs><style>.cls-1{fill:none;}</style></defs><path d="M30,19H26V15H24v9H8V8l9-.0009V6H13V2H11V6H8A2.002,2.002,0,0,0,6,8v3H2v2H6v6H2v2H6v3a2.0023,2.0023,0,0,0,2,2h3v4h2V26h6v4h2V26h3a2.0027,2.0027,0,0,0,2-2V21h4Z"></path><path d="M21,21H11V11H21Zm-8-2h6V13H13Z"></path><path d="M31,13H29A10.0117,10.0117,0,0,0,19,3V1A12.0131,12.0131,0,0,1,31,13Z"></path><path d="M26,13H24a5.0059,5.0059,0,0,0-5-5V6A7.0085,7.0085,0,0,1,26,13Z"></path><rect id="_Transparent_Rectangle_" data-name="<Transparent Rectangle>" class="cls-1" width="32" height="32"></rect></g></svg>
-		</div>
-	</div>
--->
-<script type="text/babel">
-  const {
-    Button,
-    FormControl ,
-    InputLabel ,
-    Select ,
-    MenuItem ,
-    colors,
-    EditIcon,
-    styled,
-    Dialog ,
-    DialogTitle ,
-    NavigationIcon,
-    DialogContent ,
-    Paper,
-    Grid ,
-    DialogContentText ,
-    CloseIcon,
-    DialogActions ,
-    FavoriteIcon ,
-    CssBaseline,
-    IconButton,
-    ThemeProvider,
-    Typography,
-    Container,
-    FormGroup,
-    Fab,
-    Snackbar,
-    AddIcon,
-    FormControlLabel,
-    PropTypes,
-    Slide ,
-    Switch,
-    Tab,
-    Tabs,
-    createTheme,
-    Box,
-    SvgIcon,
-    Link,
-  } = MaterialUI;
-
-  // Create a theme instance.
-  const theme = createTheme({
-    palette: {
-      primary: {
-        main: '#556cd6',
-      },
-      secondary: {
-        main: '#19857b',
-      },
-      error: {
-        main: colors.red.A400,
-      },
-    },
-  });
-
-  function TabPanel(props) {
-    const { children, value, index, ...other } = props;
-
-    return (
-      <div
-        role="tabpanel"
-        hidden={value !== index}
-        id={`simple-tabpanel-${index}`}
-        aria-labelledby={`simple-tab-${index}`}
-        {...other}
-      >
-        {value === index && (
-          <Box sx={{ p: 3 }}>
-            {children}
-          </Box>
-        )}
-      </div>
-    );
-  }
-
-  function FullWidthGrid() {
-    return (
-      <Box sx={{ flexGrow: 1 }}>
-        <Grid container spacing={2}>
-          {Object.values(window.nodes.Math).map((label) => (
-              <Grid key={label} item >
-                  <Button variant="outlined" onClick={() => window.nodes.addNode(label)}>
-                    {label}
-                  </Button>
-              </Grid>
-            ))
-          }
-
-        </Grid>
-      </Box>
-    );
-  }
-
-  function MaxWidthDialog({ open, setOpen }) {
-    const [fullWidth, setFullWidth] = React.useState(true);
-    const [maxWidth, setMaxWidth] = React.useState('sm');
-
-    const handleClickOpen = () => {
-      setOpen(true);
-    };
-
-    const handleClose = () => {
-      setOpen(false);
-    };
-
-    const handleMaxWidthChange = (event) => {
-      setMaxWidth(
-        // @ts-expect-error autofill of arbitrary value is not handled.
-        event.target.value,
-      );
-    };
-
-    const handleFullWidthChange = (event) => {
-      setFullWidth(event.target.checked);
-    };
-
-    return (
-      <React.Fragment>
-        <Dialog
-          fullWidth={fullWidth}
-          maxWidth={maxWidth}
-          open={open}
-          onClose={handleClose}
-        >
-          <DialogTitle>Optional sizes</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              You can set my maximum width and whether to adapt or not.
-            </DialogContentText>
-            <Box
-              noValidate
-              component="form"
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                m: 'auto',
-                width: 'fit-content',
-              }}
-            >
-              <FormControl sx={{ mt: 2, minWidth: 120 }}>
-                <InputLabel htmlFor="max-width">maxWidth</InputLabel>
-                <Select
-                  autoFocus
-                  value={maxWidth}
-                  onChange={handleMaxWidthChange}
-                  label="maxWidth"
-                  inputProps={{
-                    name: 'max-width',
-                    id: 'max-width',
-                  }}
-                >
-                  <MenuItem value={false}>false</MenuItem>
-                  <MenuItem value="xs">xs</MenuItem>
-                  <MenuItem value="sm">sm</MenuItem>
-                  <MenuItem value="md">md</MenuItem>
-                  <MenuItem value="lg">lg</MenuItem>
-                  <MenuItem value="xl">xl</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControlLabel
-                sx={{ mt: 1 }}
-                control={
-                  <Switch checked={fullWidth} onChange={handleFullWidthChange} />
-                }
-                label="Full width"
-              />
-            <BasicTabs />
-
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Close</Button>
-          </DialogActions>
-        </Dialog>
-      </React.Fragment>
-    );
-  }
-  function a11yProps(index) {
-    return {
-      id: `simple-tab-${index}`,
-      'aria-controls': `simple-tabpanel-${index}`,
-    };
-  }
-
-  function BasicTabs() {
-    const [value, setValue] = React.useState(0);
-
-    const handleChange = (event, newValue) => {
-      setValue(newValue);
-    };
-
-    return (
-      <Box sx={{ width: '100%' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-            {Object.keys(window.nodes).map((label, index) => (
-              <Tab key={index} label={label} {...a11yProps(index)} />
-            ))}
-          </Tabs>
-        </Box>
-        <TabPanel value={value} index={0}>
-          <FullWidthGrid />
-        </TabPanel>
-        <TabPanel value={value} index={1}>
-          <FullWidthGrid />
-        </TabPanel>
-        <TabPanel value={value} index={2}>
-          Item Three
-        </TabPanel>
-      </Box>
-    );
-  }
-
-  function LightBulbIcon(props) {
-    return (
-      <SvgIcon {...props}>
-        <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" />
-      </SvgIcon>
-    );
-  }
-
-  function ProTip() {
-    return (
-      <Typography sx={{ mt: 6, mb: 3 }} color="text.secondary">
-        <LightBulbIcon sx={{ mr: 1, verticalAlign: 'top' }} />
-        Pro tip: See more{' '}
-        <Link href="https://mui.com/getting-started/templates/">templates</Link> in the MUI
-        documentation.
-      </Typography>
-    );
-  }
-
-  function Copyright() {
-    return (
-      <Typography variant="body2" color="text.secondary" align="center">
-        {'Copyright © '}
-        <Link color="inherit" href="https://mui.com/">
-          Your Website
-        </Link>{' '}
-        {new Date().getFullYear()}
-        {'.'}
-      </Typography>
-    );
-  }
-
-  function SimpleSnackbar({openSB, setopenSB}) {
-
-    const handleClick = () => {
-      setopenSB(true);
-    };
-
-    const handleClose = (event, reason) => {
-      if (reason === 'clickaway') {
-        return;
+      
+    window.nodes = {list: {Math: ["add", "counter"], Logic: ["and", "or"], Route: ["select", "split"]}}
+    window.nodes.addNode = (name) => {
+      name = name.toLowerCase();
+      console.log(name)
+      window.graph.beforeChange();
+      var node = LiteGraph.createNode(name);
+      if (node) {
+        node.setPos((window.canvas.visible_area[0] + window.canvas.visible_area[2]) / 2,
+              (window.canvas.visible_area[1] + window.canvas.visible_area[3]) / 2);
+              window.graph.add(node, false);
       }
 
-      setopenSB(false);
-    };
-
-    const action = (
-      <React.Fragment>
-        <Button color="secondary" size="small" onClick={handleClose}>
-          UNDO
-        </Button>
-        <IconButton
-          size="small"
-          aria-label="close"
-          color="inherit"
-          onClick={handleClose}
-        >
-        </IconButton>
-      </React.Fragment>
-    );
-
-    return (
-      <div>
-        <Snackbar
-          open={openSB}
-          autoHideDuration={6000}
-          onClose={handleClose}
-          message="Note archived"
-          action={action}
-        />
-      </div>
-    );
-  }
-
-  function FloatingActionButtons({ showSnack, showNodes }) {
-    const [inputText,setInputText] = React.useState("")
-
-    return (
-      <Box sx={{
-              display: "flex",
-              flexDirection: 'column',
-              position: "fixed",
-              left: (theme) => theme.spacing(2),
-              height: "100%", top: "0", justifyContent: "center",
-              gap: 2,
-              m: 0.5,
-            }}>
-        <Fab color="primary" aria-label="add" onClick={showSnack}>
-          A
-        </Fab>
-        <Fab color="secondary" aria-label="edit" onClick={showNodes}>
-          {(()=> {if (open) return "A"; else return "OFF";})()}
-        </Fab>
-        <Fab variant="extended">
-          C
-          Navigate
-        </Fab>
-        <Fab disabled aria-label="like">
-          D
-        </Fab>
-      </Box>
-    );
-  }
-
-
-  function App() {
-    const [snackbarOpen, setSnackbarOpen] = React.useState(false);
-    const [showNodes, setShowNodes] = React.useState(false);
-
-    return (
-      <Container maxWidth="sm" >
-        <Box  sx={{ 
-          position: "fixed",
-          left: (theme) => theme.spacing(2), my: 8 }}>
-
-        <MaxWidthDialog open={showNodes}  setOpen={setShowNodes}/>
-        <SimpleSnackbar openSB={snackbarOpen}  setopenSB={setSnackbarOpen}/>
-        </Box>
-        <FloatingActionButtons showSnack={setSnackbarOpen} showNodes = {setShowNodes}/>
-      </Container>
-    );
-  }
-
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(
-    <ThemeProvider theme={theme}>
-      {/* CssBaseline kickstart an elegant, consistent, and simple baseline to build upon. */}
-      <CssBaseline />
-      <App />
-    </ThemeProvider>,
-  );
-</script>
-<script type="module">
-	import { LGraph } from "./litegraph.js"
-	import FileDialog from './filedialog.js';
-	import NodeDialog from './nodedialog.js';
-	localStorage.version = "0.1"
-	window.graph = new LGraph();
-	window.canvas = new LGraphCanvas("#mycanvas", graph);
-	window.fileDialog = new FileDialog(localStorage);
-
-/*
-		// Get all the button divs
-	const buttons = document.querySelectorAll('.menu-button');
-
-	// Loop through each button div and add an event listener to it
-	buttons.forEach(button => {
-	  button.addEventListener('mousedown', () => {
-		// Remove the "active" class from all button divs
-		buttons.forEach(button => button.classList.remove('active'));
-
-		// Add the "active" class to the clicked button div
-		button.classList.add('active');
-	  });
-	  button.addEventListener('mouseup', () => {
-		// Remove the "active" class from all button divs
-		///buttons.forEach(button => button.classList.remove('active'));
-
-		// Add the "active" class to the clicked button div
-		button.classList.remove('active');
-	  });
-	});
-
-	window.canvas.current_node_cbs.push(() => { 
-			if (window.canvas.current_node) {
-				document.getElementById("remButton").classList.remove("disabled");
-				document.getElementById("editButton").classList.remove("disabled");
-			}
-			else {
-				document.getElementById("remButton").classList.add("disabled");
-				document.getElementById("editButton").classList.add("disabled");
-			}
-		}
-	)
-
-	document.getElementById("remButton").onclick = () => {
+      window.graph.afterChange();
+    }
+    window.nodes.remNode = () => {
         var graph = window.graph;
-        graph.beforeChange();
+          graph.beforeChange();
 
-        var fApplyMultiNode = function (node) {
-            if (node.removable === false) {
-                return;
-            }
-            graph.remove(node);
-        };
+          var fApplyMultiNode = function (node) {
+              if (node.removable === false) {
+                  return;
+              }
+              graph.remove(node);
+          };
 
-        var graphcanvas = LGraphCanvas.active_canvas;
-            for (var i in graphcanvas.selected_nodes) {
-                fApplyMultiNode(graphcanvas.selected_nodes[i]);
-            }
+          var graphcanvas = LGraphCanvas.active_canvas;
+              for (var i in graphcanvas.selected_nodes) {
+                  fApplyMultiNode(graphcanvas.selected_nodes[i]);
+              }
 
-        graph.afterChange();
-		if (graphcanvas.selected_nodes && graphcanvas.selected_nodes[0]) {
-        	graphcanvas.selected_nodes[0].setDirtyCanvas(true, true);
-		}
-	}
+          graph.afterChange();
+      if (graphcanvas.selected_nodes && graphcanvas.selected_nodes[0]) {
+            graphcanvas.selected_nodes[0].setDirtyCanvas(true, true);
+      }
+    }
 
-	window.burnButton = document.getElementById("burnButton");
-	window.burnButton.onclick = () => {
-		saveMap();
-		Toastify({text: "nodework sent to nodi.box!",gravity: "bottom"}).showToast();
-	}
+    window.nodes.editNode = () => {
+      window.canvas.processContextMenu();
+    }
 
-	document.getElementById("saveButton").onclick = () => {
-		fileDialog.files[window.fileDialog.curFileName] =  graph.serialize(); 
-		fileDialog.saveToStorage();
-		Toastify({text: "Saved nodework: " + window.fileDialog.curFileName, gravity: "bottom"}).showToast();
-		M.toast("Saved nodework: " + window.fileDialog.curFileName, 4000) 
+    window.nodes.saveNodework = () => {
+      fileDialog.files[window.fileDialog.curFileName] =  graph.serialize(); 
+		  fileDialog.saveToStorage();
+      window.showSnackbar("Saved nodework: " + window.fileDialog.curFileName)
+    }
 
-	}
+    window.nodes.upload = () => {
+      saveMap();
+      window.showSnackbar("nodework sent to nodi.box!")
+    }
+
+    import { LGraph } from "./litegraph.js"
+    import FileDialog from './filedialog.js';
+    import NodeDialog from './nodedialog.js';
+    localStorage.version = "0.1"
+    window.graph = new LGraph();
+    window.canvas = new LGraphCanvas("#mycanvas", graph);
+    window.fileDialog = new FileDialog(localStorage);
+
+    window.canvas.current_node_cbs.push(() => { 
+        if (window.canvas.current_node) {
+          console.log("disable")
+        }
+        else {
+          console.log("enable")
+        }
+      }
+    )
+/*
+
+
 
 	document.getElementById("saveAsButton").onclick = () => {
 		let newFileName = fileDialog.rename(window.fileDialog.curFileName, false);
@@ -499,14 +114,11 @@
 		fileDialog.open();
 	}
 
-	document.getElementById("editButton").onclick = () => {
-		window.canvas.processContextMenu();
-	}*/
+*/
 
 	graph.configure(fileDialog.files[window.fileDialog.curFileName])
 	graph.start()
 	canvas.showSearchBox();
-	window.toolbox = document.getElementById("toolBox");
 
 	window.addEventListener('resize', function () { canvas.resize() })
 
@@ -544,20 +156,358 @@
 	window.nodeDialog = new NodeDialog(nodeList);
 
 
-window.nodeDialog.onNodeSelected = (nodeName) => {
-	window.graph.beforeChange();
-	var node = LiteGraph.createNode(nodeName);
-	if (node) {
-		node.setPos((window.canvas.visible_area[0] + window.canvas.visible_area[2]) / 2,
-					(window.canvas.visible_area[1] + window.canvas.visible_area[3]) / 2);
-					window.graph.add(node, false);
-	}
+  window.nodeDialog.onNodeSelected = (nodeName) => {
+    window.graph.beforeChange();
+    var node = LiteGraph.createNode(nodeName);
+    if (node) {
+      node.setPos((window.canvas.visible_area[0] + window.canvas.visible_area[2]) / 2,
+            (window.canvas.visible_area[1] + window.canvas.visible_area[3]) / 2);
+            window.graph.add(node, false);
+    }
 
-	window.graph.afterChange();
+    window.graph.afterChange();
+  }
 
-	console.log(nodeName)
-}
+  </script>
 
+<script type="text/babel">
+  const { Button, FormControl , InputLabel , Select , MenuItem , colors,EditIcon, styled, Dialog , List, Modal,
+    DialogTitle , DialogContent , Paper, Grid , DialogContentText , DialogActions, TextField, 
+    CssBaseline, IconButton, ThemeProvider, Typography, Container, ListItem, FormGroup, ListItemText, 
+    Fab, Snackbar, FormControlLabel, PropTypes, Slide, Switch, Tab, Tabs, createTheme, ListItemButton, ListItemIcon, 
+    Box, SvgIcon, Link} = MaterialUI;
+
+  window.mui = MaterialUI
+
+  // Create a theme instance.
+  const theme = createTheme({
+    palette: {
+      primary: {
+        main: '#556cd6',
+      },
+      secondary: {
+        main: '#19857b',
+      },
+      error: {
+        main: colors.red.A400,
+      },
+    },
+  });
+
+  function TabPanel(props) {
+    const { children, value, index, ...other } = props;
+
+    return (
+      <div
+        role="tabpanel"
+        hidden={value !== index}
+        id={`simple-tabpanel-${index}`}
+        aria-labelledby={`simple-tab-${index}`}
+        {...other}
+      >
+        {value === index && (
+          <Box sx={{ p: 3 }}>
+            {children}
+          </Box>
+        )}
+      </div>
+    );
+  }
+
+  function FullWidthGrid( {category, setOpen}) {
+    return (
+      <Box sx={{ flexGrow: 1 }}>
+        <Grid container spacing={2}>
+          {window.nodes.list[category].map(label => (
+              <Grid key={label} item >
+                  <Button variant="outlined" onClick={ ()=> {window.nodes.addNode(category+"/"+label);setOpen(false);} }>
+                    {label}
+                  </Button>
+              </Grid>
+            ))
+          }
+
+        </Grid>
+      </Box>
+    );
+  }
+
+  function SelectNodeDialog({ openND, setOpenND }) {
+    const handleClose = () => {
+      setOpenND(false);
+    };
+
+
+    return (
+      <React.Fragment>
+        <Dialog
+          open={openND}
+          onClose={handleClose}
+        >
+          <DialogTitle>Nodes</DialogTitle>
+          <DialogContent>
+            <Box
+              noValidate
+              component="form"
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                m: 'auto',
+                width: 'fit-content',
+              }}
+            >
+
+            <BasicTabs setOpen = {setOpenND} />
+
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      </React.Fragment>
+    );
+  }
+
+  const style = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    pt: 2,
+    px: 4,
+    pb: 3,
+  };
+
+
+  function RenameDialog({visible, show, filename, saveAs}) {
+    const [newFilename, setNewFilename] = React.useState("");
+    const textRef = React.useRef(null);
+
+    const handleClose = () => {
+      console.log("SAVEAS"+saveAs)
+      show(false);
+    };
+
+    const handleRename = () => {
+      var currentFiles = JSON.parse(localStorage.files)
+      currentFiles[textRef.current.value] = currentFiles[filename]
+      delete currentFiles[filename]
+      localStorage.files = JSON.stringify(currentFiles)
+      show(false);
+    };
+
+    const handleSaveAs= () => {
+      var currentFiles = JSON.parse(localStorage.files)
+      currentFiles[textRef.current.value] = currentFiles[filename]
+      localStorage.files = JSON.stringify(currentFiles)
+      show(false);
+    };
+
+    return (
+      <React.Fragment>
+        <Modal
+          open={visible}
+          onClose={handleClose}
+          aria-labelledby="child-modal-title"
+          aria-describedby="child-modal-description"
+        >
+          <Box sx={{ ...style, width: 200 }}>
+            <TextField
+              id="outlined-helperText"
+              label="New file name"
+              defaultValue = {filename}
+              inputRef = {textRef}
+            />
+            {saveAs ? <Button onClick={handleSaveAs}>Save As</Button> : <Button onClick={handleRename}>Rename</Button>}
+            <Button onClick={handleClose}>Cancel</Button>
+            
+          </Box>
+        </Modal>
+      </React.Fragment>
+    );
+  }
+  function SelectFileDialog({ openND, setOpenND }) {
+    const [renameDialogVisible, showRenameDialog] = React.useState(false);
+    const [filename, setFilename] = React.useState("");
+
+    const handleRename = (newFileName) => {
+      setFilename(newFileName);
+      showRenameDialog(true);
+    };
+
+
+    const handleClose = () => {
+      setOpenND(false);
+    };
+
+    return (
+      <React.Fragment>
+        <Dialog  open={openND} onClose={handleClose}>
+          <DialogTitle>Files</DialogTitle>
+          <DialogContent>
+            <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+            <nav aria-label="main mailbox folders">
+              <List>
+                {Object.keys(JSON.parse(localStorage.files)).map((label, index) => (
+                    <ListItem key={index} disablePadding>
+                      <ListItemButton>
+                        <ListItemText primary={label} />
+                      </ListItemButton>
+                      <ListItemButton>
+                        <ListItemText primary="Remove" />
+                      </ListItemButton>
+                      <ListItemButton onClick={ ()=>handleRename(label) }>
+                        <ListItemText primary="Rename" />
+                      </ListItemButton>
+                    </ListItem>
+                ))}
+              </List>
+            </nav>
+          </Box>
+          <RenameDialog visible = {renameDialogVisible} show = {showRenameDialog} filename = {filename} saveAs = {false}/>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      </React.Fragment>
+    );
+  }
+  function a11yProps(index) {
+    return {
+      id: `simple-tab-${index}`,
+      'aria-controls': `simple-tabpanel-${index}`,
+    };
+  }
+
+  function BasicTabs({setOpen}) {
+    const [value, setValue] = React.useState(0);
+
+    const handleChange = (event, newValue) => {
+      setValue(newValue);
+    };
+
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+            {Object.keys(window.nodes.list).map((label, index) => (
+              <Tab key={index} label={label} {...a11yProps(index)} />
+            ))}
+          </Tabs>
+        </Box>
+        {Object.keys(window.nodes.list).map((label, index) => (
+          <TabPanel key={index} value={value} index={index}>
+            <FullWidthGrid category={label} setOpen = {setOpen}/>
+          </TabPanel>
+        ))}
+      </Box>
+    );
+  }
+
+
+
+  function SimpleSnackbar({openSB, setopenSB, sbMessage}) {
+
+    const handleClick = () => {
+      setopenSB(true);
+    };
+
+    const handleClose = (event, reason) => {
+      if (reason === 'clickaway') {
+        return;
+      }
+
+      setopenSB(false);
+    };
+
+    const action = (
+      <React.Fragment>
+        <IconButton
+          size="small"
+          aria-label="close"
+          color="inherit"
+          onClick={handleClose}
+        >
+        </IconButton>
+      </React.Fragment>
+    );
+
+    return (
+      <div>
+        <Snackbar
+          open={openSB}
+          autoHideDuration={6000}
+          onClose={handleClose}
+          message={sbMessage}
+          action={action}
+        />
+      </div>
+    );
+  }
+
+
+  function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
+    const [inputText,setInputText] = React.useState("")
+
+    return (
+      <Box sx={{
+              display: "flex",
+              flexDirection: 'column',
+              position: "fixed",
+              left: (theme) => theme.spacing(2),
+              height: "100%", top: "0", justifyContent: "center",
+              gap: 2,
+              m: 0.5,
+            }}>
+        <Fab color="primary"    variant="extended" aria-label="add"     onClick={showNodes}                      > ADD </Fab>
+        <Fab color="secondary"  variant="extended" aria-label="remove"  onClick={() => {window.nodes.remNode()}} > Remove </Fab>
+        <Fab  color="warning"   variant="extended"                      onClick={() => {window.nodes.editNode()}} >Edit</Fab>
+        <Fab color="info"    variant="extended"                         onClick={showFiles} >Load</Fab>
+        <Fab  color="success"    variant="extended"                      onClick={() => {window.nodes.saveNodework()}} >Save</Fab>
+        <Fab color="info"    variant="extended"                         onClick={showSaveAsFiles} >Save As</Fab>
+        <Fab  color="error"    variant="extended"                      onClick={() => {window.nodes.upload()}} >Upload</Fab>
+      </Box>
+    );
+  }
+
+
+
+  function App() {
+    const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+    const [showNodes, setShowNodes] = React.useState(false);
+    const [showFiles, setShowFiles] = React.useState(false);
+    const [showSaveAsFiles, setShowSaveAsFiles] = React.useState(false);
+    const [filename, setFilename] = React.useState("");
+
+    window.showSnackbar = (msg) => {window.messageText = msg; setSnackbarOpen(true)}
+    return (
+      <Container maxWidth="sm" >
+        <SelectNodeDialog openND={showNodes}  setOpenND={setShowNodes}/>
+        <SelectFileDialog openND={showFiles}  setOpenND={setShowFiles}/>
+        <SimpleSnackbar openSB={snackbarOpen}  setopenSB={setSnackbarOpen} sbMessage = {window.messageText}/>
+        <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {filename} saveAs = {true}/>
+
+        <Box  sx={{ position: "fixed", left: (theme) => theme.spacing(2), my: 8 }}>
+          <FloatingActionButtons showFiles={setShowFiles} showNodes = {setShowNodes} showSaveAsFiles = {setShowSaveAsFiles} />
+        </Box>
+
+      </Container>
+    );
+  }
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <App />
+    </ThemeProvider>,
+  );
 </script>
 </body>
 </html>
