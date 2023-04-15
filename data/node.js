@@ -927,6 +927,8 @@ export default class LGraphNode {
         default_value,
         type,
         extra_info) {
+
+        if (type === undefined) type = typeof default_value
         var o = { name: name, type: type, default_value: default_value };
         if (extra_info) {
             for (var i in extra_info) {
@@ -934,9 +936,9 @@ export default class LGraphNode {
             }
         }
         if (!this.properties_info) {
-            this.properties_info = [];
+            this.properties_info = {};
         }
-        this.properties_info.push(o);
+        this.properties_info[name] = o;
         if (!this.properties) {
             this.properties = {};
         }

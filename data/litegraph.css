@@ -856,8 +856,9 @@ cursor: pointer;
     margin-bottom: 0;
   }
   
-  /*
-  Copyright 2020 Google LLC. All Rights Reserved. 
-  Use of this source code is governed by an MIT-style license that can be found
-  in the LICENSE file at http://material.angularjs.org/HEAD/license.
-  */
+  html {
+    height  : 100%;
+    overflow: hidden;
+    -ms-content-zooming: none; /* Disables zooming */
+    touch-action: none;   /* Disable any special actions on tap/touch */
+}

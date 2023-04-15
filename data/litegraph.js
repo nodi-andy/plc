@@ -2615,6 +2615,9 @@ class ContextMenu {
                 element.childNodes[1].node_prop = value.value;
                 element.childNodes[1].addEventListener('blur', function(event) {
                     if (event.target.value == "") event.target.value = "null"
+                    if (this.node.properties_info[this.node_prop].type == "string") {
+                        event.target.value = "\"" + event.target.value + "\""
+                    }
                     this.node.properties[this.node_prop] = JSON.parse(event.target.value);
                     console.log('Input edited and focus lost:', event.target.value);
                 });

@@ -2,7 +2,7 @@ import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
 class logicAnd extends LGraphNode{
-    static type = "logic/AND";
+    static type = "logic/and";
     static title = "AND";
     static desc = "Return true if all inputs are true";
     static title_mode = LiteGraph.CENTRAL_TITLE;

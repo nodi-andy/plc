@@ -3,7 +3,7 @@ import { LiteGraph } from "../../litegraph.js";
 
 //Math operation
 class MathIsEqual extends LGraphNode {
-    static title = "Operation";
+    static title = "IsEqual";
     static desc = "Easy math operators";
     static title_mode = LiteGraph.NO_TITLE;
     static type = "math/isEqual";

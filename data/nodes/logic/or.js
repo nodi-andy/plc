@@ -2,7 +2,7 @@ import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
 class logicOr extends LGraphNode{
-    static type = "logic/OR";
+    static type = "logic/or";
     static title = "OR";
     static desc = "Return true if at least one input is true";
     static title_mode = LiteGraph.CENTRAL_TITLE;

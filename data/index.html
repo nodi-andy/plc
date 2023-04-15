@@ -23,8 +23,8 @@
   <div id="root">React is loading...</div>
 
   <script type = "module">
-      
-    window.nodes = {list: {Math: ["add", "counter"], Logic: ["and", "or"], Route: ["select", "split"]}}
+    window.nodes = {}
+    window.nodes.list = {Math: ["add", "counter"], Logic: ["and", "or"], Route: ["select", "split"]}
     window.nodes.addNode = (name) => {
       name = name.toLowerCase();
       console.log(name)
@@ -92,6 +92,7 @@
         }
       }
     )
+
 /*
 
 
@@ -137,6 +138,7 @@
 	import "./nodes/time/interval.js"
 	import "./nodes/widget/button.js"
 	import "./nodes/widget/toggle.js"
+	import "./nodes/widget/led.js"
 	import "./nodes/nodi.box/b1.js"
 	import "./nodes/nodi.box/b2.js"
 	import "./nodes/nodi.box/b3.js"
@@ -146,27 +148,12 @@
 	import "./nodes/nodi.box/stepper.js"
 
 
-	let nodeList = {}
+	window.nodes.list = {}
 	for(let nodeClassName in LiteGraph.registered_node_types) {
 		let nodeClass = LiteGraph.registered_node_types[nodeClassName]
-		if (nodeList[nodeClass.category] == null) nodeList[nodeClass.category] = []
-		nodeList[nodeClass.category].push(nodeClass.elementName)
+		if (window.nodes.list[nodeClass.category] == null) window.nodes.list[nodeClass.category] = []
+		window.nodes.list[nodeClass.category].push(nodeClass.elementName)
 	}
-
-	window.nodeDialog = new NodeDialog(nodeList);
-
-
-  window.nodeDialog.onNodeSelected = (nodeName) => {
-    window.graph.beforeChange();
-    var node = LiteGraph.createNode(nodeName);
-    if (node) {
-      node.setPos((window.canvas.visible_area[0] + window.canvas.visible_area[2]) / 2,
-            (window.canvas.visible_area[1] + window.canvas.visible_area[3]) / 2);
-            window.graph.add(node, false);
-    }
-
-    window.graph.afterChange();
-  }
 
   </script>
 
@@ -350,14 +337,19 @@
         <Dialog  open={openND} onClose={handleClose}>
           <DialogTitle>Files</DialogTitle>
           <DialogContent>
-            <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-            <nav aria-label="main mailbox folders">
+            <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', }}>
               <List>
                 {Object.keys(JSON.parse(localStorage.files)).map((label, index) => (
                     <ListItem key={index} disablePadding>
                       <ListItemButton>
                         <ListItemText primary={label} />
                       </ListItemButton>
+                    </ListItem>
+                ))}
+              </List>
+              <List>
+                {Object.keys(JSON.parse(localStorage.files)).map((label, index) => (
+                    <ListItem key={index} disablePadding>
                       <ListItemButton>
                         <ListItemText primary="Remove" />
                       </ListItemButton>
@@ -367,7 +359,6 @@
                     </ListItem>
                 ))}
               </List>
-            </nav>
           </Box>
           <RenameDialog visible = {renameDialogVisible} show = {showRenameDialog} filename = {filename} saveAs = {false}/>
           </DialogContent>
@@ -485,13 +476,14 @@
     const [showSaveAsFiles, setShowSaveAsFiles] = React.useState(false);
     const [filename, setFilename] = React.useState("");
 
+    window.setFilename = (fn) => {setFilename(fn)}
     window.showSnackbar = (msg) => {window.messageText = msg; setSnackbarOpen(true)}
     return (
       <Container maxWidth="sm" >
         <SelectNodeDialog openND={showNodes}  setOpenND={setShowNodes}/>
         <SelectFileDialog openND={showFiles}  setOpenND={setShowFiles}/>
         <SimpleSnackbar openSB={snackbarOpen}  setopenSB={setSnackbarOpen} sbMessage = {window.messageText}/>
-        <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {filename} saveAs = {true}/>
+        <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
 
         <Box  sx={{ position: "fixed", left: (theme) => theme.spacing(2), my: 8 }}>
           <FloatingActionButtons showFiles={setShowFiles} showNodes = {setShowNodes} showSaveAsFiles = {setShowSaveAsFiles} />

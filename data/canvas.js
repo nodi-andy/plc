@@ -170,60 +170,31 @@ export default class LGraphCanvas {
     }
     /* this is an implementation for touch not in production and not ready
             */
-    /*LGraphCanvas.prototype.touchHandler = function(event) {
-            //alert("foo");
-            var touches = event.changedTouches,
-                first = touches[0],
-                type = "";
-    
-            switch (event.type) {
-                case "touchstart":
-                    type = "mousedown";
-                    break;
-                case "touchmove":
-                    type = "mousemove";
-                    break;
-                case "touchend":
-                    type = "mouseup";
-                    break;
-                default:
-                    return;
-            }
-    
-            //initMouseEvent(type, canBubble, cancelable, view, clickCount,
-            //           screenX, screenY, clientX, clientY, ctrlKey,
-            //           altKey, shiftKey, metaKey, button, relatedTarget);
-    
-            // this is eventually a Dom object, get the LGraphCanvas back
-            if(typeof this.getCanvasWindow == "undefined"){
-                var window = this.lgraphcanvas.getCanvasWindow();
-            }else{
-                var window = this.getCanvasWindow();
-            }
-            
-            var document = window.document;
-    
-            var simulatedEvent = document.createEvent("MouseEvent");
-            simulatedEvent.initMouseEvent(
-                type,
-                true,
-                true,
-                window,
-                1,
-                first.screenX,
-                first.screenY,
-                first.clientX,
-                first.clientY,
-                false,
-                false,
-                false,
-                false,
-                0, //left
-                null
-            );
-            first.target.dispatchEvent(simulatedEvent);
-            event.preventDefault();
-        };*/
+    touchHandler = function(event) {
+        var touches = event.changedTouches,
+        first = touches[0],
+        type = "";
+        switch(event.type)
+        {
+            case "touchstart": type = "mousedown"; break;
+            case "touchmove":  type = "mousemove"; break;        
+            case "touchend":   type = "mouseup";   break;
+            default:           return;
+        }
+
+        // initMouseEvent(type, canBubble, cancelable, view, clickCount, 
+        //                screenX, screenY, clientX, clientY, ctrlKey, 
+        //                altKey, shiftKey, metaKey, button, relatedTarget);
+
+        var simulatedEvent = document.createEvent("MouseEvent");
+        simulatedEvent.initMouseEvent(type, true, true, window, 1, 
+                                    first.screenX, first.screenY, 
+                                    first.clientX, first.clientY, false, 
+                                    false, false, false, 0/*left*/, null);
+
+        first.target.dispatchEvent(simulatedEvent);
+        event.preventDefault();
+    };
     /* CONTEXT MENU ********************/
     static onGroupAdd(info, entry, mouse_event) {
         var canvas = LGraphCanvas.active_canvas;
@@ -1220,13 +1191,10 @@ export default class LGraphCanvas {
         );
 
         //touch events -- THIS WAY DOES NOT WORK, finish implementing pointerevents, than clean the touchevents
-        /*if( 'touchstart' in document.documentElement )
-        {
-            canvas.addEventListener("touchstart", this._touch_callback, true);
-            canvas.addEventListener("touchmove", this._touch_callback, true);
-            canvas.addEventListener("touchend", this._touch_callback, true);
-            canvas.addEventListener("touchcancel", this._touch_callback, true);
-        }*/
+        canvas.addEventListener("touchstart", this.touchHandler, true);
+        canvas.addEventListener("touchmove", this.touchHandler, true);
+        canvas.addEventListener("touchend", this.touchHandler, true);
+        canvas.addEventListener("touchcancel", this.touchHandler, true);
         //Keyboard ******************
         this._key_callback = this.processKey.bind(this);
 
@@ -1276,10 +1244,10 @@ export default class LGraphCanvas {
         this.canvas.removeEventListener("dragenter", this._doReturnTrue);
 
         //touch events -- THIS WAY DOES NOT WORK, finish implementing pointerevents, than clean the touchevents
-        /*this.canvas.removeEventListener("touchstart", this._touch_callback );
-        this.canvas.removeEventListener("touchmove", this._touch_callback );
-        this.canvas.removeEventListener("touchend", this._touch_callback );
-        this.canvas.removeEventListener("touchcancel", this._touch_callback );*/
+        this.canvas.removeEventListener("touchstart", this.touchHandler );
+        this.canvas.removeEventListener("touchmove", this.touchHandler );
+        this.canvas.removeEventListener("touchend", this.touchHandler );
+        this.canvas.removeEventListener("touchcancel", this.touchHandler );
         this._mousedown_callback = null;
         this._mousewheel_callback = null;
         this._key_callback = null;
