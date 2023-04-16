@@ -6,7 +6,7 @@ class MathIsEqual extends LGraphNode {
     static title = "IsEqual";
     static desc = "Easy math operators";
     static title_mode = LiteGraph.NO_TITLE;
-    static type = "math/isEqual";
+    static type = "math/isequal";
 
     constructor() {
         super();

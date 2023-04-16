@@ -6,9 +6,9 @@ class Selector extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("A", "", "", "A");
-        this.addInput("B", "", "", "B");
-        this.addInput("sel", "number", "", "Sel");
+        this.addInput("Sel", "", "", "A");
+        this.addInput("A", "", "", "B");
+        this.addInput("B", "number", "", "Sel");
         this.addOutput("out");
 
         this.selected = 0;
@@ -19,7 +19,7 @@ class Selector extends LGraphNode{
             sel = 0;
         this.selected = sel = Math.round(sel) % (this.inputs.length - 1);
         var v = this.getInputData(sel + 1);
-        if (v !== undefined) {
+        if (v !== null) {
             this.setOutputData(0, v);
         }
     }

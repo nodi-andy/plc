@@ -6,7 +6,7 @@ class MathIsLower extends LGraphNode {
     static title = "Operation";
     static desc = "Easy math operators";
     static title_mode = LiteGraph.NO_TITLE;
-    static type = "math/isLower";
+    static type = "math/islower";
 
     constructor() {
         super();

@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 	<script type="text/javascript" src="math.js"></script>
-	<script type="module" src="websocket.js"></script>
-	<script type="module" src="litegraph.js"></script>
+	<script type="module" src="./websocket.js"></script>
+	<script type="module" src="./litegraph.js"></script>
 
 </head>
 
@@ -65,15 +65,23 @@
     }
 
     window.nodes.saveNodework = () => {
-      fileDialog.files[window.fileDialog.curFileName] =  graph.serialize(); 
-		  fileDialog.saveToStorage();
-      window.showSnackbar("Saved nodework: " + window.fileDialog.curFileName)
+      let localFiles = JSON.parse(localStorage.files)
+      localFiles[localStorage.selected] =  graph.serialize(); 
+      localStorage.files = JSON.stringify(localFiles)
+      window.showSnackbar("Saved nodework: " + localStorage.selected)
     }
 
     window.nodes.upload = () => {
       saveMap();
       window.showSnackbar("nodework sent to nodi.box!")
     }
+
+    window.load = (filename) => {;
+			graph.configure(JSON.parse(localStorage.files)[filename])
+			graph.start()
+      window.showSnackbar("Loaded nodework: " + filename)
+
+		};
 
     import { LGraph } from "./litegraph.js"
     import FileDialog from './filedialog.js';
@@ -93,31 +101,7 @@
       }
     )
 
-/*
-
-
-
-	document.getElementById("saveAsButton").onclick = () => {
-		let newFileName = fileDialog.rename(window.fileDialog.curFileName, false);
-		fileDialog.files[newFileName] =  graph.serialize(); 
-		window.fileDialog.curFileName = newFileName;
-		Toastify({text: "Saved nodework: " + window.fileDialog.curFileName, gravity: "bottom"}).showToast();
-	}
-
-
-	document.getElementById("loadButton").onclick = () => {
-		fileDialog.onFileSelected = filename => {;
-			graph.configure(fileDialog.files[window.fileDialog.curFileName])
-			graph.start()
-			Toastify({text: "Loaded nodework: " + window.fileDialog.curFileName, gravity: "bottom"}).showToast();
-		};
-
-		fileDialog.open();
-	}
-
-*/
-
-	graph.configure(fileDialog.files[window.fileDialog.curFileName])
+	graph.configure(JSON.parse(localStorage.files)[localStorage.selected])
 	graph.start()
 	canvas.showSearchBox();
 
@@ -239,8 +223,6 @@
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                m: 'auto',
-                width: 'fit-content',
               }}
             >
 
@@ -292,6 +274,7 @@
       var currentFiles = JSON.parse(localStorage.files)
       currentFiles[textRef.current.value] = currentFiles[filename]
       localStorage.files = JSON.stringify(currentFiles)
+      localStorage.selected = textRef.current.value
       show(false);
     };
 
@@ -342,7 +325,7 @@
                 {Object.keys(JSON.parse(localStorage.files)).map((label, index) => (
                     <ListItem key={index} disablePadding>
                       <ListItemButton>
-                        <ListItemText primary={label} />
+                        <ListItemText primary={label} onClick={() => {window.load(label); handleClose()} }/>
                       </ListItemButton>
                     </ListItem>
                 ))}

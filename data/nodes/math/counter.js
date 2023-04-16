@@ -10,7 +10,7 @@ class EventCounter extends LGraphNode{
     constructor() {
         super();
         this.addInput("inc", "number", "", "inc");
-        this.addInput("dec", "number", "", "dec");
+        this.addInput("dec", "number", { optional: true}, "dec");
         this.addInput("set", "number", "", "set");
         this.addOutput("num", "number", "", "num");
         this.addProperty("value", 0, "number", {name: "value"});

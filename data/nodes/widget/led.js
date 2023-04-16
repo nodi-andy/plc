@@ -3,8 +3,8 @@ import { LiteGraph } from "../../litegraph.js";
 
 export default class WidgetLed extends LGraphNode{
     static type = "widget/led";
-    static title = " ";
-    static desc = "Toggles between true or false";
+    static title = "";
+    static desc = "LED";
     static title_mode = LiteGraph.NO_TITLE;
     constructor() {
         super();

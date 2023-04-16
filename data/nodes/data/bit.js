@@ -9,14 +9,14 @@ export default class DFlipFlop extends LGraphNode {
     constructor() {
         super();
         this.addInput("set", "number", "", "set");
-        this.addInput("reset", "number", "", "reset");
+        this.addInput("clear", "number", "", "clear");
         this.addOutput("d", "number", "", "d");
         this.properties = { font: "", value: false, port: "" };
         this.size = [64, 128];
     }
     onGetInputs() {
         return [
-            ["toggle", "number", "", "toggle"]
+            ["toggle", "number", { optional: true}, "toggle"]
         ];
     }
 

@@ -80,9 +80,11 @@ export default class WidgetButton extends LGraphNode{
                 this.setOutputData(0, this.output);
             } else {
                 if (this.inputs[0]._data == null) {
-                    this.setOutputData(0, undefined);
+                    this.setOutputData(0, null);
                 } else {
-                    this.setOutputData(0, this.inputs[0]._data);
+                    if (this.output) {
+                        this.setOutputData(0, this.inputs[0]._data);
+                    }
                 }
             }
             for(let input of this.inputs) {
