@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="MERN-auth-roles a web application that alow you to manage authentication and roles of users using MERN (MongoDB Express Angular Node)"
+      content="noditron"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/img/data.png" />
     <!--
@@ -24,7 +24,7 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>MERN-auth-roles</title>
+    <title>noditron</title>
     <script type="module" src="./litegraph.js"></script>
     <script type="module" src="./view.js"></script>
     <script type="module" src="./link.js"></script>
@@ -117,7 +117,6 @@
     }
 
     window.nodes.saveNodework = () => {
-      if (localStorage.files == null) localStorage.files = JSON.stringify({})
       let localFiles = JSON.parse(localStorage.files)
       localFiles[localStorage.selected] =  graph.serialize(); 
       localStorage.files = JSON.stringify(localFiles)
@@ -137,6 +136,7 @@
 		};
 
     localStorage.version = "0.1"
+    if (localStorage.files == null) localStorage.files = JSON.stringify({})
 
 
     window.canvas.current_node_cbs.push(() => { 

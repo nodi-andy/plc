@@ -1,9 +1,14 @@
 #include <Arduino.h>
-#include <SPIFFS.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
+
+#define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
+
+#include <FS.h>
+#define SPIFFS LITTLEFS
+#include <LITTLEFS.h> 
 
 #include "map/map.h"
 
@@ -132,16 +137,11 @@ String processor(const String &var) {
     return String(var == "STATE" && onboard_led.on ? "on" : "off");
 }
 
-void onRootRequest(AsyncWebServerRequest *request) {
-  request->send(SPIFFS, "/index.html", "text/html", false, processor);
-}
-
 void initWebServer() {
     ws.onEvent(onEvent);
     server.addHandler(&ws);
     Serial.println("Starting web server...");
-    server.on("/", onRootRequest);
-    server.serveStatic("/", SPIFFS, "/");
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); ;
     server.begin();
 }
 // ----------------------------------------------------------------------------
@@ -293,7 +293,7 @@ void setup() {
 
     xTaskCreatePinnedToCore(
                     Task2code,   /* Task function. */
-                    "Task2",     /* name of task. */
+                    "noditron task",     /* name of task. */
                     20000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
                     10,           /* priority of the task */

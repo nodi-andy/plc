@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Fab,
@@ -10,10 +10,8 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Modal,
   Snackbar,
   Button,
-  TextField,
   List,
   Tab,
   Tabs,
@@ -27,69 +25,10 @@ import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import SaveAsOutlinedIcon from '@mui/icons-material/SaveAsOutlined';
 import SendAndArchiveOutlinedIcon from '@mui/icons-material/SendAndArchiveOutlined';
-
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  pt: 2,
-  px: 4,
-  pb: 3,
-};
+import RenameDialog from './RenameDialog';
 
 
-function RenameDialog({visible, show, filename, saveAs}) {
-  const textRef = useRef(null);
-
-  const handleClose = () => {
-    console.log("SAVEAS"+saveAs)
-    show(false);
-  };
-
-  const handleRename = () => {
-    var currentFiles = JSON.parse(localStorage.files)
-    currentFiles[textRef.current.value] = currentFiles[filename]
-    delete currentFiles[filename]
-    localStorage.files = JSON.stringify(currentFiles)
-    show(false);
-  };
-
-  const handleSaveAs= () => {
-    var currentFiles = JSON.parse(localStorage.files)
-    currentFiles[textRef.current.value] = currentFiles[filename]
-    localStorage.files = JSON.stringify(currentFiles)
-    localStorage.selected = textRef.current.value
-    show(false);
-  };
-
-  return (
-      <Modal
-        open={visible}
-        onClose={handleClose}
-        aria-labelledby="child-modal-title"
-        aria-describedby="child-modal-description"
-      >
-        <Box sx={{ ...style, width: 200 }}>
-          <TextField
-            id="outlined-helperText"
-            label="New file name"
-            defaultValue = {filename}
-            inputRef = {textRef}
-          />
-          {saveAs ? <Button onClick={handleSaveAs}>Save As</Button> : <Button onClick={handleRename}>Rename</Button>}
-          <Button onClick={handleClose}>Cancel</Button>
-          
-        </Box>
-      </Modal>
-  );
-}
-
-function SelectFileDialog({ openND, setOpenND }) {
+function SelectFileDialog({ openFD, setOpenFD }) {
   const [renameDialogVisible, showRenameDialog] = useState(false);
   const [filename, setFilename] = useState("");
 
@@ -100,18 +39,18 @@ function SelectFileDialog({ openND, setOpenND }) {
 
 
   const handleClose = () => {
-    setOpenND(false);
+    setOpenFD(false);
   };
 
   return (
-      <Dialog  open={openND} onClose={handleClose}>
+      <Dialog  open={openFD} onClose={handleClose}>
         <DialogTitle>Files</DialogTitle>
         <DialogContent>
           <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', }}>
             <List>
               { localStorage.files ? 
-                Object.keys(JSON.parse(localStorage.files)).map((label, index) => (
-                  <ListItem key={index} disablePadding>
+                Object.keys(JSON.parse(localStorage.files)).map((label) => (
+                  <ListItem key={label} disablePadding>
                     <ListItemButton>
                       <ListItemText primary={label} onClick={() => {window.load(label); handleClose()} }/>
                     </ListItemButton>
@@ -120,8 +59,8 @@ function SelectFileDialog({ openND, setOpenND }) {
             }
             </List>
             <List>
-              {localStorage.files ? Object.keys(JSON.parse(localStorage.files)).map((label, index) => (
-                  <ListItem key={index} disablePadding>
+              {localStorage.files ? Object.keys(JSON.parse(localStorage.files)).map((label) => (
+                  <ListItem key={label} disablePadding>
                     <ListItemButton onClick={ ()=>handleRename(label) }>
                       <DriveFileRenameOutlineIcon />
                     </ListItemButton>
@@ -164,56 +103,18 @@ function TabPanel(props) {
   );
 }
 
-function FullWidthGrid({ category, setOpen }) {
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={2}>
-        {window.nodes.list[category].map((label) => (
-          <Grid key={label} item>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                window.nodes.addNode(`${category}/${label}`);
-                setOpen(false);
-              }}>
-              {label}
-            </Button>
-          </Grid>
-        ))}
-      </Grid>
-    </Box>
-  );
-}
 
-function BasicTabs({ setOpen }) {
+function SelectNodeDialog({ openND, setOpenND }) {
+  const handleClose = () => {
+    setOpenND(false);
+  };
+
   const [value, setValue] = useState(0);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          {Object.keys(window.nodes.list).map((label, index) => (
-            <Tab key={"TabKey" + label} label={label} {...a11yProps(index)} />
-          ))}
-        </Tabs>
-      </Box>
-      {Object.keys(window.nodes.list).map((label, index) => (
-        <TabPanel key={"Panel" + label} value={value} index={index}>
-          <FullWidthGrid category={label} setOpen={setOpen} />
-        </TabPanel>
-      ))}
-    </Box>
-  );
-}
-
-function SelectNodeDialog({ openND, setOpenND }) {
-  const handleClose = () => {
-    setOpenND(false);
-  };
 
   return (
     <Dialog open={openND} onClose={handleClose}>
@@ -224,10 +125,35 @@ function SelectNodeDialog({ openND, setOpenND }) {
           component="form"
           sx={{
             display: 'flex',
-            flexDirection: 'column'
+            flexDirection: 'column',
+            width: '100%'
           }}>
-          <BasicTabs setOpen={setOpenND} />
-        </Box>
+            <Tabs   variant="scrollable" scrollButtons="auto"value={value} onChange={handleChange} aria-label="basic tabs example">
+              {window.nodes?.list && Object.keys(window.nodes.list).map((category, index) => (
+                <Tab key={category} label={category} {...a11yProps(index)} />
+              ))}
+            </Tabs>
+          </Box>
+          {window.nodes?.list && Object.keys(window.nodes.list).map((category, tabIndex) => (
+            <TabPanel key={category} value={value} index={tabIndex}>
+            <Box sx={{ flexGrow: 1 }}>
+                  <Grid container spacing={2}>
+                    {window.nodes.list[category].map((label) => (
+                      <Grid key={label} item>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            window.nodes.addNode(`${category}/${label}`);
+                            setOpenND(false);
+                          }}>
+                          {label}
+                        </Button>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+            </TabPanel>
+          ))}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
@@ -304,7 +230,7 @@ function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
         }}>
         <EditIcon />
       </Fab>
-      <Fab color="info" variant="extended" onClick={showFiles}>
+      <Fab color="info" variant="extended" onClick={()=>showFiles(true)}>
         <FileOpenOutlinedIcon />
       </Fab>
       <Fab
@@ -343,7 +269,7 @@ export default function Home() {
   return (
     <>
       <SelectNodeDialog openND={showNodes}  setOpenND={setShowNodes}/>
-      <SelectFileDialog openND={showFiles}  setOpenND={setShowFiles}/>
+      <SelectFileDialog openFD={showFiles}  setOpenFD={setShowFiles}/>
       <SimpleSnackbar openSB={snackbarOpen}  setopenSB={setSnackbarOpen} sbMessage = {window.messageText}/>
       <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
       
