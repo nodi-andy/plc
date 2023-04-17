@@ -1,4 +1,4 @@
-import { LiteGraph } from "./litegraph.js";
+import { NodiEnums } from "./enums.js";
 
 //this is the class in charge of storing link information
 export default class LLink {
@@ -62,7 +62,7 @@ export default class LLink {
 
         //choose color
         if (!color && link) {
-            color = link.color || LGraphCanvas.link_type_colors[link.type];
+            color = link.color || canvas.link_type_colors[link.type];
         }
         if (!color) {
             color = canvas.default_link_color;
@@ -71,8 +71,8 @@ export default class LLink {
             color = "#FFF";
         }
 
-        start_dir = start_dir || LiteGraph.RIGHT;
-        end_dir = end_dir || LiteGraph.LEFT;
+        start_dir = start_dir || NodiEnums.RIGHT;
+        end_dir = end_dir || NodiEnums.LEFT;
 
         var dist = Math.distance(a, b);
         ctx.setLineDash([]);
@@ -94,33 +94,33 @@ export default class LLink {
             var start_offset_y = 0;
             var end_offset_x = 0;
             var end_offset_y = 0;
-            if (canvas.links_render_mode == LiteGraph.SPLINE_LINK) {
+            if (canvas.links_render_mode == NodiEnums.SPLINE_LINK) {
                 ctx.moveTo(a[0], a[1] + offsety);
                 switch (start_dir) {
-                    case LiteGraph.LEFT:
+                    case NodiEnums.LEFT:
                         start_offset_x = dist * -0.25;
                         break;
-                    case LiteGraph.RIGHT:
+                    case NodiEnums.RIGHT:
                         start_offset_x = dist * 0.25;
                         break;
-                    case LiteGraph.UP:
+                    case NodiEnums.UP:
                         start_offset_y = dist * -0.25;
                         break;
-                    case LiteGraph.DOWN:
+                    case NodiEnums.DOWN:
                         start_offset_y = dist * 0.25;
                         break;
                 }
                 switch (end_dir) {
-                    case LiteGraph.LEFT:
+                    case NodiEnums.LEFT:
                         end_offset_x = dist * -0.25;
                         break;
-                    case LiteGraph.RIGHT:
+                    case NodiEnums.RIGHT:
                         end_offset_x = dist * 0.25;
                         break;
-                    case LiteGraph.UP:
+                    case NodiEnums.UP:
                         end_offset_y = dist * -0.25;
                         break;
-                    case LiteGraph.DOWN:
+                    case NodiEnums.DOWN:
                         end_offset_y = dist * 0.25;
                         break;
                 }
@@ -132,33 +132,33 @@ export default class LLink {
                     b[0],
                     b[1] + offsety
                 );
-            } else if (canvas.links_render_mode == LiteGraph.LINEAR_LINK) {
+            } else if (canvas.links_render_mode == NodiEnums.LINEAR_LINK) {
                 ctx.moveTo(a[0], a[1] + offsety);
                 switch (start_dir) {
-                    case LiteGraph.LEFT:
+                    case NodiEnums.LEFT:
                         start_offset_x = -1;
                         break;
-                    case LiteGraph.RIGHT:
+                    case NodiEnums.RIGHT:
                         start_offset_x = 1;
                         break;
-                    case LiteGraph.UP:
+                    case NodiEnums.UP:
                         start_offset_y = -1;
                         break;
-                    case LiteGraph.DOWN:
+                    case NodiEnums.DOWN:
                         start_offset_y = 1;
                         break;
                 }
                 switch (end_dir) {
-                    case LiteGraph.LEFT:
+                    case NodiEnums.LEFT:
                         end_offset_x = -1;
                         break;
-                    case LiteGraph.RIGHT:
+                    case NodiEnums.RIGHT:
                         end_offset_x = 1;
                         break;
-                    case LiteGraph.UP:
+                    case NodiEnums.UP:
                         end_offset_y = -1;
                         break;
-                    case LiteGraph.DOWN:
+                    case NodiEnums.DOWN:
                         end_offset_y = 1;
                         break;
                 }
@@ -172,7 +172,7 @@ export default class LLink {
                     b[1] + end_offset_y * l + offsety
                 );
                 ctx.lineTo(b[0], b[1] + offsety);
-            } else if (canvas.links_render_mode == LiteGraph.STRAIGHT_LINK) {
+            } else if (canvas.links_render_mode == NodiEnums.STRAIGHT_LINK) {
                 ctx.moveTo(a[0], a[1]);
                 var start_x = a[0];
                 var start_y = a[1];
@@ -185,14 +185,14 @@ export default class LLink {
                     targetType = canvas.graph._nodes_by_id[link.origin_id]?.constructor.type;
                 }
                 if (targetType != "control/junction") {
-                    if (start_dir == LiteGraph.RIGHT) {
+                    if (start_dir == NodiEnums.RIGHT) {
                         start_x += 32;
                     } else {
                         start_y += 32;
                     }
                 }
                 if (originType != "control/junction") {
-                    if (end_dir == LiteGraph.LEFT) {
+                    if (end_dir == NodiEnums.LEFT) {
                         end_x -= 32;
                     } else {
                         end_y -= 32;
@@ -232,7 +232,7 @@ export default class LLink {
         }
 
         //render arrow in the middle
-        if (canvas.ds.scale >= 0.6 && canvas.highquality_render && end_dir != LiteGraph.CENTER) {
+        if (canvas.ds.scale >= 0.6 && canvas.highquality_render && end_dir != NodiEnums.CENTER) {
             //render arrow
             if (canvas.render_connection_arrows) {
                 //compute two points in the connection
@@ -282,7 +282,7 @@ export default class LLink {
         if (flow) {
             ctx.fillStyle = color;
             for (let i = 0; i < 5; ++i) {
-                var f = (LiteGraph.getTime() * 0.001 + i * 0.2) % 1;
+                var f = (NodiEnums.getTime() * 0.001 + i * 0.2) % 1;
                 let pos = canvas.computeConnectionPoint(a, b, f, start_dir, end_dir);
                 ctx.beginPath();
                 ctx.arc(pos[0], pos[1], 5, 0, 2 * Math.PI);

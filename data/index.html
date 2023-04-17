@@ -1,1 +1,145 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="icon" href="/favicon.ico"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#000000"/><meta name="description" content="noditron"/><link rel="apple-touch-icon" href="/img/data.png"/><link rel="manifest" href="/manifest.json"/><title>noditron</title><script type="module" src="./litegraph.js"></script><script type="module" src="./view.js"></script><script type="module" src="./link.js"></script><script type="module" src="./math.js"></script><script type="module" src="./node.js"></script><script defer="defer" src="/static/js/main.721b3e7d.js"></script></head><body><noscript>You need to enable JavaScript to run this app.</noscript><canvas id="mycanvas" style="position:absolute;left:0;top:0"></canvas><div id="root"></div></body><script type="module">import{LGraph}from"./litegraph.js";import"./nodes/data/bit.js";import"./nodes/data/number.js";import"./nodes/math/add.js";import"./nodes/math/isequal.js";import"./nodes/math/islower.js";import"./nodes/math/counter.js";import"./nodes/control/junction.js";import"./nodes/control/router.js";import"./nodes/control/selector.js";import"./nodes/logic/and.js";import"./nodes/logic/or.js";import"./nodes/logic/not.js";import"./nodes/time/interval.js";import"./nodes/widget/button.js";import"./nodes/widget/toggle.js";import"./nodes/widget/led.js";import"./nodes/nodi.box/b1.js";import"./nodes/nodi.box/b2.js";import"./nodes/nodi.box/b3.js";import"./nodes/nodi.box/b4.js";import"./nodes/nodi.box/yellow.js";import"./nodes/nodi.box/red.js";import"./nodes/nodi.box/stepper.js";window.graph=new LGraph,window.canvas=new LGraphCanvas("#mycanvas",graph),window.nodes={},window.nodes.addNode=o=>{o=o.toLowerCase(),console.log(o),window.graph.beforeChange();var e=LiteGraph.createNode(o);e&&(e.setPos((window.canvas.visible_area[0]+window.canvas.visible_area[2])/2,(window.canvas.visible_area[1]+window.canvas.visible_area[3])/2),window.graph.add(e,!1)),window.graph.afterChange()},window.nodes.remNode=()=>{var o=window.graph;o.beforeChange();var e,n=LGraphCanvas.active_canvas;for(var s in n.selected_nodes)!1!==(e=n.selected_nodes[s]).removable&&o.remove(e);o.afterChange(),n.selected_nodes&&n.selected_nodes[0]&&n.selected_nodes[0].setDirtyCanvas(!0,!0)},window.nodes.editNode=()=>{window.canvas.processContextMenu()},window.nodes.saveNodework=()=>{let o=JSON.parse(localStorage.files);o[localStorage.selected]=graph.serialize(),localStorage.files=JSON.stringify(o),window.showSnackbar("Saved nodework: "+localStorage.selected)},window.nodes.upload=()=>{saveMap(),window.showSnackbar("nodework sent to nodi.box!")},window.load=o=>{graph.configure(JSON.parse(localStorage.files)[o]),graph.start(),window.showSnackbar("Loaded nodework: "+o)},localStorage.version="0.1",null==localStorage.files&&(localStorage.files=JSON.stringify({})),window.canvas.current_node_cbs.push((()=>{window.canvas.current_node?console.log("disable"):console.log("enable")})),graph.configure(JSON.parse(localStorage.files)[localStorage.selected]),graph.start(),canvas.showSearchBox(),window.addEventListener("resize",(function(){canvas.resize()})),window.nodes.list={};for(let o in LiteGraph.registered_node_types){let e=LiteGraph.registered_node_types[o];null==window.nodes.list[e.category]&&(window.nodes.list[e.category]=[]),window.nodes.list[e.category].push(e.elementName)}</script></html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><link rel="icon" href="/favicon.ico"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#000000"/><meta name="description" content="noditron"/><link rel="apple-touch-icon" href="/img/data.png"/><link rel="manifest" href="/manifest.json"/><title>noditron</title><script type="module" src="./link.js" async></script><script type="module" src="./litegraph.js" async></script><script type="module" src="./view.js" async></script><script type="module" src="./math.js" async></script><script type="module" src="./node.js" async></script><script defer="defer" src="/static/js/main.81607dbd.js"></script></head><body><noscript>You need to enable JavaScript to run this app.</noscript><canvas id="mycanvas" style="position:absolute;left:0;top:0"></canvas><div id="root"></div></body><script type="module">import { LGraph } from "./litegraph.js"
+
+    const loadJS = (FILE_URL, async = true, type = "module") => {
+      return new Promise((resolve, reject) => {
+          try {
+              const scriptEle = document.createElement("script");
+              scriptEle.type = type;
+              scriptEle.async = async;
+              scriptEle.src =FILE_URL;
+
+              scriptEle.addEventListener("load", (ev) => {
+                  resolve({ status: true });
+              });
+
+              scriptEle.addEventListener("error", (ev) => {
+                  reject({
+                      status: false,
+                      message: `Failed to load the script ＄{FILE_URL}`
+                  });
+              });
+
+              document.body.appendChild(scriptEle);
+          } catch (error) {
+              reject(error);
+          }
+      });
+  };
+
+    await loadJS("./nodes/data/bit.js", false);
+    await loadJS("./nodes/data/number.js", false);
+    await loadJS("./nodes/math/add.js", false);
+    await loadJS("./nodes/math/isequal.js", false);
+    await loadJS("./nodes/math/islower.js", false);
+    await loadJS("./nodes/math/counter.js", false);
+    await loadJS("./nodes/control/junction.js", false);
+    await loadJS("./nodes/control/router.js", false);
+    await loadJS("./nodes/control/selector.js", false);
+    await loadJS("./nodes/logic/and.js", false);
+    await loadJS("./nodes/logic/or.js", false);
+    await loadJS("./nodes/logic/not.js", false);
+    await loadJS("./nodes/time/interval.js", false);
+    await loadJS("./nodes/widget/button.js", false);
+    await loadJS("./nodes/widget/toggle.js", false);
+    await loadJS("./nodes/widget/led.js", false);
+    await loadJS("./nodes/nodi.box/b1.js", false);
+    await loadJS("./nodes/nodi.box/b2.js", false);
+    await loadJS("./nodes/nodi.box/b3.js", false);
+    await loadJS("./nodes/nodi.box/b4.js", false);
+    await loadJS("./nodes/nodi.box/yellow.js", false);
+    await loadJS("./nodes/nodi.box/red.js", false);
+    await loadJS("./nodes/nodi.box/stepper.js", false);
+
+    window.graph = new LGraph();
+    window.canvas = new LGraphCanvas("#mycanvas", graph);
+
+    window.nodes = {}
+    window.nodes.addNode = (name) => {
+      name = name.toLowerCase();
+      console.log(name)
+      window.graph.beforeChange();
+      var node = LiteGraph.createNode(name);
+      if (node) {
+        node.setPos((window.canvas.visible_area[0] + window.canvas.visible_area[2]) / 2,
+              (window.canvas.visible_area[1] + window.canvas.visible_area[3]) / 2);
+              window.graph.add(node, false);
+      }
+
+      window.graph.afterChange();
+    }
+    window.nodes.remNode = () => {
+        var graph = window.graph;
+          graph.beforeChange();
+
+          var fApplyMultiNode = function (node) {
+              if (node.removable === false) {
+                  return;
+              }
+              graph.remove(node);
+          };
+
+          var graphcanvas = LGraphCanvas.active_canvas;
+              for (var i in graphcanvas.selected_nodes) {
+                  fApplyMultiNode(graphcanvas.selected_nodes[i]);
+              }
+
+          graph.afterChange();
+      if (graphcanvas.selected_nodes && graphcanvas.selected_nodes[0]) {
+            graphcanvas.selected_nodes[0].setDirtyCanvas(true, true);
+      }
+    }
+
+    window.nodes.editNode = () => {
+      window.canvas.processContextMenu();
+    }
+
+    window.nodes.saveNodework = () => {
+      let localFiles = JSON.parse(localStorage.files)
+      localFiles[localStorage.selected] =  graph.serialize(); 
+      localStorage.files = JSON.stringify(localFiles)
+      window.showSnackbar("Saved nodework: " + localStorage.selected)
+    }
+
+    window.nodes.upload = () => {
+      saveMap();
+      window.showSnackbar("nodework sent to nodi.box!")
+    }
+
+    window.load = (filename) => {;
+			graph.configure(JSON.parse(localStorage.files)[filename])
+			graph.start()
+      window.showSnackbar("Loaded nodework: " + filename)
+
+		};
+
+    localStorage.version = "0.1"
+    if (localStorage.files == null) localStorage.files = JSON.stringify({})
+
+
+    window.canvas.current_node_cbs.push(() => { 
+        if (window.canvas.current_node) {
+          console.log("disable")
+        }
+        else {
+          console.log("enable")
+        }
+      }
+    )
+
+    graph.configure(JSON.parse(localStorage.files)[localStorage.selected])
+    graph.start()
+    canvas.showSearchBox();
+
+    window.addEventListener('resize', function () { canvas.resize() })
+
+
+
+    function updateNodeList () {
+      window.nodes.list = {}
+      for(let nodeClassName in LiteGraph.registered_node_types) {
+        let nodeClass = LiteGraph.registered_node_types[nodeClassName]
+        if (window.nodes.list[nodeClass.category] == null) window.nodes.list[nodeClass.category] = []
+        window.nodes.list[nodeClass.category].push(nodeClass.elementName)
+      }
+    }
+    updateNodeList()</script></html>

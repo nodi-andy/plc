@@ -25,11 +25,11 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>noditron</title>
-    <script type="module" src="./litegraph.js"></script>
-    <script type="module" src="./view.js"></script>
-    <script type="module" src="./link.js"></script>
-    <script type="module" src="./math.js"></script>
-    <script type="module" src="./node.js"></script>
+    <script type="module" src="./link.js" async></script>
+    <script type="module" src="./litegraph.js" async></script>
+    <script type="module" src="./view.js" async></script>
+    <script type="module" src="./math.js" async></script>
+    <script type="module" src="./node.js" async></script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -49,29 +49,57 @@
   </body>
   <script type = "module">
     import { LGraph } from "./litegraph.js"
-    import "./nodes/data/bit.js"
-    import "./nodes/data/number.js"
-    import "./nodes/math/add.js"
-    import "./nodes/math/isequal.js"
-    import "./nodes/math/islower.js"
-    import "./nodes/math/counter.js"
-    import "./nodes/control/junction.js"
-    import "./nodes/control/router.js"
-    import "./nodes/control/selector.js"
-    import "./nodes/logic/and.js"
-    import "./nodes/logic/or.js"
-    import "./nodes/logic/not.js"
-    import "./nodes/time/interval.js"
-    import "./nodes/widget/button.js"
-    import "./nodes/widget/toggle.js"
-    import "./nodes/widget/led.js"
-    import "./nodes/nodi.box/b1.js"
-    import "./nodes/nodi.box/b2.js"
-    import "./nodes/nodi.box/b3.js"
-    import "./nodes/nodi.box/b4.js"
-    import "./nodes/nodi.box/yellow.js"
-    import "./nodes/nodi.box/red.js"
-    import "./nodes/nodi.box/stepper.js"
+
+    const loadJS = (FILE_URL, async = true, type = "module") => {
+      return new Promise((resolve, reject) => {
+          try {
+              const scriptEle = document.createElement("script");
+              scriptEle.type = type;
+              scriptEle.async = async;
+              scriptEle.src =FILE_URL;
+
+              scriptEle.addEventListener("load", (ev) => {
+                  resolve({ status: true });
+              });
+
+              scriptEle.addEventListener("error", (ev) => {
+                  reject({
+                      status: false,
+                      message: `Failed to load the script ＄{FILE_URL}`
+                  });
+              });
+
+              document.body.appendChild(scriptEle);
+          } catch (error) {
+              reject(error);
+          }
+      });
+  };
+    // why loading the scripts one by one? 
+    // Because the IoT device can not keep more than 10 TCP connections open
+    await loadJS("./nodes/data/bit.js", false);
+    await loadJS("./nodes/data/number.js", false);
+    await loadJS("./nodes/math/add.js", false);
+    await loadJS("./nodes/math/isequal.js", false);
+    await loadJS("./nodes/math/islower.js", false);
+    await loadJS("./nodes/math/counter.js", false);
+    await loadJS("./nodes/control/junction.js", false);
+    await loadJS("./nodes/control/router.js", false);
+    await loadJS("./nodes/control/selector.js", false);
+    await loadJS("./nodes/logic/and.js", false);
+    await loadJS("./nodes/logic/or.js", false);
+    await loadJS("./nodes/logic/not.js", false);
+    await loadJS("./nodes/time/interval.js", false);
+    await loadJS("./nodes/widget/button.js", false);
+    await loadJS("./nodes/widget/toggle.js", false);
+    await loadJS("./nodes/widget/led.js", false);
+    await loadJS("./nodes/nodi.box/b1.js", false);
+    await loadJS("./nodes/nodi.box/b2.js", false);
+    await loadJS("./nodes/nodi.box/b3.js", false);
+    await loadJS("./nodes/nodi.box/b4.js", false);
+    await loadJS("./nodes/nodi.box/yellow.js", false);
+    await loadJS("./nodes/nodi.box/red.js", false);
+    await loadJS("./nodes/nodi.box/stepper.js", false);
 
     window.graph = new LGraph();
     window.canvas = new LGraphCanvas("#mycanvas", graph);
@@ -157,13 +185,15 @@
 
 
 
-
-    window.nodes.list = {}
-    for(let nodeClassName in LiteGraph.registered_node_types) {
-      let nodeClass = LiteGraph.registered_node_types[nodeClassName]
-      if (window.nodes.list[nodeClass.category] == null) window.nodes.list[nodeClass.category] = []
-      window.nodes.list[nodeClass.category].push(nodeClass.elementName)
+    function updateNodeList () {
+      window.nodes.list = {}
+      for(let nodeClassName in LiteGraph.registered_node_types) {
+        let nodeClass = LiteGraph.registered_node_types[nodeClassName]
+        if (window.nodes.list[nodeClass.category] == null) window.nodes.list[nodeClass.category] = []
+        window.nodes.list[nodeClass.category].push(nodeClass.elementName)
+      }
     }
+    updateNodeList()
 
 </script>
 </html>

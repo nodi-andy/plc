@@ -125,10 +125,9 @@ function SelectNodeDialog({ openND, setOpenND }) {
           component="form"
           sx={{
             display: 'flex',
-            flexDirection: 'column',
-            width: '100%'
+            flexDirection: 'column'
           }}>
-            <Tabs   variant="scrollable" scrollButtons="auto"value={value} onChange={handleChange} aria-label="basic tabs example">
+            <Tabs   variant="scrollable" allowScrollButtonsMobile scrollButtons="auto" value={value} onChange={handleChange} aria-label="basic tabs example">
               {window.nodes?.list && Object.keys(window.nodes.list).map((category, index) => (
                 <Tab key={category} label={category} {...a11yProps(index)} />
               ))}
