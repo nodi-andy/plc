@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="litegraph.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
       content="noditron"
     />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/img/data.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -77,29 +77,29 @@
   };
     // why loading the scripts one by one? 
     // Because the IoT device can not keep more than 10 TCP connections open
-    await loadJS("./nodes/data/bit.js", false);
-    await loadJS("./nodes/data/number.js", false);
-    await loadJS("./nodes/math/add.js", false);
-    await loadJS("./nodes/math/isequal.js", false);
-    await loadJS("./nodes/math/islower.js", false);
-    await loadJS("./nodes/math/counter.js", false);
-    await loadJS("./nodes/control/junction.js", false);
-    await loadJS("./nodes/control/router.js", false);
-    await loadJS("./nodes/control/selector.js", false);
-    await loadJS("./nodes/logic/and.js", false);
-    await loadJS("./nodes/logic/or.js", false);
-    await loadJS("./nodes/logic/not.js", false);
-    await loadJS("./nodes/time/interval.js", false);
-    await loadJS("./nodes/widget/button.js", false);
-    await loadJS("./nodes/widget/toggle.js", false);
-    await loadJS("./nodes/widget/led.js", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
     await loadJS("./nodes/nodi.box/b2.js", false);
     await loadJS("./nodes/nodi.box/b3.js", false);
     await loadJS("./nodes/nodi.box/b4.js", false);
     await loadJS("./nodes/nodi.box/yellow.js", false);
     await loadJS("./nodes/nodi.box/red.js", false);
+    await loadJS("./nodes/widget/button.js", false);
+    await loadJS("./nodes/widget/toggle.js", false);
+    await loadJS("./nodes/widget/led.js", false);
     await loadJS("./nodes/nodi.box/stepper.js", false);
+    await loadJS("./nodes/data/bit.js", false);
+    await loadJS("./nodes/data/number.js", false);
+    await loadJS("./nodes/logic/and.js", false);
+    await loadJS("./nodes/logic/or.js", false);
+    await loadJS("./nodes/logic/not.js", false);
+    await loadJS("./nodes/math/add.js", false);
+    await loadJS("./nodes/math/isequal.js", false);
+    await loadJS("./nodes/math/islower.js", false);
+    await loadJS("./nodes/math/counter.js", false);
+    await loadJS("./nodes/time/interval.js", false);
+    await loadJS("./nodes/control/junction.js", false);
+    await loadJS("./nodes/control/router.js", false);
+    await loadJS("./nodes/control/selector.js", false);
 
     window.graph = new LGraph();
     window.canvas = new LGraphCanvas("#mycanvas", graph);

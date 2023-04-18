@@ -79,6 +79,11 @@ export const NodiEnums = {
 
 }
 
+NodiEnums.link_type_colors = {
+    "-1": NodiEnums.EVENT_LINK_COLOR,
+    number: "#AAA",
+    node: "#DCA"
+};
 //timer that works everywhere
 if (typeof performance != "undefined") {
     NodiEnums.getTime = performance.now.bind(performance);

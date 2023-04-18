@@ -1,3 +1,4 @@
+import { NodiEnums } from "../../enums.js";
 import LGraphCanvas from "./canvas.js"
 import LLink from "./link.js"
 import LGraphNode from "./node.js"
@@ -734,21 +735,6 @@ export var LiteGraph = (global.LiteGraph = {
 for (let i = 65; i <= 90; i++) {
     LiteGraph.alphabet.push(String.fromCharCode(i));
 }
-//timer that works everywhere
-if (typeof performance != "undefined") {
-    LiteGraph.getTime = performance.now.bind(performance);
-} else if (typeof Date != "undefined" && Date.now) {
-    LiteGraph.getTime = Date.now.bind(Date);
-} else if (typeof process != "undefined") {
-    LiteGraph.getTime = function() {
-        var t = process.hrtime();
-        return t[0] * 0.001 + t[1] * 1e-6;
-    };
-} else {
-    LiteGraph.getTime = function getTime() {
-        return new Date().getTime();
-    };
-}
 
 
 
@@ -907,7 +893,7 @@ class LGraph {
         this.sendEventToAllNodes("onStart");
 
         //launch
-        this.starttime = LiteGraph.getTime();
+        this.starttime = NodiEnums.getTime();
         this.last_update_time = this.starttime;
         interval = interval || 0;
         var that = this;
@@ -972,7 +958,7 @@ class LGraph {
     runStep(num, do_not_catch_errors, limit) {
         num = num || 1;
 
-        var start = LiteGraph.getTime();
+        var start = NodiEnums.getTime();
         this.globaltime = 0.001 * (start - this.starttime);
 
         var nodes = this._nodes_executable
@@ -1062,7 +1048,7 @@ class LGraph {
             let link = this.links[linkID];
             this._nodes_by_id[link.origin_id].outputs[link.origin_slot]._data = null;
         }
-        var now = LiteGraph.getTime();
+        var now = NodiEnums.getTime();
         var elapsed = now - start;
         if (elapsed == 0) {
             elapsed = 1;

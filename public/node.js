@@ -1,3 +1,5 @@
+import { NodiEnums } from "./enums.js";
+
 import LLink from "./link.js"
 // *************************************************************
 //   Node CLASS                                          *******
@@ -780,11 +782,11 @@ export default class LGraphNode {
         }
 
         if (this.graph)
-            this.graph._last_trigger_time = window.LiteGraph.getTime();
+            this.graph._last_trigger_time = NodiEnums.getTime();
 
         for (var i = 0; i < this.outputs.length; ++i) {
             var output = this.outputs[i];
-            if (!output || output.type !== window.LiteGraph.EVENT || (action && output.name != action))
+            if (!output || output.type !== NodiEnums.EVENT || (action && output.name != action))
                 continue;
             this.triggerSlot(i, param, null, options);
         }
@@ -821,7 +823,7 @@ export default class LGraphNode {
         }
 
         if (this.graph) {
-            this.graph._last_trigger_time = window.LiteGraph.getTime();
+            this.graph._last_trigger_time = NodiEnums.getTime();
         }
 
         //for every link attached here
@@ -836,7 +838,7 @@ export default class LGraphNode {
                 //not connected
                 continue;
             }
-            link_info._last_time = window.LiteGraph.getTime();
+            link_info._last_time = NodiEnums.getTime();
             var node = this.graph.getNodeById(link_info.target_id);
             if (!node) {
                 //node not found?

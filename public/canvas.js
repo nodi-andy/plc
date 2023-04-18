@@ -12,6 +12,7 @@
  * @param {LGraph} graph [optional]
  * @param {Object} options [optional] { skip_rendering, autoresize, viewport }
  */
+import { NodiEnums } from "./enums.js";
 
 import DragAndScale from "./view.js"
 import { LiteGraph } from "./litegraph.js"
@@ -1393,7 +1394,7 @@ export default class LGraphCanvas {
 
         var skip_dragging = false;
         var skip_action = false;
-        var now = LiteGraph.getTime();
+        var now = NodiEnums.getTime();
         var is_primary = (e.isPrimary === undefined || !e.isPrimary);
         var is_double_click = (now - this.last_mouseclick < 300) && is_primary;
         this.mouse[0] = e.clientX;
@@ -1786,7 +1787,7 @@ export default class LGraphCanvas {
         //	this.onNodeSelectionChange(this.node_selected);
         this.last_mouse[0] = e.clientX;
         this.last_mouse[1] = e.clientY;
-        this.last_mouseclick = LiteGraph.getTime();
+        this.last_mouseclick = NodiEnums.getTime();
         this.last_mouse_dragging = true;
 
         
@@ -2093,7 +2094,7 @@ export default class LGraphCanvas {
         }
 
         this.adjustMouseEvent(e);
-        var now = LiteGraph.getTime();
+        var now = NodiEnums.getTime();
         e.click_time = now - this.last_mouseclick;
         this.last_mouse_dragging = false;
         this.last_click_position = null;
@@ -3113,7 +3114,7 @@ export default class LGraphCanvas {
         }
 
         //fps counting
-        var now = LiteGraph.getTime();
+        var now = NodiEnums.getTime();
         this.render_time = (now - this.last_draw_time) * 0.001;
         this.last_draw_time = now;
 
@@ -4559,7 +4560,7 @@ export default class LGraphCanvas {
          * @method drawConnections
          **/
     drawConnections(ctx) {
-        var now = LiteGraph.getTime();
+        var now = NodiEnums.getTime();
         var visible_area = this.visible_area;
         margin_area[0] = visible_area[0] - 20;
         margin_area[1] = visible_area[1] - 20;
@@ -4885,7 +4886,7 @@ export default class LGraphCanvas {
         if (flow) {
             ctx.fillStyle = color;
             for (let i = 0; i < 5; ++i) {
-                var f = (LiteGraph.getTime() * 0.001 + i * 0.2) % 1;
+                var f = (NodiEnums.getTime() * 0.001 + i * 0.2) % 1;
                 let pos = this.computeConnectionPoint(a, b, f, start_dir, end_dir);
                 ctx.beginPath();
                 ctx.arc(pos[0], pos[1], 5, 0, 2 * Math.PI);

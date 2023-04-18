@@ -1,3 +1,5 @@
+import { NodiEnums } from "../../enums.js";
+
 import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
@@ -13,10 +15,10 @@ export default class Interval extends LGraphNode {
         super();
         this.addProperty("ton", 500);
         this.addProperty("toff", 500);
-        this.addProperty("pressing", "");
-        this.addProperty("pressed", "1");
-        this.addProperty("releasing", "");
-        this.addProperty("released", "0");
+        this.addProperty("pressing", null);
+        this.addProperty("pressed", 1);
+        this.addProperty("releasing", null);
+        this.addProperty("released", 0);
         this.addInput("ton", "number", "", "tOn");
         this.addInput("toff", "number", "", "tOff");
         this.addOutput("tick", "number", "", "tick");
@@ -42,7 +44,7 @@ export default class Interval extends LGraphNode {
 
     onExecute() {
         if (this.state == null) this.state = 0;
-        var now = LiteGraph.getTime();
+        var now = NodiEnums.getTime();
 
         var dON = now - this.last_on;
         var dOFF = now - this.last_off;

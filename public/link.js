@@ -62,7 +62,7 @@ export default class LLink {
 
         //choose color
         if (!color && link) {
-            color = link.color || canvas.link_type_colors[link.type];
+            color = link.color || NodiEnums.link_type_colors[link.type];
         }
         if (!color) {
             color = canvas.default_link_color;
