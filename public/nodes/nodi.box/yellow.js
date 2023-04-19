@@ -1,10 +1,10 @@
-import WidgetToggle from "../widget/toggle.js";
+import WidgetLed from "../widget/led.js";
 
-export default class NodiBoxYellow extends WidgetToggle {
+export default class NodiBoxYellow extends WidgetLed {
     constructor() {
         super();
         this.properties["port"] = 22;
-        this.properties["color"] = "#FFC300";
-        this.type = WidgetToggle.type;
+        this.properties["color"] = "FFC300";
+        this.type = WidgetLed.type;
     }
 }

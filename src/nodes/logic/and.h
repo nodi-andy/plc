@@ -11,7 +11,7 @@ class LogicAnd : public Node
         return new LogicAnd(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "logic/AND";
+        return "logic/and";
     }
 
     void setup();

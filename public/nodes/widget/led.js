@@ -60,6 +60,10 @@ export default class WidgetLed extends LGraphNode{
             // console.log(this.properties.value);
         }
     }
+
+    hwSetState(v) {
+        this.properties.value = v;
+    }
 }
 
 LiteGraph.registerNodeType(WidgetLed.type, WidgetLed);

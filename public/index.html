@@ -25,10 +25,8 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>noditron</title>
-    <script type="module" src="./link.js" async></script>
-    <script type="module" src="./litegraph.js" async></script>
-    <script type="module" src="./view.js" async></script>
     <script type="module" src="./math.js" async></script>
+    <script type="module" src="./link.js" async></script>
     <script type="module" src="./node.js" async></script>
   </head>
   <body>
@@ -77,6 +75,8 @@
   };
     // why loading the scripts one by one? 
     // Because the IoT device can not keep more than 10 TCP connections open
+    await loadJS("./view.js", false);
+    await loadJS("./litegraph.js", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
     await loadJS("./nodes/nodi.box/b2.js", false);
     await loadJS("./nodes/nodi.box/b3.js", false);
@@ -100,6 +100,7 @@
     await loadJS("./nodes/control/junction.js", false);
     await loadJS("./nodes/control/router.js", false);
     await loadJS("./nodes/control/selector.js", false);
+    await loadJS("./websocket.js", false);
 
     window.graph = new LGraph();
     window.canvas = new LGraphCanvas("#mycanvas", graph);
@@ -152,8 +153,10 @@
     }
 
     window.nodes.upload = () => {
-      saveMap();
-      window.showSnackbar("nodework sent to nodi.box!")
+      if (window.ws) {
+        window.ws.send(JSON.stringify({'save':window.graph.serialize()}));
+        window.showSnackbar("nodework sent to nodi.box!")
+      }
     }
 
     window.load = (filename) => {;
@@ -169,9 +172,15 @@
 
     window.canvas.current_node_cbs.push(() => { 
         if (window.canvas.current_node) {
+          window.showRemove(true);
+          window.showEdit(true);
+          window.removeClickable = true
           console.log("disable")
         }
         else {
+          window.showRemove(false);
+          window.showEdit(false);
+          window.removeClickable = false
           console.log("enable")
         }
       }
@@ -185,7 +194,7 @@
 
 
 
-    function updateNodeList () {
+    window.updateNodeList = () => {
       window.nodes.list = {}
       for(let nodeClassName in LiteGraph.registered_node_types) {
         let nodeClass = LiteGraph.registered_node_types[nodeClassName]

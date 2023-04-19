@@ -160,7 +160,7 @@ export var LiteGraph = (global.LiteGraph = {
             console.log("Node registered: " + type);
         }
 
-        var categories = base_class.type.split("/");
+        var categories = type.split("/");
         var classname = base_class.name;
 
         base_class.category = categories[0]

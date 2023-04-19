@@ -75,7 +75,7 @@ void Button::setup() {
 }
 
 int Button::onExecute() {
-  int ret = 0;
+  bool update = false;
   output = 0;
   if (port >= 0) {
     input = getInput(0);
@@ -114,9 +114,9 @@ int Button::onExecute() {
         }
       }
     }
-    ret = (state != newState);
+    update = (state != newState);
     state = newState;
   }
   setOutput(0, output);
-  return ret;
+  return update;
 }

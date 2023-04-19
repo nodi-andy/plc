@@ -11,7 +11,7 @@ class LogicNot : public Node
         return new LogicNot(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "logic/NOT";
+        return "logic/not";
     }
 
     void setup();

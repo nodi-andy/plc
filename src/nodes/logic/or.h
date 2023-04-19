@@ -11,7 +11,7 @@ class LogicOr : public Node
         return new LogicOr(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "logic/OR";
+        return "logic/or";
     }
 
     void setup();

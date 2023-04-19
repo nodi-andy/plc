@@ -20,7 +20,7 @@ export default class WidgetButton extends LGraphNode{
         this.addProperty("released", null);
         this.addProperty("color", "gray");
         this.size = [64, 64];
-        this.clicked = false;
+        this.newState = false;
         for(let input of this.inputs) {
             input._data = null;
         }
@@ -30,7 +30,7 @@ export default class WidgetButton extends LGraphNode{
     onDrawForeground(ctx) {
         var margin = 10;
         
-        if (this.clicked == 1) {
+        if (this.newState == 1) {
             margin += 2;
         } else {
             ctx.fillStyle = "black";
@@ -43,7 +43,7 @@ export default class WidgetButton extends LGraphNode{
         if (this.properties.text || this.properties.text === 0) {
             var font_size = this.properties.font_size || 30;
             ctx.textAlign = "center";
-            ctx.fillStyle = this.clicked ? "black" : "white";
+            ctx.fillStyle = this.newState ? "black" : "white";
             ctx.font = font_size + "px " + WidgetButton.font;
             ctx.fillText(this.properties.text, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
             ctx.textAlign = "left";
@@ -53,7 +53,6 @@ export default class WidgetButton extends LGraphNode{
     onMouseDown(e, local_pos) {
         if (local_pos[0] > 10 && local_pos[1] > 10 && local_pos[0] < this.size[0] - 10 && local_pos[1] < this.size[1] - 10) {
 
-            this.clicked = 1;
             this.newState = 1;
             return true;
         }
@@ -99,10 +98,13 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onMouseUp(/*e*/) {
-        this.clicked = 0;
         this.newState = 0;
         this.setDirtyCanvas(true);
 
+    }
+
+    hwSetState(v) {
+        this.newState = !v;
     }
 }
 

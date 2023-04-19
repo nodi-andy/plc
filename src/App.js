@@ -1,6 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
 import Home from './components/Home';
 
+console.log('📦: ' + process.env.REACT_APP_NAME)
+console.log('🚀: ' + process.env.REACT_APP_VERSION)
+
 function App() {
   return (
     <Routes>

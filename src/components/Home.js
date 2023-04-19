@@ -117,25 +117,23 @@ function SelectNodeDialog({ openND, setOpenND }) {
 
 
   return (
-    <Dialog open={openND} onClose={handleClose}>
-      <DialogTitle>Nodes</DialogTitle>
-      <DialogContent>
-        <Box
-          noValidate
-          component="form"
-          sx={{
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <Tabs   variant="scrollable" allowScrollButtonsMobile scrollButtons="auto" value={value} onChange={handleChange} aria-label="basic tabs example">
+    <Dialog open={openND} onClose={handleClose} fullWidth={true} maxWidth={"xl"}>
+      <DialogContent >
+
+            <Tabs sx={{ borderBottom: 1 }}
+  variant="scrollable"
+  scrollButtons
+  allowScrollButtonsMobile
+              value={value} onChange={handleChange} aria-label="basic tabs example"
+              TabIndicatorProps={{style: {backgroundColor: "red"}}}
+            >
+              
               {window.nodes?.list && Object.keys(window.nodes.list).map((category, index) => (
                 <Tab key={category} label={category} {...a11yProps(index)} />
               ))}
             </Tabs>
-          </Box>
           {window.nodes?.list && Object.keys(window.nodes.list).map((category, tabIndex) => (
             <TabPanel key={category} value={value} index={tabIndex}>
-            <Box sx={{ flexGrow: 1 }}>
                   <Grid container spacing={2}>
                     {window.nodes.list[category].map((label) => (
                       <Grid key={label} item>
@@ -150,7 +148,6 @@ function SelectNodeDialog({ openND, setOpenND }) {
                       </Grid>
                     ))}
                   </Grid>
-                </Box>
             </TabPanel>
           ))}
       </DialogContent>
@@ -195,6 +192,14 @@ function SimpleSnackbar({openSB, setopenSB, sbMessage}) {
 }
 
 function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
+  const [editClickable, setEditClickable] = useState(false)
+  const [removeClickable, setRemoveClickable] = useState(false)
+  window.showEdit = (v) => {
+    setEditClickable(v);
+  };
+  window.showRemove = (v) => {
+    setRemoveClickable(v);
+  };
   return (
     <Box
       sx={{
@@ -216,6 +221,7 @@ function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
         color="secondary"
         variant="extended"
         aria-label="remove"
+        disabled = {!removeClickable}
         onClick={() => {
           window.nodes.remNode();
         }}>
@@ -224,6 +230,7 @@ function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
       <Fab
         color="warning"
         variant="extended"
+        disabled = {!editClickable}
         onClick={() => {
           window.nodes.editNode();
         }}>
@@ -246,6 +253,7 @@ function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
       <Fab
         color="error"
         variant="extended"
+        disabled = {!window.burnClickable}
         onClick={() => {
           window.nodes.upload();
         }}>
