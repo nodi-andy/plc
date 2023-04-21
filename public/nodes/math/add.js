@@ -37,26 +37,29 @@ class MathAdd extends LGraphNode {
     }
 
     onExecute() {
+        let update = false;
+        for(let n = 0; n < this.inputs.length; n++) {
+            if (this.getInputData(n) != null) {
+                this.properties[this.inputs[n]?.name] = this.getInputData(n)
+                update = true;
+            }
+        }
         let ret = 0;
         this.label = "";
         for (let inX = 0; inX < this.inputs.length; inX++) {
             let inp = this.inputs[inX];
-            let val = this.getInputData(inX)
-            if (val != null) {
-                if (val.constructor === Number) {
-                    this.properties[inp.name] = val;
-                }
-                this.label += val
-            } else {
-                val = parseInt(this.properties[inp.name]);
-                this.label += inp.name
-            }
+            let val = this.properties[inp?.name]
+            val = parseInt(this.properties[inp.name]);
+            this.label += val
             val = parseInt(val);
             if (val == null || isNaN(val)) val = 0;
             if (inX < this.inputs.length - 1) this.label += " + "
             ret += parseInt(val);
         }
-        this.setOutputData(0, ret);
+        if (update) {
+            this.setOutputData(0, ret);
+            update = false;
+        }
     }
     onDrawBackground(ctx) {
         if (this.flags.collapsed) {

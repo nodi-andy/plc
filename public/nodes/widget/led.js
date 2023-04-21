@@ -10,7 +10,7 @@ export default class WidgetLed extends LGraphNode{
         super();
         this.addInput("inp", "number");
         this.addOutput("outp", "number");
-        this.addProperty("text", "LED");
+        this.addProperty("label", "LED");
         this.addProperty("port", "");
         this.addProperty("value", 0);
         this.addProperty("color", "FF3333");
@@ -18,27 +18,9 @@ export default class WidgetLed extends LGraphNode{
     }
 
     onDrawForeground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
 
-        var size = this.size[1] * 0.5;
-        var margin = 0.25;
-        var y = this.size[1] * 0.25;
-        var w = 0;
-        if (this.title.trim().length) {
-            ctx.font = this.properties.font || (size * 0.8).toFixed(0) + "px Arial";
-            w = ctx.measureText(this.title).width;
-        }
-        var x = (this.size[0] - (w + size)) * 0.5;
-
-        ctx.fillRect(
-            x + size * margin,
-            y + size * margin,
-            size * (1 - margin * 2),
-            size * (1 - margin * 2)
-        );
-        
+        var size = Math.min(this.size[0] * 0.5, this.size[1] * 0.5);
+       
         ctx.beginPath();
         ctx.arc(size, size, size * 0.5, 0, 2 * Math.PI, false);
         ctx.fillStyle = this.properties.value ? "#" + this.properties.color : "#222";
@@ -47,17 +29,18 @@ export default class WidgetLed extends LGraphNode{
         ctx.strokeStyle = '#000';
         ctx.stroke();
 
-        if (this.properties.text.trim().length) {
+        if (this.properties.label.length) {
             ctx.textAlign = "center";
             ctx.fillStyle = "#AAA";
-            ctx.fillText(this.properties.text, size, y * 0.85);
+            ctx.fillText(this.properties.label, this.size[0] * 0.5, 10);
         }
     }
 
     onExecute() {
         if (this.inputs[0]._data !== null) {
             this.properties.value = parseInt(this.inputs[0]._data);
-            // console.log(this.properties.value);
+            this.setOutputData(0, this.properties.value);
+        // console.log(this.properties.value);
         }
     }
 

@@ -58,12 +58,17 @@ export default class WidgetNumber extends LGraphNode {
             }
             this.setOutputData(0, this.properties.value);
         } else {
-            if (val != null && val !== "") {
+            if (val != null && val !== "" && !isNaN(val)) {
                 if (this.properties.const === false) {
                     this.properties.value = val 
                 }
                 this.setOutputData(0, this.properties.value);
             }
+        }
+
+        if (this.update) {
+            this.setOutputData(0, this.properties.value);
+            this.update = false;
         }
     }
     onAfterExecute() {
@@ -74,6 +79,7 @@ export default class WidgetNumber extends LGraphNode {
     onPropertyChanged(name, value) {
         var t = (1 + "").split(".");
         this._precision = t.length > 1 ? t[1].length : 0;
+        this.update = true;
     }
     onMouseDown(e, pos) {
         if (pos[1] < 0) {
@@ -107,7 +113,7 @@ export default class WidgetNumber extends LGraphNode {
         var v = Math.clamp(
             this.properties.value + steps * 1,
         );
-        this.properties.value = v;
+        this.setProperty("value", v);
         this.graph._version++;
         this.setDirtyCanvas(true);
     }

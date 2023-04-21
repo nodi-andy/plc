@@ -2228,15 +2228,18 @@ export default class LGraphNode {
     }
     /* Force align to grid */
     alignToGrid() {
-        if (this.size[0] >= window.LiteGraph.CANVAS_GRID_SIZE) {
-            this.pos[0] = window.LiteGraph.CANVAS_GRID_SIZE * Math.round(this.pos[0] / window.LiteGraph.CANVAS_GRID_SIZE);
+
+        let gridSize = window.LiteGraph.CANVAS_GRID_SIZE
+        if (this.constructor.type == "control/junction" ) gridSize /= 4;
+        if (this.size[0] >= gridSize) {
+            this.pos[0] = gridSize * Math.round(this.pos[0] / gridSize);
         } else {
-            this.pos[0] = window.LiteGraph.CANVAS_GRID_SIZE * (Math.round(this.pos[0] / window.LiteGraph.CANVAS_GRID_SIZE) + 0.5) - this.size[0] / 2;
+            this.pos[0] = gridSize * (Math.round(this.pos[0] / gridSize) + 0.5) - this.size[0] / 2;
         }
-        if (this.size[1] >= window.LiteGraph.CANVAS_GRID_SIZE) {
-            this.pos[1] = window.LiteGraph.CANVAS_GRID_SIZE * Math.round(this.pos[1] / window.LiteGraph.CANVAS_GRID_SIZE);
+        if (this.size[1] >= gridSize) {
+            this.pos[1] = gridSize * Math.round(this.pos[1] / gridSize);
         }else {
-            this.pos[1] = window.LiteGraph.CANVAS_GRID_SIZE * (Math.round(this.pos[1] / window.LiteGraph.CANVAS_GRID_SIZE) + 0.5) - this.size[1] / 2;
+            this.pos[1] = gridSize * (Math.round(this.pos[1] / gridSize) + 0.5) - this.size[1] / 2;
         }
     }
     /* Console output */

@@ -3721,20 +3721,20 @@ export default class LGraphCanvas {
             this.visible_area[0] + this.visible_area[2] + marginx,
             this.visible_area[1] + this.visible_area[3] + marginy];
 
-            let l = Math.floor(grid_area[0] / s) * s - s / 2 - 4;
-            let t = Math.floor(grid_area[1] / s) * s - s / 2 - 4;
+            let l = Math.floor(grid_area[0] / s) * s;
+            let t = Math.floor(grid_area[1] / s) * s;
             let r = grid_area[2];
             let d = grid_area[3];
 
             ctx.setLineDash([8, 8]);
             ctx.beginPath();
             for (var x = l; x <= r; x += s) {
-                ctx.moveTo(x + 4, t);
-                ctx.lineTo(x + 4, d);
+                ctx.moveTo(x , t - 4);
+                ctx.lineTo(x, d - 4);
             }
             for (var y = t; y <= d; y += s) {
-                ctx.moveTo(l, y + 4);
-                ctx.lineTo(r, y + 4);
+                ctx.moveTo(l - 4, y);
+                ctx.lineTo(r - 4, y); 
             }
             ctx.stroke();
 
@@ -7025,7 +7025,7 @@ export default class LGraphCanvas {
         var ref_window = this.getCanvasWindow();
         var that = this;
         var graphcanvas = this;
-        panel = this.createPanel(node.title || "", {
+        var panel = this.createPanel(node.title || "", {
             closable: true,
             window: ref_window,
             onOpen: function () {

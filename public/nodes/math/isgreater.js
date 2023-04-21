@@ -2,11 +2,11 @@ import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
 //Math operation
-class MathIsLower extends LGraphNode {
+class MathIsGreater extends LGraphNode {
     static title = "Operation";
     static desc = "Easy math operators";
     static title_mode = LiteGraph.NO_TITLE;
-    static type = "math/islower";
+    static type = "math/isgreater";
 
     constructor() {
         super();
@@ -30,20 +30,15 @@ class MathIsLower extends LGraphNode {
     }
 
     onExecute() {
-        let update = false;
-        for(let n = 0; n < this.inputs.length; n++) {
-            if (this.getInputData(n) != null) {
-                this.properties[this.inputs[n]?.name] = this.getInputData(n)
-                this.inputs[n]._data = null;
-                update = true;
-            }
-        }
-        if (update) {
-            if (this.properties.A < this.properties.B) {
-                this.setOutputData(0, 1);
-            } else {
-                this.setOutputData(0, 0);
-            }
+        let A = this.getInputData(0)
+        let B = this.getInputData(1)
+        if (A != null) this.properties.A = A
+        if (B != null) this.properties.B = B
+
+        if (this.properties.A > this.properties.B) {
+            this.setOutputData(0, 1);
+        } else {
+            this.setOutputData(0, 0);
         }
     }
 
@@ -55,9 +50,9 @@ class MathIsLower extends LGraphNode {
         ctx.font = "40px Arial";
         ctx.fillStyle = "#666";
         ctx.textAlign = "center";
-        ctx.fillText(this.properties.A +"<" + this.properties.B + "?", this.size[0] * 0.5, (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5);
+        ctx.fillText(">?", this.size[0] * 0.5, (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5);
         ctx.textAlign = "left";
     }
 }
 
-LiteGraph.registerNodeType(MathIsLower.type, MathIsLower);
+LiteGraph.registerNodeType(MathIsGreater.type, MathIsGreater);

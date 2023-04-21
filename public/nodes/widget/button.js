@@ -10,15 +10,16 @@ export default class WidgetButton extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("inp", "number");
-        this.addOutput("outp", "number");
-        this.addProperty("text", "B1");
+        this.addInput("A", "number");
+        this.addProperty("A", 0, "number");
+        this.addProperty("label", "B1");
         this.addProperty("port", "");
         this.addProperty("pressing", 1);
         this.addProperty("pressed", null);
         this.addProperty("releasing", 0);
         this.addProperty("released", null);
         this.addProperty("color", "gray");
+        this.addOutput("outp", "number");
         this.size = [64, 64];
         this.newState = false;
         for(let input of this.inputs) {
@@ -40,12 +41,12 @@ export default class WidgetButton extends LGraphNode{
         ctx.fillStyle = this.properties.color;
         ctx.fillRect(margin, margin, this.size[0] - margin * 2, this.size[1] - margin * 2);
 
-        if (this.properties.text || this.properties.text === 0) {
+        if (this.properties.label || this.properties.label === 0) {
             var font_size = this.properties.font_size || 30;
             ctx.textAlign = "center";
             ctx.fillStyle = this.newState ? "black" : "white";
             ctx.font = font_size + "px " + WidgetButton.font;
-            ctx.fillText(this.properties.text, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
+            ctx.fillText(this.properties.label, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
             ctx.textAlign = "left";
         }
     }
@@ -62,6 +63,12 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onExecute() {
+        for(let n = 0; n < this.inputs.length; n++) {
+            if (this.getInputData(n) != null) {
+                this.properties[this.inputs[n]?.name] = this.getInputData(n);
+                this.inputs[n]._data = null;
+            }
+        }
         this.output = null;
         if (this.newState == 0 && this.state == 0) {
             this.output = this.properties.released;
@@ -78,13 +85,7 @@ export default class WidgetButton extends LGraphNode{
             if (this.inputs[0].link == null) {
                 this.setOutputData(0, this.output);
             } else {
-                if (this.inputs[0]._data == null) {
-                    this.setOutputData(0, null);
-                } else {
-                    if (this.output) {
-                        this.setOutputData(0, this.inputs[0]._data);
-                    }
-                }
+                this.setOutputData(0, this.properties.A);
             }
             for(let input of this.inputs) {
                 input._data = null;

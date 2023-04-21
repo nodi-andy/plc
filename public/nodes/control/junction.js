@@ -24,9 +24,7 @@ class Junction extends LGraphNode {
     }
     onExecute() {
         let input = this.getInputData(0);
-        if (input != null) {
-            this.setOutputData(0, input);
-        }
+        this.setOutputData(0, input);
     }
     getTitle() {
         if (this.flags.collapsed) {

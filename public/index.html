@@ -93,8 +93,10 @@
     await loadJS("./nodes/logic/or.js", false);
     await loadJS("./nodes/logic/not.js", false);
     await loadJS("./nodes/math/add.js", false);
+    await loadJS("./nodes/math/mult.js", false);
     await loadJS("./nodes/math/isequal.js", false);
     await loadJS("./nodes/math/islower.js", false);
+    await loadJS("./nodes/math/isgreater.js", false);
     await loadJS("./nodes/math/counter.js", false);
     await loadJS("./nodes/time/interval.js", false);
     await loadJS("./nodes/control/junction.js", false);
@@ -170,8 +172,8 @@
     if (localStorage.files == null) localStorage.files = JSON.stringify({})
 
 
-    window.canvas.current_node_cbs.push(() => { 
-        if (window.canvas.current_node) {
+    window.canvas.onSelectionChange = (nodes) => { 
+        if (Object.keys(nodes).length) {
           window.showRemove(true);
           window.showEdit(true);
           window.removeClickable = true
@@ -183,8 +185,7 @@
           window.removeClickable = false
           console.log("enable")
         }
-      }
-    )
+    }
 
     graph.configure(JSON.parse(localStorage.files)[localStorage.selected])
     graph.start()

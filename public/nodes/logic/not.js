@@ -14,8 +14,8 @@ class logicNot extends LGraphNode{
     }
     
     onExecute() {
-        var ret = !this.getInputData(0);
-        this.setOutputData(0, ret);
+        var ret = this.getInputData(0);
+        if (ret !== null) this.setOutputData(0, ret ? 0 : 1);
     }
 }
 

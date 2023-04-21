@@ -43,7 +43,7 @@ function SelectFileDialog({ openFD, setOpenFD }) {
   };
 
   return (
-      <Dialog  open={openFD} onClose={handleClose}>
+      <Dialog open={openFD} onClose={handleClose}>
         <DialogTitle>Files</DialogTitle>
         <DialogContent>
           <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', }}>
@@ -117,13 +117,13 @@ function SelectNodeDialog({ openND, setOpenND }) {
 
 
   return (
-    <Dialog open={openND} onClose={handleClose} fullWidth={true} maxWidth={"xl"}>
+    <Dialog open={openND} onClose={handleClose} fullWidth={true} maxWidth={"xl"} >
       <DialogContent >
 
             <Tabs sx={{ borderBottom: 1 }}
-  variant="scrollable"
-  scrollButtons
-  allowScrollButtonsMobile
+              variant="scrollable"
+              scrollButtons
+              allowScrollButtonsMobile
               value={value} onChange={handleChange} aria-label="basic tabs example"
               TabIndicatorProps={{style: {backgroundColor: "red"}}}
             >
@@ -132,8 +132,8 @@ function SelectNodeDialog({ openND, setOpenND }) {
                 <Tab key={category} label={category} {...a11yProps(index)} />
               ))}
             </Tabs>
-          {window.nodes?.list && Object.keys(window.nodes.list).map((category, tabIndex) => (
-            <TabPanel key={category} value={value} index={tabIndex}>
+              {window.nodes?.list && Object.keys(window.nodes.list).map((category, tabIndex) => (
+              <TabPanel key={category} value={value} index={tabIndex}>
                   <Grid container spacing={2}>
                     {window.nodes.list[category].map((label) => (
                       <Grid key={label} item>
@@ -148,7 +148,7 @@ function SelectNodeDialog({ openND, setOpenND }) {
                       </Grid>
                     ))}
                   </Grid>
-            </TabPanel>
+              </TabPanel>
           ))}
       </DialogContent>
       <DialogActions>

@@ -13,6 +13,7 @@ export default class WidgetNumber extends LGraphNode {
         super();
         this.addInput("set", "number", "", "");
         this.addOutput("copy", "number");
+        this.addProperty("label", "LED");
         this.addProperty("value", 0, "number");
         this.addProperty("const", false, "boolean")
         this.size = [64, 64];
@@ -49,6 +50,13 @@ export default class WidgetNumber extends LGraphNode {
             x,
             h * 0.75
         );
+
+        if (this.properties.label.trim().length) {
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#AAA";
+            ctx.fillText(this.properties.text, this.size[1] * 0.5, 0);
+        }
+        
     }
     onExecute() {
         let val = this.getInputData(0);
@@ -71,10 +79,7 @@ export default class WidgetNumber extends LGraphNode {
             input._data = null;
         }
     }
-    onPropertyChanged(name, value) {
-        var t = (1 + "").split(".");
-        this._precision = t.length > 1 ? t[1].length : 0;
-    }
+
     onMouseDown(e, pos) {
         if (pos[1] < 0) {
             return;

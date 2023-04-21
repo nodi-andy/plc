@@ -6,25 +6,25 @@ class Selector extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("Sel", "", "", "A");
-        this.addInput("A", "", "", "B");
-        this.addInput("B", "number", "", "Sel");
-        this.addOutput("out");
-
-        this.selected = 0;
+        this.addInput("SelIn", "", "", "Sel");
+        this.addInput("A", "", "", "A");
+        this.addOutput("SelOut");
+        this.addOutput("A", "", "", "A'");
+        this.addProperty("Sel", 0, "number")
+        this.addProperty("A", 0, "number")
     }
     onExecute() {
-        var sel = this.getInputData(0);
-        if (sel == null || sel.constructor !== Number)
-            sel = 0;
-        this.selected = sel = Math.round(sel) % (this.inputs.length - 1);
-        var v = this.getInputData(sel + 1);
-        if (v !== null) {
-            this.setOutputData(0, v);
+        if (this.getInputData(0) != null) this.properties.Sel = this.getInputData(0)
+        if (this.getInputData(1) != null) this.properties.A = this.getInputData(1)
+
+        if (isNaN(this.properties.Sel) == false && this.properties.Sel > 0) {
+            var v = this.properties[this.inputs[this.properties.Sel]?.name]
+            this.setOutputData(1, v);
+            this.properties[this.inputs[this.properties.Sel].name] = null
         }
     }
     onGetInputs() {
-        return [["E", 0], ["F", 0], ["G", 0], ["H", 0]];
+        return [["B", 0], ["C", 0], ["D", 0], ["E", 0]];
     }
 }
 

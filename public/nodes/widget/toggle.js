@@ -10,16 +10,16 @@ export default class WidgetToggle extends LGraphNode{
         super();
         this.addInput("inp", "number");
         this.addOutput("outp", "number");
-        this.addProperty("text", "T1");
+        this.addProperty("label", "T1");
         this.addProperty("port", "");
         this.addProperty("pressing", 1);
         this.addProperty("pressed", 1);
         this.addProperty("releasing", 0);
         this.addProperty("released", 0);
-        this.addProperty("value", 0);
+        this.addProperty("state", 0);
         this.addProperty("color", "#AEF");
         this.size = [64, 64];
-        this.state = 0
+        this.state = this.properties.state;
         this.newState = 0
     }
 
@@ -41,7 +41,7 @@ export default class WidgetToggle extends LGraphNode{
         ctx.fillStyle = "#AAA";
         ctx.fillRect(x, y, size, size);
 
-        ctx.fillStyle = this.properties.value ? this.properties.color : "#000";
+        ctx.fillStyle = this.state ? this.properties.color : "#000";
         ctx.fillRect(
             x + size * margin,
             y + size * margin,
@@ -49,11 +49,11 @@ export default class WidgetToggle extends LGraphNode{
             size * (1 - margin * 2)
         );
 
-        if (this.title.trim().length) {
-            ctx.textAlign = "left";
+
+        if (this.properties.label.length) {
+            ctx.textAlign = "center";
             ctx.fillStyle = "#AAA";
-            ctx.fillText(this.title, size * 1.2 + x, y * 0.85);
-            ctx.textAlign = "left";
+            ctx.fillText(this.properties.label, this.size[0] * 0.5, 10);
         }
     }
 
@@ -74,9 +74,7 @@ export default class WidgetToggle extends LGraphNode{
             if (this.inputs[0].link == null) {
                 this.setOutputData(0, this.output);
             } else {
-                if (this.inputs[0]._data == null) {
-                    this.setOutputData(0, undefined);
-                } else {
+                if (this.inputs[0]._data != null) {
                     this.setOutputData(0, this.inputs[0]._data);
                 }
             }
@@ -92,7 +90,6 @@ export default class WidgetToggle extends LGraphNode{
             local_pos[1] > 10 &&
             local_pos[0] < this.size[0] - 10 &&
             local_pos[1] < this.size[1] - 10) {
-            this.properties.value = !this.properties.value;
             this.graph._version++;
             this.trigger("e", this.properties.value);
             this.newState = !this.state
