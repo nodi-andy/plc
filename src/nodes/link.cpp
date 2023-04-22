@@ -27,7 +27,8 @@ int Link::onExecute() {
     if (from == NULL) return 0;
     if (to == NULL) return 0;
     int* v = from->getOutput(src);
-    /*Serial.println("");
+    if (v == NULL) return 0;
+    /* Serial.println("");
     Serial.print("> Run link: ");
     Serial.print(id);
     Serial.print(" From:");
@@ -39,9 +40,9 @@ int Link::onExecute() {
     Serial.print(" Port:");
     Serial.print(dst);
     if (v) {
-      Serial.println("Value:");
-      Serial.print(*v);
-    }*/
+      Serial.print("Value:");
+      Serial.println(*v);
+    } */
     if (to->multipleInput) {
         to->addInput(v);
     } else {

@@ -65,7 +65,7 @@ void Button::setup() {
       }
     }
 
-    state = 0;
+    state = digitalRead(port);
 
     Serial.print(">>> Setup Button, PORT: ");
     Serial.println(port);
@@ -76,7 +76,7 @@ void Button::setup() {
 
 int Button::onExecute() {
   bool update = false;
-  output = 0;
+  output = NULL;
   if (port >= 0) {
     input = getInput(0);
 
@@ -117,6 +117,6 @@ int Button::onExecute() {
     update = (state != newState);
     state = newState;
   }
-  setOutput(0, output);
+  if (update)  setOutput(0, output);
   return update;
 }

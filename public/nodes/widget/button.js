@@ -12,7 +12,7 @@ export default class WidgetButton extends LGraphNode{
         super();
         this.addInput("A", "number");
         this.addProperty("A", 0, "number");
-        this.addProperty("label", "B1");
+        this.addProperty("label", "");
         this.addProperty("port", "");
         this.addProperty("pressing", 1);
         this.addProperty("pressed", null);

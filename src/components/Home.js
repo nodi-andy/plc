@@ -194,11 +194,15 @@ function SimpleSnackbar({openSB, setopenSB, sbMessage}) {
 function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
   const [editClickable, setEditClickable] = useState(false)
   const [removeClickable, setRemoveClickable] = useState(false)
+  const [burnClickable, setBurnClickable] = useState(false)
   window.showEdit = (v) => {
     setEditClickable(v);
   };
   window.showRemove = (v) => {
     setRemoveClickable(v);
+  };
+  window.showBurn = (v) => {
+    setBurnClickable(v);
   };
   return (
     <Box
@@ -253,7 +257,7 @@ function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
       <Fab
         color="error"
         variant="extended"
-        disabled = {!window.burnClickable}
+        disabled = {!burnClickable}
         onClick={() => {
           window.nodes.upload();
         }}>

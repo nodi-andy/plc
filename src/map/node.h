@@ -33,10 +33,10 @@ class Node
         void setInput(int name, int* val);
         int* getOutput(int name);
         static std::unordered_map<std::string, Node*> nodeReg;
+        std::vector<int*> outputs;
 
     protected:
         std::vector<int*> inputs;
-        std::vector<int*> outputs;
         int* getInput(int name);
         void setOutput(int name, int* val);
 };

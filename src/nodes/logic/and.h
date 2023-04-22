@@ -7,6 +7,8 @@ class LogicAnd : public Node
 {
     public:
     LogicAnd();
+    int A = 0;
+    int B = 0;
     virtual LogicAnd* createInstance() const override {
         return new LogicAnd(*this); // Create a new instance of the Link object
     }

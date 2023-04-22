@@ -6,7 +6,9 @@
 class LogicOr : public Node
 {
     public:
-    LogicOr();
+    LogicOr();    
+    int A = 0;
+    int B = 0;
     virtual LogicOr* createInstance() const override {
         return new LogicOr(*this); // Create a new instance of the Link object
     }

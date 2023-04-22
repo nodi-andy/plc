@@ -245,7 +245,7 @@ void Task2code( void * pvParameters ){
         nodemap.state = mapState::RUN;
     }
 
-    //delay(10);
+    // delay(1000);
 
                	
     
@@ -261,6 +261,11 @@ void Task2code( void * pvParameters ){
         for (auto n : nodemap.links) {
             if (n.second) {
                 n.second->onExecute();
+            }
+        }
+        for (auto n : nodemap.nodes) {
+            for (auto output : n.second->outputs) {
+                output = NULL;
             }
         }
     }
