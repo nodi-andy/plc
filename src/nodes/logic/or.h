@@ -20,8 +20,8 @@ class LogicOr : public Node
     int onExecute();
 
     private:
-    int lastIncInput;
-    int lastResetInput;
+    int value;
+    int *output;
 };
 
 static bool counterRegistered = []() {

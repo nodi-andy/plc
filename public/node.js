@@ -557,6 +557,21 @@ export default class LGraphNode {
         }
         return this.properties[name];
     }
+    
+    getInputByName(name) {
+        for (let i = 0; i < this.inputs.length; i++) {
+            if (this.inputs[i].name === name) {
+              return this.inputs[i];
+            }
+          }
+    }
+    getInputIndexByName(name) {
+        for (let i = 0; i < this.inputs.length; i++) {
+            if (this.inputs[i].name === name) {
+              return i;
+            }
+          }
+    }
     /**
          * tells you the last output data that went in that slot
          * @method getOutputData
@@ -573,6 +588,22 @@ export default class LGraphNode {
 
         var info = this.outputs[slot];
         return info._data;
+    }
+
+    getOutputByName(name) {
+        for (let i = 0; i < this.outputs.length; i++) {
+            if (this.outputs[i].name === name) {
+              return this.outputs[i];
+            }
+          }
+    }
+
+    getOutputDataByName(name) {
+        for (let i = 0; i < this.outputs.length; i++) {
+            if (this.outputs[i].name === name) {
+              return this.outputs[i]._data;
+            }
+          }
     }
     /**
          * tells you info about an output connection (which node, type, etc)
@@ -1844,9 +1875,9 @@ export default class LGraphNode {
             this.graph.getNextID(),
             input.type || output.type,
             this.id,
-            slot,
+            this.outputs[slot].name,
             target_node.id,
-            target_slot
+            target_node.inputs[target_slot].name
         );
 
         //add to graph links list
@@ -2099,7 +2130,7 @@ export default class LGraphNode {
                     return false;
                 }
 
-                var output = target_node.outputs[link_info.origin_slot];
+                var output = target_node.getOutputByName(link_info.origin_slot);
                 if (!output || !output.links || output.links.length == 0) {
                     return false;
                 }

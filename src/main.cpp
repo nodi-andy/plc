@@ -232,20 +232,20 @@ void Task2code( void * pvParameters ){
 
         JsonArray links = saved["links"];
         for (JsonVariant kv : links) {
-            int idList[6];
-            int i = 0;
-            for (JsonVariant linkObj : kv.as<JsonArray>()) {
-                idList[i] = linkObj.as<int>();
-                i++;
-            }
-            nodemap.addLink(idList[0], idList[1], idList[2], idList[3], idList[4]);
+            JsonArray linkData = kv.as<JsonArray>();
+            int id = linkData[0].as<int>();
+            int fromNode = linkData[1].as<int>();
+            std::string fromPort = linkData[2].as<std::string>();
+            int toNode = linkData[3].as<int>();
+            std::string toPort = linkData[4].as<std::string>();
+            nodemap.addLink(id, fromNode, fromPort, toNode, toPort);
         }
 
         nodemap.report();
         nodemap.state = mapState::RUN;
     }
 
-    // delay(1000);
+    //delay(1000);
 
                	
     
@@ -264,8 +264,12 @@ void Task2code( void * pvParameters ){
             }
         }
         for (auto n : nodemap.nodes) {
-            for (auto output : n.second->outputs) {
-                output = NULL;
+            if (n.second) {
+                for (auto output : n.second->outputs) {
+                    n.second->setOutput(output.first, nullptr);
+                    /*Serial.print("Clean output:" );
+                    Serial.println(output.first.c_str());*/
+                }
             }
         }
     }

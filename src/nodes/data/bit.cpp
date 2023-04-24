@@ -19,24 +19,24 @@ void Bit::setup() {
     addInput("set");
     addInput("reset");
     addInput("toggle");
-    addOutput("d");
+    addOutput("V");
 }
 
 int Bit::onExecute() {
-    int* inputSet = getInput(0);
+    int* inputSet = getInput("set");
     if (inputSet) {
       if (*inputSet) {
         value = 1;
       }
     }
-    int* inputReset = getInput(1);
+    int* inputReset = getInput("reset");
     if (inputReset) {
       if (*inputReset) {
         value = 0;
       }
     }
 
-    int* inputToggle = getInput(2);
+    int* inputToggle = getInput("toggle");
     if (inputToggle) {
       if (*inputToggle) {
         value = !value;
@@ -45,6 +45,6 @@ int Bit::onExecute() {
     if (port) {
       digitalWrite(port, value ? HIGH : LOW);
     }
-    setOutput(0, &value);
+    setOutput("V", &value);
     return 0;
 }

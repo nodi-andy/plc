@@ -1,43 +1,27 @@
 #include "node.h"
 
 void Node::addInput(std::string name) {
-    inputs.push_back(0);
+    inputs.insert({name, NULL});
 }
 
 void Node::addOutput(std::string name) {
-    outputs.push_back(0);
+    outputs.insert({name, NULL});
 }
 
-int* Node::getInput(int name) {
+int* Node::getInput(std::string name) {
     return inputs[name];
 };
 
-int* Node::getOutput(int name) {
-    if (name >= 0 && name < outputs.size()) {
-        return outputs[name];
-    } else {
-        // handle error - index out of bounds
-        return 0;
-    }
+int* Node::getOutput(std::string name) {
+    return outputs[name];
 };
 
-void Node::setInput(int name, int* val) {
-    if (name >= 0 && name < inputs.size()) {
-        inputs[name] = val;
-        //Serial.println(*val);
-    }else {
-        Serial.println("ERR: Input index out ouf bounds");
-    }
+void Node::setInput(std::string name, int* val) {
+    inputs[name] = val;
 };
 
-void Node::addInput(int* val) {
-    inputs.push_back(val);
-};
-
-void Node::setOutput(int name, int* val) {
-    if (name >= 0 && name < outputs.size()) {
-        outputs[name] = val;
-    } 
+void Node::setOutput(std::string name, int* val) {
+    outputs[name] = val;
 };
 
 void Node::setup()

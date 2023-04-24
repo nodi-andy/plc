@@ -17,24 +17,30 @@ void LogicOr::setup() {
 
 int LogicOr::onExecute() {
     bool update = false;
-    value = 0;
-    int *inpA = getInput(0);
-    int *inpB = getInput(1);
+    output = NULL;
+    int *inpA = getInput("a");
+    int *inpB = getInput("b");
     if (inpA) {
-        A = *inpA; 
-        // Serial.print("A gate:");
-        // Serial.println(A);
+        A = *inpA;
+        setInput("a", NULL);
+        Serial.print("A gate:");
+        Serial.println(A);
+        update = true;
     }
     if (inpB) {
         B = *inpB;
-        // Serial.print("B gate:");
-        // Serial.println(B);
+        setInput("b", NULL);
+        output = &value;
+        Serial.print("B gate:");
+        Serial.println(B);
+        update = true;
     }
-    if (inpA || inpB) update = true;
+ 
     if (update) {
         value = A || B;
-        setOutput(0, &value);
-        // Serial.printf("AND gate: %d\n", value);
+        output = &value;
+        setOutput("v", output);
+        Serial.println("AND gate output ");
     }
     return 0;
 }

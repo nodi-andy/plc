@@ -14,7 +14,7 @@ class Map
 
     void addNode(int id, Node* newNode);
     void addNode(JsonObject json);
-    void addLink(int linkName, int fromNode, int fromOutput, int toNode, int toOutput);
+    void addLink(int linkName, int fromNode, std::string fromOutput, int toNode, std::string toOutput);
     void addLinkToList(int id, Node* newNode);
     void clear();
     void report();

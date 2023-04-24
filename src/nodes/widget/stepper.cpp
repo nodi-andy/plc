@@ -57,7 +57,7 @@ void Stepper::setup() {
 int Stepper::onExecute() {
     moveForced = false;
 
-    int *newSpeed = getInput(0);
+    int *newSpeed = getInput("speed");
     if (newSpeed && *newSpeed != speed && My_timer) {
         speed = *newSpeed;
         moveForced = true;
@@ -65,7 +65,7 @@ int Stepper::onExecute() {
         timerAlarmEnable(My_timer);
     }
     
-    int *newTargetPos = getInput(1);
+    int *newTargetPos = getInput("pos");
     if (newTargetPos) {
         targetPos = *newTargetPos;
         //Serial.print("TargetPos: ");
@@ -73,7 +73,7 @@ int Stepper::onExecute() {
     }
 
 
-    int *newReset = getInput(2);
+    int *newReset = getInput("reset");
     if (newReset) {
         reset = *newReset;
         pos = 0;
@@ -81,8 +81,8 @@ int Stepper::onExecute() {
         //Serial.print("TargetPos: ");
         //Serial.println(targetPos);
     }
-    setOutput(0, &speed);
-    setOutput(1, &pos);
+    setOutput("speed", &speed);
+    setOutput("pos", &pos);
     return 0;
 }
 

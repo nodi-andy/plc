@@ -69,8 +69,8 @@ void Button::setup() {
 
     Serial.print(">>> Setup Button, PORT: ");
     Serial.println(port);
-    addInput("input");
-    addOutput("output");
+    addInput("a");
+    addOutput("v");
     Serial.println(">>> Button setup done.");
 }
 
@@ -78,7 +78,7 @@ int Button::onExecute() {
   bool update = false;
   output = NULL;
   if (port >= 0) {
-    input = getInput(0);
+    input = getInput("a");
 
     int newState = digitalRead(port);
     if (input) {
@@ -86,13 +86,13 @@ int Button::onExecute() {
         output = input;
       } if (newState == 0 && state == 1 && defaultPressing && *defaultPressing) {
         output = input;
-        Serial.print("Button EdgeDown: ");
+        Serial.print("Button conduct EdgeDown: ");
         Serial.println(*output);
       } if (newState == 1 && state == 0 && defaultReleasing && *defaultReleasing) {
         output = input;
       } if (newState == 1 && state == 1 && defaultReleased && *defaultReleased) {
         output = input;
-        Serial.print("Button EdgeUp: ");
+        Serial.print("Button conduct EdgeUp: ");
         Serial.println(*output);
       }
     } else {
@@ -100,23 +100,20 @@ int Button::onExecute() {
         output = defaultPressed;
       } if (newState == 0 && state == 1) {
         output = defaultPressing;
-        if (output) {
-          Serial.print("Button EdgeDown: ");
-          Serial.println(*output);
-        }
+        Serial.println("Button state EdgeDown: ");
       } if (newState == 1 && state == 1) {
         output = defaultReleased;
       } if (newState == 1 && state == 0) {
         output = defaultReleasing;
-        if (output) {
-          Serial.print("Button EdgeUp: ");
-          Serial.println(*output);
-        }
+        Serial.println("Button state EdgeUp: ");
       }
     }
     update = (state != newState);
     state = newState;
   }
-  if (update)  setOutput(0, output);
+  if (update) {
+    setOutput("v", output);
+    Serial.println("Button output ");
+  }
   return update;
 }

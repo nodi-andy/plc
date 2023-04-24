@@ -10,12 +10,12 @@ class logicAnd extends LGraphNode{
     constructor() {
         super();
         this.properties = {};
-        this.addInput("A", "number");
-        this.addInput("B", "number");
-        this.addProperty("A", 0);
-        this.addProperty("B", 0);
+        this.addInput("a", "number");
+        this.addInput("b", "number");
+        this.addProperty("a", 0);
+        this.addProperty("b", 0);
         
-        this.addOutput("", "number");
+        this.addOutput("v", "number");
     }
 
     onExecute() {

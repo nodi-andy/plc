@@ -8,8 +8,8 @@ export default class WidgetLed extends LGraphNode{
     static title_mode = LiteGraph.NO_TITLE;
     constructor() {
         super();
-        this.addInput("inp", "number");
-        this.addOutput("outp", "number");
+        this.addInput("in", "number");
+        this.addOutput("out", "number");
         this.addProperty("label", "LED");
         this.addProperty("port", "");
         this.addProperty("value", 0);

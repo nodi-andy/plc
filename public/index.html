@@ -26,8 +26,6 @@
     -->
     <title>noditron</title>
     <script type="module" src="./math.js" async></script>
-    <script type="module" src="./link.js" async></script>
-    <script type="module" src="./node.js" async></script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -75,6 +73,8 @@
   };
     // why loading the scripts one by one? 
     // Because the IoT device can not keep more than 10 TCP connections open
+    await loadJS("./node.js", false);
+    await loadJS("./link.js", false);
     await loadJS("./view.js", false);
     await loadJS("./litegraph.js", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
@@ -187,6 +187,7 @@
         }
     }
 
+    if (localStorage.selected == null) localStorage.selected = "nodework_0"
     graph.configure(JSON.parse(localStorage.files)[localStorage.selected])
     graph.start()
     canvas.showSearchBox();

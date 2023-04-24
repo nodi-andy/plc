@@ -17,23 +17,28 @@ void LED::setup() {
       value = props["properties"]["value"].as<int>();
     }
     state = newstate = value;
-    addInput("input");
+    addInput("in");
+    addOutput("out");
 }
 
 int LED::onExecute() {
     int ret = 0;
-    int* input = getInput(0);
+    int* input = getInput("in");
     if (input) {
       newstate = *input;
+      Serial.print("LED IN: ");
+      Serial.println(*input);
+      //setOutput("in", &newstate);
+      setInput("in", NULL);
     } else {
-      newstate = value;
+      //newstate = value;
     }
-    digitalWrite(port, newstate);
     ret = (newstate != state);
     if (ret) {
       Serial.print("LED: ");
       Serial.println(newstate);
     }
     state = newstate;
+    digitalWrite(port, state);
     return ret;
 }

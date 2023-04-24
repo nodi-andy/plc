@@ -17,12 +17,12 @@ void Toggle::setup() {
       value = props["properties"]["value"].as<int>();
     }
     state = newstate = value;
-    addInput("input");
+    addInput("a");
 }
 
 int Toggle::onExecute() {
     int ret = 0;
-    int* input = getInput(0);
+    int* input = getInput("a");
     if (input) {
       newstate = *input;
     } else {

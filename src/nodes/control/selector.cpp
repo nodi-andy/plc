@@ -10,16 +10,16 @@ void Selector::setup() {
     desc = "Read input";
     name = "logic/and";
 
-    addInput("a");
-    addInput("b");
+    addInput("A");
+    addInput("B");
     addInput("select");
     addOutput("v");
 }
 
 int Selector::onExecute() {
-    int* inpA = getInput(0);
-    int* inpB = getInput(1);
-    int* inpSelect = getInput(2);
+    int* inpA = getInput("A");
+    int* inpB = getInput("B");
+    int* inpSelect = getInput("select");
     if (inpSelect) {
         if (true == *inpSelect) {
             setOutput(0, inpA);

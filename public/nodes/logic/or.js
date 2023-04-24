@@ -10,9 +10,9 @@ class logicOr extends LGraphNode{
     constructor() {
         super();
         this.properties = {};
-        this.addInput("", "number");
-        this.addInput("", "number");
-        this.addOutput("", "number");
+        this.addInput("a", "number");
+        this.addInput("b", "number");
+        this.addOutput("v", "number");
     }
     onExecute() {
         let ret = false;
@@ -26,7 +26,7 @@ class logicOr extends LGraphNode{
     }
     onGetInputs() {
         return [
-            ["and", "boolean"]
+            ["or", "boolean"]
         ];
     }
 }

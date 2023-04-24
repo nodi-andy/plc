@@ -1039,14 +1039,14 @@ class LGraph {
         }
         for(let linkID in this.links) {
             let link = this.links[linkID];
-            let dataFromNode = this._nodes_by_id[link.origin_id].outputs[link.origin_slot]._data;
-            let data = this._nodes_by_id[link.target_id].inputs[link.target_slot]._data;
-            if (dataFromNode !== null && data == null) this._nodes_by_id[link.target_id].inputs[link.target_slot]._data = dataFromNode;
+            let dataFromNode = this._nodes_by_id[link.origin_id].getOutputDataByName(link.origin_slot);
+            let data = this._nodes_by_id[link.target_id].getInputDataByName(link.target_slot);
+            if (dataFromNode != null && data == null) this._nodes_by_id[link.target_id].getInputByName(link.target_slot)._data = dataFromNode;
             
         }
         for(let linkID in this.links) {
             let link = this.links[linkID];
-            this._nodes_by_id[link.origin_id].outputs[link.origin_slot]._data = null;
+            this._nodes_by_id[link.origin_id].getOutputByName(link.origin_slot)._data = null;
         }
         var now = NodiEnums.getTime();
         var elapsed = now - start;

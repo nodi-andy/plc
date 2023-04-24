@@ -7,7 +7,7 @@
 class Link : public Node
 {
     public:
-    Link(Node* fromNode, int srcPort, Node* toNode, int dstPort);
+    Link(Node* fromNode, std::string srcPort, Node* toNode, std::string dstPort);
     virtual Link* createInstance() const override {
         return new Link(*this); // Create a new instance of the Link object
     }
@@ -20,6 +20,6 @@ class Link : public Node
     //private:
     Node* from;
     Node* to;
-    int src;
-    int dst;
+    std::string src;
+    std::string dst;
 };

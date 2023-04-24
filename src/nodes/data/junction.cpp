@@ -21,11 +21,11 @@ void Junction::setup() {
 }
 
 int Junction::onExecute() {
-    for (int *input : inputs) {
-      if (input) {
+    for (auto& input : inputs) {
+      if (input.second) {
         //Serial.print(">> Junction :");
         //Serial.println(*input);
-        setOutput(0, input);
+        setOutput(input.first, input.second);
         inputs.clear();
         return 0;
       }

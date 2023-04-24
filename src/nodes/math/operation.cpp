@@ -28,8 +28,8 @@ void Operation::setup() {
 
 int Operation::onExecute() {
     value = 0;
-    int *inpA = getInput(0);
-    int *inpB = getInput(1);
+    int *inpA = getInput("A");
+    int *inpB = getInput("B");
 
     if (inpA == 0) inpA = &defaultA;
     if (inpB == 0) inpB = &defaultB;

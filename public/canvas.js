@@ -1560,8 +1560,7 @@ export default class LGraphCanvas {
                                                 node.disconnectInput(i);
                                             }
                                             this.connecting_node = this.graph._nodes_by_id[link_info.origin_id];
-                                            this.connecting_slot =
-                                                link_info.origin_slot;
+                                            this.connecting_slot = this.connecting_node.getOutputByName(link_info.origin_slot).slot_index;
                                             this.connecting_output = this.connecting_node.outputs[this.connecting_slot];
                                             this.connecting_pos = this.connecting_node.getConnectionPos(false, this.connecting_slot);
 
@@ -2616,7 +2615,7 @@ export default class LGraphCanvas {
                     } //not selected
                     clipboard_info.links.push([
                         target_node._relative_id,
-                        link_info.origin_slot,
+                        link_info.getInputByName(link_info.origin_slot).id,
                         node._relative_id,
                         link_info.target_slot
                     ]);
@@ -2949,7 +2948,7 @@ export default class LGraphCanvas {
                 var input_node = node.getInputNode(0);
                 var output_node = node.getOutputNodes(0)[0];
                 if (input_node && output_node)
-                    input_node.connect(input_link.origin_slot, output_node, output_link.target_slot);
+                    input_node.connect(input_link.getInputByName(input_link.origin_slot).id, output_node, output_link.target_slot);
             }
             this.graph.remove(node);
             if (this.onNodeDeselected) {
@@ -4587,8 +4586,8 @@ export default class LGraphCanvas {
             if (start_node == null || end_node == null) {
                 continue;
             }
-            var start_node_slot = link.origin_slot;
-            var end_node_slot = link.target_slot;
+            var start_node_slot = start_node.getOutputByName(link.origin_slot).slot_index;
+            var end_node_slot = end_node.getInputIndexByName(link.target_slot);
             var start_node_slotpos = null;
             if (start_node_slot == -1) {
                 start_node_slotpos = [
@@ -5514,17 +5513,19 @@ export default class LGraphCanvas {
             }
         }, 1);
     }
+
     onNodeSelectionChange(node) {
         return; //disabled
     }
+
     showLinkMenu(link, e) {
         var that = this;
         // console.log(link);
         var node_left = that.graph.getNodeById(link.origin_id);
         var node_right = that.graph.getNodeById(link.target_id);
         var fromType = false;
-        if (node_left && node_left.outputs && node_left.outputs[link.origin_slot])
-            fromType = node_left.outputs[link.origin_slot].type;
+        if (node_left && node_left.outputs && node_left.getOutputByName(link.origin_slot).id)
+            fromType = node_left.getOutputByName(link.origin_slot).type;
         var destType = false;
         if (node_right && node_right.outputs && node_right.outputs[link.target_slot])
             destType = node_right.inputs[link.target_slot].type;
@@ -5549,7 +5550,7 @@ export default class LGraphCanvas {
                             return;
                         }
                         // leave the connection type checking inside connectByType
-                        if (node_left.connectByType(link.origin_slot, node, fromType)) {
+                        if (node_left.connectByType(link.getOutputByName(link.origin_slot).id , node, fromType)) {
                             node.connectByType(link.target_slot, node_right, destType);
                             node.pos[0] -= node.size[0] * 0.5;
                         }

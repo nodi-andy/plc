@@ -27,18 +27,17 @@ class Node
         bool multipleInput = false;
         virtual void setup();
         virtual int onExecute();
-        void addInput(std::string name);
-        void addOutput(std::string name);
-        void addInput(int* val);
-        void setInput(int name, int* val);
-        int* getOutput(int name);
         static std::unordered_map<std::string, Node*> nodeReg;
-        std::vector<int*> outputs;
 
-    protected:
-        std::vector<int*> inputs;
-        int* getInput(int name);
-        void setOutput(int name, int* val);
+        std::unordered_map<std::string, int*> inputs;
+        void addInput(std::string name);
+        void setInput(std::string name, int* val);
+        int* getInput(std::string name);
+        
+        void addOutput(std::string name);
+        int* getOutput(std::string name);
+        std::unordered_map<std::string, int*> outputs;
+        void setOutput(std::string name, int* val);
 };
 
 
