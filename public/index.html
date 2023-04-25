@@ -114,7 +114,8 @@
       window.graph.beforeChange();
       var node = LiteGraph.createNode(name);
       if (node) {
-        node.setPos(-window.canvas.ds.offset[0], -window.canvas.ds.offset[1]);
+        let view = window.canvas.ds;
+        node.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
         window.graph.add(node, false);
       }
 

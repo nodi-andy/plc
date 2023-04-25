@@ -1,13 +1,22 @@
 # Conucon PLC: IoT Function Block Diagram with Web Interface
 
-Conucon PLC is a platform for creating IoT function block diagrams with a web interface. This platform utilizes the PLC (programmable logic controller) concept to create a user-friendly interface for building IoT projects.
+Conucon PLC uses a specific graphical programming (noditron) for creating IoT function block diagrams with a web interface. This platform utilizes the PLC (programmable logic controller) concept to create a user-friendly interface for building IoT projects.
 
 With Conucon PLC, you can create complex IoT projects with ease. The platform is user-friendly and requires no prior programming experience.
 
-
 ## Installation
-
 To get started with Conucon PLC, follow these steps:
+1. Download 3 binary files from /public/bins. Those are partitions.bin, firmware.bin and littlefs.bin
+1. Got to Adafruits online ESPTools: https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
+1. Click on "Choose a file.." and select partitions.bin. Do not change the Offset
+1. Click on the next "Choose a file.." button and select firmware.bin. Enter the offset as "Ox10000" (10k)
+1. Repeat the same for littlefs.bin. Enter the offset as "Ox170000" (170k)
+1. Click on "Program" and reset after done.
+1. Now you can find "noditron" in the wifi search
+
+## Compilation
+
+To build conucon PLC, follow these steps:
 
 1. Clone the repository from GitHub ``git clone https://github.com/nodi-andy/plc``
 1. Install platformIO

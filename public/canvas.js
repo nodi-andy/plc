@@ -7671,7 +7671,7 @@ function TransformRecognizer(element) {
     };
     // Define thresholds for gestures.
     this.Thresholds = {
-      SCALE: 0.2, // percentage difference.
+      SCALE: 0.02, // percentage difference.
       ROTATION: 5  // degrees.
     };
     // The current gesture of this transformation.
