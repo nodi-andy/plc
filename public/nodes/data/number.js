@@ -12,7 +12,7 @@ export default class WidgetNumber extends LGraphNode {
     constructor() {
         super();
         this.addInput("set", "number", "", "");
-        this.addOutput("copy", "number");
+        this.addOutput("v", "number");
         this.addProperty("value", 0, "number");
         this.addProperty("const", false, "boolean")
         this.size = [64, 64];
@@ -50,25 +50,17 @@ export default class WidgetNumber extends LGraphNode {
             h * 0.75
         );
     }
-    onExecute() {
-        let val = this.getInputData(0);
-        if (this.inputs[0].link == null) {
-            if (this.properties.const === false && val != null) {
-                this.properties.value = val 
-            }
-            this.setOutputData(0, this.properties.value);
-        } else {
-            if (val != null && val !== "" && !isNaN(val)) {
+    onExecute(update) {
+        if (update || this.updateView) {
+            if (this.properties.set != null) {
                 if (this.properties.const === false) {
-                    this.properties.value = val 
+                    this.properties.value = this.properties.set 
                 }
-                this.setOutputData(0, this.properties.value);
+                this.setInputDataByName("set", null);
             }
-        }
 
-        if (this.update) {
-            this.setOutputData(0, this.properties.value);
-            this.update = false;
+            this.setOutputDataByName("v", this.properties.value);
+            this.updateView = false;
         }
     }
     onAfterExecute() {
@@ -79,7 +71,7 @@ export default class WidgetNumber extends LGraphNode {
     onPropertyChanged(name, value) {
         var t = (1 + "").split(".");
         this._precision = t.length > 1 ? t[1].length : 0;
-        this.update = true;
+        this.updateView = true;
     }
     onMouseDown(e, pos) {
         if (pos[1] < 0) {
@@ -110,10 +102,10 @@ export default class WidgetNumber extends LGraphNode {
         this._remainder = steps % 1;
         steps = steps | 0;
 
-        var v = Math.clamp(
+        this.properties.value = Math.clamp(
             this.properties.value + steps * 1,
         );
-        this.setProperty("value", v);
+        this.setProperty("set", this.properties.value);
         this.graph._version++;
         this.setDirtyCanvas(true);
     }
@@ -123,6 +115,7 @@ export default class WidgetNumber extends LGraphNode {
             this.properties.value = Math.clamp(
                 this.properties.value + steps * 1,
             );
+            this.setProperty("set", this.properties.value);
             this.graph._version++;
             this.setDirtyCanvas(true);
         }

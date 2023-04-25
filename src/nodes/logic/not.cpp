@@ -14,13 +14,21 @@ void LogicNot::setup() {
 }
 
 int LogicNot::onExecute() {
-    value = 0;
+    bool update = false;
+    output = NULL;
     int *inpA = getInput("a");
     if (inpA) {
         value = !(*inpA);
-        setOutput("v", &value);
-    } else {
-        setOutput("v", 0);
+        setInput("a", NULL);
+        Serial.print("A gate:");
+        Serial.println(value);
+        update = true;
+    }
+ 
+    if (update) {
+        output = &value;
+        setOutput("v", output);
+        Serial.println("NOT gate output ");
     }
     return 0;
 }

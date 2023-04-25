@@ -8,11 +8,10 @@ export default class WidgetLed extends LGraphNode{
     static title_mode = LiteGraph.NO_TITLE;
     constructor() {
         super();
-        this.addInput("in", "number");
-        this.addOutput("out", "number");
+        this.addInput("in", "number", 0);
+        this.addOutput("v", "number");
         this.addProperty("label", "LED");
         this.addProperty("port", "");
-        this.addProperty("value", 0);
         this.addProperty("color", "FF3333");
         this.size = [64, 64];
     }
@@ -23,7 +22,7 @@ export default class WidgetLed extends LGraphNode{
        
         ctx.beginPath();
         ctx.arc(size, size, size * 0.5, 0, 2 * Math.PI, false);
-        ctx.fillStyle = this.properties.value ? "#" + this.properties.color : "#222";
+        ctx.fillStyle = this.properties.v ? "#" + this.properties.color : "#222";
         ctx.fill();
         ctx.lineWidth = 5;
         ctx.strokeStyle = '#000';
@@ -36,16 +35,16 @@ export default class WidgetLed extends LGraphNode{
         }
     }
 
-    onExecute() {
-        if (this.inputs[0]._data !== null) {
-            this.properties.value = parseInt(this.inputs[0]._data);
-            this.setOutputData(0, this.properties.value);
-        // console.log(this.properties.value);
+    onExecute(update) {
+        if (update && this.properties.in != null) {
+            this.properties.v = parseInt(this.properties.in);
+            this.setInputDataByName("in", null);
+            this.setOutputDataByName("v", this.properties.v);
         }
     }
 
-    hwSetState(v) {
-        this.properties.value = v;
+    hwSetState(val) {
+        this.properties.v = val;
     }
 }
 

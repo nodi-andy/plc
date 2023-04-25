@@ -8,8 +8,8 @@ export default class WidgetToggle extends LGraphNode{
     static title_mode = LiteGraph.NO_TITLE;
     constructor() {
         super();
-        this.addInput("inp", "number");
-        this.addOutput("outp", "number");
+        this.addInput("a", "number", 0);
+        this.addOutput("v", "number", 0);
         this.addProperty("label", "T1");
         this.addProperty("port", "");
         this.addProperty("pressing", 1);
@@ -58,6 +58,7 @@ export default class WidgetToggle extends LGraphNode{
     }
 
     onExecute() {
+        let update = false;
         this.output = null;
         if (this.newState == 0 && this.state == 0) {
             this.output = this.properties.released;
@@ -68,13 +69,15 @@ export default class WidgetToggle extends LGraphNode{
         } if (this.newState == 1 && this.state == 0) {
             this.output = this.properties.pressing;
         }
+
+        update = (this.newState != this.state)
         
         this.setDirtyCanvas(true, true);
-        if (this.output != null) {
-            if (this.inputs[0].link == null) {
-                this.setOutputData(0, this.output);
+        if (this.output != null && update) {
+            if (this.getInputByName("a").link == null) {
+                this.setOutputDataByName("v", this.output);
             } else {
-                if (this.inputs[0]._data != null) {
+                if (this.getInputDataByName("a") != null) {
                     this.setOutputData(0, this.inputs[0]._data);
                 }
             }

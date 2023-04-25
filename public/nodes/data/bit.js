@@ -8,51 +8,43 @@ export default class DFlipFlop extends LGraphNode {
     static type = "data/bit";
     constructor() {
         super();
-        this.addInput("set", "number", "", "set");
-        this.addInput("clear", "number", "", "clear");
-        this.addOutput("d", "number", "", "d");
+        this.addInput("set", "number", 0, "set");
+        this.addInput("clear", "number", 0, "clear");
+        this.addOutput("d", "number", 0, "d");
         this.properties = { font: "", value: false, port: "" };
         this.size = [64, 128];
     }
     onGetInputs() {
         return [
-            ["toggle", "number", { optional: true}, "toggle"]
+            ["toggle", "number", 0, "toggle"]
         ];
     }
 
-    onExecute() {
-        let update = false;
-        this.pset = this.getInputData(0);
-        if (this.inputs[0].link != null) {
-            var setBit = this.getInputData(0);
-            if (setBit != null) {
+    onExecute(update) {
+        if (update) {
+            if (this.properties.set == 1) {
                 this.properties.value = 1;
-                update = true
+                this.properties.set = null;
+                this.setInputDataByName("set", null);
             }
-        }
 
-        if (this.inputs[1].link != null) {
-            var resetBit = this.getInputData(1);
-            if (resetBit != null) {
+            if (this.properties.clear == 1) {
                 this.properties.value = 0;
-                update = true
+                this.properties.clear = null;
+                this.setInputDataByName("clear", null);
             }
-        }
 
-        if (this.inputs[2]?.link != null) {
-            var toggleBit = this.getInputData(2);
-            if (toggleBit != null) {
+            if (this.properties.toggle == 1) {
                 if ( this.properties.value == 1) {
                     this.properties.value = 0;
                 } else {
                     this.properties.value = 1;
                 }
-                update = true
+                this.setInputDataByName("toggle", null);
+                this.properties.toggle = null;
             }
-        }
 
-        this.setDirtyCanvas(true, true);
-        if (update) {
+            this.setDirtyCanvas(true, true);
             this.setOutputData(0, this.properties.value);
         }
     }

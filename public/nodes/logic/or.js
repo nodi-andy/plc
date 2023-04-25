@@ -14,15 +14,18 @@ class logicOr extends LGraphNode{
         this.addInput("b", "number");
         this.addOutput("v", "number");
     }
-    onExecute() {
-        let ret = false;
-        for (let inX in this.inputs) {
-            if (this.getInputData(inX)) {
-                ret = true;
-                break;
+    onExecute(update) {
+        if (update) {
+            let ret = false;
+            for (let input of this.inputs) {
+                if (this.properties[input.name]) {
+                    ret = true;
+                    break;
+                }
             }
+            ret = ret ? 1 : 0;
+            this.setOutputDataByName("v", ret);
         }
-        this.setOutputData(0, ret);
     }
     onGetInputs() {
         return [

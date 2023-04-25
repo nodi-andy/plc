@@ -67,7 +67,7 @@ export default class LGraphNode {
         this.title = title;
         this.size = [window.LiteGraph.NODE_WIDTH, 60];
         this.graph = null;
-
+        this.update = false;
         this._pos = [0, 0];
 
         Object.defineProperty(this, "pos", {
@@ -565,6 +565,13 @@ export default class LGraphNode {
             }
           }
     }
+    setInputDataByName(name, val) {
+        for (let i = 0; i < this.inputs.length; i++) {
+            if (this.inputs[i].name === name) {
+              this.inputs[i]._data = val;
+            }
+          }
+    }
     getInputIndexByName(name) {
         for (let i = 0; i < this.inputs.length; i++) {
             if (this.inputs[i].name === name) {
@@ -602,6 +609,13 @@ export default class LGraphNode {
         for (let i = 0; i < this.outputs.length; i++) {
             if (this.outputs[i].name === name) {
               return this.outputs[i]._data;
+            }
+          }
+    }
+    setOutputDataByName(name, val) {
+        for (let i = 0; i < this.outputs.length; i++) {
+            if (this.outputs[i].name === name) {
+              this.outputs[i]._data = val;
             }
           }
     }
@@ -956,10 +970,7 @@ export default class LGraphNode {
          * @param {string} type string defining the output type ("vec3","number",...)
          * @param {Object} extra_info this can be used to have special properties of the property (like values, etc)
          */
-    addProperty(name,
-        default_value,
-        type,
-        extra_info) {
+    addProperty(name, default_value, type, extra_info) {
 
         if (type === undefined) type = typeof default_value
         var o = { name: name, type: type, default_value: default_value };
@@ -1079,7 +1090,7 @@ export default class LGraphNode {
          * @param {string} type string defining the input type ("vec3","number",...), it its a generic one use 0
          * @param {Object} extra_info this can be used to have special properties of an input (label, color, position, etc)
          */
-    addInput(name, type, extra_info, label) {
+    addInput(name, type, defaultValue, label, extra_info) {
         type = type || 0;
         var input = { name: name, type: type, link: null, label: label };
         if (extra_info) {
@@ -1100,7 +1111,7 @@ export default class LGraphNode {
         }
 
         window.LiteGraph.registerNodeAndSlotType(this, type);
-
+        this.addProperty(name, defaultValue, type);
         this.setDirtyCanvas(true, true);
         return input;
     }
@@ -1979,7 +1990,7 @@ export default class LGraphNode {
                 //is the link we are searching for...
                 if (link_info.target_id == target_node.id) {
                     output.links.splice(i, 1); //remove here
-                    var input = target_node.inputs[link_info.target_slot];
+                    var input = target_node.getInputByName(link_info.target_slot);
                     input.link = null; //remove there
                     delete this.graph.links[link_id]; //remove the link from the links pool
                     if (this.graph) {
@@ -2041,7 +2052,7 @@ export default class LGraphNode {
                     this.graph._version++;
                 }
                 if (target_node) {
-                    input = target_node.inputs[link_info.target_slot];
+                    input = target_node.getInputByName(link_info.target_slot);
                     input.link = null; //remove other side link
                     if (target_node.onConnectionsChange) {
                         target_node.onConnectionsChange(

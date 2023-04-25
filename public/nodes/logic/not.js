@@ -9,13 +9,16 @@ class logicNot extends LGraphNode{
     constructor() {
         super();
         this.properties = {};
-        this.addInput("", "number");
-        this.addOutput("", "number");
+        this.addInput("a", "number");
+        this.addOutput("v", "number");
+        this.addProperty("a", 0);
     }
     
-    onExecute() {
-        var ret = this.getInputData(0);
-        if (ret !== null) this.setOutputData(0, ret ? 0 : 1);
+    onExecute(update) {
+        if (update) {
+            var ret = this.properties.a ? 0 : 1;
+            this.setOutputData(0, ret);
+        }
     }
 }
 

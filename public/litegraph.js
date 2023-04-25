@@ -732,7 +732,7 @@ export var LiteGraph = (global.LiteGraph = {
 });
 
 
-for (let i = 65; i <= 90; i++) {
+for (let i = 97; i <= 123; i++) {
     LiteGraph.alphabet.push(String.fromCharCode(i));
 }
 
@@ -994,12 +994,22 @@ class LGraph {
             }
         } else {
             try {
+                for (i = 0; i < nodes.length; i++) {
+                    node = nodes[i];
+                    node.update = false;
+                    for(let n = 0; n < node.inputs.length; n++) {
+                        if (node.getInputData(n) != null) {
+                            node.properties[node.inputs[n]?.name] = node.getInputData(n)
+                            node.update = true;
+                        }
+                    }
+                }
                 //iterations
                 for (i = 0; i < num; i++) {
                     for (j = 0; j < limit; ++j) {
                         node = nodes[j];
                         if (node.onExecute) {
-                            node.onExecute();
+                            node.onExecute(node.update);
                         }
                     }
 
@@ -1037,17 +1047,19 @@ class LGraph {
                 this.stop();
             }
         }
-        for(let linkID in this.links) {
+
+        for (let linkID in this.links) {
             let link = this.links[linkID];
             let dataFromNode = this._nodes_by_id[link.origin_id].getOutputDataByName(link.origin_slot);
             let data = this._nodes_by_id[link.target_id].getInputDataByName(link.target_slot);
             if (dataFromNode != null && data == null) this._nodes_by_id[link.target_id].getInputByName(link.target_slot)._data = dataFromNode;
-            
         }
-        for(let linkID in this.links) {
+
+        for (let linkID in this.links) {
             let link = this.links[linkID];
             this._nodes_by_id[link.origin_id].getOutputByName(link.origin_slot)._data = null;
         }
+
         var now = NodiEnums.getTime();
         var elapsed = now - start;
         if (elapsed == 0) {

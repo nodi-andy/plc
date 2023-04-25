@@ -13,14 +13,10 @@ export default class Interval extends LGraphNode {
 
     constructor() {
         super();
-        this.addProperty("ton", 500);
-        this.addProperty("toff", 500);
-        this.addProperty("pressing", 1);
-        this.addProperty("pressed", null);
-        this.addProperty("releasing", 0);
-        this.addProperty("released", null);
-        this.addInput("ton", "number", "", "tOn");
-        this.addInput("toff", "number", "", "tOff");
+        this.addInput("ton", "number", 500, "tOn");
+        this.addInput("toff", "number", 500, "tOff");
+        this.addProperty("press", 1);
+        this.addProperty("release", 0);
         this.addOutput("tick", "number", "", "tick");
         this.last_on = 0;
         this.last_off = 0;
@@ -58,23 +54,18 @@ export default class Interval extends LGraphNode {
 
         this.output = null;
 
-        if (this.newState == 0 && this.state == 0) {
-            this.output = this.properties.released;
-        } if (this.newState == 0 && this.state == 1) {
-            this.output = this.properties.releasing;
+        if (this.newState == 0 && this.state == 1) {
+            this.output = this.properties.release;
             this.last_on = now;
-        } if (this.newState == 1 && this.state == 1) {
-            this.output = this.properties.pressed;
         } if (this.newState == 1 && this.state == 0) {
-            this.output = this.properties.pressing;
+            this.output = this.properties.press;
             this.last_off = now;
         }
         if (this.state != this.newState) {
             this.setDirtyCanvas(true, true);
+            this.state = this.newState;
+            this.setOutputDataByName("tick", this.output);
         }
-        this.state = this.newState;
-        this.setOutputData(0, this.output);
-        //console.log(this.output);
     }
 }
 

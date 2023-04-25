@@ -6,25 +6,27 @@ class Selector extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("SelIn", "", "", "Sel");
-        this.addInput("A", "", "", "A");
+        this.addInput("SelIn", "", "", "SelIn");
+        this.addInput("a", "", 0, "a");
         this.addOutput("SelOut");
-        this.addOutput("A", "", "", "A'");
-        this.addProperty("Sel", 0, "number")
-        this.addProperty("A", 0, "number")
+        this.addOutput("a", "", 0, "a'");
     }
-    onExecute() {
-        if (this.getInputData(0) != null) this.properties.Sel = this.getInputData(0)
-        if (this.getInputData(1) != null) this.properties.A = this.getInputData(1)
+    onExecute(update) {
+        if (update && isNaN(this.properties.SelIn) == false && this.properties.SelIn > 0) {
 
-        if (isNaN(this.properties.Sel) == false && this.properties.Sel > 0) {
-            var v = this.properties[this.inputs[this.properties.Sel]?.name]
-            this.setOutputData(1, v);
-            this.properties[this.inputs[this.properties.Sel].name] = null
+            var v = this.properties[this.inputs[this.properties.SelIn]?.name]
+            this.setOutputData(1, v); // select output feature missing, const 1
+            this.properties[this.inputs[this.properties.SelIn].name] = null
         }
     }
+    onNodeInputAdd() {
+        return LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
+    }
+
     onGetInputs() {
-        return [["B", 0], ["C", 0], ["D", 0], ["E", 0]];
+        return [
+            ["gate", "number", 0, ""]
+        ];
     }
 }
 

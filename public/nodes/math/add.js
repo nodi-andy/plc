@@ -10,11 +10,9 @@ class MathAdd extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("A", "number");
-        this.addInput("B", "number");
-        this.addOutput("=", "number");
-        this.addProperty("A", 0);
-        this.addProperty("B", 0);
+        this.addInput("a", "number", 0, "a");
+        this.addInput("b", "number", 0, "b");
+        this.addOutput("v", "number", 0, "v");
         this.label = ""
         this._result = []; //only used for arrays
     }
@@ -25,39 +23,32 @@ class MathAdd extends LGraphNode {
         }
         this.properties["value"] = v;
     }
+
     onGetInputs() {
         return [
-            ["summand", "number"]
+            ["summand", "number", 0, "summand", {optional: true}]
         ];
     }
 
-    onNodeInputAdd(slot) {
-        slot.name = LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
-        this.addProperty(slot.name, 0);
+    onNodeInputAdd() {
+        return LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
     }
 
-    onExecute() {
-        let update = false;
-        for(let n = 0; n < this.inputs.length; n++) {
-            if (this.getInputData(n) != null) {
-                this.properties[this.inputs[n]?.name] = this.getInputData(n)
-                update = true;
-            }
-        }
-        let ret = 0;
-        this.label = "";
-        for (let inX = 0; inX < this.inputs.length; inX++) {
-            let inp = this.inputs[inX];
-            let val = this.properties[inp?.name]
-            val = parseInt(this.properties[inp.name]);
-            this.label += val
-            val = parseInt(val);
-            if (val == null || isNaN(val)) val = 0;
-            if (inX < this.inputs.length - 1) this.label += " + "
-            ret += parseInt(val);
-        }
+    onExecute(update) {
         if (update) {
-            this.setOutputData(0, ret);
+            let ret = 0;
+            this.label = "";
+            for (let inX = 0; inX < this.inputs.length; inX++) {
+                let inp = this.inputs[inX];
+                let val = this.properties[inp?.name]
+                val = parseInt(this.properties[inp.name]);
+                this.label += val
+                val = parseInt(val);
+                if (val == null || isNaN(val)) val = 0;
+                if (inX < this.inputs.length - 1) this.label += " + "
+                ret += parseInt(val);
+            }
+            this.setOutputDataByName("v", ret);
             update = false;
         }
     }

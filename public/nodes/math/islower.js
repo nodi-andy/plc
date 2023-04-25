@@ -10,40 +10,23 @@ class MathIsLower extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("A", "number");
-        this.addInput("B", "number");
-        this.addOutput("=", "number");
-        this.addProperty("A", 0);
-        this.addProperty("B", 0);
+        this.addInput("a", "number", 0, "a");
+        this.addInput("b", "number", 0, "b");
+        this.addOutput("v", "number", 0, "v");
+        this.label = ""
         this._result = []; //only used for arrays
     }
 
-    setValue(v) {
-        if (typeof v == "string") {
-            v = parseFloat(v);
-        }
-        this.properties["value"] = v;
-    }
-    onNodeInputAdd(slot) {
-        slot.name = LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
-        this.addProperty(slot.name, 0);
-    }
-
-    onExecute() {
-        let update = false;
-        for(let n = 0; n < this.inputs.length; n++) {
-            if (this.getInputData(n) != null) {
-                this.properties[this.inputs[n]?.name] = this.getInputData(n)
-                this.inputs[n]._data = null;
-                update = true;
-            }
-        }
+    onExecute(update) {
         if (update) {
-            if (this.properties.A < this.properties.B) {
-                this.setOutputData(0, 1);
+            let ret = null;
+            if (this.properties.a < this.properties.b) {
+                ret = 1;
             } else {
-                this.setOutputData(0, 0);
+                ret = 0;
             }
+            this.setOutputDataByName("v", ret);
+            update = false;
         }
     }
 
@@ -52,10 +35,10 @@ class MathIsLower extends LGraphNode {
             return;
         }
 
-        ctx.font = "40px Arial";
+        ctx.font = "20px Arial";
         ctx.fillStyle = "#666";
         ctx.textAlign = "center";
-        ctx.fillText(this.properties.A +"<" + this.properties.B + "?", this.size[0] * 0.5, (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5);
+        ctx.fillText(this.properties.a +"<" + this.properties.b + "?", this.size[0] * 0.5, (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5);
         ctx.textAlign = "left";
     }
 }

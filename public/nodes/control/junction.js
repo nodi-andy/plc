@@ -15,7 +15,7 @@ class Junction extends LGraphNode {
         inp.pos = [16,16]
         inp.shape = LiteGraph.CIRCLE_SHAPE;
         
-        let outp = this.addOutput("", "number");
+        let outp = this.addOutput("out", "number");
         outp.pos = [16,16]
         outp.shape = LiteGraph.CIRCLE_SHAPE;
 
@@ -23,8 +23,8 @@ class Junction extends LGraphNode {
         this._shape = LiteGraph.CIRCLE_SHAPE;
     }
     onExecute() {
-        let input = this.getInputData(0);
-        this.setOutputData(0, input);
+        let input = this.getInputDataByName("in");
+        this.setOutputDataByName("out", input);
     }
     getTitle() {
         if (this.flags.collapsed) {

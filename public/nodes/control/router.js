@@ -9,7 +9,7 @@ class Router extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("inp", "number", "", "");
+        this.addInput("in", "number", "", "");
         this.addOutput("out", "number", "", "");
         this.addProperty("pass", 1, "number", {name: "pass"});
 
@@ -17,9 +17,8 @@ class Router extends LGraphNode{
     }
 
     onExecute() {
-        var inputData = this.getInputData(0);
-        if (inputData != null && inputData == this.properties.pass) {
-            this.setOutputData(0, inputData);
+        if (this.properties.in == this.properties.pass) {
+            this.setOutputDataByName("out", this.properties.in);
         }
     }
     
