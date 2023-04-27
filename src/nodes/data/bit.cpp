@@ -17,34 +17,38 @@ void Bit::setup() {
       value = props["properties"]["value"].as<int>();
     }
     addInput("set");
-    addInput("reset");
+    addInput("clear");
     addInput("toggle");
-    addOutput("V");
+    addOutput("v");
 }
 
 int Bit::onExecute() {
+    int ret = 0;
     int* inputSet = getInput("set");
-    if (inputSet) {
-      if (*inputSet) {
-        value = 1;
-      }
+    if (inputSet && *inputSet) {
+        newvalue = 1;
+        setInput("set", NULL);
     }
-    int* inputReset = getInput("reset");
-    if (inputReset) {
-      if (*inputReset) {
-        value = 0;
-      }
+
+    int* inputClear = getInput("clear");
+    if (inputClear && *inputClear) {
+        newvalue = 0;
+        setInput("clear", NULL);
     }
 
     int* inputToggle = getInput("toggle");
-    if (inputToggle) {
-      if (*inputToggle) {
-        value = !value;
-      }
+    if (inputToggle && *inputToggle) {
+        newvalue = !value;
+        setInput("toggle", NULL);
     }
+    
     if (port) {
       digitalWrite(port, value ? HIGH : LOW);
     }
-    setOutput("V", &value);
+    ret = (value != newvalue);
+    value = newvalue;
+    if (ret) {
+        setOutput("v", &value);
+    }
     return 0;
 }

@@ -10,7 +10,7 @@ export default class DFlipFlop extends LGraphNode {
         super();
         this.addInput("set", "number", 0, "set");
         this.addInput("clear", "number", 0, "clear");
-        this.addOutput("d", "number", 0, "d");
+        this.addOutput("v", "number", 0, "v");
         this.properties = { font: "", value: false, port: "" };
         this.size = [64, 128];
     }
@@ -23,29 +23,29 @@ export default class DFlipFlop extends LGraphNode {
     onExecute(update) {
         if (update) {
             if (this.properties.set == 1) {
-                this.properties.value = 1;
+                this.properties.v = 1;
                 this.properties.set = null;
                 this.setInputDataByName("set", null);
             }
 
             if (this.properties.clear == 1) {
-                this.properties.value = 0;
+                this.properties.v = 0;
                 this.properties.clear = null;
                 this.setInputDataByName("clear", null);
             }
 
             if (this.properties.toggle == 1) {
-                if ( this.properties.value == 1) {
-                    this.properties.value = 0;
+                if ( this.properties.v == 1) {
+                    this.properties.v = 0;
                 } else {
-                    this.properties.value = 1;
+                    this.properties.v = 1;
                 }
                 this.setInputDataByName("toggle", null);
                 this.properties.toggle = null;
             }
 
             this.setDirtyCanvas(true, true);
-            this.setOutputData(0, this.properties.value);
+            this.setOutputDataByName("v", this.properties.v);
         }
     }
 }

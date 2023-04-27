@@ -11,12 +11,10 @@ void Counter::setup() {
     name = "events/counter";
 
     value = 0;
-    addInput("increment");
-    addInput("decrement");
-    addInput("reset");
-    addOutput("change");
-    addOutput("value");
-    //lastIncInput = *getInput(0);
+    addInput("inc");
+    addInput("dec");
+    addInput("set");
+    addOutput("v");
 }
 
 int Counter::onExecute() {
@@ -44,6 +42,8 @@ int Counter::onExecute() {
     }
     ret = (value != newvalue);
     value = newvalue;
-    setOutput(0, &value);
+    if (ret) {
+        setOutput("v", &value);
+    }
     return ret;
 }

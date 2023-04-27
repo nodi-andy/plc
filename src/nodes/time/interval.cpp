@@ -8,6 +8,9 @@ void Interval::setup() {
     title = "Interval";
     desc = "Read input";
 
+    defaultPressed = 0;
+    defaultReleased = 0;
+    
     if (props["properties"].containsKey("ton")) {
       if (props["properties"]["ton"].as<std::string>().length() > 0 ) {
         defaultTOn = props["properties"]["ton"].as<int>() * 1000;
@@ -21,73 +24,62 @@ void Interval::setup() {
     }
 
     defaultPressed = 1;
-    if (props["properties"].containsKey("pressed")) {
-      defaultPressed = props["properties"]["pressed"].as<int>();
-    }
-
-    defaultPressing = 1;
-    if (props["properties"].containsKey("pressing")) {
-      defaultPressing = props["properties"]["pressing"].as<int>();
+    if (props["properties"].containsKey("press")) {
+      defaultPressed = props["properties"]["press"].as<int>();
     }
 
     defaultReleased = 0;
-    if (props["properties"].containsKey("released")) {
-      defaultReleased = props["properties"]["released"].as<int>();
+    if (props["properties"].containsKey("release")) {
+      defaultReleased = props["properties"]["release"].as<int>();
     }
 
-    defaultReleasing = 0;
-    if (props["properties"].containsKey("releasing")) {
-      defaultReleasing = props["properties"]["releasing"].as<int>();
-    }
-
-    state = defaultReleasing;
-
+    state = defaultReleased;
+    ton = defaultTOn;
+    toff = defaultTOff;
     Serial.print(">>> Setup Interval");
     addInput("ton");
     addInput("toff");
-    addOutput("output");
+    addOutput("tick");
     lastTick = micros();
 }
 
 int Interval::onExecute() {
-  int ret = 0;
-  int newState = state;
-  output = 0;
-  int ton = defaultTOn;
-  int toff = defaultTOff;
   int now = micros();
-//    input = getInput(0);
-  if (state == 0 && now - lastTick >= toff) {
-      lastTick = now;
-      output = &defaultReleasing;
-      Serial.print("Interval EdgeUp: ");
-      Serial.println(newState);
-      newState = 1;
-  } else if (state == 1 && now - lastTick >= ton) {
-      lastTick = now;
-      output = &defaultPressing;
-      Serial.print("Interval EdgeDown: ");
-      Serial.println(newState);
-      newState = 0;
-  } else if (state == 0 && now - lastTick < toff) {
-      output = &defaultReleased;
-  } else if (state == 1 && now - lastTick < ton) {
-      output = &defaultPressed;
+
+  bool update = false;
+  output = NULL;
+  int *inpTOn = getInput("ton");
+  if (inpTOn) {
+      ton = *inpTOn;
+      setInput("ton", NULL);
   }
-/*
-    if (newState == 0 && state == 0) {
-      output = &defaultPressed;
-    } if (newState == 0 && state == 1) {
 
-    } if (newState == 1 && state == 1) {
-      output = &defaultReleased;
-    } if (newState == 1 && state == 0) {
+  //Serial.print("Interval run: ");
+  //Serial.println(now - lastTick);
 
-    }*/
+  if (state == 0 && now - lastTick > ton) {
+    newstate = 1;
+    lastTick = now;
+    Serial.println("Interval output High");
+  } else if (state == 1 && now - lastTick > toff) {
+    newstate = 0;
+    lastTick = now;
+    Serial.println("Interval output Low");
+  }
 
-  ret = (state != newState);
-  state = newState;
+  if (newstate == 0 && state == 1) {
+    output = &defaultPressed;
+    Serial.println("Button state EdgeDown: ");
+  } if (newstate == 1 && state == 0) {
+    output = &defaultReleased;
+    Serial.println("Button state EdgeUp: ");
+  }
 
-  setOutput(0, output);
-  return 0; // do not update interval in browser
+  update = (state != newstate);
+  state = newstate;
+  if (update) {
+    setOutput("tick", output);
+    Serial.println("Interval output ");
+  }
+  return 0;
 }

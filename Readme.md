@@ -7,7 +7,7 @@ With Conucon PLC, you can create complex IoT projects with ease. The platform is
 ## Installation
 To get started with Conucon PLC, follow these steps:
 1. Download 3 binary files from [/public/bins](https://github.com/nodi-andy/plc/tree/master/public/bins). Those are partitions.bin, firmware.bin and littlefs.bin
-1. Got to Adafruits online ESPTools: https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
+1. Go to the Adafruits online ESPTools: https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
 1. Click on "Choose a file.." and select partitions.bin. Do not change the Offset
 1. Click on the next "Choose a file.." button and select firmware.bin. Enter the offset as "Ox10000" (10k)
 1. Repeat the same for littlefs.bin. Enter the offset as "Ox170000" (170k)

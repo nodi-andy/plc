@@ -16,14 +16,12 @@ class Interval : public Node
     int onExecute();
 
     private:
-    int defaultPressing;
     int defaultPressed;
-    int defaultReleasing;
     int defaultReleased;
     int defaultTOn;
     int defaultTOff;
-    int *ton;
-    int *toff;
+    int ton;
+    int toff;
     int *input;
     int *output;
     int lastTick;
