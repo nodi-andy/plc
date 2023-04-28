@@ -22,13 +22,15 @@ int Counter::onExecute() {
     int *newIncInput = getInput("inc");
     if (newIncInput) {
         newvalue += *newIncInput;
-        //Serial.print("Increment: ");
-        //Serial.println(newvalue);
+        setInput("inc", NULL);
+        Serial.print("Increment: ");
+        Serial.println(newvalue);
     }
 
     int *newDecInput = getInput("dec");
     if (newDecInput) {
         newvalue -= *newDecInput;
+        setInput("dec", NULL);
         Serial.print("Decrement: ");
         Serial.println(newvalue);
     }
@@ -38,6 +40,7 @@ int Counter::onExecute() {
         if (*newResetInput) {
             newvalue = 0;
         }
+        setInput("reset", NULL);
         //Serial.print("Reset");
     }
     ret = (value != newvalue);

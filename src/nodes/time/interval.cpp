@@ -48,10 +48,14 @@ int Interval::onExecute() {
 
   bool update = false;
   output = NULL;
-  int *inpTOn = getInput("ton");
-  if (inpTOn) {
-      ton = *inpTOn;
+  if (getInput("ton")) {
+      ton = *getInput("ton");
       setInput("ton", NULL);
+  }
+
+  if (getInput("toff")) {
+      ton = *getInput("toff");
+      setInput("toff", NULL);
   }
 
   //Serial.print("Interval run: ");
@@ -60,26 +64,26 @@ int Interval::onExecute() {
   if (state == 0 && now - lastTick > ton) {
     newstate = 1;
     lastTick = now;
-    Serial.println("Interval output High");
+    //Serial.println("Interval output High");
   } else if (state == 1 && now - lastTick > toff) {
     newstate = 0;
     lastTick = now;
-    Serial.println("Interval output Low");
+    //Serial.println("Interval output Low");
   }
 
   if (newstate == 0 && state == 1) {
     output = &defaultPressed;
-    Serial.println("Button state EdgeDown: ");
+    //Serial.println("Button state EdgeDown: ");
   } if (newstate == 1 && state == 0) {
     output = &defaultReleased;
-    Serial.println("Button state EdgeUp: ");
+    //Serial.println("Button state EdgeUp: ");
   }
 
   update = (state != newstate);
   state = newstate;
   if (update) {
     setOutput("tick", output);
-    Serial.println("Interval output ");
+    //Serial.println("Interval output ");
   }
   return 0;
 }

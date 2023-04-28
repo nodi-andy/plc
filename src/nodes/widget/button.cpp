@@ -29,17 +29,10 @@ void Button::setup() {
     defaultReleased = 0;
     defaultReleasing = 0;
 
-    if (jsonProp.containsKey("pressed")) {
-      if (jsonProp["pressed"].as<std::string>().length() > 0 ) {
-        defaultPressedVal = jsonProp["pressed"].as<int>();
-        defaultPressed = &defaultPressedVal;
-      } else {
-        defaultPressed = 0;
-      }
-    }
 
     if (jsonProp.containsKey("pressing")) {
-      if (jsonProp["pressing"].as<std::string>().length() > 0 ) {
+      std::string jsonVal = jsonProp["pressing"].as<std::string>();
+      if ( jsonVal.length() > 0 && jsonVal != "null") {
         defaultDownVal = jsonProp["pressing"].as<int>();
         defaultPressing = &defaultDownVal;
       } else {
@@ -47,17 +40,9 @@ void Button::setup() {
       }
     }
 
-    if (jsonProp.containsKey("released")) {
-      if (jsonProp["released"].as<std::string>().length() > 0 ) {
-        defaultReleasedVal = jsonProp["released"].as<int>();
-        defaultReleased = &defaultReleasedVal;
-      } else {
-        defaultReleased = 0;
-      }
-    }
-
     if (jsonProp.containsKey("releasing")) {
-      if (jsonProp["releasing"].as<std::string>().length() > 0 ) {
+      std::string jsonVal = jsonProp["releasing"].as<std::string>();
+      if ( jsonVal.length() > 0 && jsonVal != "null") {
         defaultUpVal = jsonProp["releasing"].as<int>();
         defaultReleasing = &defaultUpVal;
       } else {
@@ -111,7 +96,7 @@ int Button::onExecute() {
     update = (state != newState);
     state = newState;
   }
-  if (update) {
+  if (update && output) {
     setOutput("v", output);
     Serial.println("Button output ");
   }
