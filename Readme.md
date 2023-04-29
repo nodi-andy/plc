@@ -27,7 +27,7 @@ To build conucon PLC, follow these steps:
 
 You should now see the home screen with the toolbox:
 
-<img src="https://user-images.githubusercontent.com/19575988/226483575-d08071e0-56ef-4dff-9901-b49b5f7c6bd9.png" width="640">
+<img src="https://user-images.githubusercontent.com/19575988/235246671-21eeefc2-d2bd-49ad-991a-6593dcc27c2d.png" width="640">
 
 ## Adding blocks
 To add your first block:
