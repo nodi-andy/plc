@@ -35,7 +35,7 @@ class logicAnd extends LGraphNode{
 
     onGetInputs() {
         return [
-            ["and", "boolean", 0, ""]
+            ["and", "number", 0, ""]
         ];
     }
 

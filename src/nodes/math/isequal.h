@@ -28,4 +28,3 @@ static bool IsEqualRegistered = []() {
     RegistryManager::getInstance().registerNode(new IsEqual());
     return true;
 }();
-

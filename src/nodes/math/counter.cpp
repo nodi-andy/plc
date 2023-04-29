@@ -14,30 +14,27 @@ void Counter::setup() {
     addInput("inc");
     addInput("dec");
     addInput("set");
-    addOutput("v");
+    addOutput("n");
 }
 
 int Counter::onExecute() {
     int ret = 0;
-    int *newIncInput = getInput("inc");
-    if (newIncInput) {
-        newvalue += *newIncInput;
+    if (getInput("inc")) {
+        newvalue += *getInput("inc");
         setInput("inc", NULL);
         Serial.print("Increment: ");
         Serial.println(newvalue);
     }
 
-    int *newDecInput = getInput("dec");
-    if (newDecInput) {
-        newvalue -= *newDecInput;
+    if (getInput("dec")) {
+        newvalue -= *getInput("dec");
         setInput("dec", NULL);
         Serial.print("Decrement: ");
         Serial.println(newvalue);
     }
 
-    int *newResetInput = getInput("reset");
-    if (newResetInput) {
-        if (*newResetInput) {
+    if (getInput("reset")) {
+        if (*getInput("reset")) {
             newvalue = 0;
         }
         setInput("reset", NULL);
@@ -46,7 +43,7 @@ int Counter::onExecute() {
     ret = (value != newvalue);
     value = newvalue;
     if (ret) {
-        setOutput("v", &value);
+        setOutput("n", &value);
     }
     return ret;
 }

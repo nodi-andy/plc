@@ -1,13 +1,13 @@
-#include "isequal.h"
+#include "isgreater.h"
 
-IsEqual::IsEqual() {
+IsGreater::IsGreater() {
 }
 
 // init the node
-void IsEqual::setup() {
-    title = "IsEqual";
-    desc = "Is Equal";
-    name = "math/isequal";
+void IsGreater::setup() {
+    title = "is less";
+    desc = "Is less";
+    name = "math/isgreater";
 
 
     addInput("a");
@@ -17,7 +17,7 @@ void IsEqual::setup() {
     state = 0;
 }
 
-int IsEqual::onExecute() {
+int IsGreater::onExecute() {
     bool update = false;
     output = NULL;
     if (getInput("a")) {
@@ -27,6 +27,7 @@ int IsEqual::onExecute() {
         Serial.println(A);
         update = true;
     }
+
     if (getInput("b")) {
         B = *getInput("b");
         setInput("b", NULL);
@@ -37,7 +38,7 @@ int IsEqual::onExecute() {
     }
  
     if (update) {
-        value = (A == B);
+        value = (A > B);
         output = &value;
         setOutput("v", output);
         Serial.println("IsEqual output ");

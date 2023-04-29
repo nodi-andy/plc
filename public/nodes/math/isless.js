@@ -2,11 +2,11 @@ import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
 //Math operation
-class MathIsLower extends LGraphNode {
+class MathIsLess extends LGraphNode {
     static title = "Operation";
     static desc = "Easy math operators";
     static title_mode = LiteGraph.NO_TITLE;
-    static type = "math/islower";
+    static type = "math/isless";
 
     constructor() {
         super();
@@ -43,4 +43,4 @@ class MathIsLower extends LGraphNode {
     }
 }
 
-LiteGraph.registerNodeType(MathIsLower.type, MathIsLower);
+LiteGraph.registerNodeType(MathIsLess.type, MathIsLess);

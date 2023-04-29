@@ -9,39 +9,44 @@ void LogicAnd::setup() {
     desc = "Read input";
     name = "logic/and";
 
+    Serial.print(" And inputs:");
+    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addInput(inputObj["name"].as<std::string>());
+        inputVals[inputObj["name"].as<std::string>()] = 0;
+    }
 
-    addInput("a");
-    addInput("b");
-    addOutput("v");
+    Serial.print(" And outputs:");
+    for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addOutput(inputObj["name"].as<std::string>());
+    }
+
     value = 1;
-    state = 0;
 }
 
 int LogicAnd::onExecute() {
     bool update = false;
-    output = NULL;
-    int *inpA = getInput("a");
-    int *inpB = getInput("b");
-    if (inpA) {
-        A = *inpA;
-        setInput("a", NULL);
-        Serial.print("A gate:");
-        Serial.println(A);
+    value = 1;
+    for (auto& input : inputs) {
+      if (input.second) {
         update = true;
+        inputVals[input.first] = *(input.second);
+        Serial.println(*input.second);
+      }
     }
-    if (inpB) {
-        B = *inpB;
-        setInput("b", NULL);
-        output = &value;
-        Serial.print("B gate:");
-        Serial.println(B);
-        update = true;
-    }
+    inputs.clear();
  
+
+    for (auto input : inputVals) {
+      if (input.second == 0) {
+        value = 0;
+        break;
+      }
+    }
+
     if (update) {
-        value = A && B;
-        output = &value;
-        setOutput("v", output);
+        setOutput("v", &value);
         Serial.println("AND gate output ");
     }
     return 0;

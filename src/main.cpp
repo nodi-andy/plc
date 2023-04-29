@@ -159,7 +159,7 @@ void initWiFi() {
  
     wm.setClass("invert"); // set dark theme
     
-    char wifiMode = preferences.getChar("WIFI_MODE", 'A');
+    char wifiMode = ' '; //preferences.getChar("WIFI_MODE", 'A');
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
     Serial.print("Selected wifi mode: ");
     Serial.println(wifiMode);

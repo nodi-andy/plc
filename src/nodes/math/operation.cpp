@@ -9,9 +9,6 @@ void Operation::setup() {
     Serial.println("Setup Math/Operation");
     title = "Math Operation";
     desc = "Read input";
-    if (props["properties"].containsKey("OP")) {
-      myVariant = props["properties"]["OP"].as<std::string>();
-    }
 
     if (props["properties"].containsKey("A")) {
       defaultA = props["properties"]["A"].as<int>();
