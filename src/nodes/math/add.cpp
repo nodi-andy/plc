@@ -1,22 +1,22 @@
-#include "and.h"
+#include "add.h"
 
-LogicAnd::LogicAnd() {
+LogicAdd::LogicAdd() {
 }
 
 // init the node
-void LogicAnd::setup() {
-    title = "LogicAnd";
+void LogicAdd::setup() {
+    title = "LogicAdd";
     desc = "Read input";
-    name = "logic/and";
+    name = "logic/add";
 
-    //Serial.print(" And inputs:");
+    //Serial.print(" Add inputs:");
     for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addInput(inputObj["name"].as<std::string>());
         inputVals[inputObj["name"].as<std::string>()] = 0;
     }
 
-    //Serial.print(" And outputs:");
+    //Serial.print(" Add outputs:");
     for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addOutput(inputObj["name"].as<std::string>());
@@ -25,24 +25,23 @@ void LogicAnd::setup() {
     value = 1;
 }
 
-int LogicAnd::onExecute() {
+int LogicAdd::onExecute() {
     bool update = false;
-    value = 1;
+    value = 0;
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
         inputVals[input.first] = *(input.second);
         Serial.println(*input.second);
+      } else if (props["properties"].containsKey(input.first)) {
+        inputVals[input.first] = props["properties"][input.first].as<int>();
       }
     }
     inputs.clear();
  
 
     for (auto input : inputVals) {
-      if (input.second == 0) {
-        value = 0;
-        break;
-      }
+        value += input.second;
     }
 
     if (update) {

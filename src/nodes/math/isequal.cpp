@@ -9,17 +9,18 @@ void IsEqual::setup() {
     desc = "Is Equal";
     name = "math/isequal";
 
-
     addInput("a");
     addInput("b");
     addOutput("v");
+
+    A = props["properties"]["a"].as<int>();
+    B = props["properties"]["b"].as<int>();
     value = 1;
     state = 0;
 }
 
 int IsEqual::onExecute() {
     bool update = false;
-    output = NULL;
     if (getInput("a")) {
         A = *getInput("a");
         setInput("a", NULL);
@@ -30,7 +31,6 @@ int IsEqual::onExecute() {
     if (getInput("b")) {
         B = *getInput("b");
         setInput("b", NULL);
-        output = &value;
         Serial.print("B gate:");
         Serial.println(B);
         update = true;
@@ -38,9 +38,9 @@ int IsEqual::onExecute() {
  
     if (update) {
         value = (A == B);
-        output = &value;
-        setOutput("v", output);
-        Serial.println("IsEqual output ");
+        setOutput("v", &value);
+        Serial.print("IsEqual output ");
+        Serial.println(value);
     }
     return 0;
 }

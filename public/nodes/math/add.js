@@ -10,9 +10,9 @@ class MathAdd extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("a", "number", 0, "a");
-        this.addInput("b", "number", 0, "b");
-        this.addOutput("v", "number", 0, "v");
+        this.addInput("a", "number", 0);
+        this.addInput("b", "number", 0);
+        this.addOutput("v", "number", 0);
         this.label = ""
         this._result = []; //only used for arrays
     }
@@ -26,7 +26,7 @@ class MathAdd extends LGraphNode {
 
     onGetInputs() {
         return [
-            ["summand", "number", 0, "summand", {optional: true}]
+            ["summand", "number", 0, ""]
         ];
     }
 
