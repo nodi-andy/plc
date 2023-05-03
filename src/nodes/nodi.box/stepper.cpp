@@ -11,7 +11,7 @@ Stepper::~Stepper() {
 void Stepper::setup() {
     title = "Counter";
     desc = "Read input";
-    name = "widget/stepper";
+    name = "nodi.box/stepper";
     stepPort = 27;
     dirPort = 14;
     enablePort = 32;
@@ -28,14 +28,18 @@ void Stepper::setup() {
     }
 
     pos = 0;
-    moveForced = false;
+    //Serial.print(" And inputs:");
+    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addInput(inputObj["name"].as<std::string>());
+        inputVals[inputObj["name"].as<std::string>()] = 0;
+    }
 
-
-    addInput("speed");
-    addInput("pos");
-    addInput("reset");
-    addOutput("speed");
-    addOutput("pos");
+    //Serial.print(" And outputs:");
+    for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addOutput(inputObj["name"].as<std::string>());
+    }
 
     My_timer = NULL;
 
@@ -55,34 +59,42 @@ void Stepper::setup() {
 }
 
 int Stepper::onExecute() {
-    moveForced = false;
 
-    int *newSpeed = getInput("speed");
-    if (newSpeed && *newSpeed != speed && My_timer) {
-        speed = *newSpeed;
-        moveForced = true;
+    bool update = false;
+    value = 1;
+    for (auto& input : inputs) {
+      if (input.second) {
+        update = true;
+        inputVals[input.first] = *(input.second);
+        Serial.println(*input.second);
+      }
+    }
+    inputs.clear();
+
+    targetPos = inputVals["pos"];
+    if (speed != inputVals["speed"]) {
+      setOutput("speed", &speed);
+      speed = inputVals["speed"];
+    }
+
+
+    if (speed != 0 && My_timer) {
         timerAlarmWrite(My_timer, speed, true);
         timerAlarmEnable(My_timer);
     }
     
-    int *newTargetPos = getInput("pos");
-    if (newTargetPos) {
-        targetPos = *newTargetPos;
-        //Serial.print("TargetPos: ");
-        //Serial.println(targetPos);
-    }
-
-
-    int *newReset = getInput("reset");
-    if (newReset) {
-        reset = *newReset;
+    if (inputVals["reset"]) {
         pos = 0;
         targetPos = 0;
+        inputVals["reset"] = 0;
         //Serial.print("TargetPos: ");
         //Serial.println(targetPos);
     }
-    setOutput("speed", &speed);
-    setOutput("pos", &pos);
+        
+    if (updatePos) {
+        setOutput("pos", &pos);
+        updatePos = false;
+    }
     return 0;
 }
 
@@ -91,10 +103,12 @@ void Stepper::onTimer() {
     Serial.print(targetPos);
     Serial.print(" INTR POS: ");
     Serial.println(pos);*/
+    
     dir = targetPos > pos;
     digitalWrite(dirPort, dir);
-    if (targetPos != pos || moveForced) {
+    if (targetPos != pos) {
         digitalWrite(stepPort, !digitalRead(stepPort));
+        updatePos = true;
         if (digitalRead(stepPort)) {
             if (dir) pos++;
             else pos--;

@@ -30,20 +30,20 @@ void Button::setup() {
     defaultReleasing = 0;
 
 
-    if (jsonProp.containsKey("pressing")) {
-      std::string jsonVal = jsonProp["pressing"].as<std::string>();
+    if (jsonProp.containsKey("press")) {
+      std::string jsonVal = jsonProp["press"].as<std::string>();
       if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultDownVal = jsonProp["pressing"].as<int>();
+        defaultDownVal = jsonProp["press"].as<int>();
         defaultPressing = &defaultDownVal;
       } else {
         defaultPressing = 0;
       }
     }
 
-    if (jsonProp.containsKey("releasing")) {
-      std::string jsonVal = jsonProp["releasing"].as<std::string>();
+    if (jsonProp.containsKey("release")) {
+      std::string jsonVal = jsonProp["release"].as<std::string>();
       if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultUpVal = jsonProp["releasing"].as<int>();
+        defaultUpVal = jsonProp["release"].as<int>();
         defaultReleasing = &defaultUpVal;
       } else {
         defaultReleasing = 0;
@@ -63,10 +63,10 @@ int Button::onExecute() {
   bool update = false;
   output = NULL;
   if (port >= 0) {
-    input = getInput("a");
-
+    int link = props["inputs"][0]["link"].isNull();
     int newState = digitalRead(port);
-    if (input) {
+    input = getInput("a");
+    if (link == false && input) {
       if (newState == 0 && state == 0 && defaultPressed && *defaultPressed) {
         output = input;
       } if (newState == 0 && state == 1 && defaultPressing && *defaultPressing) {

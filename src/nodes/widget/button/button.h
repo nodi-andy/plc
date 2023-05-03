@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../../map/node.h"
+#include "../../../map/node.h"
 
 // Button digital input
 class Button : public Node

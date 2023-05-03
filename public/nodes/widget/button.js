@@ -10,16 +10,15 @@ export default class WidgetButton extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("a", "number");
-        this.addProperty("a", 0, "number");
+        this.addProperty("press", 1);
+        this.addProperty("release", 0);
+
+        this.addInput("a", "number", 0 , "");
+        this.addOutput("v", "number");
+
         this.addProperty("label", "");
         this.addProperty("port", "");
-        this.addProperty("pressing", 1);
-        this.addProperty("pressed", null);
-        this.addProperty("releasing", 0);
-        this.addProperty("released", null);
         this.addProperty("color", "gray");
-        this.addOutput("v", "number");
         this.size = [64, 64];
         this.newState = false;
         for(let input of this.inputs) {

@@ -10,20 +10,26 @@ void Junction::setup() {
     desc = "Show value of input";
     multipleInput = true;
 
-    addOutput("d");
+    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addInput(inputObj["name"].as<std::string>());
+    }
+
+    for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addOutput(inputObj["name"].as<std::string>());
+    }
 }
 
 int Junction::onExecute() {
     for (auto& input : inputs) {
       if (input.second) {
-        //Serial.print(">> Junction :");
-        //Serial.println(*input);
-        setOutput(input.first, input.second);
-        inputs.clear();
-        return 0;
+        setOutput("out", input.second);
+        break;
+        Serial.println(*input.second);
       }
     }
-    setOutput(0, 0);
+
     inputs.clear();
     return 0;
 }

@@ -1091,7 +1091,9 @@ export default class LGraphNode {
          * @param {Object} extra_info this can be used to have special properties of an input (label, color, position, etc)
          */
     addInput(name, type, defaultValue, label, extra_info) {
-        type = type || 0;
+        type = type || "number";
+        defaultValue = defaultValue || 0;
+        label = label || name;
         var input = { name: name, type: type, link: null, label: label };
         if (extra_info) {
             for (var i in extra_info) {

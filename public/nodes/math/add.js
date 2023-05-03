@@ -10,9 +10,9 @@ class MathAdd extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("a", "number", 0);
-        this.addInput("b", "number", 0);
-        this.addOutput("v", "number", 0);
+        this.addInput("a", "number");
+        this.addInput("b", "number");
+        this.addOutput("v", "number");
         this.label = ""
         this._result = []; //only used for arrays
     }

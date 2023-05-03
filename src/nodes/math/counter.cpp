@@ -33,11 +33,11 @@ int Counter::onExecute() {
         Serial.println(newvalue);
     }
 
-    if (getInput("reset")) {
-        if (*getInput("reset")) {
+    if (getInput("set")) {
+        if (*getInput("set")) {
             newvalue = 0;
         }
-        setInput("reset", NULL);
+        setInput("set", NULL);
         //Serial.print("Reset");
     }
     ret = (value != newvalue);

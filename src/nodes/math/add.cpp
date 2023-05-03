@@ -46,7 +46,7 @@ int LogicAdd::onExecute() {
 
     if (update) {
         setOutput("v", &value);
-        Serial.println("AND gate output ");
+        Serial.println("ADD gate output ");
     }
     return 0;
 }
