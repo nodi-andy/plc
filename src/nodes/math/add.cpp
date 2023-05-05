@@ -36,9 +36,8 @@ int LogicAdd::onExecute() {
       } else if (props["properties"].containsKey(input.first)) {
         inputVals[input.first] = props["properties"][input.first].as<int>();
       }
+      input.second = nullptr;
     }
-    inputs.clear();
- 
 
     for (auto input : inputVals) {
         value += input.second;

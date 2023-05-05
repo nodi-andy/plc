@@ -6,10 +6,9 @@ class Selector extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("SelIn", "", "", "SelIn");
-        this.addInput("a", "", 0, "a");
-        this.addOutput("SelOut");
-        this.addOutput("a", "", 0, "a'");
+        this.addInput("SelIn", "number" );
+        this.addInput("a", "number");
+        this.addOutput("out", "number");
     }
     onExecute(update) {
         if (update && isNaN(this.properties.SelIn) == false && this.properties.SelIn > 0) {

@@ -20,7 +20,6 @@ class LogicAnd : public Node
     int onExecute();
 
     private:
-    std::unordered_map<std::string, int> inputVals;
     int value;
     int *output;
 };

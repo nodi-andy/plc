@@ -11,7 +11,7 @@ export default class WidgetNumber extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("set", "number", "", "");
+        this.addInput("set", "number", 0, " ");
         this.addOutput("v", "number");
         this.addProperty("value", 0, "number");
         this.addProperty("const", false, "boolean")

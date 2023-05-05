@@ -11,19 +11,26 @@ void Counter::setup() {
     name = "events/counter";
 
     value = 0;
-    addInput("inc");
-    addInput("dec");
-    addInput("set");
-    addOutput("n");
+    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
+        Serial.print("Counter input:");
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addInput(inputObj["name"].as<std::string>());
+    }
+
+    for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
+        Serial.println(inputObj["name"].as<std::string>().c_str());
+        addOutput(inputObj["name"].as<std::string>());
+    }
 }
 
 int Counter::onExecute() {
-    int ret = 0;
+    bool update = false;
     if (getInput("inc")) {
         newvalue += *getInput("inc");
         setInput("inc", NULL);
         Serial.print("Increment: ");
         Serial.println(newvalue);
+        update = true;
     }
 
     if (getInput("dec")) {
@@ -31,19 +38,18 @@ int Counter::onExecute() {
         setInput("dec", NULL);
         Serial.print("Decrement: ");
         Serial.println(newvalue);
+        update = true;
     }
 
     if (getInput("set")) {
-        if (*getInput("set")) {
-            newvalue = 0;
-        }
+        newvalue = *getInput("set");
         setInput("set", NULL);
+        update = true;
         //Serial.print("Reset");
     }
-    ret = (value != newvalue);
     value = newvalue;
-    if (ret) {
+    if (update) {
         setOutput("n", &value);
     }
-    return ret;
+    return update;
 }

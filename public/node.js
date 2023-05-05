@@ -1094,7 +1094,7 @@ export default class LGraphNode {
         type = type || "number";
         defaultValue = defaultValue || 0;
         label = label || name;
-        var input = { name: name, type: type, link: null, label: label };
+        var input = { name: name, type: type, link: null, label: label, removable: true };
         if (extra_info) {
             for (var i in extra_info) {
                 input[i] = extra_info[i];

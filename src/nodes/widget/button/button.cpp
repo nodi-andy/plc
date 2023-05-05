@@ -60,45 +60,60 @@ void Button::setup() {
 }
 
 int Button::onExecute() {
-  bool update = false;
+  bool updateGUI = false;
+  bool updateOutput = false;
+  bool updateVal = false;
   output = NULL;
   if (port >= 0) {
+
+    value = 1;
+    for (auto& input : inputs) {
+      if (input.second) {
+        updateVal = true;
+        inputVals[input.first] = *(input.second);
+        Serial.println(*input.second);
+      }
+      input.second = nullptr;
+    }
+
     int link = props["inputs"][0]["link"].isNull();
     int newState = digitalRead(port);
-    input = getInput("a");
-    if (link == false && input) {
-      if (newState == 0 && state == 0 && defaultPressed && *defaultPressed) {
-        output = input;
-      } if (newState == 0 && state == 1 && defaultPressing && *defaultPressing) {
-        output = input;
+    if (link == false) {
+      value = inputVals["a"];
+      if (newState == 0 && defaultPressing && *defaultPressing) {
+        output = &value;
         Serial.print("Button conduct EdgeDown: ");
-        Serial.println(*output);
-      } if (newState == 1 && state == 0 && defaultReleasing && *defaultReleasing) {
-        output = input;
-      } if (newState == 1 && state == 1 && defaultReleased && *defaultReleased) {
-        output = input;
+        Serial.println(value);
+        updateOutput = true;
+        //updateGUI = true;
+      } 
+      if (newState == 1 && defaultReleasing && *defaultReleasing) {
+        output = &value;
         Serial.print("Button conduct EdgeUp: ");
-        Serial.println(*output);
+        Serial.println(value);
+        updateOutput = true;
+        //updateGUI = true;
       }
     } else {
-      if (newState == 0 && state == 0) {
-        output = defaultPressed;
-      } if (newState == 0 && state == 1) {
+      if (newState == 0 && state == 1) {
         output = defaultPressing;
         Serial.println("Button state EdgeDown: ");
-      } if (newState == 1 && state == 1) {
-        output = defaultReleased;
-      } if (newState == 1 && state == 0) {
+        updateOutput = true;
+        updateGUI = true;
+      } 
+      if (newState == 1 && state == 0) {
         output = defaultReleasing;
         Serial.println("Button state EdgeUp: ");
+        updateOutput = true;
+        updateGUI = true;
       }
+      updateGUI = (state != newState);
     }
-    update = (state != newState);
     state = newState;
   }
-  if (update && output) {
+  if (updateOutput && output) {
     setOutput("v", output);
     Serial.println("Button output ");
   }
-  return update;
+  return updateGUI;
 }

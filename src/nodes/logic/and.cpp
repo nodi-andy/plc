@@ -34,8 +34,8 @@ int LogicAnd::onExecute() {
         inputVals[input.first] = *(input.second);
         Serial.println(*input.second);
       }
+      input.second = nullptr;
     }
-    inputs.clear();
  
 
     for (auto input : inputVals) {

@@ -11,12 +11,11 @@ class Selector : public Node
         return new Selector(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "routing/selector";
+        return "control/selector";
     }
 
     void setup();
     int onExecute();
-
 };
 
 static bool selectorRegistered = []() {

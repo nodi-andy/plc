@@ -29,23 +29,23 @@ int Link::onExecute() {
     int* v = from->getOutput(src);
     if (v == nullptr) return 0;
     Serial.println("");
-    Serial.print("> Run link: ");
+    Serial.print("> Run link:");
     Serial.print(id);
     Serial.print(" From: ");
     Serial.print(from->id);
-    Serial.print(" Port: '");
+    Serial.print("/");
+    Serial.print(from->title.c_str());
+    Serial.print(" Port:'");
     Serial.print(src.c_str());
     Serial.print("' To:");
     Serial.print(to->id);
+    Serial.print("/");
+    Serial.print(to->title.c_str());
     Serial.print(" Port: '");
     Serial.print(dst.c_str());
     Serial.print("' Value: ");
     Serial.println(*v);
 
-    if (to->multipleInput) {
-       // to->addInput(dst, v);
-    } else {
-        to->setInput(dst, v);
-    }
+    to->setInput(dst, v);
     return 0;
 }

@@ -59,43 +59,82 @@ void Stepper::setup() {
 }
 
 int Stepper::onExecute() {
-
     bool update = false;
-    value = 1;
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
-        inputVals[input.first] = *(input.second);
+        props["properties"][input.first] = *(input.second);
+        Serial.print("Stepper.");
+        Serial.print(input.first.c_str());
+        Serial.print(": ");
         Serial.println(*input.second);
       }
-    }
-    inputs.clear();
-
-    targetPos = inputVals["pos"];
-    if (speed != inputVals["speed"]) {
-      setOutput("speed", &speed);
-      speed = inputVals["speed"];
+      input.second = nullptr;
     }
 
-
-    if (speed != 0 && My_timer) {
-        timerAlarmWrite(My_timer, speed, true);
-        timerAlarmEnable(My_timer);
+    if (targetPos != props["properties"]["pos"].as<int>()) {
+      targetPos = props["properties"]["pos"].as<int>();
+      //Serial.print("Stepper.targetPos.changed: ");
+      setOutput("pos", &pos);
     }
+
+    if (targetSpeed != props["properties"]["speed"].as<int>()) {
+      targetSpeed = props["properties"]["speed"].as<int>();
+      Serial.print("Stepper.speed.changed: ");
+      Serial.println(speed);
+      setOutput("speed", &targetSpeed);
+    }
+
     
-    if (inputVals["reset"]) {
+    if (props["properties"]["reset"]) {
         pos = 0;
+        props["properties"]["pos"] = 0;
         targetPos = 0;
-        inputVals["reset"] = 0;
-        //Serial.print("TargetPos: ");
-        //Serial.println(targetPos);
     }
-        
-    if (updatePos) {
-        setOutput("pos", &pos);
-        updatePos = false;
+
+    int posGiven = 0, speedGiven = 0;
+    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
+        if (inputObj["name"].as<std::string>() == "pos" && inputObj["link"].isNull() == false) {
+            posGiven = 1;
+        }
+        if (inputObj["name"].as<std::string>() == "speed" && inputObj["link"].isNull() == false) {
+            speedGiven = 1;
+        }
     }
+
+    setSpeed(targetSpeed);
+    if (posGiven == 0 && speedGiven == 1) {
+        targetPos = targetSpeed > 0 ? pos + 1000 : targetPos = pos - 1000;
+        /*Serial.print("Speed control: Stepper.pos: ");
+        Serial.print(pos);
+        Serial.print("\tStepper.targetpos: ");
+        Serial.print(targetPos);
+        Serial.print("\tStepper.speed: ");
+        Serial.println(speed);*/
+    }
+    props["properties"]["pos"] = pos;
     return 0;
+}
+
+void Stepper::setSpeed(int newSpeed) {
+  if (!My_timer) return;
+  newSpeed = abs(newSpeed);
+  if (newSpeed == 0) {
+        timerAlarmDisable(My_timer);
+        timerState = 0;
+  } else {
+    if (timerState == 0) {
+        Serial.print("Timer ON. ");
+        timerAlarmEnable(My_timer);
+        timerState = 1;
+    }
+    if (newSpeed != speed) {
+      Serial.print("Set Speed.");
+      Serial.println(speed);
+      timerAlarmWrite(My_timer, speed, true);
+    }
+    speed = newSpeed;
+  }
 }
 
 void Stepper::onTimer() {

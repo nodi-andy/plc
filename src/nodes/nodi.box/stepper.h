@@ -30,10 +30,10 @@ class Stepper : public Node
     static int pos;
     static int updatePos;
     hw_timer_t *My_timer;
-    std::unordered_map<std::string, int> inputVals;
 
     static void IRAM_ATTR onTimer();
-
+    void setSpeed(int newSpeed);
+    int timerState = 0;
 };
 
 int Stepper::targetPos = 0;

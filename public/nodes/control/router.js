@@ -9,8 +9,8 @@ class Router extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("in", "number", "", "");
-        this.addOutput("out", "number", "", "");
+        this.addInput("in", "number", 0, " ");
+        this.addOutput("out", "number", 0, " ");
         this.addProperty("pass", 1, "number", {name: "pass"});
 
         this.selected = 0;

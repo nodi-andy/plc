@@ -1,14 +1,14 @@
-#include "selector.h"
+#include "router.h"
 
-Selector::Selector() {
+Router::Router() {
     setup();
 }
 
 // init the node
-void Selector::setup() {
+void Router::setup() {
     title = "Selector";
     desc = "Read input";
-    name = "control/selector";
+    name = "control/router";
 
 
     for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
@@ -21,24 +21,23 @@ void Selector::setup() {
 
 }
 
-int Selector::onExecute() {
+int Router::onExecute() {
     bool update = false;
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
-        inputVals[input.first] = *(input.second);
+        props["properties"][input.first] = *(input.second);
       }
       input.second = nullptr;
     }
 
-    int inpSelect = inputVals["SelIn"];
-    if (inpSelect && update) {
-        std::string inpString;
-        inpString.push_back(inpSelect + 96);
-        value = props["properties"][inpString];
-        setOutput("out", &value);
-        Serial.print("Select: ");
-        Serial.print(inpString.c_str());
+    if (update) {
+        if (props["properties"]["in"] == props["properties"]["pass"]) {
+            value = props["properties"]["in"].as<int>();
+            setOutput("out", &value);
+            Serial.print("Router: output ");
+            Serial.println(value);
+        }
     }
     return 0;
 }

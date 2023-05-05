@@ -62,7 +62,7 @@ void Map::addLink(int linkID, int fromNode, std::string fromOutput, int toNode, 
     Serial.print(" To:");
     Serial.print(toNode);
     Serial.print(" Port:");
-    Serial.print(toOutput.c_str());
+    Serial.println(toOutput.c_str());
     Link* link = new Link(nodes[fromNode], fromOutput, nodes[toNode], toOutput);
     addLinkToList(linkID, link);
 }

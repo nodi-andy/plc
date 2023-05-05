@@ -27,26 +27,25 @@ void MathMult::setup() {
 
 int MathMult::onExecute() {
     bool update = false;
-    value = 0;
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
         inputVals[input.first] = *(input.second);
-        Serial.println(*input.second);
       } else if (props["properties"].containsKey(input.first)) {
         inputVals[input.first] = props["properties"][input.first].as<int>();
       }
+      input.second = nullptr;
     }
-    inputs.clear();
  
-
+    value = 1;
     for (auto input : inputVals) {
-        value += input.second;
+        value *= input.second;
     }
 
     if (update) {
         setOutput("v", &value);
-        Serial.println("AND gate output ");
+        Serial.print("Mult output: ");
+        Serial.println(value);
     }
     return 0;
 }
