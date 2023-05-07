@@ -3,6 +3,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
+#include "WiFi.h"
 
 #define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
 
@@ -12,7 +13,7 @@
 
 #include "map/map.h"
 
-TaskHandle_t Task2;
+TaskHandle_t noditronTaskHandle;
 
 #define BTN_PIN   0
 #define TRIGGER_PIN 18
@@ -159,17 +160,16 @@ void initWiFi() {
  
     wm.setClass("invert"); // set dark theme
     
-    char wifiMode = ' '; //preferences.getChar("WIFI_MODE", 'A');
+    char wifiMode = preferences.getChar("WIFI_MODE", 'A');
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
     Serial.print("Selected wifi mode: ");
     Serial.println(wifiMode);
     // AP MODE, Config
-    if ( digitalRead(TRIGGER_PIN) == LOW || (wm.getWiFiIsSaved() == false && wifiMode == 'S')) {
+    if ( digitalRead(TRIGGER_PIN) == LOW || (wm.getWiFiIsSaved() == false && wifiMode == 'A')) {
         
         Serial.println("WiFi Config Portal loading...");
         wm.setHostname("noditron");
-        WiFi.mode(WIFI_STA);
-        
+       
         // set configportal timeout
         wm.setConfigPortalTimeout(120);
 
@@ -180,9 +180,9 @@ void initWiFi() {
             ESP.restart();
             delay(5000);
         }
-
+        preferences.putChar("WIFI_MODE", 'S');
         //if you get here you have connected to the WiFi
-        Serial.println("connected...yeey :)");
+        Serial.printf("Connected after Config Portal with the IP: %s\n", WiFi.localIP().toString().c_str());
     } else if (wm.getWiFiIsSaved() == false && wifiMode == 'A') {
         Serial.println("Access point loading...");
         WiFi.softAPsetHostname("noditron");
@@ -203,14 +203,13 @@ void initWiFi() {
             Serial.print("WiFi Error");
             delay(500);
         }
-        Serial.printf("Connected %s\n", WiFi.localIP().toString().c_str());
+        Serial.printf("Connected with the IP: %s\n", WiFi.localIP().toString().c_str());
     }
 
 }
 
-//Task2code: blinks an LED every 1000 ms
-void Task2code( void * pvParameters ){
-  Serial.print("noditron task running on task2 ");
+void noditronTask( void * pvParameters ){
+  Serial.print("noditron task is running.");
   Serial.println(xPortGetCoreID());
 
   for(;;){
@@ -301,46 +300,13 @@ void setup() {
     file.close();
 
     xTaskCreatePinnedToCore(
-                    Task2code,   /* Task function. */
+                    noditronTask,   /* Task function. */
                     "noditron task",     /* name of task. */
                     20000,       /* Stack size of task */
                     NULL,        /* parameter of the task */
                     10,           /* priority of the task */
-                    &Task2,      /* Task handle to keep track of created task */
+                    &noditronTaskHandle,      /* Task handle to keep track of created task */
                     1);          /* pin task to core 1 */
-
-    /*nodemap.clear();
-    Button* b = new Button();
-    b->props["port"] = "0";
-    nodemap.addNode(1, b);
-    nodemap.addNode(2, new Toggle());*/
-    //nodemap.addNode(3, new Counter());
-    
-    //MathOp* isEq = new MathOp(MathOpVariants::IsEq);
-    //isEq->setInput(1, 5);
-    //nodemap.addNode(4, isEq);
-
-    //nodemap.addLink(5, 1, 0, 3, 0);
-    //nodemap.addLink(6, 3, 0, 4, 0);
-    //nodemap.addLink(7, 4, 0, 3, 1);
-    //nodemap.report();
-
-/*
-    nodemap.clear();
-    b = new Button();
-    b->props["port"] = "0";
-    nodemap.addNode(1, b);
-    //nodemap.addNode(2, new Toggle(BUILTIN_LED));
-    nodemap.addNode(3, new Counter());
-    
-    isEq = new MathOp(MathOpVariants::IsEq);
-    isEq->setInput(1, 5);
-    nodemap.addNode(4, isEq);
-
-    nodemap.addLink(5, 1, 0, 3, 0);
-    nodemap.addLink(6, 3, 0, 4, 0);
-    nodemap.addLink(7, 4, 0, 3, 1);
-    nodemap.report();*/
 }
 
 // ----------------------------------------------------------------------------

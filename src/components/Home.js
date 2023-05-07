@@ -25,6 +25,8 @@ import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import SaveAsOutlinedIcon from '@mui/icons-material/SaveAsOutlined';
 import SendAndArchiveOutlinedIcon from '@mui/icons-material/SendAndArchiveOutlined';
+import WifiIcon from '@mui/icons-material/Wifi';
+
 import RenameDialog from './RenameDialog';
 
 
@@ -81,6 +83,33 @@ function SelectFileDialog({ openFD, setOpenFD }) {
   );
 }
 
+function ConnectionDialog({ openFD, setOpenFD }) {
+  const handleClose = () => {
+    setOpenFD(false);
+  };
+
+  return (
+      <Dialog open={openFD} onClose={handleClose}>
+        <DialogTitle>Connections</DialogTitle>
+        <DialogContent>
+          <Box sx={{ width: '100%', display: 'flex', flexDirection: 'row', }}>
+            <List>
+                  <ListItem  >
+                    <ListItemButton>
+                      Station
+                    </ListItemButton>
+                  </ListItem>
+                
+            </List>
+           
+        </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Close</Button>
+        </DialogActions>
+      </Dialog>
+  );
+}
 function a11yProps(index) {
   return {
     id: `simple-tab-${index}`,
@@ -191,16 +220,8 @@ function SimpleSnackbar({openSB, setopenSB, sbMessage}) {
   );
 }
 
-function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
-  const [editClickable, setEditClickable] = useState(false)
-  const [removeClickable, setRemoveClickable] = useState(false)
+function LeftActionButtons({ showConnection }) {
   const [burnClickable, setBurnClickable] = useState(false)
-  window.showEdit = (v) => {
-    setEditClickable(v);
-  };
-  window.showRemove = (v) => {
-    setRemoveClickable(v);
-  };
   window.showBurn = (v) => {
     setBurnClickable(v);
   };
@@ -211,48 +232,16 @@ function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
         flexDirection: 'column',
         position: 'fixed',
         left: (theme) => theme.spacing(2),
-        height: '100%',
-        top: '0',
-        justifyContent: 'center',
+        bottom: (theme) => theme.spacing(2),
+        top: (theme) => theme.spacing(2),
+        justifyContent: 'start',
         gap: 2,
         m: 0.5
       }}>
-      <Fab color="primary" variant="extended" aria-label="add" onClick={()=>showNodes(true)}>
-        {' '}
-        <AddIcon />{' '}
-      </Fab>
-      <Fab
-        color="secondary"
-        variant="extended"
-        aria-label="remove"
-        disabled = {!removeClickable}
-        onClick={() => {
-          window.nodes.remNode();
-        }}>
-        <DeleteOutlineIcon />
-      </Fab>
-      <Fab
-        color="warning"
-        variant="extended"
-        disabled = {!editClickable}
-        onClick={() => {
-          window.nodes.editNode();
-        }}>
-        <EditIcon />
-      </Fab>
-      <Fab color="info" variant="extended" onClick={()=>showFiles(true)}>
-        <FileOpenOutlinedIcon />
-      </Fab>
-      <Fab
-        color="success"
-        variant="extended"
-        onClick={() => {
-          window.nodes.saveNodework();
-        }}>
-        <SaveOutlinedIcon />
-      </Fab>
-      <Fab color="info" variant="extended" onClick={showSaveAsFiles}>
-        <SaveAsOutlinedIcon />
+      
+      <Fab color="error" variant="extended" onClick={()=>showConnection(true)}
+      >
+        <WifiIcon />
       </Fab>
       <Fab
         color="error"
@@ -267,10 +256,82 @@ function FloatingActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
   );
 }
 
+function RightActionButtons({ showFiles, showNodes, showSaveAsFiles }) {
+  const [editClickable, setEditClickable] = useState(false)
+  const [removeClickable, setRemoveClickable] = useState(false)
+  window.showEdit = (v) => {
+    setEditClickable(v);
+  };
+  window.showRemove = (v) => {
+    setRemoveClickable(v);
+  };
+
+  return (
+    <>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'start',
+        position: 'fixed',
+        bottom: (theme) => theme.spacing(2),
+        top: (theme) => theme.spacing(2),
+        right: (theme) => theme.spacing(2),
+        gap: 2,
+        m: 0.5
+      }}>
+
+      <Fab color="info" variant="extended" onClick={()=>showFiles(true)}>
+        <FileOpenOutlinedIcon />
+      </Fab>
+      <Fab
+        color="success"
+        variant="extended"
+        onClick={() => {
+          window.nodes.saveNodework();
+        }}>
+        <SaveOutlinedIcon />
+      </Fab>
+      <Fab color="info" variant="extended" onClick={showSaveAsFiles}>
+        <SaveAsOutlinedIcon />
+      </Fab>
+
+      <Box sx={{
+        display: 'flex',
+        flexGrow: 2,
+      }}></Box>
+      <Fab
+        color="warning"
+        variant="extended"
+        disabled = {!editClickable}
+        onClick={() => {
+          window.nodes.editNode();
+        }}>
+        <EditIcon />
+      </Fab>
+      <Fab
+        color="secondary"
+        variant="extended"
+        aria-label="remove"
+        disabled = {!removeClickable}
+        onClick={() => {
+          window.nodes.remNode();
+        }}>
+        <DeleteOutlineIcon />
+      </Fab>
+      <Fab color="primary" variant="extended" aria-label="add" onClick={()=>showNodes(true)}>
+        <AddIcon />
+      </Fab>
+    </Box>
+    </>
+  );
+}
+
 export default function Home() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [showNodes, setShowNodes] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
+  const [showConnection, setShowConnection] = useState(false);
   const [showSaveAsFiles, setShowSaveAsFiles] = useState(false);
   const [, setFilename] = useState("");
 
@@ -281,14 +342,23 @@ export default function Home() {
     <>
       <SelectNodeDialog openND={showNodes}  setOpenND={setShowNodes}/>
       <SelectFileDialog openFD={showFiles}  setOpenFD={setShowFiles}/>
+      <ConnectionDialog openFD={showConnection}  setOpenFD={setShowConnection}/>
       <SimpleSnackbar openSB={snackbarOpen}  setopenSB={setSnackbarOpen} sbMessage = {window.messageText}/>
       <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
       
-      <FloatingActionButtons
+      <LeftActionButtons
         sx={{
           position: 'fixed',
           left: (theme) => theme.spacing(2),
           my: 8
+        }}
+        showConnection={setShowConnection}
+      />
+      <RightActionButtons
+        sx={{
+          position: 'fixed',
+          right: (theme) => theme.spacing(2),
+          my: 18
         }}
         showFiles={setShowFiles}
         showNodes={setShowNodes}
