@@ -3748,6 +3748,8 @@ export default class LGraphCanvas {
             let d = grid_area[3];
 
             ctx.setLineDash([8, 8]);
+            ctx.strokeStyle = "rgb(0,0,0,0.2)";
+
             ctx.beginPath();
             for (var x = l; x <= r; x += s) {
                 ctx.moveTo(x , t - 4);
