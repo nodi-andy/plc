@@ -10,7 +10,6 @@ export default class Stepper extends LGraphNode{
     constructor() {
         super();
         this.addInput("pos", "number", 0, "pos");
-        this.addOutput("pos", "number", null, "pos");
 
         this.addProperty("step port", 27, "number", { name: "Step Port" });
         this.addProperty("dir port", 14, "number", { name: "Direction Port" });
@@ -21,21 +20,23 @@ export default class Stepper extends LGraphNode{
     }
 
     onGetInputs() {
-        return [["speed", "number", 100, "speed"], ["reset", "number", 0, "reset"]];
+        return [["pos", "number", 0, "pos"], ["speed", "number", 100, "speed"], ["reset", "number", 0, "reset"]];
     }
+
     onGetOutputs() {
-        return [["pos", "number", null, "pos"], ["speed", "number", 100, "speed"]];
+        return [["pos", "number", null, "pos"], ["speed", "number", null, "speed"]];
     }
+
     onDrawForeground(ctx) {
         if (this.flags.collapsed) {
             return;
         }
         ctx.fillStyle = "#AAA";
-        ctx.font = "20px Arial";
+        ctx.font = "12px Arial";
         ctx.textAlign = "center";
         
-        if (this.properties["pos"]) {
-            ctx.fillText("x:" + this.properties["pos"], this.size[0] * 0.5, this.size[1] * 0.5);
+        if (this.inputs[0]) {
+            ctx.fillText("x:" + this.inputs[0].value, this.size[0] * 0.5, this.size[1] * 0.5);
         } else if (this.properties["speed"]) {
             ctx.fillText("v:" + this.properties["speed"], this.size[0] * 0.5, this.size[1] * 0.5);
         } 

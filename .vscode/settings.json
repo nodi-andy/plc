@@ -50,5 +50,6 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/andy/Desktop/plc/.pio/libdeps/esp32doit-devkit-v1/ESPAsyncWebServer-esphome"
 }

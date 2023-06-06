@@ -28,6 +28,7 @@ class Stepper : public Node
     static int targetPos;
     static int reset;
     static int pos;
+    int lastPos;
     static int updatePos;
     hw_timer_t *My_timer;
 

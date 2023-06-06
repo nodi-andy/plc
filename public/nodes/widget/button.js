@@ -13,8 +13,7 @@ export default class WidgetButton extends LGraphNode{
         this.addProperty("press", 1);
         this.addProperty("release", 0);
 
-        this.addInput("a", "number", 0 , " ");
-        this.addOutput("v", "number");
+        this.addOutput("v", "number", null, " ");
 
         this.addProperty("label", "");
         this.addProperty("port", "");
@@ -25,6 +24,10 @@ export default class WidgetButton extends LGraphNode{
             input._data = null;
         }
         this.onMouseUp();
+    }
+    
+    onGetInputs() {
+        return [["in", "number", 0 , " "]];
     }
 
     onDrawForeground(ctx) {

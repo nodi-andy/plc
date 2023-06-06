@@ -8,6 +8,7 @@ import NodiBoxYellow from "./nodes/nodi.box/yellow.js";
 import Stepper from "./nodes/nodi.box/stepper.js";
 
 var gateway = `ws://${window.location.hostname}/ws`;
+websocket = new WebSocket(gateway);
 //var gateway = `ws://192.168.1.104/ws`;
 var websocket;
 
@@ -28,7 +29,6 @@ function onLoad(event) {
 
 function initWebSocket() {
     console.log('Trying to open a WebSocket connection...');
-    websocket = new WebSocket(gateway);
     window.ws = websocket
     websocket.onopen    = onOpen;
     websocket.onclose   = onClose;
@@ -63,10 +63,27 @@ function onMessage(event) {
     }
 
     if (data.update) {
-        window.graph._nodes_by_id[data.update.id].hwSetState(data.update.state);
+        if (window.graph._nodes_by_id[data.update.id].hwSetState) {
+            window.graph._nodes_by_id[data.update.id].hwSetState(data.update.state);
+        }
         window.graph._nodes_by_id[data.update.id].value = data.update.value;
+        window.graph._nodes_by_id[data.update.id].properties.value = data.update.value;
+    }
+
+    if (data.updateWiFi) {
+        window.wifiList = data.updateWiFi.list.filter((value, index) => {
+            return data.updateWiFi.list.indexOf(value) === index;
+        });
+        window.wifiListArrived(window.wifiList);
+    }
+    if (data.connectionSettings) {
+        window.setWiFiEnabled(data.connectionSettings.STA_Enabled)
     }
     //document.getElementById('led').className = data.status;
+}
+
+websocket.sendMsg = (msg) => {
+    websocket.send(msg);   
 }
 
 // ----------------------------------------------------------------------------

@@ -33,7 +33,7 @@ class EventCounter extends LGraphNode{
             return;
         }
         ctx.fillStyle = "#AAA";
-        ctx.font = "20px Arial";
+        ctx.font = "12px Arial";
         ctx.textAlign = "center";
         ctx.fillText(this.properties.value, this.size[0] * 0.5, this.size[1] * 0.5);
     }

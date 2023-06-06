@@ -1002,7 +1002,8 @@ export default class LGraphNode {
          * @param {Object} extra_info this can be used to have special properties of an output (label, special color, position, etc)
          */
     addOutput(name, type, extra_info, label) {
-        var output = { name: name, type: type, links: null, label: label };
+        label = label || name;
+        var output = { name: name, type: type, links: null, label: label, removable: true };
         if (extra_info) {
             for (var i in extra_info) {
                 output[i] = extra_info[i];
@@ -1032,7 +1033,7 @@ export default class LGraphNode {
     addOutputs(array) {
         for (var i = 0; i < array.length; ++i) {
             var info = array[i];
-            var o = { name: info[0], type: info[1], link: null };
+            var o = { name: info[0], type: info[1], link: null, removable: true };
             if (array[2]) {
                 for (var j in info[2]) {
                     o[j] = info[2][j];
@@ -1125,7 +1126,7 @@ export default class LGraphNode {
     addInputs(array) {
         for (var i = 0; i < array.length; ++i) {
             var info = array[i];
-            var o = { name: info[0], type: info[1], link: null };
+            var o = { name: info[0], type: info[1], link: null, removable: true};
             if (array[2]) {
                 for (var j in info[2]) {
                     o[j] = info[2][j];

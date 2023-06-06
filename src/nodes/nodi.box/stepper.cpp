@@ -33,6 +33,7 @@ void Stepper::setup() {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addInput(inputObj["name"].as<std::string>());
         inputVals[inputObj["name"].as<std::string>()] = 0;
+        props["properties"][inputObj["name"]] = nullptr;
     }
 
     //Serial.print(" And outputs:");
@@ -53,75 +54,83 @@ void Stepper::setup() {
     
     My_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(My_timer, &Stepper::onTimer, true);
-    speed = 2000;
+    speed = 0;
+    setSpeed(2000);
     timerAlarmWrite(My_timer, speed, true);
     timerAlarmEnable(My_timer);
 }
 
 int Stepper::onExecute() {
     bool update = false;
+
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
-        props["properties"][input.first] = *(input.second);
-        Serial.print("Stepper.");
+        /*Serial.print("Stepper.");
         Serial.print(input.first.c_str());
         Serial.print(": ");
-        Serial.println(*input.second);
+        Serial.println(*input.second);*/
+        inputVals[input.first] = *input.second;
       }
-      input.second = nullptr;
     }
 
-    if (targetPos != props["properties"]["pos"].as<int>()) {
-      targetPos = props["properties"]["pos"].as<int>();
-      //Serial.print("Stepper.targetPos.changed: ");
-      setOutput("pos", &pos);
+    if (targetPos != inputVals["pos"]) {
+      targetPos = inputVals["pos"];
+      /*Serial.print("Stepper.targetPos.changed: ");
+      Serial.print(targetPos);
+      Serial.print("speed is: ");
+      Serial.println(speed);*/
     }
 
-    if (targetSpeed != props["properties"]["speed"].as<int>()) {
-      targetSpeed = props["properties"]["speed"].as<int>();
-      Serial.print("Stepper.speed.changed: ");
-      Serial.println(speed);
-      setOutput("speed", &targetSpeed);
+    if (inputs["speed"] && targetSpeed != *inputs["speed"]) {
+      targetSpeed = inputVals["speed"];
+      /*Serial.print("Stepper.speed.changed: ");
+      Serial.println(speed);*/
     }
 
-    
-    if (props["properties"]["reset"]) {
-        pos = 0;
-        props["properties"]["pos"] = 0;
-        targetPos = 0;
+    if (inputVals["reset"] == 1) {
+      Serial.print("Stepper.reset ");
+      pos = 0;
+      targetPos = 0;
+      inputVals["reset"] = 0;
     }
 
     int posGiven = 0, speedGiven = 0;
-    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
-        if (inputObj["name"].as<std::string>() == "pos" && inputObj["link"].isNull() == false) {
-            posGiven = 1;
-        }
-        if (inputObj["name"].as<std::string>() == "speed" && inputObj["link"].isNull() == false) {
-            speedGiven = 1;
-        }
+    if (inputs["pos"] != nullptr && inputs["speed"] == nullptr) {
+        posGiven = 1;
+    }
+    if (inputs["pos"] == nullptr && inputs["speed"] != nullptr) {
+        speedGiven = 1;
     }
 
+    setOutput("pos", &pos);
+    setOutput("speed", &speed);
     setSpeed(targetSpeed);
     if (posGiven == 0 && speedGiven == 1) {
         targetPos = targetSpeed > 0 ? pos + 1000 : targetPos = pos - 1000;
-        /*Serial.print("Speed control: Stepper.pos: ");
-        Serial.print(pos);
-        Serial.print("\tStepper.targetpos: ");
-        Serial.print(targetPos);
-        Serial.print("\tStepper.speed: ");
-        Serial.println(speed);*/
+        //Serial.print("Speed control: Stepper.pos: ");
+        //Serial.print(pos);
+        //Serial.print("\tStepper.targetpos: ");
+        //Serial.print(targetPos);
+        //Serial.print("\tStepper.speed: ");
+        //Serial.println(speed);
     }
-    props["properties"]["pos"] = pos;
+
+    for (auto& input : inputs) {
+      input.second = nullptr;
+    }
     return 0;
 }
 
 void Stepper::setSpeed(int newSpeed) {
+  if (newSpeed == speed) return;
   if (!My_timer) return;
   newSpeed = abs(newSpeed);
   if (newSpeed == 0) {
+        speed = 0;
         timerAlarmDisable(My_timer);
         timerState = 0;
+        Serial.print("Timer OFF. ");
   } else {
     if (timerState == 0) {
         Serial.print("Timer ON. ");
