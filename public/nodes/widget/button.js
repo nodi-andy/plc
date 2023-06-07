@@ -72,19 +72,16 @@ export default class WidgetButton extends LGraphNode{
             }
         }
         this.output = null;
-        if (this.newState == 0 && this.state == 0) {
-            this.output = this.properties.released;
-        } if (this.newState == 0 && this.state == 1) {
-            this.output = this.properties.releasing;
-        } if (this.newState == 1 && this.state == 1) {
-            this.output = this.properties.pressed;
-        } if (this.newState == 1 && this.state == 0) {
-            this.output = this.properties.pressing;
+        if (this.newState == 0 && this.state == 1) {
+            this.output = this.properties.release;
+        } 
+        if (this.newState == 1 && this.state == 0) {
+            this.output = this.properties.press;
         }
         
         this.setDirtyCanvas(true, true);
         if (this.output != null) {
-            if (this.inputs[0].link == null) {
+            if (this.inputs[0]?.link == null) {
                 this.setOutputData(0, this.output);
             } else {
                 this.setOutputData(0, this.properties.A);

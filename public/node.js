@@ -1878,11 +1878,11 @@ export default class LGraphNode {
         }
 
         //if there is something already plugged there, disconnect: except junction
-        if (target_node.inputs[target_slot] && target_node.inputs[target_slot].link != null && target_node.constructor.type !== "control/junction") {
+        //if (target_node.inputs[target_slot] && target_node.inputs[target_slot].link != null && target_node.constructor.type !== "control/junction") {
             this.graph.beforeChange();
-            target_node.disconnectInput(target_slot, { doProcessChange: false });
+        //    target_node.disconnectInput(target_slot, { doProcessChange: false });
             changed = true;
-        }
+        //}
 
         //create link class
         link_info = new LLink(
