@@ -29,7 +29,7 @@ class Node
         virtual int onExecute();
         static std::unordered_map<std::string, Node*> nodeReg;
 
-        std::unordered_map<std::string, int> inputVals;
+        std::unordered_map<std::string, int*> inputVals;
         std::unordered_map<std::string, int*> inputs;
         void addInput(std::string name);
         void setInput(std::string name, int* val);

@@ -1,4 +1,5 @@
 #include "link.h"
+int NULL_DATA = INT_MAX;
 
 Link::Link(Node* fromNode, std::string srcPort, Node* toNode, std::string dstPort) {
     from = fromNode;
@@ -27,25 +28,29 @@ int Link::onExecute() {
     if (from == NULL) return 0;
     if (to == NULL) return 0;
     int* v = from->getOutput(src);
-    if (v == nullptr) return 0;
-    Serial.println("");
-    Serial.print("> Run link:");
-    Serial.print(id);
-    Serial.print(" From: ");
-    Serial.print(from->id);
-    Serial.print("/");
-    Serial.print(from->title.c_str());
-    Serial.print(" Port:'");
-    Serial.print(src.c_str());
-    Serial.print("' To:");
-    Serial.print(to->id);
-    Serial.print("/");
-    Serial.print(to->title.c_str());
-    Serial.print(" Port: '");
-    Serial.print(dst.c_str());
-    Serial.print("' Value: ");
-    Serial.println(*v);
+    //if (v == nullptr) return 0;
+    if (v) {
+        Serial.println("");
+        Serial.print("> Run link:");
+        Serial.print(id);
+        Serial.print(" From: ");
+        Serial.print(from->id);
+        Serial.print("/");
+        Serial.print(from->title.c_str());
+        Serial.print(" Port:'");
+        Serial.print(src.c_str());
+        Serial.print("' To:");
+        Serial.print(to->id);
+        Serial.print("/");
+        Serial.print(to->title.c_str());
+        Serial.print(" Port: '");
+        Serial.print(dst.c_str());
+        Serial.print("' Value: ");
+        Serial.println(*v);
+    }
 
-    to->setInput(dst, v);
+    if (to->getInput(dst) == nullptr) to->setInput(dst, v);
+    
+    from->setOutput(src, nullptr);
     return 0;
 }

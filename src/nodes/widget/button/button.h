@@ -17,14 +17,11 @@ class Button : public Node
     int onExecute();
 
     private:
-    int defaultDownVal;
-    int defaultPressedVal;
-    int defaultUpVal;
-    int defaultReleasedVal;
-    int *defaultPressing;
-    int *defaultPressed;
-    int *defaultReleasing;
-    int *defaultReleased;
+    int defaultPressVal;
+    int NULL_DATA = INT_MAX;
+    int defaultReleaseVal;
+    int *defaultPress;
+    int *defaultRelease;
     int *input;
     int *output;
 };

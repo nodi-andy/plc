@@ -367,15 +367,7 @@ void noditronTask( void * pvParameters ){
                 n.second->onExecute();
             }
         }
-        for (auto n : nodemap.nodes) {
-            if (n.second) {
-                for (auto output : n.second->outputs) {
-                    n.second->setOutput(output.first, nullptr);
-                    //Serial.print("Clean output:" );
-                    //Serial.println(output.first.c_str());
-                }
-            }
-        }
+
     }
     vTaskDelay(10);
   } 

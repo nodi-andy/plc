@@ -70,25 +70,26 @@ int Stepper::onExecute() {
         Serial.print(input.first.c_str());
         Serial.print(": ");
         Serial.println(*input.second);*/
-        inputVals[input.first] = *input.second;
+        inputVals[input.first] = input.second;
+        input.second = nullptr;
       }
     }
 
-    if (targetPos != inputVals["pos"]) {
-      targetPos = inputVals["pos"];
-      /*Serial.print("Stepper.targetPos.changed: ");
+    if (inputVals["pos"] != nullptr && targetPos != *(inputVals["pos"]) && *(inputVals["pos"]) != INT_MAX) {
+      targetPos = *(inputVals["pos"]);
+      Serial.print("Stepper.targetPos.changed: ");
       Serial.print(targetPos);
       Serial.print("speed is: ");
-      Serial.println(speed);*/
+      Serial.println(speed);
     }
 
     if (inputs["speed"] && targetSpeed != *inputs["speed"]) {
-      targetSpeed = inputVals["speed"];
+      targetSpeed = *(inputVals["speed"]);
       /*Serial.print("Stepper.speed.changed: ");
       Serial.println(speed);*/
     }
 
-    if (inputVals["reset"] == 1) {
+    if (inputVals["reset"] && *(inputVals["reset"]) == 1) {
       Serial.print("Stepper.reset ");
       pos = 0;
       targetPos = 0;
@@ -116,9 +117,6 @@ int Stepper::onExecute() {
         //Serial.println(speed);
     }
 
-    for (auto& input : inputs) {
-      input.second = nullptr;
-    }
     return 0;
 }
 

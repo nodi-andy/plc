@@ -20,33 +20,29 @@ void Button::setup() {
       }
     }
 
-    defaultPressedVal = 0;
-    defaultDownVal = 0;
-    defaultReleasedVal = 0;
-    defaultUpVal = 0;
-    defaultPressed = 0;
-    defaultPressing = 0;
-    defaultReleased = 0;
-    defaultReleasing = 0;
+    defaultPressVal = 0;
+    defaultReleaseVal = 0;
+    defaultPress = 0;
+    defaultRelease = 0;
 
 
     if (jsonProp.containsKey("press")) {
       std::string jsonVal = jsonProp["press"].as<std::string>();
       if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultDownVal = jsonProp["press"].as<int>();
-        defaultPressing = &defaultDownVal;
+        defaultPressVal = jsonProp["press"].as<int>();
+        defaultPress = &defaultPressVal;
       } else {
-        defaultPressing = 0;
+        defaultPress = 0;
       }
     }
 
     if (jsonProp.containsKey("release")) {
       std::string jsonVal = jsonProp["release"].as<std::string>();
       if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultUpVal = jsonProp["release"].as<int>();
-        defaultReleasing = &defaultUpVal;
+        defaultReleaseVal = jsonProp["release"].as<int>();
+        defaultRelease = &defaultReleaseVal;
       } else {
-        defaultReleasing = 0;
+        defaultRelease = 0;
       }
     }
 
@@ -76,40 +72,59 @@ int Button::onExecute() {
 
     value = 1;
     int newState = digitalRead(port);
-    if (state == newState) return 0;
     for (auto& input : inputs) {
       if (input.second) {
-        props["properties"][input.first] = *(input.second);
+        Serial.print("Button.");
+        Serial.print(input.first.c_str());
+        Serial.print(": ");
+        Serial.println(*input.second);
+        inputVals[input.first] = input.second;
+        input.second = nullptr;
       }
-      input.second = nullptr;
     }
+    if (state == newState) return false;
 
-    /*value = inputVals["in"];
-    if (value && newState == 0 && defaultPressing && *defaultPressing) {
-      output = &value;
-      Serial.print("Button conduct EdgeDown: ");
-      Serial.println(value);
-    } 
-    if (value && newState == 1 && defaultReleasing && *defaultReleasing) {
-      output = &value;
-      Serial.print("Button conduct EdgeUp: ");
-      Serial.println(value);
-    }*/
-    if (newState == 0) {
-      output = defaultPressing;
-      Serial.println("Button state EdgeDown: ");
-    } 
-    if (newState == 1) {
-      output = defaultReleasing;
-      Serial.println("Button state EdgeUp: ");
+
+    updateGUI = false;
+
+    if ( inputVals.count("in") ) {
+      updateOutput = true;
+      if (newState == 0) {
+        Serial.println("Button conduct EdgeDown: ");
+        if (defaultPress && *defaultPress) {
+          output = inputVals["in"];
+        } else {
+          output = &NULL_DATA;
+        }
+      } 
+      if (newState == 1) {
+        Serial.println("Button conduct EdgeUp: ");
+        if (defaultRelease && *defaultRelease) {
+          output = inputVals["in"];
+        } else {
+          output = &NULL_DATA;
+        }
+      } 
+    } else {
+      if (newState == 0) {
+        output = defaultPress;
+        Serial.println("Button state EdgeDown: ");
+        updateOutput = true;
+      } 
+      if (newState == 1) {
+        output = defaultRelease;
+        Serial.println("Button state EdgeUp: ");
+        updateOutput = true;
+      }
     }
-    updateOutput = true;
-    updateGUI = true;
     state = newState;
   }
-  if (updateOutput && output) {
+  if (updateOutput) {
     setOutput("v", output);
-    Serial.println("Button output ");
+    Serial.print("Button output: ");
+    if (output) {
+      Serial.println(*output);
+    }
   }
   return updateGUI;
 }

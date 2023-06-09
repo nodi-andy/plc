@@ -47,7 +47,6 @@ int Interval::onExecute() {
   int now = micros();
 
   bool update = false;
-  output = NULL;
   if (getInput("ton")) {
       ton = *getInput("ton");
       setInput("ton", NULL);
@@ -72,18 +71,21 @@ int Interval::onExecute() {
   }
 
   if (newstate == 0 && state == 1) {
-    output = &defaultPressed;
+    value = defaultPressed;
     //Serial.println("Button state EdgeDown: ");
   } if (newstate == 1 && state == 0) {
-    output = &defaultReleased;
+    value = defaultReleased;
     //Serial.println("Button state EdgeUp: ");
   }
 
   update = (state != newstate);
   state = newstate;
   if (update) {
-    setOutput("tick", output);
-    //Serial.println("Interval output ");
+    setOutput("tick", &value);
+    Serial.print("Interval output: ");
+    Serial.print((uintptr_t)&value);
+    Serial.print(" : ");
+    Serial.println(value);
   }
   return 0;
 }

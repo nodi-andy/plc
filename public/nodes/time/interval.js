@@ -13,8 +13,6 @@ export default class Interval extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("ton", "number", 500, "tOn");
-        this.addInput("toff", "number", 500, "tOff");
         this.addProperty("press", 1);
         this.addProperty("release", 0);
         this.addOutput("tick", "number", "", "tick");
@@ -23,6 +21,10 @@ export default class Interval extends LGraphNode {
         this.triggered = false;
         this.state = 0;
         this.size = [128, 128];
+    }
+
+    onGetInputs() {
+        return [["ton", "number", 500, "tOn"], ["toff", "number", 500, "tOff"]];
     }
 
     onStart() {
