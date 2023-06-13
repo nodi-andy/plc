@@ -280,7 +280,9 @@ export default class LGraphNode {
         //remove links
         if (data.inputs) {
             for (var i = 0; i < data.inputs.length; ++i) {
-                data.inputs[i].link = null;
+                if (data.inputs[i].links) {
+                    data.inputs[i].links.length = 0;
+                }
             }
         }
 
@@ -419,7 +421,7 @@ export default class LGraphNode {
             return null;
         } //undefined;
 
-        if (slot >= this.inputs.length || this.inputs[slot].link == null) {
+        if (slot >= this.inputs.length || slot >= this.inputs.length) {
             return null;
         }
         return this.inputs[slot]._data;
@@ -435,15 +437,11 @@ export default class LGraphNode {
             return null;
         } //undefined;
 
-        if (slot >= this.inputs.length || this.inputs[slot].link == null) {
+        if (slot >= this.inputs.length || this.inputs[slot].links.length > 0) {
             return null;
         }
-        var link_id = this.inputs[slot].link;
+        var link_id = this.inputs[slot].links[0];
         var link = this.graph.links[link_id];
-        if (!link) {
-            //bug: weird case but it happens sometimes
-            return null;
-        }
         var node = this.graph.getNodeById(link.origin_id);
         if (!node) {
             return link.type;
@@ -479,7 +477,7 @@ export default class LGraphNode {
         if (!this.inputs) {
             return false;
         }
-        return slot < this.inputs.length && this.inputs[slot].link != null;
+        return slot < this.inputs.length && this.inputs[slot].links.length > 0;
     }
     /**
          * tells you info about an input connection (which node, type, etc)
@@ -1541,7 +1539,7 @@ export default class LGraphNode {
             return -1;
         }
         for (var i = 0, l = this.inputs.length; i < l; ++i) {
-            if (this.inputs[i].link && this.inputs[i].link != null) {
+            if (this.inputs[i].links && this.inputs[i].links != null) {
                 continue;
             }
             if (opts.typesNotAccepted && opts.typesNotAccepted.includes && opts.typesNotAccepted.includes(this.inputs[i].type)) {
@@ -1901,9 +1899,13 @@ export default class LGraphNode {
         if (output.links == null) {
             output.links = [];
         }
+
+        //connect in output
+        if (input.links == null) {
+            input.links = [];
+        }
         output.links.push(link_info.id);
-        //connect in input
-        target_node.inputs[target_slot].link = link_info.id;
+        input.links.push(link_info.id);
         if (this.graph) {
             this.graph._version++;
         }
@@ -2110,41 +2112,24 @@ export default class LGraphNode {
          * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
          * @return {boolean} if it was disconnected successfully
          */
-    disconnectInput(slot) {
-        //seek for the output slot
-        if (slot.constructor === String) {
-            slot = this.findInputSlot(slot);
-            if (slot == -1) {
-                if (window.LiteGraph.debug) {
-                    console.log("Connect: Error, no slot of name " + slot);
-                }
-                return false;
-            }
-        } else if (!this.inputs || slot >= this.inputs.length) {
-            if (window.LiteGraph.debug) {
-                console.log("Connect: Error, slot number not found");
-            }
-            return false;
-        }
-
-        var input = this.inputs[slot];
+    disconnectInput(link) {
+        var input = this.inputs[link.target_slot];
         if (!input) {
             return false;
         }
 
-        var link_id = this.inputs[slot].link;
+        var link_id = link.id;
         if (link_id != null) {
-            this.inputs[slot].link = null;
+            //this.inputs[slot].links = null;
 
             //remove other side
-            var link_info = this.graph.links[link_id];
-            if (link_info) {
-                var target_node = this.graph.getNodeById(link_info.origin_id);
+            if (link) {
+                var target_node = this.graph.getNodeById(link.origin_id);
                 if (!target_node) {
                     return false;
                 }
 
-                var output = target_node.getOutputByName(link_info.origin_slot);
+                var output = target_node.getOutputByName(link.origin_slot);
                 if (!output || !output.links || output.links.length == 0) {
                     return false;
                 }
@@ -2164,9 +2149,9 @@ export default class LGraphNode {
                 if (this.onConnectionsChange) {
                     this.onConnectionsChange(
                         window.LiteGraph.INPUT,
-                        slot,
+                        link.target_slot,
                         false,
-                        link_info,
+                        link,
                         input
                     );
                 }
@@ -2175,7 +2160,7 @@ export default class LGraphNode {
                         window.LiteGraph.OUTPUT,
                         i,
                         false,
-                        link_info,
+                        link,
                         output
                     );
                 }
@@ -2185,7 +2170,7 @@ export default class LGraphNode {
                         target_node,
                         i
                     );
-                    this.graph.onNodeConnectionChange(window.LiteGraph.INPUT, this, slot);
+                    this.graph.onNodeConnectionChange(window.LiteGraph.INPUT, this, link.target_slot);
                 }
             }
         } //link != null

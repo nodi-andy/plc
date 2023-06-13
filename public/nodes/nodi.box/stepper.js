@@ -35,11 +35,11 @@ export default class Stepper extends LGraphNode{
         ctx.font = "12px Arial";
         ctx.textAlign = "center";
         
-        if (this.properties["pos"]) {
-            ctx.fillText("x:" + this.inputs[0].value, this.size[0] * 0.5, this.size[1] * 0.5);
+        /*if (this.properties["pos"]) {
+            ctx.fillText("pos:" + this.properties["pos"], this.size[0] * 0.5, this.size[1] * 0.5);
         } else if (this.properties["speed"]) {
             ctx.fillText("v:" + this.properties["speed"], this.size[0] * 0.5, this.size[1] * 0.5);
-        } 
+        } */
     }
     onExecute() {
         this.setOutputData(1, this.num);

@@ -5995,6 +5995,7 @@ export default class LGraphCanvas {
         return dialog;
     }
     showSearchBox(event, options) {
+        if (!canvas) return;
         // proposed defaults
         let def_options = {
             slot_from: null,

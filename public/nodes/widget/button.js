@@ -7,6 +7,7 @@ export default class WidgetButton extends LGraphNode{
     static title_mode = LiteGraph.NO_TITLE;
     static font = "Arial";
     static type = "widget/button";
+    static margin = 12;
 
     constructor() {
         super();
@@ -31,17 +32,16 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onDrawForeground(ctx) {
-        var margin = 10;
         
         if (this.newState == 1) {
-            margin += 2;
+            this.margin += 2;
         } else {
             ctx.fillStyle = "black";
-            ctx.fillRect(margin + 2, margin + 2, this.size[0] - margin * 2, this.size[1] - margin * 2);
+            ctx.fillRect(this.margin + 2, this.margin + 2, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
         }
 
         ctx.fillStyle = this.properties.color;
-        ctx.fillRect(margin, margin, this.size[0] - margin * 2, this.size[1] - margin * 2);
+        ctx.fillRect(this.margin, this.margin, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
 
         if (this.properties.label || this.properties.label === 0) {
             var font_size = this.properties.font_size || 30;
@@ -54,7 +54,7 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onMouseDown(e, local_pos) {
-        if (local_pos[0] > 10 && local_pos[1] > 10 && local_pos[0] < this.size[0] - 10 && local_pos[1] < this.size[1] - 10) {
+        if (local_pos[0] > this.margin && local_pos[1] > this.margin && local_pos[0] < this.size[0] - this.margin && local_pos[1] < this.size[1] - this.margin) {
 
             this.newState = 1;
             return true;

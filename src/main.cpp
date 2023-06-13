@@ -184,6 +184,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
 
         // ws input is modified if its given to deserializeJson, make a copy here
         memcpy(mapFile, wsInput, strlen((char *)wsInput));
+        mapFile[info->len] = '\0';  // Add the null-terminator
 
         DynamicJsonDocument doc(10240);
         deserializeJson(doc, wsInput);
@@ -368,6 +369,16 @@ void noditronTask( void * pvParameters ){
             }
         }
 
+        // Clean output after all links are done
+        for (auto n : nodemap.nodes) {
+            if (n.second) {
+                for (auto output : n.second->outputs) {
+                    n.second->setOutput(output.first, nullptr);
+                    /*Serial.print("Clean output:" );
+                    Serial.println(output.first.c_str());*/
+                }
+            }
+        }
     }
     vTaskDelay(10);
   } 

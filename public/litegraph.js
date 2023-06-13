@@ -1841,8 +1841,9 @@ class LGraph {
         }
         var node = this.getNodeById(link.target_id);
         if (node) {
-            node.disconnectInput(link.target_slot);
+            node.disconnectInput(link);
         }
+        if (this.links[link_id]) delete this.links[link_id];
     }
     //save and recover app state ***************************************
     /**

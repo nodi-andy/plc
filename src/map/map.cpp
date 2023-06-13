@@ -81,13 +81,17 @@ void Map::report() {
     for (auto n : nodes) {
       Serial.print(n.first);
       Serial.print(" : ");
-      Serial.println(n.second->getType().c_str());
+      if (n.second) {
+        Serial.println(n.second->getType().c_str());
+      }
     }
     Serial.println("LINKS:");
     for (auto n : links) {
       Serial.print(n.first);
       Serial.print(" : ");
-      Serial.println(n.second->getType().c_str());
+      if (n.second) {
+        Serial.println(n.second->getType().c_str());
+      }
     }
     Serial.println(">>>>>>>");
     Serial.println("");

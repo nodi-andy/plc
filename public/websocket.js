@@ -51,7 +51,7 @@ function onOpen(event) {
 
 function onClose(event) {
     console.log('Connection closed');
-    window.showBurn(false);
+    if (window.showBurn) window.showBurn(false);
     setTimeout(initWebSocket, 2000);
 }
 

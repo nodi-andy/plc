@@ -31,6 +31,7 @@ class Stepper : public Node
     int lastPos;
     static int updatePos;
     hw_timer_t *My_timer;
+    int posGiven = 0, speedGiven = 0;
 
     static void IRAM_ATTR onTimer();
     void setSpeed(int newSpeed);

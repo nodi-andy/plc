@@ -64,7 +64,6 @@ void Button::setup() {
 }
 
 int Button::onExecute() {
-  bool updateGUI = false;
   bool updateOutput = false;
   bool updateVal = false;
   output = NULL;
@@ -84,8 +83,6 @@ int Button::onExecute() {
     }
     if (state == newState) return false;
 
-
-    updateGUI = false;
 
     if ( inputVals.count("in") ) {
       updateOutput = true;
@@ -126,5 +123,5 @@ int Button::onExecute() {
       Serial.println(*output);
     }
   }
-  return updateGUI;
+  return true;
 }

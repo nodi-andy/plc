@@ -50,7 +50,5 @@ int Link::onExecute() {
     }
 
     if (to->getInput(dst) == nullptr) to->setInput(dst, v);
-    
-    from->setOutput(src, nullptr);
     return 0;
 }

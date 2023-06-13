@@ -62,14 +62,18 @@ void Stepper::setup() {
 
 int Stepper::onExecute() {
     bool update = false;
+    posGiven = 0;
+    speedGiven = 0;
 
     for (auto& input : inputs) {
+      if (input.first == "pos") posGiven = 1;
+      if (input.first == "speed") speedGiven = 1;
       if (input.second) {
         update = true;
-        /*Serial.print("Stepper.");
+        Serial.print("Stepper.");
         Serial.print(input.first.c_str());
         Serial.print(": ");
-        Serial.println(*input.second);*/
+        Serial.println(*input.second);
         inputVals[input.first] = input.second;
         input.second = nullptr;
       }
@@ -83,30 +87,24 @@ int Stepper::onExecute() {
       Serial.println(speed);
     }
 
-    if (inputs["speed"] && targetSpeed != *inputs["speed"]) {
+    if (inputVals["speed"] != nullptr && targetSpeed != *(inputVals["speed"]) && *(inputVals["speed"]) != INT_MAX) {
       targetSpeed = *(inputVals["speed"]);
-      /*Serial.print("Stepper.speed.changed: ");
-      Serial.println(speed);*/
+      Serial.print("Stepper.speed.changed: ");
+      Serial.println(speed);
+      setSpeed(targetSpeed);
     }
 
-    if (inputVals["reset"] && *(inputVals["reset"]) == 1) {
-      Serial.print("Stepper.reset ");
+    if (inputVals["reset"] != nullptr && 1 != *(inputVals["reset"]) && *(inputVals["reset"]) != INT_MAX) {
+      Serial.println("Stepper.resetted ");
       pos = 0;
       targetPos = 0;
-      inputVals["reset"] = 0;
-    }
-
-    int posGiven = 0, speedGiven = 0;
-    if (inputs["pos"] != nullptr && inputs["speed"] == nullptr) {
-        posGiven = 1;
-    }
-    if (inputs["pos"] == nullptr && inputs["speed"] != nullptr) {
-        speedGiven = 1;
+      inputVals["reset"] = nullptr;
+      inputVals["pos"] = nullptr;
+      inputVals["speed"] = nullptr;
     }
 
     setOutput("pos", &pos);
     setOutput("speed", &speed);
-    setSpeed(targetSpeed);
     if (posGiven == 0 && speedGiven == 1) {
         targetPos = targetSpeed > 0 ? pos + 1000 : targetPos = pos - 1000;
         //Serial.print("Speed control: Stepper.pos: ");
