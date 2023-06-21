@@ -5,6 +5,7 @@ import { blue } from '@mui/material/colors';
 
 import Home from './components/Home';
 import NavBar from './components/NavBar';
+import EditDialog from './components/EditDialog';
 import Header from './components/header/header';
 import RenameDialog from './components/RenameDialog';
 import SelectFileDialog from './components/SelectFileDialog';
@@ -26,14 +27,15 @@ function App() {
   const [showSaveAsFiles, setShowSaveAsFiles] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
   const [showConnection, setShowConnection] = useState(false);
-  
+  const [showEditMenu, setShowEditMenu] = useState(false);
 
   return (
     <div>
       <ThemeProvider theme={theme}>
       <div style={{ position: 'relative', zIndex: 2 }}>
+        <Header setOpenDrawer={setOpenDrawer} showConnection={setShowConnection}  />
         <NavBar openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} showSaveAsFiles={setShowSaveAsFiles}  showFiles={setShowFiles}/>
-        <Header openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} showConnection={setShowConnection}  />
+        <EditDialog showEditMenu={showEditMenu} setShowEditMenu = {setShowEditMenu} />
         <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
         <SelectFileDialog openFD={showFiles}  setOpenFD={setShowFiles}/>
         <ConnectionDialog openFD={showConnection}  setOpenFD={setShowConnection}/>
@@ -47,7 +49,7 @@ function App() {
         />
         <Routes>
           {/* Public routes */}
-          <Route index element={<Home />} />
+          <Route index element={<Home setShowEditMenu = {setShowEditMenu}/>} />
         </Routes>
       </ThemeProvider>
     </div>

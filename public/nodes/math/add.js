@@ -24,7 +24,7 @@ class MathAdd extends LGraphNode {
         this.properties["value"] = v;
     }
 
-    onGetInputs() {
+    getProps() {
         return [
             ["summand", "number", 0, ""]
         ];

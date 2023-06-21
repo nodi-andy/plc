@@ -24,7 +24,7 @@ class MathMult extends LGraphNode {
         this.properties["value"] = v;
     }
 
-    onGetInputs() {
+    getProps() {
         return [
             ["summand", "number", 0, "summand", {optional: true}]
         ];

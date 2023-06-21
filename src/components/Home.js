@@ -129,7 +129,7 @@ function SimpleSnackbar({openSB, setopenSB, sbMessage}) {
 }
 
 
-function RightActionButtons({ showNodes }) {
+function RightActionButtons({ showNodes, setShowEditMenu }) {
   const [editClickable, setEditClickable] = useState(false)
   const [removeClickable, setRemoveClickable] = useState(false)
 
@@ -139,6 +139,10 @@ function RightActionButtons({ showNodes }) {
   window.showRemove = (v) => {
     setRemoveClickable(v);
   };
+
+  const editMenuClick = () =>  {
+      setShowEditMenu(true);
+  }
 
   return (
     <>
@@ -164,9 +168,7 @@ function RightActionButtons({ showNodes }) {
         color="warning"
         variant="extended"
         disabled = {!editClickable}
-        onClick={() => {
-          window.nodes.editNode();
-        }}>
+        onClick={editMenuClick}>
         <EditIcon />
       </Fab>
       <Fab
@@ -176,6 +178,7 @@ function RightActionButtons({ showNodes }) {
         disabled = {!removeClickable}
         onClick={() => {
           window.nodes.remNode();
+          setShowEditMenu(true);
         }}>
         <DeleteOutlineIcon />
       </Fab>
@@ -187,7 +190,7 @@ function RightActionButtons({ showNodes }) {
   );
 }
 
-export default function Home() {
+export default function Home({setShowEditMenu}) {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [showNodes, setShowNodes] = useState(false);
   const [, setFilename] = useState("");
@@ -200,16 +203,7 @@ export default function Home() {
       <SelectNodeDialog openND={showNodes}  setOpenND={setShowNodes}/>
       <SimpleSnackbar openSB={snackbarOpen}  setopenSB={setSnackbarOpen} sbMessage = {window.messageText}/>
       
-      <RightActionButtons 
-        sx={{
-          position: 'fixed',
-          right: (theme) => theme.spacing(2),
-          my: 18
-        }}
-
-        showNodes={setShowNodes}
-
-      />
+      <RightActionButtons showNodes={setShowNodes} setShowEditMenu = {setShowEditMenu}  sx={{ position: 'fixed', right: (theme) => theme.spacing(2), my: 18 }} />
     </>
   );
 }

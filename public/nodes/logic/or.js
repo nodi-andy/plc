@@ -27,7 +27,7 @@ class logicOr extends LGraphNode{
             this.setOutputDataByName("v", ret);
         }
     }
-    onGetInputs() {
+    getProps() {
         return [
             ["or", "boolean"]
         ];

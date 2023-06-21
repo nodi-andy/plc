@@ -18,7 +18,7 @@ class EventCounter extends LGraphNode{
         this.size = [64, 64];
     }
 
-    onGetInputs() {
+    getProps() {
         return [["set", "number", null, "set"], ["dec", "number", null, "dec"]];
     }
 

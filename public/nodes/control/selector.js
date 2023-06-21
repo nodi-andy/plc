@@ -22,7 +22,7 @@ class Selector extends LGraphNode{
         return LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
     }
 
-    onGetInputs() {
+    getProps() {
         return [
             ["gate", "number", 0, ""]
         ];

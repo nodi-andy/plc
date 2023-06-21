@@ -292,8 +292,8 @@ export default class LGraphCanvas {
         var ref_window = canvas.getCanvasWindow();
 
         var options = node.optional_inputs;
-        if (node.onGetInputs) {
-            options = node.onGetInputs();
+        if (node.getProps) {
+            options = node.getProps();
         }
 
         var entries = [];
@@ -381,8 +381,8 @@ export default class LGraphCanvas {
         var ref_window = canvas.getCanvasWindow();
 
         var options = node.optional_outputs;
-        if (node.onGetOutputs) {
-            options = node.onGetOutputs();
+        if (node.onGetProps) {
+            options = node.onGetProps();
         }
 
         var entries = [];
@@ -7417,15 +7417,15 @@ export default class LGraphCanvas {
             );
         }
 
-        if (node.onGetInputs) {
-            var inputs = node.onGetInputs();
+        if (node.getProps) {
+            var inputs = node.getProps();
             if (inputs && inputs.length) {
                 options[0].disabled = false;
             }
         }
 
-        if (node.onGetOutputs) {
-            var outputs = node.onGetOutputs();
+        if (node.onGetProps) {
+            var outputs = node.onGetProps();
             if (outputs && outputs.length) {
                 options[1].disabled = false;
             }

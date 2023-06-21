@@ -24,7 +24,7 @@ class MathIsEqual extends LGraphNode {
         this.properties["value"] = v;
     }
 
-    onGetInputs() {
+    getProps() {
         return [
             ["comparand", "number", 0, "comparand", {optional: true}]
         ];

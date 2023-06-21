@@ -9,31 +9,31 @@ export default class Stepper extends LGraphNode{
     
     constructor() {
         super();
-        this.addInput("pos", "number", 0, "pos");
-
-        this.addProperty("step port", 27, "number", { name: "Step Port" });
-        this.addProperty("dir port", 14, "number", { name: "Direction Port" });
-        this.addProperty("enable port", 32, "number", { name: "Enable Port" });
+        this.setProperty("pos", "number", 0, "pos", {input: true, output: false});
+        this.setProperty("speed", "number", 100, "speed", {input: false, output: false});
+        this.setProperty("reset", "number", 0, "reset", {input: false, output: false});
+        this.setProperty("step port", "number", 27, "Step Port", {input: false, output: false});
+        this.setProperty("dir port", 14, "number", "Direction Port", {input: false, output: false});
+        this.setProperty("enable port", 32, "number", "Enable Port" , {input: false, output: false});
         this.num = 0;
         this.size = [64, 64];
 
     }
 
-    onGetInputs() {
-        return [["pos", "number", 0, "pos"], ["speed", "number", 100, "speed"], ["reset", "number", 0, "reset"]];
-    }
-
-    onGetOutputs() {
-        return [["pos", "number", null, "pos"], ["speed", "number", null, "speed"]];
-    }
 
     onDrawForeground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-        ctx.fillStyle = "#AAA";
-        ctx.font = "12px Arial";
+        var x = this.size[0] * 0.5;
+        var h = Math.min(this.size[0], this.size[1]);
+        ctx.textBaseline = 'middle';
         ctx.textAlign = "center";
+        ctx.font = (h * 0.15).toFixed(2) + "px Arial";
+        ctx.fillStyle = "#AAA";
+        ctx.fillText(
+            "stepper",
+            x,
+            h * 0.2
+        );
+        
         
         /*if (this.properties["pos"]) {
             ctx.fillText("pos:" + this.properties["pos"], this.size[0] * 0.5, this.size[1] * 0.5);

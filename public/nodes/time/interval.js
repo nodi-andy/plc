@@ -26,7 +26,7 @@ export default class Interval extends LGraphNode {
         this.size = [64, 64];
     }
 
-    /*onGetInputs() {
+    /*getProps() {
         return [["ton", "number", 500, "tOn"], ["toff", "number", 500, "tOff"]];
     }*/
 

@@ -7,48 +7,45 @@ export default class WidgetButton extends LGraphNode{
     static title_mode = LiteGraph.NO_TITLE;
     static font = "Arial";
     static type = "widget/button";
-    static margin = 12;
 
     constructor() {
         super();
-        this.addProperty("press", 1);
-        this.addProperty("release", 0);
+        this.setProperty("out", "number", null, " ", {input: false, output: true});
+        this.setProperty("press", "number", 1, " ", {input: false, output: false});
+        this.setProperty("release", "number", 9, " ", {input: false, output: false});
+        this.setProperty("in", "number", null, "in", {input: false, output: false});
+        this.setProperty("label", "string", "B1", "label", {input: false, output: false});
+        this.setProperty("port", "number", null, "port", {input: false, output: false});
+        this.setProperty("color", "string",  "gray", "color", {input: false, output: false});
 
-        this.addOutput("v", "number", null, " ");
-
-        this.addProperty("label", "");
-        this.addProperty("port", "");
-        this.addProperty("color", "gray");
         this.size = [64, 64];
         this.newState = false;
+        this.margin = 12;
         for(let input of this.inputs) {
             input._data = null;
         }
         this.onMouseUp();
     }
-    
-    onGetInputs() {
-        return [["in", "number", 0 , " "]];
-    }
 
     onDrawForeground(ctx) {
         
         if (this.newState == 1) {
-            this.margin += 2;
+            this.margin = 14;
         } else {
+            this.margin = 12;
             ctx.fillStyle = "black";
             ctx.fillRect(this.margin + 2, this.margin + 2, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
         }
 
-        ctx.fillStyle = this.properties.color;
+        ctx.fillStyle = this.properties.color.value;
         ctx.fillRect(this.margin, this.margin, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
 
-        if (this.properties.label || this.properties.label === 0) {
+        if (this.properties.label || this.properties.label.value === 0) {
             var font_size = this.properties.font_size || 30;
             ctx.textAlign = "center";
             ctx.fillStyle = this.newState ? "black" : "white";
             ctx.font = font_size + "px " + WidgetButton.font;
-            ctx.fillText(this.properties.label, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
+            ctx.fillText(this.properties.label.value, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
             ctx.textAlign = "left";
         }
     }

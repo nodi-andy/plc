@@ -38,8 +38,7 @@ supported callbacks:
     + onMouseLeave
     + onExecute: execute the node
     + onPropertyChanged: when a property is changed in the panel (return true to skip default behaviour)
-    + onGetInputs: returns an array of possible inputs
-    + onGetOutputs: returns an array of possible outputs
+    + getProps: returns an array of possible inputs
     + onBounding: in case this node has a bigger bounding than the node itself (the callback receives the bounding as [x,y,w,h])
     + onDblClick: double clicked in the node
     + onInputDblClick: input slot double clicked (can be used to automatically create a node connected)
@@ -321,17 +320,29 @@ export default class LGraphNode {
          * @param {String} name
          * @param {*} value
          */
-    setProperty(name, value) {
+    setProperty(name, type, value, label, extra_info) {
         if (!this.properties) {
             this.properties = {};
         }
+        this.properties[name] = {}
         if (value === this.properties[name])
             return;
         var prev_value = this.properties[name];
-        this.properties[name] = value;
+        var prop = this.properties[name];
+        prop.value = value;
+        prop.type = type;
+        prop.label = label;
+        if (extra_info) {
+            for (var i in extra_info) {
+                this.properties[name][i] = extra_info[i];
+            }
+        }
         if (this.onPropertyChanged) {
             if (this.onPropertyChanged(name, value, prev_value) === false) //abort change
                 this.properties[name] = prev_value;
+        }
+        if (prop.input) {
+            this.addInput(name, type, value, label, extra_info)
         }
         if (this.widgets) //widgets could be linked to properties
             for (var i = 0; i < this.widgets.length; ++i) {
@@ -1082,6 +1093,19 @@ export default class LGraphNode {
         }
         this.setDirtyCanvas(true, true);
     }
+    addInputByName(name) {
+        this.properties[name].input = true;
+        let prop = this.properties[name];
+        this.addInput(name, prop.type, prop.defaultValue, prop.label)
+        window.updateEditDialog();
+    }
+
+    addOutputByName(name) {
+        this.properties[name].output = true;
+        let prop = this.properties[name];
+        this.addOutput(name, prop.type, null, prop.label)
+        window.updateEditDialog();
+    }
     /**
          * add a new input slot to use in this node
          * @method addInput
@@ -1093,7 +1117,7 @@ export default class LGraphNode {
         type = type || "number";
         defaultValue = defaultValue || 0;
         label = label || name;
-        var input = { name: name, type: type, link: null, label: label, removable: true };
+        var input = { name: name, type: type, link: null, label: label, removable: true, value: defaultValue };
         if (extra_info) {
             for (var i in extra_info) {
                 input[i] = extra_info[i];
@@ -1112,7 +1136,6 @@ export default class LGraphNode {
         }
 
         window.LiteGraph.registerNodeAndSlotType(this, type);
-        this.addProperty(name, defaultValue, type);
         this.setDirtyCanvas(true, true);
         return input;
     }
@@ -1145,6 +1168,24 @@ export default class LGraphNode {
         this.setSize(this.computeSize());
         this.setDirtyCanvas(true, true);
     }
+
+    removeInputByName(name) {
+        this.properties[name].input = false;
+        let slot = this.inputs.findIndex(item => item.name === name)
+        if (slot >= 0) {
+            this.removeInput(slot);
+        }
+        window.updateEditDialog();
+    }
+
+    removeOutputByName(name) {
+        this.properties[name].output = false;
+        let slot = this.outputs.findIndex(item => item.name === name)
+        if (slot >= 0) {
+            this.removeOutput(slot);
+        }
+        window.updateEditDialog();
+    }
     /**
          * remove an existing input slot
          * @method removeInput
@@ -1167,7 +1208,6 @@ export default class LGraphNode {
         if (this.onInputRemoved) {
             this.onInputRemoved(slot, slot_info[0]);
         }
-        this.removeProperty(slot_info[0].name);
         this.setDirtyCanvas(true, true);
     }
     /**

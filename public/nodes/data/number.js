@@ -11,10 +11,9 @@ export default class WidgetNumber extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("set", "number", 0, " ");
-        this.addOutput("v", "number", 0, " ");
-        this.addProperty("value", 0, "number");
-        this.addProperty("const", false, "boolean")
+        this.setProperty("value", "number", 0, " ", {input: false, output: true});
+        this.setProperty("get", "number", 0, "get", {input: false, output: false});
+        this.setProperty("set", "number", 0, "set", {input: true, output: false});
         this.size = [64, 64];
         this.old_y = -1;
         this._remainder = 0;
@@ -25,29 +24,29 @@ export default class WidgetNumber extends LGraphNode {
         var x = this.size[0] * 0.5;
         var h = this.size[1];
         if (h > 30) {
+            ctx.font = (h * 0.3).toFixed(1) + "px Arial";
             ctx.fillStyle = WidgetNumber.markers_color;
-            ctx.beginPath();
-            ctx.moveTo(x, h * 0.1);
-            ctx.lineTo(x + h * 0.1, h * 0.2);
-            ctx.lineTo(x + h * -0.1, h * 0.2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(x, h * 0.9);
-            ctx.lineTo(x + h * 0.1, h * 0.8);
-            ctx.lineTo(x + h * -0.1, h * 0.8);
-            ctx.fill();
-            ctx.font = (h * 0.7).toFixed(1) + "px Arial";
+            ctx.fillText(
+                "+",
+                x - h * 0.05,
+                h * 0.2
+            );
+            ctx.fillText(
+                "-",
+                x - h * 0.05,
+                h * 0.9
+            );
         } else {
             ctx.font = (h * 0.8).toFixed(1) + "px Arial";
         }
 
         ctx.textAlign = "center";
-        ctx.font = (h * 0.7).toFixed(1) + "px Arial";
+        ctx.font = (h * 0.6).toFixed(1) + "px Arial";
         ctx.fillStyle = "#EEE";
         ctx.fillText(
-            this.properties.value,
+            this.properties.value.value,
             x,
-            h * 0.75
+            h * 0.65
         );
     }
     onExecute(update) {
@@ -59,7 +58,7 @@ export default class WidgetNumber extends LGraphNode {
                 this.setInputDataByName("set", null);
             }
 
-            this.setOutputDataByName("v", this.properties.value);
+            this.setOutputDataByName("v", this.properties.value.value);
             this.updateView = false;
         }
     }
@@ -102,20 +101,20 @@ export default class WidgetNumber extends LGraphNode {
         this._remainder = steps % 1;
         steps = steps | 0;
 
-        this.properties.value = Math.clamp(
-            this.properties.value + steps * 1,
+        this.properties.value.value = Math.clamp(
+            this.properties.value.value + steps * 1,
         );
-        this.setProperty("set", this.properties.value);
+        this.setProperty("value", this.properties.value.value);
         this.graph._version++;
         this.setDirtyCanvas(true);
     }
     onMouseUp(e, pos) {
         if (e.click_time < 200) {
             var steps = pos[1] > this.size[1] * 0.5 ? -1 : 1;
-            this.properties.value = Math.clamp(
-                this.properties.value + steps * 1,
+            this.properties.value.value = Math.clamp(
+                this.properties.value.value + steps * 1,
             );
-            this.setProperty("set", this.properties.value);
+            this.setProperty("value", this.properties.value.value);
             this.graph._version++;
             this.setDirtyCanvas(true);
         }

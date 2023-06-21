@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useNavigate  } from 'react-router-dom'
-import styles from './Header.module.css'
 
 import AppBar from '@mui/material/AppBar';
 import {Box, Fab} from '@mui/material';
@@ -10,14 +9,12 @@ import Typography from '@mui/material/Typography';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
-import mainLogo from '../../logo_128.png'
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import SendAndArchiveOutlinedIcon from '@mui/icons-material/SendAndArchiveOutlined';
 import WifiIcon from '@mui/icons-material/Wifi';
 
     
 export default function Header({ setOpenDrawer, showConnection } ) {
-    const [user, setUser] = useState(JSON.parse(localStorage.getItem('profile')))
     const history = useNavigate ()
     const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
@@ -34,7 +31,6 @@ export default function Header({ setOpenDrawer, showConnection } ) {
   };
   const logout = () => {
     history('/')
-    setUser(null)
 }  
   const handleMenuClose = () => {
     setAnchorEl(null);
@@ -110,13 +106,6 @@ export default function Header({ setOpenDrawer, showConnection } ) {
     </Menu>
   );
 
-  if(!user) 
-    return (
-      <div className={styles.header2}>
-        <img style={{width: '50px', cursor: 'pointer'}} onClick={()=> history('/')} src={mainLogo} alt="logo" />
-        <button onClick={() => history('/login')} className={styles.login}>Get started</button>
-      </div>
-    )
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
