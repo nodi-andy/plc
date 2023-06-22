@@ -178,7 +178,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
         disabled = {!removeClickable}
         onClick={() => {
           window.nodes.remNode();
-          setShowEditMenu(true);
+          setShowEditMenu(false);
         }}>
         <DeleteOutlineIcon />
       </Fab>

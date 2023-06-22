@@ -344,6 +344,9 @@ export default class LGraphNode {
         if (prop.input) {
             this.addInput(name, type, value, label, extra_info)
         }
+        if (prop.output) {
+            this.addOutput(name, type, extra_info, label )
+        }
         if (this.widgets) //widgets could be linked to properties
             for (var i = 0; i < this.widgets.length; ++i) {
                 var w = this.widgets[i];
