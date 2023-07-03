@@ -8,45 +8,34 @@ export default class DFlipFlop extends LGraphNode {
     static type = "data/bit";
     constructor() {
         super();
-        this.addInput("set", "number", 0, "set");
-        this.addInput("clear", "number", 0, "clear");
-        this.addOutput("v", "number", 0, "v");
-        this.properties = { font: "", value: false, port: "" };
+        this.setProperty("state", "number", 0, "state", {input: false, output: false});
+        this.setProperty("set", "number", 0, "set", {input: true, output: false});
+        this.setProperty("clear", "number", 0, "clear", {input: true, output: false});
+        this.setProperty("toggle", "number", 0, "toggle", {input: false, output: false});
+        this.setProperty("in", "number", 0, "in", {input: false, output: false});
+        this.setProperty("out", "number", 0, "out", {input: false, output: false});
         this.size = [64, 128];
     }
-    onGetInputs() {
-        return [
-            ["toggle", "number", 0, "toggle"]
-        ];
-    }
 
-    onExecute(update) {
-        if (update) {
-            if (this.properties.set == 1) {
-                this.properties.v = 1;
-                this.properties.set = null;
-                this.setInputDataByName("set", null);
+
+    onExecute() {
+            if (this.properties.set.value == 1) {
+                this.properties.state.value = 1;
             }
 
-            if (this.properties.clear == 1) {
-                this.properties.v = 0;
-                this.properties.clear = null;
-                this.setInputDataByName("clear", null);
+            if (this.properties.clear.value == 1) {
+                this.properties.state.value = 0;
             }
 
-            if (this.properties.toggle == 1) {
-                if ( this.properties.v == 1) {
-                    this.properties.v = 0;
+            if (this.properties.toggle.value == 1) {
+                if ( this.properties.state.value == 1) {
+                    this.properties.state.value = 0;
                 } else {
-                    this.properties.v = 1;
+                    this.properties.state.value = 1;
                 }
-                this.setInputDataByName("toggle", null);
-                this.properties.toggle = null;
             }
 
             this.setDirtyCanvas(true, true);
-            this.setOutputDataByName("v", this.properties.v);
-        }
     }
 }
 

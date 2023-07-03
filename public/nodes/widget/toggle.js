@@ -8,18 +8,16 @@ export default class WidgetToggle extends LGraphNode{
     static title_mode = LiteGraph.NO_TITLE;
     constructor() {
         super();
-        this.addInput("a", "number", 0);
-        this.addOutput("v", "number", 0);
-        this.addProperty("label", "T1");
-        this.addProperty("port", "");
-        this.addProperty("pressing", 1);
-        this.addProperty("pressed", 1);
-        this.addProperty("releasing", 0);
-        this.addProperty("released", 0);
-        this.addProperty("state", 0);
-        this.addProperty("color", "#AEF");
+        this.setProperty("state", "number", 1, " ", {input: false, output: false});
+        this.setProperty("press", "number", 1, " ", {input: false, output: false});
+        this.setProperty("release", "number", 0, " ", {input: false, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
+        this.setProperty("in", "number", null, "in", {input: false, output: false});
+        this.setProperty("label", "string", "B1", "label", {input: false, output: false});
+        this.setProperty("port", "number", null, "port", {input: false, output: false});
+        this.setProperty("color", "string",  "#A00", "color", {input: false, output: false});
+        this.properties.out.value = false;
         this.size = [64, 64];
-        this.state = this.properties.state;
         this.newState = 0
     }
 
@@ -41,7 +39,7 @@ export default class WidgetToggle extends LGraphNode{
         ctx.fillStyle = "#AAA";
         ctx.fillRect(x, y, size, size);
 
-        ctx.fillStyle = this.state ? this.properties.color : "#000";
+        ctx.fillStyle = this.properties.state.value ? this.properties.color.value : "#000";
         ctx.fillRect(
             x + size * margin,
             y + size * margin,
@@ -58,34 +56,13 @@ export default class WidgetToggle extends LGraphNode{
     }
 
     onExecute() {
-        let update = false;
-        this.output = null;
-        if (this.newState == 0 && this.state == 0) {
-            this.output = this.properties.released;
-        } if (this.newState == 0 && this.state == 1) {
-            this.output = this.properties.releasing;
-        } if (this.newState == 1 && this.state == 1) {
-            this.output = this.properties.pressed;
-        } if (this.newState == 1 && this.state == 0) {
-            this.output = this.properties.pressing;
+        if (this.newState == 0 && this.properties.state.value == 1) {
+            this.properties.out.value = this.properties.release.value;
+        } if (this.newState == 1 && this.properties.state.value == 0) {
+            this.properties.out.value = this.properties.press.value;
         }
 
-        update = (this.newState != this.state)
-        
-        this.setDirtyCanvas(true, true);
-        if (this.output != null && update) {
-            if (this.getInputByName("a").link == null) {
-                this.setOutputDataByName("v", this.output);
-            } else {
-                if (this.getInputDataByName("a") != null) {
-                    this.setOutputData(0, this.inputs[0]._data);
-                }
-            }
-            for(let input of this.inputs) {
-                input._data = null;
-            }
-        }
-        this.state = this.newState;
+        this.properties.state.value = this.newState;
     }
     
     onMouseDown(e, local_pos) {
@@ -95,7 +72,7 @@ export default class WidgetToggle extends LGraphNode{
             local_pos[1] < this.size[1] - 10) {
             this.graph._version++;
             this.trigger("e", this.properties.value);
-            this.newState = !this.state
+            this.newState = !this.properties.state.value
             return true;
         }
     }

@@ -1050,14 +1050,13 @@ class LGraph {
 
         for (let linkID in this.links) {
             let link = this.links[linkID];
-            let dataFromNode = this._nodes_by_id[link.origin_id].getOutputDataByName(link.origin_slot);
-            let data = this._nodes_by_id[link.target_id].getInputDataByName(link.target_slot);
-            if (dataFromNode != null && data == null) this._nodes_by_id[link.target_id].getInputByName(link.target_slot)._data = dataFromNode;
+            let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].value;
+            if(dataFromNode !== null) this._nodes_by_id[link.target_id].properties[link.target_slot].value = dataFromNode;
         }
 
         for (let linkID in this.links) {
             let link = this.links[linkID];
-            this._nodes_by_id[link.origin_id].getOutputByName(link.origin_slot)._data = null;
+            this._nodes_by_id[link.origin_id].properties[link.origin_slot].value = null;
         }
 
         var now = NodiEnums.getTime();
@@ -1251,6 +1250,7 @@ class LGraph {
 
         return node; //to chain actions
     }
+
     /**
          * Removes a node from the graph
          * @method remove
@@ -1283,9 +1283,10 @@ class LGraph {
         //disconnect inputs
         if (node.inputs) {
             for (var i = 0; i < node.inputs.length; i++) {
-                var slot = node.inputs[i];
-                if (slot.link != null) {
-                    node.disconnectInput(i);
+                var links = node.inputs[i].links;
+                for (var link of links) {
+                    node.disconnectInput(link);
+                    this.removeLink(link)
                 }
             }
         }
@@ -1293,9 +1294,10 @@ class LGraph {
         //disconnect outputs
         if (node.outputs) {
             for (var i = 0; i < node.outputs.length; i++) {
-                var slot = node.outputs[i];
-                if (slot.links != null && slot.links.length) {
-                    node.disconnectOutput(i);
+                var links = node.outputs[i].links;
+                for (var link of links) {
+                    node.disconnectOutput(link);
+                    this.removeLink(link)
                 }
             }
         }
@@ -1843,7 +1845,7 @@ class LGraph {
         if (node) {
             node.disconnectInput(link);
         }
-        if (this.links[link_id]) delete this.links[link_id];
+        if (this.links[link_id]) this.links.splice(link_id);
     }
     //save and recover app state ***************************************
     /**

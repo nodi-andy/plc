@@ -10,9 +10,10 @@ export default class WidgetButton extends LGraphNode{
 
     constructor() {
         super();
-        this.setProperty("out", "number", 0, " ", {input: false, output: true});
+        this.setProperty("state", "number", 0, " ", {input: false, output: true});
         this.setProperty("press", "number", 1, " ", {input: false, output: false});
         this.setProperty("release", "number", 0, " ", {input: false, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: false});
         this.setProperty("in", "number", null, "in", {input: false, output: false});
         this.setProperty("label", "string", "B1", "label", {input: false, output: false});
         this.setProperty("port", "number", null, "port", {input: false, output: false});
@@ -52,8 +53,8 @@ export default class WidgetButton extends LGraphNode{
 
     onMouseDown(e, local_pos) {
         if (local_pos[0] > this.margin && local_pos[1] > this.margin && local_pos[0] < this.size[0] - this.margin && local_pos[1] < this.size[1] - this.margin) {
-
             this.newState = 1;
+            this.properties["state"].value = this.properties["press"].value;
             return true;
         }
         this.setDirtyCanvas(true);
@@ -95,7 +96,9 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onMouseUp(/*e*/) {
-        this.newState = 0;
+            this.newState = 0;
+            this.properties["state"].value = this.properties["release"].value;
+
         this.setDirtyCanvas(true);
 
     }
