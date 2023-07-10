@@ -276,18 +276,17 @@ export default class LLink {
             ctx.beginPath();
             ctx.arc(pos[0], pos[1], 5, 0, Math.PI * 2);
             ctx.fill();
-        }
 
-        //render flowing points
-        if (flow) {
-            ctx.fillStyle = color;
-            for (let i = 0; i < 5; ++i) {
-                var f = (NodiEnums.getTime() * 0.001 + i * 0.2) % 1;
-                let pos = canvas.computeConnectionPoint(a, b, f, start_dir, end_dir);
+
+            //selection
+            if (this.selected) {
+                ctx.fillStyle = "#000";
+
                 ctx.beginPath();
-                ctx.arc(pos[0], pos[1], 5, 0, 2 * Math.PI);
+                ctx.arc(pos[0], pos[1], 5, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
+
     }
 }

@@ -1417,6 +1417,7 @@ export default class LGraphCanvas {
         this.graph_mouse[0] = e.canvasX;
         this.graph_mouse[1] = e.canvasY;
         this.last_click_position = [this.mouse[0], this.mouse[1]];
+        this.selectedLink = null;
 
         if (this.pointer_is_down && is_primary) {
             this.pointer_is_double = true;
@@ -1675,7 +1676,10 @@ export default class LGraphCanvas {
                                 continue;
                             }
                             //link clicked
-                            this.showLinkMenu(link, e);
+                            //this.showLinkMenu(link, e);
+                            this.selectedLink = link.id
+                            link.selected = true;
+                            this.onSelectionChange([link.id]);
                             this.over_link_center = null; //clear tooltip
                             break;
                         }
@@ -2317,7 +2321,7 @@ export default class LGraphCanvas {
                     this.visible_nodes
                 );
 
-                if (!node && e.click_time < 300) {
+                if (!node && this.selectedLink == null && e.click_time < 300) {
                     this.deselectAllNodes();
                 }
 
@@ -2942,6 +2946,8 @@ export default class LGraphCanvas {
                 this.onNodeDeselected(node);
             }
         }
+
+        this.graph.links.forEach((linkit) => {linkit.selected = false; });
         this.selected_nodes = {};
         this.current_node = null;
         this.highlighted_links = {};

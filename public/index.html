@@ -109,6 +109,7 @@
     window.canvas = new LGraphCanvas("#mycanvas", graph);
 
     window.nodes = {}
+    
     window.nodes.addNode = (name) => {
       name = name.toLowerCase();
       console.log(name)
@@ -122,6 +123,7 @@
 
       window.graph.afterChange();
     }
+
     window.nodes.remNode = () => {
         var graph = window.graph;
           graph.beforeChange();
@@ -194,8 +196,6 @@
     canvas.showSearchBox();
 
     window.addEventListener('resize', function () { canvas.resize() })
-
-
 
     window.updateNodeList = () => {
       window.nodes.list = {}
