@@ -1205,7 +1205,7 @@ export default class LGraphCanvas {
         touchManager.onScale(function(data) {
             console.log('Scale gesture:', data);
             let scale = window.scale * data.scale;
-            window.canvas.ds.changeScale(scale, [0, 0]);
+            window.canvas.ds.changeScale(scale);
 
             window.canvas.graph.change();
         });
@@ -1679,6 +1679,7 @@ export default class LGraphCanvas {
                             //this.showLinkMenu(link, e);
                             this.selectedLink = link.id
                             link.selected = true;
+                            this.highlighted_links[link.id] = true;
                             this.onSelectionChange([link.id]);
                             this.over_link_center = null; //clear tooltip
                             break;
@@ -1793,9 +1794,6 @@ export default class LGraphCanvas {
                         this.selectNodes([node]);
                     }
                 }
-
-                // show menu on this node
-                this.processContextMenu(node, e);
             }
 
         }
@@ -2363,9 +2361,6 @@ export default class LGraphCanvas {
         return false;
     }
 
-    addZoomScale(scale) {
-
-    }
     zoom(e) {
         var delta = e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60;
 
@@ -2870,7 +2865,12 @@ export default class LGraphCanvas {
 
             if (node.inputs) {
                 for (var j = 0; j < node.inputs.length; ++j) {
-                    this.highlighted_links[node.inputs[j].link] = true;
+                    var inp = node.inputs[j];
+                    if (inp.links) {
+                        for (var k = 0; k < inp.links.length; ++k) {
+                            this.highlighted_links[inp.links[k]] = true;
+                        }
+                    }
                 }
             }
             if (node.outputs) {
@@ -2947,7 +2947,9 @@ export default class LGraphCanvas {
             }
         }
 
-        this.graph.links.forEach((linkit) => {linkit.selected = false; });
+        if (Array.isArray(this.graph.links)) {
+            this.graph.links.forEach((linkit) => {linkit.selected = false; });
+        }
         this.selected_nodes = {};
         this.current_node = null;
         this.highlighted_links = {};
@@ -3037,25 +3039,6 @@ export default class LGraphCanvas {
          **/
     setZoom(value, zooming_center) {
         this.ds.changeScale(value, zooming_center);
-        /*
-    if(!zooming_center && this.canvas)
-        zooming_center = [this.canvas.width * 0.5,this.canvas.height * 0.5];
-
-    var center = this.convertOffsetToCanvas( zooming_center );
-
-    this.ds.scale = value;
-
-    if(this.scale > this.max_zoom)
-        this.scale = this.max_zoom;
-    else if(this.scale < this.min_zoom)
-        this.scale = this.min_zoom;
-
-    var new_center = this.convertOffsetToCanvas( zooming_center );
-    var delta_offset = [new_center[0] - center[0], new_center[1] - center[1]];
-
-    this.offset[0] += delta_offset[0];
-    this.offset[1] += delta_offset[1];
-    */
         this.dirty_canvas = true;
         this.dirty_bgcanvas = true;
     }

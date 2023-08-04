@@ -31,9 +31,9 @@ export default class WidgetButton extends LGraphNode{
     onDrawForeground(ctx) {
         
         if (this.newState == 1) {
-            this.margin = 14;
+            this.margin = 16;
         } else {
-            this.margin = 12;
+            this.margin = 14;
             ctx.fillStyle = "black";
             ctx.fillRect(this.margin + 2, this.margin + 2, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
         }

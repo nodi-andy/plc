@@ -1845,6 +1845,11 @@ class LGraph {
         if (node) {
             node.disconnectInput(link);
         }
+
+        node = this.getNodeById(link.origin_id);
+        if (node) {
+            node.disconnectOutput(link);
+        }
         if (this.links[link_id]) this.links.splice(link_id);
     }
     //save and recover app state ***************************************

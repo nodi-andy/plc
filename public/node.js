@@ -2000,153 +2000,51 @@ export default class LGraphNode {
          * @param {LGraphNode} target_node the target node to which this slot is connected [Optional, if not target_node is specified all nodes will be disconnected]
          * @return {boolean} if it was disconnected successfully
          */
-    disconnectOutput(slot, target_node) {
-        if (slot.constructor === String) {
-            slot = this.findOutputSlot(slot);
-            if (slot == -1) {
-                if (window.LiteGraph.debug) {
-                    console.log("Connect: Error, no slot of name " + slot);
-                }
-                return false;
-            }
-        } else if (!this.outputs || slot >= this.outputs.length) {
-            if (window.LiteGraph.debug) {
-                console.log("Connect: Error, slot number not found");
-            }
+    disconnectOutput(link) {
+        var output = this.getOutputByName(link.origin_slot);
+        if (!output) {
             return false;
         }
 
-        //get output slot
-        var output = this.outputs[slot];
-        if (!output || !output.links || output.links.length == 0) {
-            return false;
-        }
+        var link_id = link.id;
+        if (link_id != null) {
+            // Find the index of the value you want to remove
+            let indexToRemove = output.links.indexOf(link_id);
 
-        //one of the output links in this slot
-        if (target_node) {
-            if (target_node.constructor === Number) {
-                target_node = this.graph.getNodeById(target_node);
+            // Check if the value exists in the array
+            if (indexToRemove !== -1) {
+                // Use splice to remove the value
+                output.links.splice(indexToRemove, 1);
+                console.log(`Removed ${link_id} from the array.`);
+            } else {
+                console.log(`${link_id} not found in the array.`);
             }
-            if (!target_node) {
-                throw "Target Node not found";
-            }
 
-            for (var i = 0, l = output.links.length; i < l; i++) {
-                var link_id = output.links[i];
-                var link_info = this.graph.links[link_id];
-
-                //is the link we are searching for...
-                if (link_info.target_id == target_node.id) {
-                    output.links.splice(i, 1); //remove here
-                    var input = target_node.getInputByName(link_info.target_slot);
-                    input.link = null; //remove there
-                    delete this.graph.links[link_id]; //remove the link from the links pool
-                    if (this.graph) {
-                        this.graph._version++;
-                    }
-                    if (target_node.onConnectionsChange) {
-                        target_node.onConnectionsChange(
-                            window.LiteGraph.INPUT,
-                            link_info.target_slot,
-                            false,
-                            link_info,
-                            input
-                        );
-                    } //link_info hasn't been modified so its ok
-                    if (this.onConnectionsChange) {
-                        this.onConnectionsChange(
-                            window.LiteGraph.OUTPUT,
-                            slot,
-                            false,
-                            link_info,
-                            output
-                        );
-                    }
-                    if (this.graph && this.graph.onNodeConnectionChange) {
-                        this.graph.onNodeConnectionChange(
-                            window.LiteGraph.OUTPUT,
-                            this,
-                            slot
-                        );
-                    }
-                    if (this.graph && this.graph.onNodeConnectionChange) {
-                        this.graph.onNodeConnectionChange(
-                            window.LiteGraph.OUTPUT,
-                            this,
-                            slot
-                        );
-                        this.graph.onNodeConnectionChange(
-                            window.LiteGraph.INPUT,
-                            target_node,
-                            link_info.target_slot
-                        );
-                    }
-                    break;
+            //remove other side
+            if (link) {
+                var origin_node = this.graph.getNodeById(link.origin_id);
+                if (!origin_node) {
+                    return false;
                 }
-            }
-        } //all the links in this output slot
-        else {
-            for (let i = 0, l = output.links.length; i < l; i++) {
-                let link_id = output.links[i];
-                let link_info = this.graph.links[link_id];
-                if (!link_info) {
-                    //bug: it happens sometimes
-                    continue;
-                }
-
-                let target_node = this.graph.getNodeById(link_info.target_id);
-                let input = null;
+                delete this.graph.links[link_id]; //remove from the pool
                 if (this.graph) {
                     this.graph._version++;
                 }
-                if (target_node) {
-                    input = target_node.getInputByName(link_info.target_slot);
-                    input.link = null; //remove other side link
-                    if (target_node.onConnectionsChange) {
-                        target_node.onConnectionsChange(
-                            window.LiteGraph.INPUT,
-                            link_info.target_slot,
-                            false,
-                            link_info,
-                            input
-                        );
-                    } //link_info hasn't been modified so its ok
-                    if (this.graph && this.graph.onNodeConnectionChange) {
-                        this.graph.onNodeConnectionChange(
-                            window.LiteGraph.INPUT,
-                            target_node,
-                            link_info.target_slot
-                        );
-                    }
-                }
-                delete this.graph.links[link_id]; //remove the link from the links pool
                 if (this.onConnectionsChange) {
                     this.onConnectionsChange(
-                        window.LiteGraph.OUTPUT,
-                        slot,
+                        window.LiteGraph.INPUT,
+                        link.target_slot,
                         false,
-                        link_info,
+                        link,
                         output
                     );
                 }
-                if (this.graph && this.graph.onNodeConnectionChange) {
-                    this.graph.onNodeConnectionChange(
-                        window.LiteGraph.OUTPUT,
-                        this,
-                        slot
-                    );
-                    this.graph.onNodeConnectionChange(
-                        window.LiteGraph.INPUT,
-                        target_node,
-                        link_info.target_slot
-                    );
-                }
             }
-            output.links = null;
-        }
+        } //link != null
 
         this.setDirtyCanvas(false, true);
-        this.graph.connectionChange(this);
+        if (this.graph)
+            this.graph.connectionChange(this);
         return true;
     }
     /**
@@ -2156,35 +2054,31 @@ export default class LGraphNode {
          * @return {boolean} if it was disconnected successfully
          */
     disconnectInput(link) {
-        var input = this.inputs[link.target_slot];
+        var input = this.getInputByName(link.target_slot);
         if (!input) {
             return false;
         }
 
         var link_id = link.id;
         if (link_id != null) {
-            //this.inputs[slot].links = null;
+            // Find the index of the value you want to remove
+            let indexToRemove = input.links.indexOf(link_id);
+
+            // Check if the value exists in the array
+            if (indexToRemove !== -1) {
+                // Use splice to remove the value
+                input.links.splice(indexToRemove, 1);
+                console.log(`Removed ${link_id} from the array.`);
+            } else {
+                console.log(`${link_id} not found in the array.`);
+            }
 
             //remove other side
             if (link) {
-                var target_node = this.graph.getNodeById(link.origin_id);
+                var target_node = this.graph.getNodeById(link.target_id);
                 if (!target_node) {
                     return false;
                 }
-
-                var output = target_node.getOutputByName(link.origin_slot);
-                if (!output || !output.links || output.links.length == 0) {
-                    return false;
-                }
-
-                //search in the inputs list for this link
-                for (var i = 0, l = output.links.length; i < l; i++) {
-                    if (output.links[i] == link_id) {
-                        output.links.splice(i, 1);
-                        break;
-                    }
-                }
-
                 delete this.graph.links[link_id]; //remove from the pool
                 if (this.graph) {
                     this.graph._version++;
@@ -2197,23 +2091,6 @@ export default class LGraphNode {
                         link,
                         input
                     );
-                }
-                if (target_node.onConnectionsChange) {
-                    target_node.onConnectionsChange(
-                        window.LiteGraph.OUTPUT,
-                        i,
-                        false,
-                        link,
-                        output
-                    );
-                }
-                if (this.graph && this.graph.onNodeConnectionChange) {
-                    this.graph.onNodeConnectionChange(
-                        window.LiteGraph.OUTPUT,
-                        target_node,
-                        i
-                    );
-                    this.graph.onNodeConnectionChange(window.LiteGraph.INPUT, this, link.target_slot);
                 }
             }
         } //link != null

@@ -136,10 +136,11 @@
           };
 
           var graphcanvas = LGraphCanvas.active_canvas;
-              for (var i in graphcanvas.selected_nodes) {
-                  fApplyMultiNode(graphcanvas.selected_nodes[i]);
-              }
+          for (var i in graphcanvas.selected_nodes) {
+              fApplyMultiNode(graphcanvas.selected_nodes[i]);
+          }
 
+          graph.removeLink(canvas.selectedLink);
           graph.afterChange();
       if (graphcanvas.selected_nodes && graphcanvas.selected_nodes[0]) {
             graphcanvas.selected_nodes[0].setDirtyCanvas(true, true);

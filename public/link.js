@@ -279,13 +279,14 @@ export default class LLink {
 
 
             //selection
+            /*
             if (this.selected) {
                 ctx.fillStyle = "#000";
 
                 ctx.beginPath();
                 ctx.arc(pos[0], pos[1], 5, 0, Math.PI * 2);
                 ctx.fill();
-            }
+            }*/
         }
 
     }
