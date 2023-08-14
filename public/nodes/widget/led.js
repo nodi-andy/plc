@@ -36,7 +36,7 @@ export default class WidgetLed extends LGraphNode{
     }
 
     onExecute(update) {
-        if (update && this.properties.value != null) {
+        if (update && this.properties.value.value != null) {
             this.properties.value.value = parseInt(this.properties.value.value);
         }
     }

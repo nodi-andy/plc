@@ -58,7 +58,9 @@ export default class WidgetToggle extends LGraphNode{
     onExecute() {
         if (this.newState == 0 && this.properties.state.value == 1) {
             this.properties.out.value = this.properties.release.value;
-        } if (this.newState == 1 && this.properties.state.value == 0) {
+        }
+        
+        if (this.newState == 1 && this.properties.state.value == 0) {
             this.properties.out.value = this.properties.press.value;
         }
 

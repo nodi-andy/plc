@@ -10,11 +10,10 @@ class MathAdd extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("a", "number");
-        this.addInput("b", "number");
-        this.addOutput("v", "number");
+        this.setProperty("in1", "number", 0, " ", {input: true, output: false});
+        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.label = ""
-        this._result = []; //only used for arrays
     }
 
     setValue(v) {
@@ -38,20 +37,21 @@ class MathAdd extends LGraphNode {
         if (update) {
             let ret = 0;
             this.label = "";
-            for (let inX = 0; inX < this.inputs.length; inX++) {
-                let inp = this.inputs[inX];
-                let val = this.properties[inp?.name]
-                val = parseInt(this.properties[inp.name]);
-                this.label += val
+            for (let input of Object.values(this.properties)) {
+                let val = input.value
+                val = parseInt(input.value);
+                //this.label += val
                 val = parseInt(val);
                 if (val == null || isNaN(val)) val = 0;
-                if (inX < this.inputs.length - 1) this.label += " + "
+                //if (inX < this.inputs.length - 1) this.label += " + "
                 ret += parseInt(val);
             }
-            this.setOutputDataByName("v", ret);
+            this.label = ret
+            this.properties.out.value = ret;
             update = false;
         }
     }
+
     onDrawBackground(ctx) {
         if (this.flags.collapsed) {
             return;

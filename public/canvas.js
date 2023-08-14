@@ -1679,6 +1679,7 @@ export default class LGraphCanvas {
                             //this.showLinkMenu(link, e);
                             this.selectedLink = link.id
                             link.selected = true;
+                            this.deselectAllNodes();
                             this.highlighted_links[link.id] = true;
                             this.onSelectionChange([link.id]);
                             this.over_link_center = null; //clear tooltip
@@ -2862,27 +2863,6 @@ export default class LGraphCanvas {
             }
             node.is_selected = true;
             this.selected_nodes[node.id] = node;
-
-            if (node.inputs) {
-                for (var j = 0; j < node.inputs.length; ++j) {
-                    var inp = node.inputs[j];
-                    if (inp.links) {
-                        for (var k = 0; k < inp.links.length; ++k) {
-                            this.highlighted_links[inp.links[k]] = true;
-                        }
-                    }
-                }
-            }
-            if (node.outputs) {
-                for (var j = 0; j < node.outputs.length; ++j) {
-                    var out = node.outputs[j];
-                    if (out.links) {
-                        for (var k = 0; k < out.links.length; ++k) {
-                            this.highlighted_links[out.links[k]] = true;
-                        }
-                    }
-                }
-            }
         }
 
         if (this.onSelectionChange)
@@ -2905,23 +2885,6 @@ export default class LGraphCanvas {
 
         if (this.onNodeDeselected) {
             this.onNodeDeselected(node);
-        }
-
-        //remove highlighted
-        if (node.inputs) {
-            for (var i = 0; i < node.inputs.length; ++i) {
-                delete this.highlighted_links[node.inputs[i].link];
-            }
-        }
-        if (node.outputs) {
-            for (var i = 0; i < node.outputs.length; ++i) {
-                var out = node.outputs[i];
-                if (out.links) {
-                    for (var j = 0; j < out.links.length; ++j) {
-                        delete this.highlighted_links[out.links[j]];
-                    }
-                }
-            }
         }
     }
     /**

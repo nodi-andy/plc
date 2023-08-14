@@ -61,7 +61,7 @@ class EventCounter extends LGraphNode{
 
     onAfterExecute() {
         for(let input of this.inputs) {
-            input._data = null;
+            input.value = null;
         }
     }
 }

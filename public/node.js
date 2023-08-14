@@ -215,7 +215,7 @@ export default class LGraphNode {
         if (this.outputs) {
             //clear outputs last data (because data in connections is never serialized but stored inside the outputs info)
             for (var i = 0; i < this.outputs.length; i++) {
-                delete this.outputs[i]._data;
+                delete this.outputs[i].value;
             }
             o.outputs = this.outputs;
         }
@@ -438,7 +438,7 @@ export default class LGraphNode {
         if (slot >= this.inputs.length || slot >= this.inputs.length) {
             return null;
         }
-        return this.inputs[slot]._data;
+        return this.inputs[slot].value;
     }
     /**
          * Retrieves the input data type (in case this supports multiple input types)
@@ -580,7 +580,7 @@ export default class LGraphNode {
     setInputDataByName(name, val) {
         for (let i = 0; i < this.inputs.length; i++) {
             if (this.inputs[i].name === name) {
-              this.inputs[i]._data = val;
+              this.inputs[i].value = val;
             }
           }
     }
@@ -606,7 +606,7 @@ export default class LGraphNode {
         }
 
         var info = this.outputs[slot];
-        return info._data;
+        return info.value;
     }
 
     getOutputByName(name) {
@@ -620,14 +620,14 @@ export default class LGraphNode {
     getOutputDataByName(name) {
         for (let i = 0; i < this.outputs.length; i++) {
             if (this.outputs[i].name === name) {
-              return this.outputs[i]._data;
+              return this.outputs[i].value;
             }
           }
     }
     setOutputDataByName(name, val) {
         for (let i = 0; i < this.outputs.length; i++) {
             if (this.outputs[i].name === name) {
-              this.outputs[i]._data = val;
+              this.outputs[i].value = val;
             }
           }
     }

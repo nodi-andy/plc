@@ -11,15 +11,17 @@ export default class WidgetNumber extends LGraphNode {
 
     constructor() {
         super();
-        this.setProperty("value", "number", 0, " ", {input: false, output: true});
+        this.setProperty("value", "number", 0, " ", {input: false, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.setProperty("get", "number", 0, "get", {input: false, output: false});
-        this.setProperty("set", "number", 0, "set", {input: true, output: false});
+        this.setProperty("set", "number", 0, " ", {input: false, output: false});
         this.size = [64, 64];
         this.old_y = -1;
         this._remainder = 0;
         this._precision = 0;
         this.mouse_captured = false;
     }
+
     onDrawForeground(ctx) {
         var x = this.size[0] * 0.5;
         var h = this.size[1];
@@ -49,29 +51,32 @@ export default class WidgetNumber extends LGraphNode {
             h * 0.65
         );
     }
+
     onExecute(update) {
         if (update || this.updateView) {
-            if (this.properties.set != null) {
-                if (this.properties.const === false) {
-                    this.properties.value = this.properties.set 
-                }
-                this.setInputDataByName("set", null);
+            if (this.properties.set.value != null) {
+                this.properties.value.value = this.properties.set.value
+                this.properties.set.value = null;
             }
 
-            this.setOutputDataByName("v", this.properties.value.value);
+            this.properties.out.value = this.properties.value.value;
+            this.valUpdated = false;
             this.updateView = false;
         }
     }
+
     onAfterExecute() {
         for(let input of this.inputs) {
             input._data = null;
         }
     }
+
     onPropertyChanged(name, value) {
         var t = (1 + "").split(".");
         this._precision = t.length > 1 ? t[1].length : 0;
         this.updateView = true;
     }
+
     onMouseDown(e, pos) {
         if (pos[1] < 0) {
             return;
@@ -83,6 +88,7 @@ export default class WidgetNumber extends LGraphNode {
         this.setDirtyCanvas(true);
         return true;
     }
+
     onMouseMove(e) {
         if (!this.mouse_captured) {
             return;
@@ -101,20 +107,15 @@ export default class WidgetNumber extends LGraphNode {
         this._remainder = steps % 1;
         steps = steps | 0;
 
-        this.properties.value.value = Math.clamp(
-            this.properties.value.value + steps * 1,
-        );
-        this.setProperty("value", this.properties.value.value);
+        this.setValue( Math.clamp(this.properties.value.value + steps * 1));
         this.graph._version++;
         this.setDirtyCanvas(true);
     }
+
     onMouseUp(e, pos) {
         if (e.click_time < 200) {
             var steps = pos[1] > this.size[1] * 0.5 ? -1 : 1;
-            this.properties.value.value = Math.clamp(
-                this.properties.value.value + steps * 1,
-            );
-            this.setProperty("value", this.properties.value.value);
+            this.setValue( Math.clamp(this.properties.value.value + steps * 1));
             this.graph._version++;
             this.setDirtyCanvas(true);
         }
@@ -125,6 +126,12 @@ export default class WidgetNumber extends LGraphNode {
         }
         this.setDirtyCanvas(true);
 
+    }
+
+    setValue(val) {
+        this.properties.value.value = val;
+        this.update = true;
+        this.properties.out.value = val;
     }
 }
 

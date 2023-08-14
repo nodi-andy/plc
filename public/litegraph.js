@@ -964,27 +964,38 @@ class LGraph {
         var nodes = this._nodes_executable
             ? this._nodes_executable
             : this._nodes;
+
         if (!nodes) {
             return;
         }
 
-        limit = limit || nodes.length;
+        for (let linkID in this.links) {
+            let link = this.links[linkID];
+            let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].value;
+            if(dataFromNode !== null) {
+                this._nodes_by_id[link.target_id].properties[link.target_slot].value = dataFromNode;
+                this._nodes_by_id[link.target_id].update = true;
+            }
+        }
+        
+        for (let linkID in this.links) {
+            let link = this.links[linkID];
+            this._nodes_by_id[link.origin_id].properties[link.origin_slot].value = null;
+        }
 
-        if (do_not_catch_errors) {
-            //iterations
-            for (var i = 0; i < num; i++) {
-                for (var j = 0; j < limit; ++j) {
-                    var node = nodes[j];
-                    if (node.mode == LiteGraph.ALWAYS && node.onExecute) {
-                        //wrap node.onExecute();
-                        node.doExecute();
-                    }
-                }
+        for (var j = 0; j < nodes.length; ++j) {
+            var node = nodes[j];
+            if (node.mode == LiteGraph.ALWAYS && node.onExecute) {
+                node.doExecute(node.update);
+                node.update = false;
+            }
+        }
 
-                this.fixedtime += this.fixedtime_lapse;
-                if (this.onExecuteStep) {
-                    this.onExecuteStep();
-                }
+
+
+            this.fixedtime += this.fixedtime_lapse;
+            if (this.onExecuteStep) {
+                this.onExecuteStep();
             }
 
 
@@ -992,72 +1003,10 @@ class LGraph {
             if (this.onAfterExecute) {
                 this.onAfterExecute();
             }
-        } else {
-            try {
-                for (i = 0; i < nodes.length; i++) {
-                    node = nodes[i];
-                    node.update = false;
-                    for(let n = 0; n < node.inputs.length; n++) {
-                        if (node.getInputData(n) != null) {
-                            node.properties[node.inputs[n]?.name] = node.getInputData(n)
-                            node.update = true;
-                        }
-                    }
-                }
-                //iterations
-                for (i = 0; i < num; i++) {
-                    for (j = 0; j < limit; ++j) {
-                        node = nodes[j];
-                        if (node.onExecute) {
-                            node.onExecute(node.update);
-                        }
-                    }
-
-                    this.fixedtime += this.fixedtime_lapse;
-                    if (this.onExecuteStep) {
-                        this.onExecuteStep();
-                    }
-                }
-                for (i = 0; i < num; i++) {
-                    for (j = 0; j < limit; ++j) {
-                        node = nodes[j];
-                        if (node.onAfterExecute) {
-                            node.onAfterExecute();
-                        } else {
-                            for(let input of node.inputs) {
-                                input._data = null;
-                            }
-                        }
-                    }
-                }
+        
 
 
-                if (this.onAfterExecute) {
-                    this.onAfterExecute();
-                }
-                this.errors_in_execution = false;
-            } catch (err) {
-                this.errors_in_execution = true;
-                if (LiteGraph.throw_errors) {
-                    throw err;
-                }
-                if (LiteGraph.debug) {
-                    console.log("Error during execution: " + err);
-                }
-                this.stop();
-            }
-        }
 
-        for (let linkID in this.links) {
-            let link = this.links[linkID];
-            let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].value;
-            if(dataFromNode !== null) this._nodes_by_id[link.target_id].properties[link.target_slot].value = dataFromNode;
-        }
-
-        for (let linkID in this.links) {
-            let link = this.links[linkID];
-            this._nodes_by_id[link.origin_id].properties[link.origin_slot].value = null;
-        }
 
         var now = NodiEnums.getTime();
         var elapsed = now - start;
@@ -1279,25 +1228,29 @@ class LGraph {
 
         this.beforeChange(); //sure? - almost sure is wrong
 
-
+        var i, links, link;
         //disconnect inputs
         if (node.inputs) {
             for (var i = 0; i < node.inputs.length; i++) {
-                var links = node.inputs[i].links;
-                for (var link of links) {
-                    node.disconnectInput(link);
-                    this.removeLink(link)
+                links = node.inputs[i].links;
+                if (links) {
+                        for (link of links) {
+                        node.disconnectInput(link);
+                        this.removeLink(link)
+                    }
                 }
             }
         }
 
         //disconnect outputs
         if (node.outputs) {
-            for (var i = 0; i < node.outputs.length; i++) {
-                var links = node.outputs[i].links;
-                for (var link of links) {
-                    node.disconnectOutput(link);
-                    this.removeLink(link)
+            for (i = 0; i < node.outputs.length; i++) {
+                links = node.outputs[i].links;
+                if (links) {
+                    for (link of links) {
+                        node.disconnectOutput(link);
+                        this.removeLink(link)
+                    }
                 }
             }
         }
@@ -1313,7 +1266,7 @@ class LGraph {
 
         //remove from canvas render
         if (this.list_of_graphcanvas) {
-            for (var i = 0; i < this.list_of_graphcanvas.length; ++i) {
+            for (i = 0; i < this.list_of_graphcanvas.length; ++i) {
                 var canvas = this.list_of_graphcanvas[i];
                 if (canvas.selected_nodes[node.id]) {
                     delete canvas.selected_nodes[node.id];

@@ -10,21 +10,22 @@ class logicOr extends LGraphNode{
     constructor() {
         super();
         this.properties = {};
-        this.addInput("a", "number");
-        this.addInput("b", "number");
-        this.addOutput("v", "number");
+        this.setProperty("in1", "number", 0, " ", {input: true, output: false});
+        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
     }
     onExecute(update) {
-        if (update) {
+           if (update) {
             let ret = false;
-            for (let input of this.inputs) {
-                if (this.properties[input.name]) {
+            for (let input of Object.values(this.properties)) {
+                if (input.input == true && input.value) {
                     ret = true;
                     break;
                 }
             }
             ret = ret ? 1 : 0;
-            this.setOutputDataByName("v", ret);
+            this.properties.out.value = ret;
+            this.update = false;
         }
     }
     getProps() {

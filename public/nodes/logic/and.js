@@ -10,22 +10,23 @@ class logicAnd extends LGraphNode{
     constructor() {
         super();
         this.properties = {};
-        this.addInput("a", "number", 0);
-        this.addInput("b", "number", 0);
-        this.addOutput("v", "number");
+        this.setProperty("in1", "number", 0, " ", {input: true, output: false});
+        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
     }
 
     onExecute(update) {
         if (update) {
             let ret = true;
-            for (let input of this.inputs) {
-                if (!this.properties[input.name]) {
+            for (let input of Object.values(this.properties)) {
+                if (input.input == true && !input.value) {
                     ret = false;
                     break;
                 }
             }
             ret = ret ? 1 : 0;
-            this.setOutputDataByName("v", ret);
+            this.properties.out.value = ret;
+            this.update = false;
         }
     }
 

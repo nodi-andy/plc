@@ -13,16 +13,16 @@ export default class Interval extends LGraphNode {
 
     constructor() {
         super();
-        this.addProperty("press", 1);
-        this.addProperty("release", 0);
-        this.addProperty("ton", 500);
-        this.addProperty("toff", 500);
-        this.addProperty("release", 0);
-        this.addOutput("tick", "number", "", "tick");
+        this.setProperty("press", "number", 1, "press", {input: false, output: false});
+        this.setProperty("release", "number", 0, "release", {input: false, output: false});
+        this.setProperty("ton", "number", 500, "release", {input: false, output: false});
+        this.setProperty("toff", "number", 500, "release", {input: false, output: false});
+        this.setProperty("state", "number", 0, "state", {input: false, output: true});
+
         this.last_on = 0;
         this.last_off = 0;
         this.triggered = false;
-        this.state = 0;
+        this.newState = 0;
         this.size = [64, 64];
     }
 
@@ -44,32 +44,23 @@ export default class Interval extends LGraphNode {
     }
 
     onExecute() {
-        if (this.state == null) this.state = 0;
         var now = NodiEnums.getTime();
 
         var dON = now - this.last_on;
         var dOFF = now - this.last_off;
-        if (this.state == 0 && dOFF > this.properties.toff) {
+        if (this.newState == 0 && dOFF > this.properties.toff.value) {
             this.newState = 1;
             this.last_on = now;
-        } else if (this.state == 1 && dON > this.properties.ton) {
+            this.properties.state.value = this.properties.release.value;
+        } else if (this.newState == 1 && dON > this.properties.ton.value) {
             this.newState = 0;
             this.last_off = now;
+            this.properties.state.value = this.properties.press.value;
         }
 
-        this.output = null;
-
-        if (this.newState == 0 && this.state == 1) {
-            this.output = this.properties.release;
-            this.last_on = now;
-        } if (this.newState == 1 && this.state == 0) {
-            this.output = this.properties.press;
-            this.last_off = now;
-        }
-        if (this.state != this.newState) {
+        if (this.properties.state.value != this.newState) {
             this.setDirtyCanvas(true, true);
-            this.state = this.newState;
-            this.setOutputDataByName("tick", this.output);
+            this.properties.state.value = this.newState;
         }
     }
 }
