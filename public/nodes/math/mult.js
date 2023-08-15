@@ -10,24 +10,10 @@ class MathMult extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("a", "number", 0, "a");
-        this.addInput("b", "number", 0, "b");
-        this.addOutput("v", "number", 0, "v");
+        this.setProperty("in1", "number", 0, " ", {input: true, output: false});
+        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.label = ""
-        this._result = []; //only used for arrays
-    }
-
-    setValue(v) {
-        if (typeof v == "string") {
-            v = parseFloat(v);
-        }
-        this.properties["value"] = v;
-    }
-
-    getProps() {
-        return [
-            ["summand", "number", 0, "summand", {optional: true}]
-        ];
     }
 
     onNodeInputAdd() {
@@ -36,23 +22,20 @@ class MathMult extends LGraphNode {
 
     onExecute(update) {
         if (update) {
-            let ret = 0;
+            let ret = 1;
             this.label = "";
-            for (let inX = 0; inX < this.inputs.length; inX++) {
-                let inp = this.inputs[inX];
-                let val = this.properties[inp?.name]
-                val = parseInt(this.properties[inp.name]);
-                this.label += val
+            for (let input of Object.values(this.properties)) {
+                if (input.input == false) continue;
+                let val = input.value
+                val = parseInt(input.value);
+                //this.label += val
                 val = parseInt(val);
                 if (val == null || isNaN(val)) val = 0;
-                if (inX < this.inputs.length - 1) this.label += " * "
-                if (inX == 0) {
-                    ret = parseInt(val)
-                } else {
-                    ret *= parseInt(val);
-                }
+                //if (inX < this.inputs.length - 1) this.label += " + "
+                ret *= parseInt(val);
             }
-            this.setOutputDataByName("v", ret);
+            this.label = ret
+            this.properties.out.value = ret;
             update = false;
         }
     }

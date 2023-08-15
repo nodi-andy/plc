@@ -16,19 +16,6 @@ class MathAdd extends LGraphNode {
         this.label = ""
     }
 
-    setValue(v) {
-        if (typeof v == "string") {
-            v = parseFloat(v);
-        }
-        this.properties["value"] = v;
-    }
-
-    getProps() {
-        return [
-            ["summand", "number", 0, ""]
-        ];
-    }
-
     onNodeInputAdd() {
         return LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
     }
@@ -38,11 +25,13 @@ class MathAdd extends LGraphNode {
             let ret = 0;
             this.label = "";
             for (let input of Object.values(this.properties)) {
+                if (input.input == false) continue;
                 let val = input.value
                 val = parseInt(input.value);
+                if (val == null || isNaN(val)) val = 0;
+
                 //this.label += val
                 val = parseInt(val);
-                if (val == null || isNaN(val)) val = 0;
                 //if (inX < this.inputs.length - 1) this.label += " + "
                 ret += parseInt(val);
             }

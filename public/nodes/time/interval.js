@@ -52,15 +52,16 @@ export default class Interval extends LGraphNode {
             this.newState = 1;
             this.last_on = now;
             this.properties.state.value = this.properties.release.value;
+            console.log("ton")
         } else if (this.newState == 1 && dON > this.properties.ton.value) {
             this.newState = 0;
             this.last_off = now;
             this.properties.state.value = this.properties.press.value;
+            console.log("toff")
         }
 
         if (this.properties.state.value != this.newState) {
             this.setDirtyCanvas(true, true);
-            this.properties.state.value = this.newState;
         }
     }
 }

@@ -9,12 +9,12 @@ class EventCounter extends LGraphNode{
 
     constructor() {
         super();
-        this.addInput("inc", "number", null, "inc");
-        this.addOutput("n", "number", 0, "n");
-        this.addProperty("value", 0, "number", {name: "value"});
-        this.addProperty("inc", null);
-        this.addProperty("set", null);
-        //this.addWidget("toggle","Count Exec.",this.properties.doCountExecution,"doCountExecution");
+        this.setProperty("inc", "number", 0, "+", {input: true, output: false});
+        this.setProperty("dec", "number", 0, "-", {input: false, output: false});
+        this.setProperty("value", "number", 0, " ", {input: false, output: true});
+        this.setProperty("set", "number", 0, " ", {input: false, output: false});
+        this.setProperty("get", "number", 0, " ", {input: false, output: false});
+
         this.size = [64, 64];
     }
 
@@ -35,27 +35,23 @@ class EventCounter extends LGraphNode{
         ctx.fillStyle = "#AAA";
         ctx.font = "12px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(this.properties.value, this.size[0] * 0.5, this.size[1] * 0.5);
+        ctx.fillText(this.properties.value.value, this.size[0] * 0.5, this.size[1] * 0.5);
     }
     onExecute(update) {
         if (update) {
-            if (this.properties.inc !== null && isNaN(this.properties.inc) == false) {
-                this.properties.value = parseInt(this.properties.value) + parseInt(this.properties.inc);
-                this.properties.inc = null;
-                this.setInputDataByName("inc", null);
+            if (this.properties.inc.value !== null && isNaN(this.properties.inc.value) == false) {
+                this.properties.value.value = parseInt(this.properties.value.value) + parseInt(this.properties.inc.value);
+                this.properties.inc.value = null;
             }
-            if (this.properties.dec !== null && isNaN(this.properties.dec) == false) {
-                this.properties.value -= parseInt(this.properties.dec);
-                this.properties.dec = null;
-                this.setInputDataByName("dec", null);
+            if (this.properties.dec.value !== null && isNaN(this.properties.dec.value) == false) {
+                this.properties.value.value -= parseInt(this.properties.dec.value);
+                this.properties.dec.value = null;
             }
-            if (this.properties.set != null && isNaN(this.properties.set) == false) {
-                this.properties.value = this.properties.set;
-                this.properties.set = null;
-                this.setInputDataByName("set", null);
+            if (this.properties.set.value != null && isNaN(this.properties.set.value) == false) {
+                this.properties.value.value = this.properties.set.value;
+                this.properties.set.value = null;
             }
             this.setDirtyCanvas(true, true);
-            this.setOutputData(0, parseInt(this.properties.value));
         }
     }
 

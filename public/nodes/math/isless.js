@@ -10,9 +10,9 @@ class MathIsLess extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("a", "number", 0, "a");
-        this.addInput("b", "number", 0, "b");
-        this.addOutput("v", "number", 0, "v");
+        this.setProperty("in1", "number", 0, " ", {input: true, output: false});
+        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.label = ""
         this._result = []; //only used for arrays
     }
@@ -20,12 +20,12 @@ class MathIsLess extends LGraphNode {
     onExecute(update) {
         if (update) {
             let ret = null;
-            if (this.properties.a < this.properties.b) {
+            if (this.properties.in1.value < this.properties.in2.value) {
                 ret = 1;
             } else {
                 ret = 0;
             }
-            this.setOutputDataByName("v", ret);
+            this.properties.out.value = ret;
             update = false;
         }
     }
@@ -38,7 +38,7 @@ class MathIsLess extends LGraphNode {
         ctx.font = "20px Arial";
         ctx.fillStyle = "#666";
         ctx.textAlign = "center";
-        ctx.fillText(this.properties.a +"<" + this.properties.b + "?", this.size[0] * 0.5, (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5);
+        ctx.fillText(this.properties.in1.value +"<" + this.properties.in2.value + "?", this.size[0] * 0.5, (this.size[1] + LiteGraph.NODE_TITLE_HEIGHT) * 0.5);
         ctx.textAlign = "left";
     }
 }

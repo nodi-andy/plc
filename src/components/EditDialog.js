@@ -20,7 +20,7 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
 
   const handlePropertyChange = (event, key) => {
     const { value } = event.target;
-    window.canvas.current_node.properties[key] = value;
+    window.canvas.current_node.properties[key].value = value;
     event.stopPropagation(); // Stop event propagation to prevent closing the drawer
   };
 
@@ -60,7 +60,7 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
                   id="outlined-size-small"
                   defaultValue= {value.value}
                   sx={{ margin: '8px' }}
-                  onChange={(event) => handlePropertyChange(event, value.name)}
+                  onChange={(event) => handlePropertyChange(event, key)}
                   onClick={(event) => event.stopPropagation()} // Stop event propagation to prevent closing the drawer
                 />
                 <Checkbox 

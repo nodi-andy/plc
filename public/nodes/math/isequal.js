@@ -10,24 +10,17 @@ class MathIsEqual extends LGraphNode {
 
     constructor() {
         super();
-        this.addInput("a", "number", 0, "a");
-        this.addInput("b", "number", 0, "b");
-        this.addOutput("v", "number", 0, "v");
+        this.setProperty("in1", "number", 0, " ", {input: true, output: false});
+        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.label = ""
-        this._result = []; //only used for arrays
     }
 
     setValue(v) {
         if (typeof v == "string") {
             v = parseFloat(v);
         }
-        this.properties["value"] = v;
-    }
-
-    getProps() {
-        return [
-            ["comparand", "number", 0, "comparand", {optional: true}]
-        ];
+        this.properties["out"] = v;
     }
 
     onNodeInputAdd() {
@@ -35,20 +28,23 @@ class MathIsEqual extends LGraphNode {
     }
 
     onExecute(update) {
+
         if (update) {
             let ret = 1;
             this.label = "=?";
             let lastValue = null;
-            for (let index in this.inputs) {
-                let input = this.inputs[index]
-                if (index == 0) {
-                    lastValue = this.properties[input.name];
-                } else if (lastValue != this.properties[input.name]) {
+            for (let input of Object.values(this.properties)) {
+                if (input.input == false) continue;
+
+                let val = input.value
+                if (lastValue == null) {
+                    lastValue = val;
+                } else if (lastValue != val) {
                     ret = 0;
                     break;
                 }
             }
-            this.setOutputDataByName("v", ret);
+            this.properties.out.value = ret;
             update = false;
         }
     }
