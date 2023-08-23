@@ -11,7 +11,8 @@ class EventCounter extends LGraphNode{
         super();
         this.setProperty("inc", "number", 0, "+", {input: true, output: false});
         this.setProperty("dec", "number", 0, "-", {input: false, output: false});
-        this.setProperty("value", "number", 0, " ", {input: false, output: true});
+        this.setProperty("value", "number", 0, " ", {input: false, output: false});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.setProperty("set", "number", 0, " ", {input: false, output: false});
         this.setProperty("get", "number", 0, " ", {input: false, output: false});
 
@@ -43,14 +44,17 @@ class EventCounter extends LGraphNode{
                 this.properties.value.value = parseInt(this.properties.value.value) + parseInt(this.properties.inc.value);
                 this.properties.inc.value = null;
             }
+
             if (this.properties.dec.value !== null && isNaN(this.properties.dec.value) == false) {
                 this.properties.value.value -= parseInt(this.properties.dec.value);
                 this.properties.dec.value = null;
             }
+
             if (this.properties.set.value != null && isNaN(this.properties.set.value) == false) {
                 this.properties.value.value = this.properties.set.value;
                 this.properties.set.value = null;
             }
+            this.properties.out.value = this.properties.value.value;
             this.setDirtyCanvas(true, true);
         }
     }

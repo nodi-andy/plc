@@ -13,24 +13,24 @@ void Interval::setup() {
     
     if (props["properties"].containsKey("ton")) {
       if (props["properties"]["ton"].as<std::string>().length() > 0 ) {
-        defaultTOn = props["properties"]["ton"].as<int>() * 1000;
+        defaultTOn = props["properties"]["ton"]["value"].as<int>() * 1000;
       }
     }
 
     if (props["properties"].containsKey("toff")) {
       if (props["properties"]["toff"].as<std::string>().length() > 0 ) {
-        defaultTOff = props["properties"]["toff"].as<int>() * 1000;
+        defaultTOff = props["properties"]["toff"]["value"].as<int>() * 1000;
       }
     }
 
     defaultPressed = 1;
     if (props["properties"].containsKey("press")) {
-      defaultPressed = props["properties"]["press"].as<int>();
+      defaultPressed = props["properties"]["press"]["value"].as<int>();
     }
 
     defaultReleased = 0;
     if (props["properties"].containsKey("release")) {
-      defaultReleased = props["properties"]["release"].as<int>();
+      defaultReleased = props["properties"]["release"]["value"].as<int>();
     }
 
     state = defaultReleased;
@@ -39,7 +39,7 @@ void Interval::setup() {
     Serial.print(">>> Setup Interval");
     addInput("ton");
     addInput("toff");
-    addOutput("tick");
+    addOutput("state");
     lastTick = micros();
 }
 
@@ -81,7 +81,7 @@ int Interval::onExecute() {
   update = (state != newstate);
   state = newstate;
   if (update) {
-    setOutput("tick", &value);
+    setOutput("state", &value);
     Serial.print("Interval output: ");
     Serial.print((uintptr_t)&value);
     Serial.print(" : ");

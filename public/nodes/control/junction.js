@@ -10,22 +10,23 @@ class Junction extends LGraphNode {
 
     constructor() {
         super();
-        let inp = this.addInput("in", "number");
-        this.addProperty("in", 0);
-        inp.pos = [16,16]
-        inp.shape = LiteGraph.CIRCLE_SHAPE;
-        
-        let outp = this.addOutput("out", "number");
-        outp.pos = [16,16]
-        outp.shape = LiteGraph.CIRCLE_SHAPE;
+        this.setProperty("in", "number", 0, " ", {input: true, output: false, pos : [16, 16], shape: LiteGraph.CIRCLE_SHAPE});
+        this.setProperty("value", "number", 0, " ", {input: false, output: false, pos : [16, 16], shape: LiteGraph.CIRCLE_SHAPE});
+        this.setProperty("out", "number", 0, " ", {input: false, output: true, pos : [16, 16], shape: LiteGraph.CIRCLE_SHAPE});
 
         this.size = [32, 32];
         this._shape = LiteGraph.CIRCLE_SHAPE;
     }
-    onExecute() {
-        let input = this.getInputDataByName("in");
-        this.setOutputDataByName("out", input);
+
+    onExecute(update) {
+        if (update) {
+            if (this.properties.in.value != this.properties.value.value) {
+                this.properties.value.value = this.properties.in.value;
+                this.properties.out.value = this.properties.value.value;
+          }
+        }
     }
+
     getTitle() {
         if (this.flags.collapsed) {
             return this.properties.value;

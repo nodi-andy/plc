@@ -17,9 +17,7 @@ export default class Stepper extends LGraphNode{
         this.setProperty("enable port", 32, "number", "Enable Port" , {input: false, output: false});
         this.num = 0;
         this.size = [64, 64];
-
     }
-
 
     onDrawForeground(ctx) {
         var x = this.size[0] * 0.5;
@@ -41,6 +39,7 @@ export default class Stepper extends LGraphNode{
             ctx.fillText("v:" + this.properties["speed"], this.size[0] * 0.5, this.size[1] * 0.5);
         } */
     }
+
     onExecute() {
         this.setOutputData(1, this.num);
     }

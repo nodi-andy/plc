@@ -124,19 +124,24 @@ void initWiFi() {
 }
 
 void loadNoditronFile() {
-    File file = SPIFFS.open(defaultFileName.c_str());
-    if(!file){
-        Serial.println("There was an error opening the file for reading");
-    } else {
-        file.read((uint8_t *)mapFile, file.size());  
-        mapFile[file.size()] = 0;
-            Serial.println("READ DONE: ");
-            Serial.print(file.size());
-            Serial.print(",");
-            Serial.println((const char*)mapFile);
-        file.close();
-        nodemap.state = mapState::UPDATE;
-    }	
+    //if (SPIFFS.exists(defaultFileName.c_str())) {
+        //Serial.println("Default File found");
+        File file = SPIFFS.open(defaultFileName, "w", true);
+        if(!file){
+            Serial.println("There was an error opening the file for reading");
+        } else {
+            file.read((uint8_t *)mapFile, file.size());  
+            mapFile[file.size()] = 0;
+                Serial.println("READ DONE: ");
+                Serial.print(file.size());
+                Serial.print(",");
+                Serial.println((const char*)mapFile);
+            file.close();
+            nodemap.state = mapState::UPDATE;
+        }	
+    /*} else {
+        Serial.println("Default File not found");
+    }*/
 }
 // ----------------------------------------------------------------------------
 // WebSocket initialization
@@ -191,7 +196,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         JsonObject root = doc.as<JsonObject>();
         if ( root["save"].isNull() == false) {
             notifyClients((const char*)mapFile);
-            File file = SPIFFS.open("/map.json", FILE_WRITE);
+            File file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
             Serial.print("INPUT: ");
             Serial.print(strlen((const char*)mapFile));
             Serial.print(",");
@@ -383,6 +388,7 @@ void noditronTask( void * pvParameters ){
     vTaskDelay(10);
   } 
 }
+
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------

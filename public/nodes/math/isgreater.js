@@ -13,6 +13,7 @@ class MathIsGreater extends LGraphNode {
         this.setProperty("in1", "number", 0, " ", {input: true, output: false});
         this.setProperty("in2", "number", 0, " ", {input: true, output: false});
         this.setProperty("out", "number", 0, " ", {input: false, output: true});
+        this.setProperty("value", "number", 0, " ", {input: false, output: true});
         this.label = ""
         this._result = []; //only used for arrays
     }
@@ -20,12 +21,17 @@ class MathIsGreater extends LGraphNode {
     onExecute(update) {
         if (update) {
             let ret = null;
+
             if (this.properties.in1.value > this.properties.in2.value) {
                 ret = 1;
             } else {
                 ret = 0;
             }
-            this.properties.out.value = ret;
+
+            if (this.properties.value.value != ret) {
+                this.properties.value.value = ret;
+                this.properties.out.value = ret;
+            }
             update = false;
         }
     }

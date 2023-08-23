@@ -16,31 +16,36 @@ void Stepper::setup() {
     dirPort = 14;
     enablePort = 32;
     if(props["properties"].containsKey("step port") > 0 ) {
-      stepPort = props["properties"]["step port"].as<int>();
+      stepPort = props["properties"]["step port"]["value"].as<int>();
     }
     
     if(props["properties"].containsKey("dir port") > 0 ) {
-      dirPort = props["properties"]["dir port"].as<int>();
+      dirPort = props["properties"]["dir port"]["value"].as<int>();
     }
 
     if(props["properties"].containsKey("enable port") > 0 ) {
-      enablePort = props["properties"]["enable port"].as<int>();
+      enablePort = props["properties"]["enable port"]["value"].as<int>();
     }
 
     pos = 0;
     //Serial.print(" And inputs:");
+    /*
     for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addInput(inputObj["name"].as<std::string>());
         inputVals[inputObj["name"].as<std::string>()] = 0;
         props["properties"][inputObj["name"]] = nullptr;
     }
+*/
+    addInput("pos");
 
     //Serial.print(" And outputs:");
+    /*
     for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addOutput(inputObj["name"].as<std::string>());
     }
+    */
 
     My_timer = NULL;
 

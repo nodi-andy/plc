@@ -10,15 +10,14 @@ void LED::setup() {
     desc = "Show value of input";
 
     if (props["properties"].containsKey("port")) {
-      port = props["properties"]["port"].as<int>();
+      port = props["properties"]["port"]["value"].as<int>();
       if (port >= 0) pinMode(port, OUTPUT);
     }
     if (props["properties"].containsKey("value")) {
-      value = props["properties"]["value"].as<int>();
+      value = props["properties"]["value"]["value"].as<int>();
     }
     state = newstate = value;
-    addInput("in");
-    addOutput("out");
+    addInput("value");
 }
 
 int LED::onExecute() {
@@ -36,8 +35,8 @@ int LED::onExecute() {
       }
     }
 
-    if (inputVals["in"] != nullptr && newstate != *(inputVals["in"]) && *(inputVals["in"]) != INT_MAX) {
-      newstate = *(inputVals["in"]);
+    if (inputVals["value"] != nullptr && newstate != *(inputVals["value"]) && *(inputVals["value"]) != INT_MAX) {
+      newstate = *(inputVals["value"]);
       Serial.print("LED.targetState.changed: ");
       Serial.print(newstate);
     }

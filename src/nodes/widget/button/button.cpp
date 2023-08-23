@@ -12,7 +12,7 @@ void Button::setup() {
 
     if (jsonProp.containsKey("port")) {
       if (jsonProp["port"].as<std::string>().length() > 0 ) {
-        port = jsonProp["port"].as<int>();
+        port = jsonProp["port"]["value"].as<int>();
         if (port >= 0) {
           pinMode(port, INPUT);
           pinMode(port, INPUT_PULLUP);
@@ -27,9 +27,9 @@ void Button::setup() {
 
 
     if (jsonProp.containsKey("press")) {
-      std::string jsonVal = jsonProp["press"].as<std::string>();
+      std::string jsonVal = jsonProp["press"]["value"].as<std::string>();
       if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultPressVal = jsonProp["press"].as<int>();
+        defaultPressVal = jsonProp["press"]["value"].as<int>();
         defaultPress = &defaultPressVal;
       } else {
         defaultPress = 0;
@@ -37,9 +37,9 @@ void Button::setup() {
     }
 
     if (jsonProp.containsKey("release")) {
-      std::string jsonVal = jsonProp["release"].as<std::string>();
+      std::string jsonVal = jsonProp["release"]["value"].as<std::string>();
       if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultReleaseVal = jsonProp["release"].as<int>();
+        defaultReleaseVal = jsonProp["release"]["value"].as<int>();
         defaultRelease = &defaultReleaseVal;
       } else {
         defaultRelease = 0;
@@ -117,7 +117,7 @@ int Button::onExecute() {
     state = newState;
   }
   if (updateOutput) {
-    setOutput("v", output);
+    setOutput("state", output);
     Serial.print("Button output: ");
     if (output) {
       Serial.println(*output);
