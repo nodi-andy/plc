@@ -160,7 +160,18 @@
 
     window.nodes.upload = () => {
       if (window.ws) {
-        window.ws.send(JSON.stringify({'save':window.graph.serialize()}));
+        let storeGraph = JSON.parse(JSON.stringify(window.graph.serialize()))
+        delete storeGraph.config;
+        delete storeGraph.extra;
+        delete storeGraph.groups;
+        for(let n in storeGraph.nodes) {
+          let node = storeGraph.nodes[n];
+          delete node.flags;
+          delete node.inputs;
+          delete node.outputs;
+          delete node.mode;
+        }
+        window.ws.send(JSON.stringify({'save': storeGraph}));
         window.showSnackbar("nodework sent to nodi.box!")
       }
     }

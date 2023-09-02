@@ -66,8 +66,8 @@ function onMessage(event) {
         if (window.graph._nodes_by_id[data.update.id].hwSetState) {
             window.graph._nodes_by_id[data.update.id].hwSetState(data.update.state);
         }
-        window.graph._nodes_by_id[data.update.id].value = data.update.value;
-        window.graph._nodes_by_id[data.update.id].properties.value = data.update.value;
+        window.graph._nodes_by_id[data.update.id].properties.value.value = data.update.value;
+        window.graph._nodes_by_id[data.update.id].properties.state.value = data.update.state;
     }
 
     if (data.updateWiFi) {

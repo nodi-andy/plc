@@ -11,7 +11,7 @@ class Router : public Node
         return new Router(*this); // Create a new instance of the Link object
     }
     virtual std::string getType() const override {
-        return "control/router";
+        return "control/filter";
     }
 
     void setup();

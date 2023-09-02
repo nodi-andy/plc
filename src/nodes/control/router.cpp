@@ -8,15 +8,36 @@ Router::Router() {
 void Router::setup() {
     title = "Selector";
     desc = "Read input";
-    name = "control/router";
+    name = "control/filter";
 
-
-    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
-        addInput(inputObj["name"].as<std::string>());
+    // Iterate through the properties object
+    for (JsonPair property : props["properties"].as<JsonObject>()) {
+        JsonObject propObj = property.value().as<JsonObject>();
+        
+        // Check if the "input" property is true
+        if (propObj["input"] == true) {
+            const char* propertyName = property.key().c_str();
+            
+            // Call your addInput function with propertyName
+            Serial.print("Adding input for property: ");
+            Serial.println(propertyName);
+            addInput(propertyName);
+        }
     }
 
-    for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
-        addOutput(inputObj["name"].as<std::string>());
+    // Iterate through the properties object
+    for (JsonPair property : props["properties"].as<JsonObject>()) {
+        JsonObject propObj = property.value().as<JsonObject>();
+        
+        // Check if the "input" property is true
+        if (propObj["output"] == true) {
+            const char* propertyName = property.key().c_str();
+            
+            // Call your addInput function with propertyName
+            Serial.print("Adding output for property: ");
+            Serial.println(propertyName);
+            addOutput(propertyName);
+        }
     }
 
 }

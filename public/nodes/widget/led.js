@@ -28,7 +28,7 @@ export default class WidgetLed extends LGraphNode{
         ctx.strokeStyle = '#000';
         ctx.stroke();
 
-        if (this.properties.label.value.length) {
+        if (this.properties.label.value) {
             ctx.textAlign = "center";
             ctx.fillStyle = "#AAA";
             ctx.fillText(this.properties.label.value, this.size[0] * 0.5, 10);

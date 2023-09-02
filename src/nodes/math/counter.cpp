@@ -11,15 +11,34 @@ void Counter::setup() {
     name = "events/counter";
 
     value = 0;
-    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
-        Serial.print("Counter input:");
-        Serial.println(inputObj["name"].as<std::string>().c_str());
-        addInput(inputObj["name"].as<std::string>());
+    // Iterate through the properties object
+    for (JsonPair property : props["properties"].as<JsonObject>()) {
+        JsonObject propObj = property.value().as<JsonObject>();
+        
+        // Check if the "input" property is true
+        if (propObj["input"] == true) {
+            const char* propertyName = property.key().c_str();
+            
+            // Call your addInput function with propertyName
+            Serial.print("Adding input for property: ");
+            Serial.println(propertyName);
+            addInput(propertyName);
+        }
     }
 
-    for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
-        Serial.println(inputObj["name"].as<std::string>().c_str());
-        addOutput(inputObj["name"].as<std::string>());
+    // Iterate through the properties object
+    for (JsonPair property : props["properties"].as<JsonObject>()) {
+        JsonObject propObj = property.value().as<JsonObject>();
+        
+        // Check if the "input" property is true
+        if (propObj["output"] == true) {
+            const char* propertyName = property.key().c_str();
+            
+            // Call your addInput function with propertyName
+            Serial.print("Adding output for property: ");
+            Serial.println(propertyName);
+            addOutput(propertyName);
+        }
     }
 }
 
@@ -49,7 +68,7 @@ int Counter::onExecute() {
     }
     value = newvalue;
     if (update) {
-        setOutput("n", &value);
+        setOutput("get", &value);
     }
     return update;
 }

@@ -13,8 +13,8 @@ export default class Stepper extends LGraphNode{
         this.setProperty("speed", "number", 100, "speed", {input: false, output: false});
         this.setProperty("reset", "number", 0, "reset", {input: false, output: false});
         this.setProperty("step port", "number", 27, "Step Port", {input: false, output: false});
-        this.setProperty("dir port", 14, "number", "Direction Port", {input: false, output: false});
-        this.setProperty("enable port", 32, "number", "Enable Port" , {input: false, output: false});
+        this.setProperty("dir port", "number", 14, "Direction Port", {input: false, output: false});
+        this.setProperty("enable port", "number", 32, "Enable Port" , {input: false, output: false});
         this.num = 0;
         this.size = [64, 64];
     }

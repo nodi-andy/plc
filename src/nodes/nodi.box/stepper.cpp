@@ -38,6 +38,13 @@ void Stepper::setup() {
     }
 */
     addInput("pos");
+    addInput("speed");
+    if (props["properties"]["pos"]["input"] == true) {
+      posGiven = 1;
+    }
+    if (props["properties"]["speed"]["input"] == true) {
+      speedGiven = 1;
+    }
 
     //Serial.print(" And outputs:");
     /*
@@ -67,12 +74,11 @@ void Stepper::setup() {
 
 int Stepper::onExecute() {
     bool update = false;
-    posGiven = 0;
-    speedGiven = 0;
+    //posGiven = 0;
+    //speedGiven = 0;
+
 
     for (auto& input : inputs) {
-      if (input.first == "pos") posGiven = 1;
-      if (input.first == "speed") speedGiven = 1;
       if (input.second) {
         update = true;
         Serial.print("Stepper.");
@@ -97,6 +103,10 @@ int Stepper::onExecute() {
       Serial.print("Stepper.speed.changed: ");
       Serial.println(speed);
       setSpeed(targetSpeed);
+      Serial.print("posGiven: ");
+      Serial.print(posGiven);
+      Serial.print("  speedGiven: ");
+      Serial.println(speedGiven);
     }
 
     if (inputVals["reset"] != nullptr && 1 != *(inputVals["reset"]) && *(inputVals["reset"]) != INT_MAX) {
