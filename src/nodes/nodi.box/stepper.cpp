@@ -9,7 +9,7 @@ Stepper::~Stepper() {
 
 // init the node
 void Stepper::setup() {
-    title = "Counter";
+    title = "Stepper";
     desc = "Read input";
     name = "nodi.box/stepper";
     stepPort = 27;
@@ -66,8 +66,9 @@ void Stepper::setup() {
     
     My_timer = timerBegin(0, 80, true);
     timerAttachInterrupt(My_timer, &Stepper::onTimer, true);
-    speed = 0;
-    setSpeed(2000);
+    speed = 2000;
+    targetSpeed = speed;
+    setSpeed(targetSpeed); // default speed, if only pos is controlled
     timerAlarmWrite(My_timer, speed, true);
     timerAlarmEnable(My_timer);
 }
@@ -78,44 +79,36 @@ int Stepper::onExecute() {
     //speedGiven = 0;
 
 
-    for (auto& input : inputs) {
-      if (input.second) {
-        update = true;
-        Serial.print("Stepper.");
-        Serial.print(input.first.c_str());
-        Serial.print(": ");
-        Serial.println(*input.second);
-        inputVals[input.first] = input.second;
-        input.second = nullptr;
-      }
-    }
-
-    if (inputVals["pos"] != nullptr && targetPos != *(inputVals["pos"]) && *(inputVals["pos"]) != INT_MAX) {
-      targetPos = *(inputVals["pos"]);
+    if (getInput("pos") != nullptr && targetPos != *getInput("pos") && *getInput("pos") != INT_MAX) {
+      targetPos = *getInput("pos");
       Serial.print("Stepper.targetPos.changed: ");
       Serial.print(targetPos);
       Serial.print("speed is: ");
       Serial.println(speed);
+      setInput("pos", NULL);
     }
 
-    if (inputVals["speed"] != nullptr && targetSpeed != *(inputVals["speed"]) && *(inputVals["speed"]) != INT_MAX) {
-      targetSpeed = *(inputVals["speed"]);
+
+    if (getInput("speed") != nullptr  && *getInput("speed") != INT_MAX) {
+      targetSpeed = *getInput("speed");
       Serial.print("Stepper.speed.changed: ");
-      Serial.println(speed);
+      Serial.println(targetSpeed);
       setSpeed(targetSpeed);
       Serial.print("posGiven: ");
       Serial.print(posGiven);
       Serial.print("  speedGiven: ");
       Serial.println(speedGiven);
+      setInput("speed", NULL);
     }
 
-    if (inputVals["reset"] != nullptr && 1 != *(inputVals["reset"]) && *(inputVals["reset"]) != INT_MAX) {
+    if (getInput("reset") != nullptr && 1 != *getInput("reset") && *getInput("reset") != INT_MAX) {
       Serial.println("Stepper.resetted ");
       pos = 0;
       targetPos = 0;
       inputVals["reset"] = nullptr;
       inputVals["pos"] = nullptr;
       inputVals["speed"] = nullptr;
+      setInput("reset", NULL);
     }
 
     setOutput("pos", &pos);
@@ -134,24 +127,24 @@ int Stepper::onExecute() {
 }
 
 void Stepper::setSpeed(int newSpeed) {
-  if (newSpeed == speed) return;
   if (!My_timer) return;
   newSpeed = abs(newSpeed);
+  if (newSpeed == speed) return;
   if (newSpeed == 0) {
         speed = 0;
         timerAlarmDisable(My_timer);
         timerState = 0;
-        Serial.print("Timer OFF. ");
+        Serial.println("Timer OFF. ");
   } else {
     if (timerState == 0) {
-        Serial.print("Timer ON. ");
+        Serial.println("Timer ON. ");
         timerAlarmEnable(My_timer);
         timerState = 1;
     }
     if (newSpeed != speed) {
       Serial.print("Set Speed.");
       Serial.println(speed);
-      timerAlarmWrite(My_timer, speed, true);
+      timerAlarmWrite(My_timer, newSpeed, true);
     }
     speed = newSpeed;
   }

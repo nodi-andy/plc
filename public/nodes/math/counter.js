@@ -18,7 +18,7 @@ class EventCounter extends WidgetNumber{
         ctx.fillStyle = "#AAA";
         ctx.font = "12px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(this.value, this.size[0] * 0.5, this.size[1] * 0.5);
+        ctx.fillText(this.properties.value.value, this.size[0] * 0.5, this.size[1] * 0.5);
     }
 
     onMouseDown(e, pos) {
@@ -46,16 +46,16 @@ class EventCounter extends WidgetNumber{
         if (update) {
             super.exec(update);
             if (this.properties.inc.value !== null && isNaN(this.properties.inc.value) == false) {
-                this.value = parseInt(this.value) + parseInt(this.properties.inc.value);
+                this.properties.value.value = parseInt(this.properties.value.value) + parseInt(this.properties.inc.value);
                 this.properties.inc.value = null;
             }
 
             if (this.properties.dec.value !== null && isNaN(this.properties.dec.value) == false) {
-                this.value -= parseInt(this.properties.dec.value);
+                this.properties.value.value -= parseInt(this.properties.dec.value);
                 this.properties.dec.value = null;
             }
 
-            this.properties.get.value = this.value;
+            this.properties.get.value = this.properties.value.value;
             this.setDirtyCanvas(true, true);
         }
     }

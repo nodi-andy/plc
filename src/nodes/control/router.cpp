@@ -44,21 +44,20 @@ void Router::setup() {
 
 int Router::onExecute() {
     bool update = false;
-    for (auto& input : inputs) {
-      if (input.second) {
-        update = true;
-        props["properties"][input.first] = *(input.second);
-      }
-      input.second = nullptr;
-    }
 
-    if (update) {
-        if (props["properties"]["in"] == props["properties"]["pass"]) {
-            value = props["properties"]["in"].as<int>();
+    if (getInput("in")) {
+        Serial.print("Router c: ");
+        Serial.print(*getInput("in"));
+        Serial.print(" : ");
+        Serial.println(props["properties"]["pass"]["value"].as<int>());
+
+        if (*getInput("in") == props["properties"]["pass"]["value"].as<int>()) {
+            value = *getInput("in");
             setOutput("out", &value);
             Serial.print("Router: output ");
             Serial.println(value);
         }
+        setInput("in", NULL);
     }
     return 0;
 }
