@@ -13,8 +13,6 @@ export default class WidgetNumber extends LGraphNode {
         super();
         this.setProperty("value", "number", 0, " ", {input: false, output: false});
         this.setProperty("read", "number", 0, "read", {input: false, output: false});
-        this.setProperty("get", "number", 0, " ", {input: false, output: false});
-        this.setProperty("set", "number", 0, "set", {input: false, output: false});
         this.size = [64, 64];
         this.old_y = -1;
         this._remainder = 0;
@@ -54,15 +52,15 @@ export default class WidgetNumber extends LGraphNode {
 
     exec(update) {
         if (update || this.updateView) {
-            if (this.properties.set.value != null) {
-                this.properties.value.value = parseInt(this.properties.set.value);
-                this.properties.set.value = null;
-                this.properties.get.value = this.properties.value.value;
+            if (this.properties.value.inpValue != null) {
+                this.properties.value.value = parseInt(this.properties.value.inpValue);
+                this.properties.value.inpValue = null;
+                this.properties.value.outValue = this.properties.value.value;
                 this.setDirtyCanvas(true);
             }
             if (this.properties.read.value != null) {
                 this.properties.read.value = null;
-                this.properties.get.value = this.properties.value.value;
+                this.properties.value.outValue = this.properties.value.value;
                 this.setDirtyCanvas(true);
             }
             this.valUpdated = false;
@@ -88,15 +86,15 @@ export default class WidgetNumber extends LGraphNode {
     }
 
     onMouseDown(e, pos) {
-        if (pos[1] < 0) {
-            return;
+        if (this.is_selected !== true) {
+            return false
+        } else {
+            this.old_y = e.canvasY;
+            this.captureInput(true);
+            this.mouse_captured = true;
+            this.setDirtyCanvas(true);
+            return true;
         }
-
-        this.old_y = e.canvasY;
-        this.captureInput(true);
-        this.mouse_captured = true;
-        this.setDirtyCanvas(true);
-        return true;
     }
 
     onMouseMove(e) {
@@ -141,7 +139,7 @@ export default class WidgetNumber extends LGraphNode {
     setValue(val) {
         this.properties.value.value = val;
         this.update = true;
-        this.properties.get.value = val;
+        this.properties.value.outValue = this.properties.value.value;
     }
 }
 

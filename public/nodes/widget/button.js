@@ -54,7 +54,8 @@ export default class WidgetButton extends LGraphNode{
     onMouseDown(e, local_pos) {
         if (local_pos[0] > this.margin && local_pos[1] > this.margin && local_pos[0] < this.size[0] - this.margin && local_pos[1] < this.size[1] - this.margin) {
             this.newState = 1;
-            this.properties["state"].value = this.properties["press"].value;
+            this.properties.state.value = this.properties.press.value;
+            this.properties.state.outValue = this.properties.state.value;
             return true;
         }
         this.setDirtyCanvas(true);
@@ -97,7 +98,8 @@ export default class WidgetButton extends LGraphNode{
 
     onMouseUp(/*e*/) {
             this.newState = 0;
-            this.properties["state"].value = this.properties["release"].value;
+            this.properties.state.value = this.properties.release.value;
+            this.properties.state.outValue = this.properties.state.value;
 
         this.setDirtyCanvas(true);
 

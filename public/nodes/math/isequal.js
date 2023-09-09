@@ -34,6 +34,12 @@ class MathIsEqual extends LGraphNode {
             this.label = "=?";
             let lastValue = null;
             for (let input of Object.values(this.properties)) {
+                if (input.input == true && input.inpValue !== null) {
+                    input.value = input.inpValue;
+                    input.inpValue = null;
+                }
+            }
+            for (let input of Object.values(this.properties)) {
                 if (input.input == false) continue;
 
                 let val = input.value
@@ -44,15 +50,11 @@ class MathIsEqual extends LGraphNode {
                     break;
                 }
             }
-            this.properties.out.value = ret;
+            this.properties.out.outValue = ret;
             update = false;
         }
     }
     onDrawBackground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
         ctx.font = "20px Arial";
         ctx.fillStyle = "#666";
         ctx.textAlign = "center";

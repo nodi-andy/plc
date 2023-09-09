@@ -22,13 +22,9 @@ class EventCounter extends WidgetNumber{
     }
 
     onMouseDown(e, pos) {
-        if (pos[1] < 0) {
-            return;
-        }
-
         this.captureInput(true);
         this.setDirtyCanvas(true);
-        return true;
+        return false;
     }
 
     onMouseUp(e, pos) {

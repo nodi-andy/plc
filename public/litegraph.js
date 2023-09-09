@@ -17,7 +17,7 @@ export var LiteGraph = (global.LiteGraph = {
 
     CANVAS_GRID_SIZE: 64,
 
-    NODE_TITLE_HEIGHT: 24,
+    NODE_TITLE_HEIGHT: 0,
     NODE_TITLE_TEXT_Y: 10,
     NODE_SLOT_HEIGHT: 64,
     NODE_WIDGET_HEIGHT: 20,
@@ -971,16 +971,16 @@ class LGraph {
 
         for (let linkID in this.links) {
             let link = this.links[linkID];
-            let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].value;
+            let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].outValue;
             if(dataFromNode !== null) {
-                this._nodes_by_id[link.target_id].properties[link.target_slot].value = dataFromNode;
+                this._nodes_by_id[link.target_id].properties[link.target_slot].inpValue = dataFromNode;
                 this._nodes_by_id[link.target_id].update = true;
             }
         }
         
         for (let linkID in this.links) {
             let link = this.links[linkID];
-            this._nodes_by_id[link.origin_id].properties[link.origin_slot].value = null;
+            this._nodes_by_id[link.origin_id].properties[link.origin_slot].outValue = null;
         }
 
         for (var j = 0; j < nodes.length; ++j) {

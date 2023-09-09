@@ -25,6 +25,12 @@ class MathAdd extends LGraphNode {
             let ret = 0;
             this.label = "";
             for (let input of Object.values(this.properties)) {
+                if (input.input == true && input.inpValue !== null) {
+                    input.value = input.inpValue;
+                    input.inpValue = null;
+                }
+            }
+            for (let input of Object.values(this.properties)) {
                 if (input.input == false) continue;
                 let val = input.value
                 val = parseInt(input.value);
@@ -36,7 +42,7 @@ class MathAdd extends LGraphNode {
                 ret += parseInt(val);
             }
             this.label = ret
-            this.properties.out.value = ret;
+            this.properties.out.outValue = ret;
             update = false;
         }
     }

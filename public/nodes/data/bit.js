@@ -19,20 +19,25 @@ export default class DFlipFlop extends LGraphNode {
 
 
     onExecute() {
-            if (this.properties.set.value == 1) {
+            if (this.properties.set.inpValue == 1) {
                 this.properties.state.value = 1;
+                this.properties.set.inpValue = null;
             }
 
-            if (this.properties.clear.value == 1) {
+            if (this.properties.clear.inpValue == 1) {
                 this.properties.state.value = 0;
+                this.properties.clear.inpValue = null;
             }
 
-            if (this.properties.toggle.value == 1) {
+            if (this.properties.toggle.inpValue == 1) {
                 if ( this.properties.state.value == 1) {
                     this.properties.state.value = 0;
+                    this.properties.state.outValue = this.properties.state.value;
                 } else {
                     this.properties.state.value = 1;
+                    this.properties.state.outValue = this.properties.state.value;
                 }
+                this.properties.toggle.inpValue = null;
             }
 
             this.setDirtyCanvas(true, true);

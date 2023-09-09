@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect  } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { blue } from '@mui/material/colors';
 
@@ -29,6 +29,26 @@ function App() {
   const [showConnection, setShowConnection] = useState(false);
   const [showEditMenu, setShowEditMenu] = useState(false);
 
+  useEffect(() => {
+    const canvas = document.getElementById('mycanvas');
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    // Initial sizing
+    resizeCanvas();
+
+    // Listen for window resize events and resize the canvas accordingly
+    window.addEventListener('resize', resizeCanvas);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []); // Empty dependency array ensures this effect runs only once
+
   return (
     <div>
       <ThemeProvider theme={theme}>
@@ -39,13 +59,11 @@ function App() {
         <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
         <SelectFileDialog openFD={showFiles}  setOpenFD={setShowFiles}/>
         <ConnectionDialog openFD={showConnection}  setOpenFD={setShowConnection}/>
-
       </div>
+
         <canvas
           id="mycanvas"
           style={{ position: 'absolute', left: 0, top: 0}}
-          width={800}
-          height={600}
         />
         <Routes>
           {/* Public routes */}

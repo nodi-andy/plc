@@ -18,14 +18,9 @@ export default class WidgetToggle extends LGraphNode{
         this.setProperty("color", "string",  "#A00", "color", {input: false, output: false});
         this.properties.out.value = false;
         this.size = [64, 64];
-        this.newState = 0
     }
 
     onDrawForeground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
         var size = this.size[1] * 0.5;
         var margin = 0.25;
         var y = this.size[1] * 0.25;
@@ -56,25 +51,29 @@ export default class WidgetToggle extends LGraphNode{
     }
 
     onExecute() {
-        if (this.newState == 0 && this.properties.state.value == 1) {
-            this.properties.out.value = this.properties.release.value;
+        if (this.properties.state.inpValue == 0 && this.properties.state.value == 1) {
+            this.properties.out.outValue = this.properties.release.value;
+            this.properties.state.value = this.properties.state.inpValue;
+            this.properties.state.outValue = this.properties.state.value;
+            this.properties.state.inpValue = null;
         }
         
-        if (this.newState == 1 && this.properties.state.value == 0) {
-            this.properties.out.value = this.properties.press.value;
+        if (this.properties.state.inpValue == 1 && this.properties.state.value == 0) {
+            this.properties.out.outValue = this.properties.press.value;
+            this.properties.state.value = this.properties.state.inpValue;
+            this.properties.state.outValue = this.properties.state.value;
+            this.properties.state.inpValue = null;
         }
-
-        this.properties.state.value = this.newState;
     }
     
     onMouseDown(e, local_pos) {
-        if (local_pos[0] > 10 &&
-            local_pos[1] > 10 &&
-            local_pos[0] < this.size[0] - 10 &&
-            local_pos[1] < this.size[1] - 10) {
+        if (local_pos[0] > this.size[0] * 0.25 &&
+            local_pos[1] >  this.size[0] * 0.25 &&
+            local_pos[0] < this.size[0] * 0.75 &&
+            local_pos[1] < this.size[1] * 0.75) {
             this.graph._version++;
             this.trigger("e", this.properties.value);
-            this.newState = !this.properties.state.value
+            this.properties.state.inpValue = !this.properties.state.value
             return true;
         }
     }
