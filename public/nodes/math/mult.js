@@ -46,10 +46,6 @@ class MathMult extends LGraphNode {
         }
     }
     onDrawBackground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
         ctx.font = "20px Arial";
         ctx.fillStyle = "#666";
         ctx.textAlign = "center";

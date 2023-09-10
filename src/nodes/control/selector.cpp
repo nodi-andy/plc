@@ -26,12 +26,12 @@ int Selector::onExecute() {
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
-        inputVals[input.first] = (input.second);
+        inputVals[input.first][0] = (input.second);
       }
       input.second = nullptr;
     }
 
-    int inpSelect = *(inputVals["SelIn"]);
+    int inpSelect = *(inputVals["SelIn"][0]);
     if (inpSelect && update) {
         std::string inpString;
         inpString.push_back(inpSelect + 96);

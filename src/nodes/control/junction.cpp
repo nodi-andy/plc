@@ -8,7 +8,6 @@ Junction::Junction() {
 void Junction::setup() {
     title = "Junction";
     name = "Junction";
-    multipleInput = true;
 
     for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
         Serial.print("Junction input:");

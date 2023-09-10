@@ -24,13 +24,16 @@ class Node
         int newvalue = 0;
         int state = 0;
         int newstate = 0;
-        bool multipleInput = false;
         virtual void setup();
         virtual int onExecute();
         static std::unordered_map<std::string, Node*> nodeReg;
 
-        std::unordered_map<std::string, int*> inputVals;
+        void setupVals();
+        std::unordered_map<std::string, std::array<int*, 2>> inputVals;
+        std::unordered_map<std::string, int> vals;
+        std::unordered_map<std::string, std::array<int*, 2>> outputVals;
         std::unordered_map<std::string, int*> inputs;
+        void addProp(std::string name);
         void addInput(std::string name);
         void setInput(std::string name, int* val);
         int* getInput(std::string name);

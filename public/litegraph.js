@@ -2948,44 +2948,14 @@ class Subgraph {
     getProps() {
         return [["enabled", "boolean"]];
     }
-    /*
-        Subgraph.prototype.onDrawTitle = function(ctx) {
-            if (this.flags.collapsed) {
-                return;
-            }
     
-            ctx.fillStyle = "#555";
-            var w = LiteGraph.NODE_TITLE_HEIGHT;
-            var x = this.size[0] - w;
-            ctx.fillRect(x, -w, w, w);
-            ctx.fillStyle = "#333";
-            ctx.beginPath();
-            ctx.moveTo(x + w * 0.2, -w * 0.6);
-            ctx.lineTo(x + w * 0.8, -w * 0.6);
-            ctx.lineTo(x + w * 0.5, -w * 0.3);
-            ctx.fill();
-        };
-        */
     onDblClick(e, pos, graphcanvas) {
         var that = this;
         setTimeout(function () {
             graphcanvas.openSubgraph(that.subgraph);
         }, 10);
     }
-    /*
-        Subgraph.prototype.onMouseDown = function(e, pos, graphcanvas) {
-            if (
-                !this.flags.collapsed &&
-                pos[0] > this.size[0] - LiteGraph.NODE_TITLE_HEIGHT &&
-                pos[1] < 0
-            ) {
-                var that = this;
-                setTimeout(function() {
-                    graphcanvas.openSubgraph(that.subgraph);
-                }, 10);
-            }
-        };
-        */
+    
     onAction(action, param) {
         this.subgraph.onAction(action, param);
     }
@@ -3022,8 +2992,7 @@ class Subgraph {
         }
     }
     onDrawBackground(ctx, graphcanvas, canvas, pos) {
-        if (this.flags.collapsed)
-            return;
+
         var y = this.size[1] - LiteGraph.NODE_TITLE_HEIGHT + 0.5;
         // button
         var over = Math.isInsideRectangle(pos[0], pos[1], this.pos[0], this.pos[1] + y, this.size[0], LiteGraph.NODE_TITLE_HEIGHT);
@@ -3374,13 +3343,8 @@ class GraphInput {
         else if (name == "type") {
             this.updateType();
         }
-        else if (name == "value") {
-        }
     }
     getTitle() {
-        if (this.flags.collapsed) {
-            return this.properties.name;
-        }
         return this.title;
     }
     onAction(action, param) {
@@ -3526,9 +3490,6 @@ class GraphOutput {
         }
     }
     getTitle() {
-        if (this.flags.collapsed) {
-            return this.properties.name;
-        }
         return this.title;
     }
 }

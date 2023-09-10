@@ -13,7 +13,7 @@ void LogicAdd::setup() {
     for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addInput(inputObj["name"].as<std::string>());
-        inputVals[inputObj["name"].as<std::string>()] = 0;
+        inputVals[inputObj["name"].as<std::string>()][0] = 0;
     }
 
     //Serial.print(" Add outputs:");
@@ -31,7 +31,7 @@ int LogicAdd::onExecute() {
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
-        inputVals[input.first] = input.second;
+        inputVals[input.first][0] = input.second;
         Serial.println(*input.second);
       } else if (props["properties"].containsKey(input.first)) {
        // inputVals[input.first] = props["properties"][input.first].as<int>();
@@ -40,7 +40,7 @@ int LogicAdd::onExecute() {
     }
 
     for (auto input : inputVals) {
-        value += *(input.second);
+        value += *(input.second[0]);
     }
 
     if (update) {

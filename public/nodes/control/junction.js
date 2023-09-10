@@ -26,13 +26,6 @@ class Junction extends LGraphNode {
           }
         }
     }
-
-    getTitle() {
-        if (this.flags.collapsed) {
-            return this.properties.value;
-        }
-        return this.title;
-    }
 }
 
 

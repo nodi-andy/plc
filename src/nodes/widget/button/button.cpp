@@ -10,56 +10,29 @@ void Button::setup() {
     desc = "Read input";
     JsonObject jsonProp = props["properties"];
 
-    if (jsonProp.containsKey("port")) {
-      if (jsonProp["port"].as<std::string>().length() > 0 ) {
-        port = jsonProp["port"]["value"].as<int>();
-        if (port >= 0) {
-          pinMode(port, INPUT);
-          pinMode(port, INPUT_PULLUP);
-        }
-      }
+    // Iterate through the properties object
+    for (JsonPair property : props["properties"].as<JsonObject>()) {
+      JsonObject propObj = property.value().as<JsonObject>();
+      const char* propertyName = property.key().c_str();
+      
+      // Call your addInput function with propertyName
+      Serial.print("Adding property: ");
+      Serial.println(propertyName);
+      addProp(propertyName);
+      vals[propertyName] = props["properties"][propertyName]["value"].as<int>();
     }
 
-    defaultPressVal = 0;
-    defaultReleaseVal = 0;
-    defaultPress = 0;
-    defaultRelease = 0;
-
-
-    if (jsonProp.containsKey("press")) {
-      std::string jsonVal = jsonProp["press"]["value"].as<std::string>();
-      if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultPressVal = jsonProp["press"]["value"].as<int>();
-        defaultPress = &defaultPressVal;
-      } else {
-        defaultPress = 0;
-      }
-    }
-
-    if (jsonProp.containsKey("release")) {
-      std::string jsonVal = jsonProp["release"]["value"].as<std::string>();
-      if ( jsonVal.length() > 0 && jsonVal != "null") {
-        defaultReleaseVal = jsonProp["release"]["value"].as<int>();
-        defaultRelease = &defaultReleaseVal;
-      } else {
-        defaultRelease = 0;
-      }
+    port = vals["port"];
+    if (port >= 0) {
+      pinMode(port, INPUT);
+      pinMode(port, INPUT_PULLUP);
     }
 
     state = digitalRead(port);
 
     Serial.print(">>> Setup Button, PORT: ");
     Serial.println(port);
-    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
-        Serial.println(inputObj["name"].as<std::string>().c_str());
-        addInput(inputObj["name"].as<std::string>());
-        inputVals[inputObj["name"].as<std::string>()] = 0;
-        props["properties"][inputObj["name"]] = nullptr;
-    }
-    for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
-        Serial.println(inputObj["name"].as<std::string>().c_str());
-        addOutput(inputObj["name"].as<std::string>());
-    }
+
     Serial.println(">>> Button setup done.");
 }
 
@@ -71,25 +44,16 @@ int Button::onExecute() {
 
     value = 1;
     int newState = digitalRead(port);
-    for (auto& input : inputs) {
-      if (input.second) {
-        Serial.print("Button.");
-        Serial.print(input.first.c_str());
-        Serial.print(": ");
-        Serial.println(*input.second);
-        inputVals[input.first] = input.second;
-        input.second = nullptr;
-      }
-    }
+
     if (state == newState) return false;
 
 
-    if ( inputVals.count("in") ) {
+    /*if ( inputVals.count("in") ) {
       updateOutput = true;
       if (newState == 0) {
         Serial.println("Button conduct EdgeDown: ");
         if (defaultPress && *defaultPress) {
-          output = inputVals["in"];
+          output = inputVals["in"][0];
         } else {
           output = &NULL_DATA;
         }
@@ -97,25 +61,26 @@ int Button::onExecute() {
       if (newState == 1) {
         Serial.println("Button conduct EdgeUp: ");
         if (defaultRelease && *defaultRelease) {
-          output = inputVals["in"];
+          output = inputVals["in"][0];
         } else {
           output = &NULL_DATA;
         }
       } 
-    } else {
+    } else */{
       if (newState == 0) {
-        output = defaultPress;
+        output = &vals["press"];
         Serial.println("Button state EdgeDown: ");
         updateOutput = true;
       } 
       if (newState == 1) {
-        output = defaultRelease;
+        output = &vals["release"];
         Serial.println("Button state EdgeUp: ");
         updateOutput = true;
       }
     }
     state = newState;
   }
+  
   if (updateOutput) {
     setOutput("state", output);
     Serial.print("Button output: ");

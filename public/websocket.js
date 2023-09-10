@@ -95,9 +95,9 @@ function initButton() {
 }
 
 function onToggle(event) {
-    if (websocket) websocket.send(JSON.stringify({'action':'toggle'}));
+    if (websocket) websocket.sendMsg(JSON.stringify({'action':'toggle'}));
 }
 
 function saveMap(event) {
-    if (websocket) websocket.send(JSON.stringify({'save':window.graph.serialize()}));
+    if (websocket) websocket.sendMsg(JSON.stringify({'save':window.graph.serialize()}));
 }

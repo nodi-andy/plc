@@ -105,9 +105,9 @@ int Stepper::onExecute() {
       Serial.println("Stepper.resetted ");
       pos = 0;
       targetPos = 0;
-      inputVals["reset"] = nullptr;
-      inputVals["pos"] = nullptr;
-      inputVals["speed"] = nullptr;
+      inputVals["reset"][0] = nullptr;
+      inputVals["pos"][0] = nullptr;
+      inputVals["speed"][0] = nullptr;
       setInput("reset", NULL);
     }
 

@@ -13,7 +13,6 @@ export default class WidgetButton extends LGraphNode{
         this.setProperty("state", "number", 0, " ", {input: false, output: true});
         this.setProperty("press", "number", 1, " ", {input: false, output: false});
         this.setProperty("release", "number", 0, " ", {input: false, output: false});
-        this.setProperty("out", "number", 0, " ", {input: false, output: false});
         this.setProperty("in", "number", null, "in", {input: false, output: false});
         this.setProperty("label", "string", "B1", "label", {input: false, output: false});
         this.setProperty("port", "number", null, "port", {input: false, output: false});

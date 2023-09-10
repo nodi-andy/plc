@@ -45,4 +45,4 @@ export default class Stepper extends LGraphNode{
     }
 }
 
-LiteGraph.registerNodeType(Stepper.type, Stepper);
+//LiteGraph.registerNodeType(Stepper.type, Stepper);

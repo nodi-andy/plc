@@ -10,65 +10,46 @@ void Counter::setup() {
     desc = "Read input";
     name = "events/counter";
 
-    value = 0;
     // Iterate through the properties object
     for (JsonPair property : props["properties"].as<JsonObject>()) {
-        JsonObject propObj = property.value().as<JsonObject>();
-        
-        // Check if the "input" property is true
-        if (propObj["input"] == true) {
-            const char* propertyName = property.key().c_str();
-            
-            // Call your addInput function with propertyName
-            Serial.print("Adding input for property: ");
-            Serial.println(propertyName);
-            addInput(propertyName);
-        }
-    }
-
-    // Iterate through the properties object
-    for (JsonPair property : props["properties"].as<JsonObject>()) {
-        JsonObject propObj = property.value().as<JsonObject>();
-        
-        // Check if the "input" property is true
-        if (propObj["output"] == true) {
-            const char* propertyName = property.key().c_str();
-            
-            // Call your addInput function with propertyName
-            Serial.print("Adding output for property: ");
-            Serial.println(propertyName);
-            addOutput(propertyName);
-        }
+      JsonObject propObj = property.value().as<JsonObject>();
+      const char* propertyName = property.key().c_str();
+      
+      // Call your addInput function with propertyName
+      Serial.print("Adding property: ");
+      Serial.println(propertyName);
+      addProp(propertyName);
+      vals[propertyName] = props["properties"][propertyName]["value"].as<int>();
     }
 }
 
 int Counter::onExecute() {
     bool update = false;
-    if (getInput("inc")) {
+    if (getInput("inc") != nullptr && *(getInput("inc")) != INT_MAX) {
         newvalue += *getInput("inc");
-        setInput("inc", NULL);
         Serial.print("Increment: ");
-        Serial.println(newvalue);
         update = true;
+        setInput("inc", NULL);
     }
 
-    if (getInput("dec")) {
+    if (getInput("dec") != nullptr && *(getInput("dec")) != INT_MAX) {
         newvalue -= *getInput("dec");
-        setInput("dec", NULL);
         Serial.print("Decrement: ");
-        Serial.println(newvalue);
         update = true;
+        setInput("dec", NULL);
     }
 
-    if (getInput("set")) {
+    if (getInput("set") != nullptr && *(getInput("set")) != INT_MAX) {
         newvalue = *getInput("set");
-        setInput("set", NULL);
         update = true;
         //Serial.print("Reset");
+        setInput("set", NULL);
     }
-    value = newvalue;
+    
+    vals["value"] = newvalue;
     if (update) {
-        setOutput("get", &value);
+        Serial.println(vals["value"]);
+        setOutput("value", &vals["value"]);
     }
     return update;
 }

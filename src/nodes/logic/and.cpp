@@ -13,7 +13,7 @@ void LogicAnd::setup() {
     for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addInput(inputObj["name"].as<std::string>());
-        inputVals[inputObj["name"].as<std::string>()] = 0;
+        inputVals[inputObj["name"].as<std::string>()][0] = 0;
     }
 
     //Serial.print(" And outputs:");
@@ -31,7 +31,7 @@ int LogicAnd::onExecute() {
     for (auto& input : inputs) {
       if (input.second) {
         update = true;
-        inputVals[input.first] = input.second;
+        inputVals[input.first][0] = input.second;
         Serial.println(*input.second);
       }
       input.second = nullptr;
@@ -39,7 +39,7 @@ int LogicAnd::onExecute() {
  
 
     for (auto input : inputVals) {
-      if (input.second == 0) {
+      if (input.second[0] == 0) {
         value = 0;
         break;
       }

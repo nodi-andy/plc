@@ -11,17 +11,22 @@ class MathIsGreater extends LGraphNode {
     constructor() {
         super();
         this.setProperty("in1", "number", 0, " ", {input: true, output: false});
-        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
-        this.setProperty("out", "number", 0, " ", {input: false, output: true});
-        this.setProperty("value", "number", 0, " ", {input: false, output: false});
+        this.setProperty("in2", "number", 0, " ", {input: false, output: false});
+        this.setProperty("value", "number", 0, " ", {input: false, output: true});
         this.label = ""
-        this._result = []; //only used for arrays
     }
 
     onExecute(update) {
         if (update) {
             let ret = null;
-
+            if (this.properties.in1.inpValue != null) {
+                this.properties.in1.value = parseInt(this.properties.in1.inpValue);
+                this.properties.in1.inpValue = null;
+            }
+            if (this.properties.in2.inpValue != null) {
+                this.properties.in2.value = parseInt(this.properties.in2.inpValue);
+                this.properties.in2.inpValue = null;
+            }
             if (this.properties.in1.value > this.properties.in2.value) {
                 ret = 1;
             } else {
@@ -30,17 +35,13 @@ class MathIsGreater extends LGraphNode {
 
             if (this.properties.in1.value !== null) {
                 this.properties.value.value = ret;
-                this.properties.out.value = ret;
+                this.properties.value.outValue = ret;
             }
             update = false;
         }
     }
 
     onDrawBackground(ctx) {
-        if (this.flags.collapsed) {
-            return;
-        }
-
         ctx.font = "20px Arial";
         ctx.fillStyle = "#666";
         ctx.textAlign = "center";

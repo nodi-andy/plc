@@ -90,7 +90,7 @@ export default class LGraphCanvas {
         this.render_connections_border = true;
         this.render_curved_connections = false;
         this.render_connection_arrows = false;
-        this.render_collapsed_slots = true;
+        this.render_collapsed_slots = false;
         this.render_execution_order = false;
         this.render_title_colored = true;
         this.render_link_tooltip = true;
@@ -1478,7 +1478,7 @@ export default class LGraphCanvas {
 
 
                 //not dragging mouse to connect two slots
-                if (!this.connecting_node && !node.flags.collapsed && !this.live_mode) {
+                if (!this.connecting_node && !this.live_mode) {
                     //Search for corner for resize
                     if (!skip_action &&
                         node.resizable !== false &&
@@ -1701,7 +1701,6 @@ export default class LGraphCanvas {
                 if (node && this.allow_interaction && !skip_action && !this.read_only) {
                     //not dragging mouse to connect two slots
                     if (!this.connecting_node &&
-                        !node.flags.collapsed &&
                         !this.live_mode) {
                         var mClikSlot = false;
                         var mClikSlot_index = false;
@@ -3703,16 +3702,6 @@ export default class LGraphCanvas {
         var low_quality = this.ds.scale < 0.6; //zoomed out
 
 
-        //only render if it forces it to do it
-        if (this.live_mode) {
-            if (!node.flags.collapsed) {
-                ctx.shadowColor = "transparent";
-                if (node.onDrawForeground) {
-                    node.onDrawForeground(ctx, this, this.canvas);
-                }
-            }
-            return;
-        }
 
         var editor_alpha = this.editor_alpha;
         ctx.globalAlpha = editor_alpha;
@@ -3726,32 +3715,11 @@ export default class LGraphCanvas {
             ctx.shadowColor = "transparent";
         }
 
-        //custom draw collapsed method (draw after shadows because they are affected)
-        if (node.flags.collapsed &&
-            node.onDrawCollapsed &&
-            node.onDrawCollapsed(ctx, this) == true) {
-            return;
-        }
-
         //clip if required (mask)
         var shape = node._shape || LiteGraph.CIRCLE_SHAPE;
         var size = temp_vec2;
         temp_vec2.set(node.size);
         var horizontal = node.horizontal; // || node.flags.horizontal;
-
-        if (node.flags.collapsed) {
-            ctx.font = this.inner_text_font;
-            var title = node.getTitle ? node.getTitle() : node.title;
-            if (title != null) {
-                node._collapsed_width = Math.min(
-                    node.size[0],
-                    ctx.measureText(title).width +
-                    LiteGraph.NODE_TITLE_HEIGHT * 2
-                ); //LiteGraph.NODE_COLLAPSED_WIDTH;
-                size[0] = node._collapsed_width;
-                size[1] = 0;
-            }
-        }
 
         if (node.clip_area) {
             //Start clipping
@@ -3800,293 +3768,225 @@ export default class LGraphCanvas {
 
 
         //render inputs and outputs
-        if (!node.flags.collapsed) {
-            //input connection slots
-            if (node.inputs) {
-                for (var i = 0; i < node.inputs.length; i++) {
-                    var slot = node.inputs[i];
+        //input connection slots
+        if (node.inputs) {
+            for (var i = 0; i < node.inputs.length; i++) {
+                var slot = node.inputs[i];
 
-                    var slot_type = slot.type;
-                    var slot_shape = slot.shape;
+                var slot_type = slot.type;
+                var slot_shape = slot.shape;
 
-                    ctx.globalAlpha = editor_alpha;
-                    //change opacity of incompatible slots when dragging a connection
-                    if (this.connecting_output && !LiteGraph.isValidConnection(slot.type, out_slot.type)) {
-                        ctx.globalAlpha = 0.4 * editor_alpha;
-                    }
-
-                    ctx.fillStyle =
-                        slot.link != null
-                            ? slot.color_on ||
-                            this.default_connection_color_byType[slot_type] ||
-                            this.default_connection_color.input_on
-                            : slot.color_off ||
-                            this.default_connection_color_byTypeOff[slot_type] ||
-                            this.default_connection_color_byType[slot_type] ||
-                            this.default_connection_color.input_off;
-
-                    var pos = node.getConnectionPos(true, i, slot_pos);
-                    pos[0] -= node.pos[0];
-                    pos[1] -= node.pos[1];
-                    if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
-                        max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
-                    }
-
-                    ctx.beginPath();
-
-                    if (slot_type == "array") {
-                        slot_shape = LiteGraph.GRID_SHAPE; // place in addInput? addOutput instead?
-                    }
-
-                    var doStroke = true;
-
-                    if (slot.type === LiteGraph.EVENT || slot.shape === LiteGraph.BOX_SHAPE) {
-                        if (horizontal) {
-                            ctx.rect(
-                                pos[0] - 5 + 0.5,
-                                pos[1] - 8 + 0.5,
-                                10,
-                                14
-                            );
-                        } else {
-                            ctx.rect(
-                                pos[0] - 6 + 0.5,
-                                pos[1] - 5 + 0.5,
-                                14,
-                                10
-                            );
-                        }
-                    } else if (slot_shape === LiteGraph.GRID_SHAPE) {
-                        ctx.rect(pos[0] - 4, pos[1] - 4, 2, 2);
-                        ctx.rect(pos[0] - 1, pos[1] - 4, 2, 2);
-                        ctx.rect(pos[0] + 2, pos[1] - 4, 2, 2);
-                        ctx.rect(pos[0] - 4, pos[1] - 1, 2, 2);
-                        ctx.rect(pos[0] - 1, pos[1] - 1, 2, 2);
-                        ctx.rect(pos[0] + 2, pos[1] - 1, 2, 2);
-                        ctx.rect(pos[0] - 4, pos[1] + 2, 2, 2);
-                        ctx.rect(pos[0] - 1, pos[1] + 2, 2, 2);
-                        ctx.rect(pos[0] + 2, pos[1] + 2, 2, 2);
-                        doStroke = false;
-                    } else if (slot_shape === LiteGraph.CIRCLE_SHAPE) {
-                        ctx.arc(pos[0], pos[1], 6, 0, 2 * Math.PI);
-                        doStroke = false;
-                    } else {
-                        if (low_quality)
-                            ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8); //faster
-                        else {
-                            ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
-                            ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
-                            ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
-                            ctx.closePath();
-                        }
-                    }
-                    ctx.fill();
-
-                    //render name
-                    if (render_text) {
-                        var text = slot.label;
-                        if (text) {
-                            ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
-                            if (horizontal || slot.dir == LiteGraph.UP) {
-                                ctx.fillText(text, pos[0], pos[1] - 10);
-                            } else {
-                                ctx.fillText(text, pos[0] + 10, pos[1] + 5);
-                            }
-                        }
-                    }
+                ctx.globalAlpha = editor_alpha;
+                //change opacity of incompatible slots when dragging a connection
+                if (this.connecting_output && !LiteGraph.isValidConnection(slot.type, out_slot.type)) {
+                    ctx.globalAlpha = 0.4 * editor_alpha;
                 }
-            }
 
-            //output connection slots
-            ctx.textAlign = horizontal ? "center" : "right";
-            ctx.strokeStyle = "black";
-            if (node.outputs) {
-                for (var i = 0; i < node.outputs.length; i++) {
-                    var slot = node.outputs[i];
+                ctx.fillStyle =
+                    slot.link != null
+                        ? slot.color_on ||
+                        this.default_connection_color_byType[slot_type] ||
+                        this.default_connection_color.input_on
+                        : slot.color_off ||
+                        this.default_connection_color_byTypeOff[slot_type] ||
+                        this.default_connection_color_byType[slot_type] ||
+                        this.default_connection_color.input_off;
 
-                    var slot_type = slot.type;
-                    var slot_shape = slot.shape;
-
-                    //change opacity of incompatible slots when dragging a connection
-                    if (this.connecting_input && !LiteGraph.isValidConnection(slot_type, in_slot.type)) {
-                        ctx.globalAlpha = 0.4 * editor_alpha;
-                    }
-
-                    var pos = node.getConnectionPos(false, i, slot_pos);
-                    pos[0] -= node.pos[0];
-                    pos[1] -= node.pos[1];
-                    if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
-                        max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
-                    }
-
-                    ctx.fillStyle =
-                        slot.links && slot.links.length
-                            ? slot.color_on ||
-                            this.default_connection_color_byType[slot_type] ||
-                            this.default_connection_color.output_on
-                            : slot.color_off ||
-                            this.default_connection_color_byTypeOff[slot_type] ||
-                            this.default_connection_color_byType[slot_type] ||
-                            this.default_connection_color.output_off;
-                    ctx.beginPath();
-                    //ctx.rect( node.size[0] - 14,i*14,10,10);
-                    if (slot_type == "array") {
-                        slot_shape = LiteGraph.GRID_SHAPE;
-                    }
-
-                    var doStroke = true;
-
-                    if (slot_type === LiteGraph.EVENT || slot_shape === LiteGraph.BOX_SHAPE) {
-                        if (horizontal) {
-                            ctx.rect(
-                                pos[0] - 5 + 0.5,
-                                pos[1] - 8 + 0.5,
-                                10,
-                                14
-                            );
-                        } else {
-                            ctx.rect(
-                                pos[0] - 6 + 0.5,
-                                pos[1] - 5 + 0.5,
-                                14,
-                                10
-                            );
-                        }
-                    } else if (slot_shape === LiteGraph.GRID_SHAPE) {
-                        ctx.rect(pos[0] - 4, pos[1] - 4, 2, 2);
-                        ctx.rect(pos[0] - 1, pos[1] - 4, 2, 2);
-                        ctx.rect(pos[0] + 2, pos[1] - 4, 2, 2);
-                        ctx.rect(pos[0] - 4, pos[1] - 1, 2, 2);
-                        ctx.rect(pos[0] - 1, pos[1] - 1, 2, 2);
-                        ctx.rect(pos[0] + 2, pos[1] - 1, 2, 2);
-                        ctx.rect(pos[0] - 4, pos[1] + 2, 2, 2);
-                        ctx.rect(pos[0] - 1, pos[1] + 2, 2, 2);
-                        ctx.rect(pos[0] + 2, pos[1] + 2, 2, 2);
-                        doStroke = false;
-                    } else if (slot_shape === LiteGraph.CIRCLE_SHAPE) {
-                        ctx.arc(pos[0], pos[1], 6, 0, 2 * Math.PI);
-                        doStroke = false;
-                    } else {
-                        if (low_quality)
-                            ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8);
-                        else {
-                            ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
-                            ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
-                            ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
-                            ctx.closePath();
-                        }
-                    }
-
-                    //trigger
-                    //if(slot.node_id != null && slot.slot == -1)
-                    //	ctx.fillStyle = "#F85";
-                    //if(slot.links != null && slot.links.length)
-                    ctx.fill();
-                    if (!low_quality && doStroke)
-                        ctx.stroke();
-
-                    //render output name
-                    if (render_text) {
-                        text = slot.label;
-                        if (text) {
-                            ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
-                            if (horizontal || slot.dir == LiteGraph.DOWN) {
-                                ctx.fillText(text, pos[0], pos[1] - 8);
-                            } else {
-                                ctx.fillText(text, pos[0] - 10, pos[1] + 5);
-                            }
-                        }
-                    }
+                var pos = node.getConnectionPos(true, i, slot_pos);
+                pos[0] -= node.pos[0];
+                pos[1] -= node.pos[1];
+                if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
+                    max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
                 }
-            }
 
-            ctx.textAlign = "left";
-            ctx.globalAlpha = 1;
-
-            if (node.widgets) {
-                var widgets_y = max_y;
-                if (horizontal || node.widgets_up) {
-                    widgets_y = 2;
-                }
-                if (node.widgets_start_y != null)
-                    widgets_y = node.widgets_start_y;
-                this.drawNodeWidgets(
-                    node,
-                    widgets_y,
-                    ctx,
-                    this.node_widget && this.node_widget[0] == node
-                        ? this.node_widget[1]
-                        : null
-                );
-            }
-        } else if (this.render_collapsed_slots) {
-            //if collapsed
-            var input_slot = null;
-            var output_slot = null;
-
-            //get first connected slot to render
-            if (node.inputs) {
-                for (var i = 0; i < node.inputs.length; i++) {
-                    var slot = node.inputs[i];
-                    if (slot.link == null) {
-                        continue;
-                    }
-                    input_slot = slot;
-                    break;
-                }
-            }
-            if (node.outputs) {
-                for (var i = 0; i < node.outputs.length; i++) {
-                    var slot = node.outputs[i];
-                    if (!slot.links || !slot.links.length) {
-                        continue;
-                    }
-                    output_slot = slot;
-                }
-            }
-
-            if (input_slot) {
-                var x = 0;
-                var y = LiteGraph.NODE_TITLE_HEIGHT * -0.5; //center
-                if (horizontal) {
-                    x = node._collapsed_width * 0.5;
-                    y = -LiteGraph.NODE_TITLE_HEIGHT;
-                }
-                ctx.fillStyle = "#686";
                 ctx.beginPath();
-                if (slot.shape === LiteGraph.BOX_SHAPE) {
-                    ctx.rect(x - 7 + 0.5, y - 4, 14, 8);
+
+                if (slot_type == "array") {
+                    slot_shape = LiteGraph.GRID_SHAPE; // place in addInput? addOutput instead?
+                }
+
+                var doStroke = true;
+
+                if (slot.type === LiteGraph.EVENT || slot.shape === LiteGraph.BOX_SHAPE) {
+                    if (horizontal) {
+                        ctx.rect(
+                            pos[0] - 5 + 0.5,
+                            pos[1] - 8 + 0.5,
+                            10,
+                            14
+                        );
+                    } else {
+                        ctx.rect(
+                            pos[0] - 6 + 0.5,
+                            pos[1] - 5 + 0.5,
+                            14,
+                            10
+                        );
+                    }
+                } else if (slot_shape === LiteGraph.GRID_SHAPE) {
+                    ctx.rect(pos[0] - 4, pos[1] - 4, 2, 2);
+                    ctx.rect(pos[0] - 1, pos[1] - 4, 2, 2);
+                    ctx.rect(pos[0] + 2, pos[1] - 4, 2, 2);
+                    ctx.rect(pos[0] - 4, pos[1] - 1, 2, 2);
+                    ctx.rect(pos[0] - 1, pos[1] - 1, 2, 2);
+                    ctx.rect(pos[0] + 2, pos[1] - 1, 2, 2);
+                    ctx.rect(pos[0] - 4, pos[1] + 2, 2, 2);
+                    ctx.rect(pos[0] - 1, pos[1] + 2, 2, 2);
+                    ctx.rect(pos[0] + 2, pos[1] + 2, 2, 2);
+                    doStroke = false;
+                } else if (slot_shape === LiteGraph.CIRCLE_SHAPE) {
+                    ctx.arc(pos[0], pos[1], 6, 0, 2 * Math.PI);
+                    doStroke = false;
                 } else {
-                    ctx.moveTo(x + 8, y);
-                    ctx.lineTo(x + -4, y - 4);
-                    ctx.lineTo(x + -4, y + 4);
-                    ctx.closePath();
+                    if (low_quality)
+                        ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8); //faster
+                    else {
+                        ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
+                        ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
+                        ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
+                        ctx.closePath();
+                    }
                 }
                 ctx.fill();
-            }
 
-            if (output_slot) {
-                var x = node._collapsed_width;
-                var y = LiteGraph.NODE_TITLE_HEIGHT * -0.5; //center
-                if (horizontal) {
-                    x = node._collapsed_width * 0.5;
-                    y = 0;
+                //render name
+                if (render_text) {
+                    var text = slot.label;
+                    if (text) {
+                        ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
+                        if (horizontal || slot.dir == LiteGraph.UP) {
+                            ctx.fillText(text, pos[0], pos[1] - 10);
+                        } else {
+                            ctx.fillText(text, pos[0] + 10, pos[1] + 5);
+                        }
+                    }
                 }
-                ctx.fillStyle = "#686";
-                ctx.strokeStyle = "black";
-                ctx.beginPath();
-                if (slot.shape === LiteGraph.BOX_SHAPE) {
-                    ctx.rect(x - 7 + 0.5, y - 4, 14, 8);
-                } else {
-                    ctx.moveTo(x + 6, y);
-                    ctx.lineTo(x - 6, y - 4);
-                    ctx.lineTo(x - 6, y + 4);
-                    ctx.closePath();
-                }
-                ctx.fill();
-                //ctx.stroke();
             }
         }
+
+        //output connection slots
+        ctx.textAlign = horizontal ? "center" : "right";
+        ctx.strokeStyle = "black";
+        if (node.outputs) {
+            for (var i = 0; i < node.outputs.length; i++) {
+                var slot = node.outputs[i];
+
+                var slot_type = slot.type;
+                var slot_shape = slot.shape;
+
+                //change opacity of incompatible slots when dragging a connection
+                if (this.connecting_input && !LiteGraph.isValidConnection(slot_type, in_slot.type)) {
+                    ctx.globalAlpha = 0.4 * editor_alpha;
+                }
+
+                var pos = node.getConnectionPos(false, i, slot_pos);
+                pos[0] -= node.pos[0];
+                pos[1] -= node.pos[1];
+                if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
+                    max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
+                }
+
+                ctx.fillStyle =
+                    slot.links && slot.links.length
+                        ? slot.color_on ||
+                        this.default_connection_color_byType[slot_type] ||
+                        this.default_connection_color.output_on
+                        : slot.color_off ||
+                        this.default_connection_color_byTypeOff[slot_type] ||
+                        this.default_connection_color_byType[slot_type] ||
+                        this.default_connection_color.output_off;
+                ctx.beginPath();
+                //ctx.rect( node.size[0] - 14,i*14,10,10);
+                if (slot_type == "array") {
+                    slot_shape = LiteGraph.GRID_SHAPE;
+                }
+
+                var doStroke = true;
+
+                if (slot_type === LiteGraph.EVENT || slot_shape === LiteGraph.BOX_SHAPE) {
+                    if (horizontal) {
+                        ctx.rect(
+                            pos[0] - 5 + 0.5,
+                            pos[1] - 8 + 0.5,
+                            10,
+                            14
+                        );
+                    } else {
+                        ctx.rect(
+                            pos[0] - 6 + 0.5,
+                            pos[1] - 5 + 0.5,
+                            14,
+                            10
+                        );
+                    }
+                } else if (slot_shape === LiteGraph.GRID_SHAPE) {
+                    ctx.rect(pos[0] - 4, pos[1] - 4, 2, 2);
+                    ctx.rect(pos[0] - 1, pos[1] - 4, 2, 2);
+                    ctx.rect(pos[0] + 2, pos[1] - 4, 2, 2);
+                    ctx.rect(pos[0] - 4, pos[1] - 1, 2, 2);
+                    ctx.rect(pos[0] - 1, pos[1] - 1, 2, 2);
+                    ctx.rect(pos[0] + 2, pos[1] - 1, 2, 2);
+                    ctx.rect(pos[0] - 4, pos[1] + 2, 2, 2);
+                    ctx.rect(pos[0] - 1, pos[1] + 2, 2, 2);
+                    ctx.rect(pos[0] + 2, pos[1] + 2, 2, 2);
+                    doStroke = false;
+                } else if (slot_shape === LiteGraph.CIRCLE_SHAPE) {
+                    ctx.arc(pos[0], pos[1], 6, 0, 2 * Math.PI);
+                    doStroke = false;
+                } else {
+                    if (low_quality)
+                        ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8);
+                    else {
+                        ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
+                        ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
+                        ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
+                        ctx.closePath();
+                    }
+                }
+
+                //trigger
+                //if(slot.node_id != null && slot.slot == -1)
+                //	ctx.fillStyle = "#F85";
+                //if(slot.links != null && slot.links.length)
+                ctx.fill();
+                if (!low_quality && doStroke)
+                    ctx.stroke();
+
+                //render output name
+                if (render_text) {
+                    text = slot.label;
+                    if (text) {
+                        ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
+                        if (horizontal || slot.dir == LiteGraph.DOWN) {
+                            ctx.fillText(text, pos[0], pos[1] - 8);
+                        } else {
+                            ctx.fillText(text, pos[0] - 10, pos[1] + 5);
+                        }
+                    }
+                }
+            }
+        }
+
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
+
+        if (node.widgets) {
+            var widgets_y = max_y;
+            if (horizontal || node.widgets_up) {
+                widgets_y = 2;
+            }
+            if (node.widgets_start_y != null)
+                widgets_y = node.widgets_start_y;
+            this.drawNodeWidgets(
+                node,
+                widgets_y,
+                ctx,
+                this.node_widget && this.node_widget[0] == node
+                    ? this.node_widget[1]
+                    : null
+            );
+        }
+    
 
         if (node.clip_area) {
             ctx.restore();
@@ -4177,8 +4077,7 @@ export default class LGraphCanvas {
         var old_alpha = ctx.globalAlpha;
 
         //full node shape
-        //if(node.flags.collapsed)
-        {
+
             ctx.beginPath();
             if (shape == LiteGraph.BOX_SHAPE || low_quality) {
                 ctx.fillRect(area[0], area[1], area[2], area[3]);
@@ -4201,14 +4100,7 @@ export default class LGraphCanvas {
                 );
             }
             ctx.fill();
-
-            //separator
-            if (!node.flags.collapsed) {
-                ctx.shadowColor = "transparent";
-                ctx.fillStyle = "rgba(0,0,0,0.2)";
-                ctx.fillRect(0, -1, area[2], 2);
-            }
-        }
+            
         ctx.shadowColor = "transparent";
 
         if (node.onDrawBackground) {
@@ -4221,9 +4113,6 @@ export default class LGraphCanvas {
                 (node.constructor.title_color || this.render_title_colored)) {
                 var title_color = node.constructor.title_color || fgcolor;
 
-                if (node.flags.collapsed) {
-                    ctx.shadowColor = LiteGraph.DEFAULT_SHADOW_COLOR;
-                }
 
                 //* gradient test
                 if (this.use_gradients) {
@@ -4248,7 +4137,7 @@ export default class LGraphCanvas {
                         0,
                         size[0] + 1,
                         0,
-                        node.flags.collapsed ? [this.round_radius] : [this.round_radius, this.round_radius, 0, 0]
+                        [this.round_radius, this.round_radius, 0, 0]
                     );
                 }
                 ctx.fill();
@@ -4342,48 +4231,18 @@ export default class LGraphCanvas {
                             node.constructor.title_text_color ||
                             this.node_title_color;
                     }
-                    if (node.flags.collapsed) {
-                        ctx.textAlign = "left";
-                        var measure = ctx.measureText(title);
-                        ctx.fillText(
-                            title.substr(0, 20),
-                            title_height,
-                            LiteGraph.NODE_TITLE_TEXT_Y - title_height
-                        );
-                        ctx.textAlign = "left";
-                    } else {
+
                         ctx.textAlign = "left";
                         ctx.fillText(
                             title,
                             title_height,
                             LiteGraph.NODE_TITLE_TEXT_Y - title_height
                         );
-                    }
+                    
                 }
             }
 
-            //subgraph box
-            if (!node.flags.collapsed && node.subgraph && !node.skip_subgraph_button) {
-                var w = LiteGraph.NODE_TITLE_HEIGHT;
-                var x = node.size[0] - w;
-                var over = Math.isInsideRectangle(this.graph_mouse[0] - node.pos[0], this.graph_mouse[1] - node.pos[1], x + 2, -w + 2, w - 4, w - 4);
-                ctx.fillStyle = over ? "#888" : "#555";
-                if (shape == LiteGraph.BOX_SHAPE || low_quality)
-                    ctx.fillRect(x + 2, -w + 2, w - 4, w - 4);
-
-                else {
-                    ctx.beginPath();
-                    ctx.roundRect(x + 2, -w + 2, w - 4, w - 4, [4]);
-                    ctx.fill();
-                }
-                ctx.fillStyle = "#333";
-                ctx.beginPath();
-                ctx.moveTo(x + w * 0.2, -w * 0.6);
-                ctx.lineTo(x + w * 0.8, -w * 0.6);
-                ctx.lineTo(x + w * 0.5, -w * 0.3);
-                ctx.fill();
-            }
-
+            
             //custom title render
             if (node.onDrawTitle) {
                 node.onDrawTitle(ctx);
@@ -4417,7 +4276,7 @@ export default class LGraphCanvas {
                     12 + area[3]
                 );
             } else if (shape == LiteGraph.ROUND_SHAPE ||
-                (shape == LiteGraph.CARD_SHAPE && node.flags.collapsed)) {
+                (shape == LiteGraph.CARD_SHAPE)) {
                 ctx.roundRect(
                     -6 + area[0],
                     -6 + area[1],

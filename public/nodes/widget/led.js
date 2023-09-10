@@ -1,21 +1,21 @@
 import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
-export default class WidgetLed extends LGraphNode{
+export default class WidgetLed extends LGraphNode {
     static type = "widget/led";
     static title = " ";
     static desc = "LED";
     static title_mode = LiteGraph.NO_TITLE;
     constructor() {
         super();
-        this.setProperty("state", "number", 0, " ", {input: false, output: false});
+        this.setProperty("state", "number", 0, "state", {input: false, output: false});
         this.setProperty("set", "number", 0, "set", {input: false, output: false});
         this.setProperty("clear", "number", 0, "clear", {input: false, output: false});
         this.setProperty("toggle", "number", 0, "toggle", {input: false, output: false});
+        this.setProperty("in", "number", 0, "in", {input: false, output: false});
         this.setProperty("label", "string", null, "LED", {input: false, output: false});
         this.setProperty("port", "number", null, "port", {input: false, output: false});
         this.setProperty("color", "string", "FF3333", "color", {input: false, output: false});
-
         this.size = [64, 64];
     }
 
@@ -39,6 +39,27 @@ export default class WidgetLed extends LGraphNode{
     }
 
     onExecute(update) {
+        if (this.properties.set.inpValue == 1) {
+            this.properties.state.value = 1;
+            this.properties.set.inpValue = null;
+        }
+
+        if (this.properties.clear.inpValue == 1) {
+            this.properties.state.value = 0;
+            this.properties.clear.inpValue = null;
+        }
+
+        if (this.properties.toggle.inpValue == 1) {
+            if ( this.properties.state.value == 1) {
+                this.properties.state.value = 0;
+                this.properties.state.outValue = this.properties.state.value;
+            } else {
+                this.properties.state.value = 1;
+                this.properties.state.outValue = this.properties.state.value;
+            }
+            this.properties.toggle.inpValue = null;
+        }
+
         if (update && this.properties.state.inpValue != null) {
             this.properties.state.value = this.properties.state.inpValue;
             this.properties.state.value = parseInt(this.properties.state.value);
@@ -51,9 +72,8 @@ export default class WidgetLed extends LGraphNode{
             local_pos[1] >  this.size[0] * 0.25 &&
             local_pos[0] < this.size[0] * 0.75 &&
             local_pos[1] < this.size[1] * 0.75) {
-            this.graph._version++;
-            this.trigger("e", this.properties.value);
-            this.properties.state.inpValue = !this.properties.state.value
+            this.properties.state.inpValue = this.properties.state.value ? 0 : 1;
+            this.update = true;
             return true;
         }
     }

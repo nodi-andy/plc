@@ -5,7 +5,7 @@ export default class WidgetNumber extends LGraphNode {
     static title = "Number";
     static desc = "Widget to select number value";
     static title_mode = LiteGraph.NO_TITLE;
-    static type = "data/number";
+    static type = "widget/number";
     static pixels_threshold = 10;
     static markers_color = "#666";
 

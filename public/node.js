@@ -1439,7 +1439,7 @@ export default class LGraphNode {
         out[0] = this.pos[0] - 4;
         out[1] = this.pos[1] - window.LiteGraph.NODE_TITLE_HEIGHT;
         out[2] = this.size[0] + 4;
-        out[3] = this.flags.collapsed ? window.LiteGraph.NODE_TITLE_HEIGHT : this.size[1] + window.LiteGraph.NODE_TITLE_HEIGHT;
+        out[3] =  this.size[1] + window.LiteGraph.NODE_TITLE_HEIGHT;
 
         if (this.onBounding) {
             this.onBounding(out);
@@ -1460,20 +1460,7 @@ export default class LGraphNode {
         if (skip_title) {
             margin_top = 0;
         }
-        if (this.flags && this.flags.collapsed) {
-            //if ( distance([x,y], [this.pos[0] + this.size[0]*0.5, this.pos[1] + this.size[1]*0.5]) < window.LiteGraph.NODE_COLLAPSED_RADIUS)
-            if (Math.isInsideRectangle(
-                x,
-                y,
-                this.pos[0] - margin,
-                this.pos[1] - window.LiteGraph.NODE_TITLE_HEIGHT - margin,
-                (this._collapsed_width || window.LiteGraph.NODE_COLLAPSED_WIDTH) +
-                2 * margin,
-                window.LiteGraph.NODE_TITLE_HEIGHT + 2 * margin
-            )) {
-                return true;
-            }
-        } else if (this.pos[0] - 4 - margin < x &&
+        if (this.pos[0] - 4 - margin < x &&
             this.pos[0] + this.size[0] + 4 + margin > x &&
             this.pos[1] - margin_top - margin < y &&
             this.pos[1] + this.size[1] + margin > y) {
@@ -2120,26 +2107,6 @@ export default class LGraphNode {
             num_slots = this.outputs.length;
         }
 
-        if (this.flags.collapsed) {
-            var w = this._collapsed_width || window.LiteGraph.NODE_COLLAPSED_WIDTH;
-            if (this.horizontal) {
-                out[0] = this.pos[0] + w * 0.5;
-                if (is_input) {
-                    out[1] = this.pos[1] - window.LiteGraph.NODE_TITLE_HEIGHT;
-                } else {
-                    out[1] = this.pos[1];
-                }
-            } else {
-                if (is_input) {
-                    out[0] = this.pos[0];
-                } else {
-                    out[0] = this.pos[0] + w;
-                }
-                out[1] = this.pos[1] - window.LiteGraph.NODE_TITLE_HEIGHT * 0.5;
-            }
-            return out;
-        }
-
         //hard-coded pos
         if (is_input && num_slots > slot_number && this.inputs[slot_number].pos) {
             out[0] = this.pos[0] + this.inputs[slot_number].pos[0];
@@ -2286,22 +2253,7 @@ export default class LGraphNode {
             c.node_capturing_input = v ? this : null;
         }
     }
-    /**
-         * Collapse the node to make it smaller on the canvas
-         * @method collapse
-         **/
-    collapse(force) {
-        this.graph._version++;
-        /*if (this.constructor.collapsable === false && !force) {
-            return;
-        }
-        if (!this.flags.collapsed) {
-            this.flags.collapsed = true;
-        } else {
-            this.flags.collapsed = false;
-        }
-        this.setDirtyCanvas(true, true);*/
-    }
+
     /**
          * Forces the node to do not move or realign on Z
          * @method pin

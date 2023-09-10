@@ -1,4 +1,4 @@
-import WidgetNumber from "../data/number.js";
+import WidgetNumber from "../widget/number.js";
 import { LiteGraph } from "../../litegraph.js";
 
 class EventCounter extends WidgetNumber{
@@ -9,8 +9,8 @@ class EventCounter extends WidgetNumber{
 
     constructor() {
         super();
-        this.setProperty("inc",     "number", 0, "+", {input: true, output: false});
-        this.setProperty("dec",     "number", 0, "-", {input: false, output: false});
+        this.setProperty("inc", "number", 0, "+", {input: true, output: false});
+        this.setProperty("dec", "number", 0, "-", {input: false, output: false});
     }
 
 
@@ -41,17 +41,18 @@ class EventCounter extends WidgetNumber{
     onExecute(update) {
         if (update) {
             super.exec(update);
-            if (this.properties.inc.value !== null && isNaN(this.properties.inc.value) == false) {
-                this.properties.value.value = parseInt(this.properties.value.value) + parseInt(this.properties.inc.value);
-                this.properties.inc.value = null;
+            if (this.properties.inc.inpValue !== null && isNaN(this.properties.inc.inpValue) == false) {
+                this.properties.value.value = parseInt(this.properties.value.value) + parseInt(this.properties.inc.inpValue);
+                this.properties.value.outValue = this.properties.value.value;
+                this.properties.inc.inpValue = null;
             }
 
             if (this.properties.dec.value !== null && isNaN(this.properties.dec.value) == false) {
                 this.properties.value.value -= parseInt(this.properties.dec.value);
+                this.properties.value.outValue = this.properties.value.value;
                 this.properties.dec.value = null;
             }
 
-            this.properties.get.value = this.properties.value.value;
             this.setDirtyCanvas(true, true);
         }
     }

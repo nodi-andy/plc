@@ -8,44 +8,48 @@ void LED::setup() {
     title = "LED";
     name = "LED";
     desc = "Show value of input";
+    
+    // Iterate through the properties object
+    for (JsonPair property : props["properties"].as<JsonObject>()) {
+      JsonObject propObj = property.value().as<JsonObject>();
+      const char* propertyName = property.key().c_str();
+      
+      // Call your addInput function with propertyName
+      Serial.print("Adding property: ");
+      Serial.println(propertyName);
+      addProp(propertyName);
+      vals[propertyName] = props["properties"][propertyName]["value"].as<int>();
+    }
 
-    if (props["properties"].containsKey("port")) {
-      port = props["properties"]["port"]["value"].as<int>();
-      if (port >= 0) pinMode(port, OUTPUT);
-    }
-    if (props["properties"].containsKey("value")) {
-      value = props["properties"]["value"]["value"].as<int>();
-    }
-    state = newstate = value;
-    addInput("value");
+    port = vals["port"];
+    if (port >= 0) pinMode(port, OUTPUT);
+
+    newstate = vals["state"];
 }
 
 int LED::onExecute() {
     bool update = false;
 
     int ret = 0;
-    for (auto& input : inputs) {
-      if (input.second) {
-        Serial.print("LED.");
-        Serial.print(input.first.c_str());
-        Serial.print(": ");
-        Serial.println(*input.second);
-        inputVals[input.first] = input.second;
-        input.second = nullptr;
+
+    if (getInput("state") != nullptr ) {
+      if (newstate != *(getInput("state")) && *(getInput("state")) != INT_MAX) {
+        newstate = *(getInput("state"));
+        Serial.print("LED.targetState.changed: ");
+        Serial.print(newstate);
       }
+      Serial.println("LED.state.input");
+      setInput("state", nullptr);
     }
 
-    if (inputVals["value"] != nullptr && newstate != *(inputVals["value"]) && *(inputVals["value"]) != INT_MAX) {
-      newstate = *(inputVals["value"]);
-      Serial.print("LED.targetState.changed: ");
-      Serial.print(newstate);
-    }
-    update = (newstate != state);
+    update = (newstate != vals["state"]);
     if (update) {
       Serial.print("LED: ");
       Serial.println(newstate);
+      ret = 1;
     }
-    state = newstate;
-    digitalWrite(port, state);
-    return update;
+    
+    vals["state"] = newstate;
+    digitalWrite(port, vals["state"]);
+    return ret;
 }
