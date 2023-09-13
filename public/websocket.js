@@ -7,10 +7,31 @@ import NodiBoxGreen from "./nodes/nodi.box/green.js";
 import NodiBoxYellow from "./nodes/nodi.box/yellow.js";
 import Stepper from "./nodes/nodi.box/stepper.js";
 
-var gateway = `ws://${window.location.hostname}/ws`;
-websocket = new WebSocket(gateway);
-//var gateway = `ws://192.168.1.104/ws`;
-var websocket;
+//var gateway = `ws://${window.location.hostname}/ws`;
+var websocket = null;// new WebSocket(gateway);
+
+const socket = io(window.location.hostname);
+window.socket = socket;
+
+// Event handler for when the connection is established
+socket.on("connect", () => {
+    console.log("Connected to the server!");
+    onOpen();
+});
+
+socket.on("setNodework", (message) => {
+    // Handle incoming messages here
+    onMessage(message);
+});
+
+// Event handler for custom events from the server
+socket.on("custom-event-from-server", (data) => {
+    console.log("Received data from the server:", data);
+});
+
+socket.on("disconnect", () => {
+    console.log("Disconnected from the server!");
+});
 
 // ----------------------------------------------------------------------------
 // Initialization
@@ -30,9 +51,9 @@ function onLoad(event) {
 function initWebSocket() {
     console.log('Trying to open a WebSocket connection...');
     window.ws = websocket
-    websocket.onopen    = onOpen;
-    websocket.onclose   = onClose;
-    websocket.onmessage = onMessage;
+    //websocket.onopen    = onOpen;
+    //websocket.onclose   = onClose;
+    //websocket.onmessage = onMessage;
 }
 
 function onOpen(event) {
@@ -56,6 +77,8 @@ function onClose(event) {
 }
 
 function onMessage(event) {
+    console.log("Received message from the server:", event);
+
     let data = JSON.parse(event.data);
     if (data.save) {
       window.graph.configure(data.save, false);
@@ -82,9 +105,9 @@ function onMessage(event) {
     //document.getElementById('led').className = data.status;
 }
 
-websocket.sendMsg = (msg) => {
+/*websocket.sendMsg = (msg) => {
     websocket.send(msg);   
-}
+}*/
 
 // ----------------------------------------------------------------------------
 // Button handling
@@ -95,9 +118,9 @@ function initButton() {
 }
 
 function onToggle(event) {
-    if (websocket) websocket.sendMsg(JSON.stringify({'action':'toggle'}));
+   // if (websocket) websocket.sendMsg(JSON.stringify({'action':'toggle'}));
 }
 
 function saveMap(event) {
-    if (websocket) websocket.sendMsg(JSON.stringify({'save':window.graph.serialize()}));
+    //if (websocket) socket.sendMsg(JSON.stringify({'save':window.graph.serialize()}));
 }

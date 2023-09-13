@@ -23,12 +23,17 @@
     "react-scripts": "^5.0.1",
     "recoil": "^0.7.5",
     "recoil-persist": "^4.2.0",
+    "socket.io": "^4.7.2",
     "socket.io-client": "^4.5.3",
-    "yup": "^0.32.11"
+    "yup": "^0.32.11",
+    "express": "^4.15.4",
+    "express-ws": "^5.0.2",
+    "http-proxy": "^1.18.1"
   },
   "scripts": {
     "start": "node index.js",
-    "debug": "react-scripts start",
+    "deploy": "gcloud app deploy",
+    "debug": "set PORT=8080 &&  react-scripts start",
     "build": "set \"GENERATE_SOURCEMAP=false\" &&  react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -47,9 +52,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "engines": {
-    "npm": "10.0.0"
   },
   "devDependencies": {
     "compress-create-react-app": "^1.4.1",

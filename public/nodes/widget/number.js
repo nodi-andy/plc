@@ -58,8 +58,8 @@ export default class WidgetNumber extends LGraphNode {
                 this.properties.value.outValue = this.properties.value.value;
                 this.setDirtyCanvas(true);
             }
-            if (this.properties.read.value != null) {
-                this.properties.read.value = null;
+            if (this.properties.read.inpValue != null) {
+                this.properties.read.inpValue = null;
                 this.properties.value.outValue = this.properties.value.value;
                 this.setDirtyCanvas(true);
             }

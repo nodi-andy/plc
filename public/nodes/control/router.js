@@ -17,8 +17,9 @@ class Filter extends LGraphNode{
     }
 
     onExecute(update) {
-        if (update && this.properties.in.value == this.properties.pass.value) {
-            this.properties.out.value = this.properties.in.value;
+        if (update && this.properties.in.inpValue == this.properties.pass.value) {
+            this.properties.out.outValue = this.properties.in.inpValue;
+            this.properties.in.inpValue = null;
         }
     }
     

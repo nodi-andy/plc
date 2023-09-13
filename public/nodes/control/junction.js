@@ -20,9 +20,8 @@ class Junction extends LGraphNode {
 
     onExecute(update) {
         if (update) {
-            if (this.properties.in.value != this.properties.value.value) {
-                this.properties.value.value = this.properties.in.value;
-                this.properties.out.value = this.properties.value.value;
+            if (this.properties.in.inpValue != null) {
+                this.properties.out.outValue = this.properties.in.inpValue;
           }
         }
     }

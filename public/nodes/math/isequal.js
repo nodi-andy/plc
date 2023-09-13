@@ -31,26 +31,24 @@ class MathIsEqual extends LGraphNode {
 
         if (update) {
             let ret = 1;
-            this.label = "=?";
-            let lastValue = null;
-            for (let input of Object.values(this.properties)) {
-                if (input.input == true && input.inpValue !== null) {
-                    input.value = input.inpValue;
-                    input.inpValue = null;
-                }
+            if (this.properties.in1.inpValue != null) {
+                this.properties.in1.value = parseInt(this.properties.in1.inpValue);
+                this.properties.in1.inpValue = null;
             }
-            for (let input of Object.values(this.properties)) {
-                if (input.input == false) continue;
+            if (this.properties.in2.inpValue != null) {
+                this.properties.in2.value = parseInt(this.properties.in2.inpValue);
+                this.properties.in2.inpValue = null;
+            }
+            if (this.properties.in1.value == this.properties.in2.value) {
+                ret = 1;
+            } else {
+                ret = 0;
+            }
 
-                let val = input.value
-                if (lastValue == null) {
-                    lastValue = val;
-                } else if (lastValue != val) {
-                    ret = 0;
-                    break;
-                }
-            }
-            this.properties.out.outValue = ret;
+                this.properties.out.value = ret;
+                this.properties.out.outValue = ret;
+            this.label = this.properties.in1.value + "=? " + this.properties.in2.value;
+
             update = false;
         }
     }

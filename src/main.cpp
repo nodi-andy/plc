@@ -1,9 +1,18 @@
+#define DEBUG_ESP_PORT
+
 #include <Arduino.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
 #include "WiFi.h"
+#include <ESP32Ping.h>
+
+#include <WebSocketsClient.h>
+#include <SocketIOclient.h>
+
+SocketIOclient socketIO;
+
 
 #define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
 
@@ -29,6 +38,94 @@ static uint8_t mapFile[MAX_MESSAGE_SIZE];
 Map nodemap;
 Preferences preferences;
 
+#define USE_SERIAL Serial
+
+void loadNoditronFile() {
+    //if (SPIFFS.exists(defaultFileName.c_str())) {
+        //Serial.println("Default File found");
+        File file = SPIFFS.open(defaultFileName, "w", true);
+        if(!file){
+            Serial.println("There was an error opening the file for reading");
+        } else {
+            file.read((uint8_t *)mapFile, file.size());  
+            mapFile[file.size()] = 0;
+                Serial.println("READ DONE: ");
+                Serial.print(file.size());
+                Serial.print(",");
+                Serial.println((const char*)mapFile);
+            file.close();
+            nodemap.state = mapState::UPDATE;
+        }	
+    /*} else {
+        Serial.println("Default File not found");
+    }*/
+}
+
+
+void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length) {
+
+    char * sptr = NULL;
+    DynamicJsonDocument doc(1024);
+    String eventName, jsonData;
+    File file;
+    int id;
+    DeserializationError error;
+    switch(type) {
+        case sIOtype_DISCONNECT:
+            USE_SERIAL.printf("[IOc] Disconnected!\n");
+            break;
+        case sIOtype_CONNECT:
+            USE_SERIAL.printf("[IOc] Connected to url: %s\n", payload);
+
+            // join default namespace (no auto join in Socket.IO V3)
+            socketIO.send(sIOtype_CONNECT, "/");
+            break;
+        case sIOtype_EVENT:
+
+            id = strtol((char *)payload, &sptr, 10);
+            USE_SERIAL.printf("[IOc] get event: %s id: %d\n", payload, id);
+            if(id) {
+              payload = (uint8_t *)sptr;
+            }
+
+
+            error = deserializeJson(doc, payload, length);
+            if(error) {
+                USE_SERIAL.print(F("deserializeJson() failed: "));
+                USE_SERIAL.println(error.c_str());
+                break;
+            }
+
+            eventName = doc[0].as<String>();
+            jsonData = doc[1].as<String>();
+            USE_SERIAL.printf("[IOc] event name: %s\n", eventName.c_str());
+
+            Serial.print("INPUT: ");
+            Serial.print(jsonData.length());
+            Serial.print(",");
+            Serial.println(jsonData.c_str());
+            
+            jsonData.getBytes(mapFile, jsonData.length() + 1);
+            file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
+            file.write(mapFile, jsonData.length()+1);
+            file.close();
+            loadNoditronFile();
+            break;
+        case sIOtype_ACK:
+            USE_SERIAL.printf("[IOc] get ack: %u\n", length);
+            break;
+        case sIOtype_ERROR:
+            USE_SERIAL.printf("[IOc] get error: %u\n", length);
+            break;
+        case sIOtype_BINARY_EVENT:
+            USE_SERIAL.printf("[IOc] get binary: %u\n", length);
+            break;
+        case sIOtype_BINARY_ACK:
+            USE_SERIAL.printf("[IOc] get binary ack: %u\n", length);
+            break;
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -51,7 +148,7 @@ struct Led {
 Led    onboard_led = { BUILTIN_LED, false };
 
 AsyncWebServer server(HTTP_PORT);
-AsyncWebSocket ws("/ws");
+//AsyncWebSocket ws("/ws");
 
 // ----------------------------------------------------------------------------
 // SPIFFS initialization
@@ -72,10 +169,9 @@ void initSPIFFS() {
 // ----------------------------------------------------------------------------
 
 void initWiFi() {
-
     
-    int AP_Enabled = 1; //preferences.getInt("AP_Enabled", 1);
-    int STA_Enabled = 0; //preferences.getInt("STA_Enabled", 0);
+    int AP_Enabled = 0; //preferences.getInt("AP_Enabled", 1);
+    int STA_Enabled = 1; //preferences.getInt("STA_Enabled", 0);
     String SSID_stored = preferences.getString("SSID", "");
     String PW_stored = preferences.getString("PW", "");
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
@@ -123,33 +219,14 @@ void initWiFi() {
 
 }
 
-void loadNoditronFile() {
-    //if (SPIFFS.exists(defaultFileName.c_str())) {
-        //Serial.println("Default File found");
-        File file = SPIFFS.open(defaultFileName, "w", true);
-        if(!file){
-            Serial.println("There was an error opening the file for reading");
-        } else {
-            file.read((uint8_t *)mapFile, file.size());  
-            mapFile[file.size()] = 0;
-                Serial.println("READ DONE: ");
-                Serial.print(file.size());
-                Serial.print(",");
-                Serial.println((const char*)mapFile);
-            file.close();
-            nodemap.state = mapState::UPDATE;
-        }	
-    /*} else {
-        Serial.println("Default File not found");
-    }*/
-}
+
 // ----------------------------------------------------------------------------
 // WebSocket initialization
 // ----------------------------------------------------------------------------
 
 void notifyClients(const char* msg) {
     if (msg) {
-      ws.textAll(wsInput, strlen((const char*)msg));
+      //ws.textAll(wsInput, strlen((const char*)msg));
     }
 }
 
@@ -169,7 +246,7 @@ void sendConnectionSettings() {
     msg += "\"STA_IP\": \"" + WiFi.localIP().toString() + "\"}";
 
     msg += "}";
-    ws.textAll(msg.c_str(), msg.length());
+    //ws.textAll(msg.c_str(), msg.length());
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -236,7 +313,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
             }
 
             msg += "]}}";
-            ws.textAll(msg.c_str(), msg.length());
+            //ws.textAll(msg.c_str(), msg.length());
         }
         if ( root["saveWiFi"].isNull() == false) {
             Serial.println("Save WiFi");
@@ -286,7 +363,7 @@ void onEvent(AsyncWebSocket       *server,
     switch (type) {
         case WS_EVT_CONNECT:
             Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-            ws.text(client->id(), mapFile, strlen((const char*)mapFile));
+            //ws.text(client->id(), mapFile, strlen((const char*)mapFile));
             sendConnectionSettings();
             break;
         case WS_EVT_DISCONNECT:
@@ -311,8 +388,8 @@ String processor(const String &var) {
 }
 
 void initWebServer() {
-    ws.onEvent(onEvent);
-    server.addHandler(&ws);
+    //ws.onEvent(onEvent);
+    //server.addHandler(&ws);
     Serial.println("Starting web server...");
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); ;
     server.begin();
@@ -334,16 +411,14 @@ void noditronTask( void * pvParameters ){
 
         deserializeJson(doc, wsInput);
         JsonObject root = doc.as<JsonObject>();
-        JsonObject saved = root["save"];    
 
-
-        JsonArray nodes = saved["nodes"];
+        JsonArray nodes = root["nodes"];
         for (JsonVariant kv : nodes) {
             JsonObject node = kv.as<JsonObject>();
             nodemap.addNode(node);
         }
 
-        JsonArray links = saved["links"];
+        JsonArray links = root["links"];
         for (JsonVariant kv : links) {
             JsonArray linkData = kv.as<JsonArray>();
             int id = linkData[0].as<int>();
@@ -363,7 +438,7 @@ void noditronTask( void * pvParameters ){
             if (n.second) {
                 if (n.second->onExecute()) {
                     std::string msg = "{\"update\": {\"id\":" + std::to_string(n.second->id) + ", \"state\":" + std::to_string(n.second->state) + ", \"value\":" + std::to_string(n.second->value) + "}}";
-                    ws.textAll(msg.c_str(), msg.length());
+                    //ws.textAll(msg.c_str(), msg.length());
                 }
             }
         }
@@ -389,6 +464,58 @@ void noditronTask( void * pvParameters ){
   } 
 }
 
+
+void hexdump(const void *mem, uint32_t len, uint8_t cols = 16) {
+	const uint8_t* src = (const uint8_t*) mem;
+	Serial.printf("\n[HEXDUMP] Address: 0x%08X len: 0x%X (%d)", (ptrdiff_t)src, len, len);
+	for(uint32_t i = 0; i < len; i++) {
+		if(i % cols == 0) {
+			Serial.printf("\n[0x%08X] 0x%08X: ", (ptrdiff_t)src, i);
+		}
+		Serial.printf("%02X ", *src);
+		src++;
+	}
+	Serial.printf("\n");
+}
+
+void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
+
+
+    switch(type) {
+        case WStype_DISCONNECTED:
+            Serial.printf("[WSc] Disconnected!\n");
+            break;
+        case WStype_CONNECTED:
+            {
+                Serial.printf("[WSc] Connected to url: %s\n",  payload);
+
+			    // send message to server when Connected
+				//socketIO.sendTXT("Connected");
+            }
+            break;
+        case WStype_TEXT:
+            Serial.printf("[WSc] get text: %s\n", payload);
+
+			// send message to server
+			// webSocket.sendTXT("message here");
+            break;
+        case WStype_BIN:
+            Serial.printf("[WSc] get binary length: %u\n", length);
+            hexdump(payload, length);
+
+            // send data to server
+            // webSocket.sendBIN(payload, length);
+            break;
+		case WStype_ERROR:			
+            Serial.printf("[WSc] Err: %s\n", payload);
+		case WStype_FRAGMENT_TEXT_START:
+		case WStype_FRAGMENT_BIN_START:
+		case WStype_FRAGMENT:
+		case WStype_FRAGMENT_FIN:
+			break;
+    }
+
+}
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
@@ -401,7 +528,7 @@ void setup() {
     preferences.begin("noditron", false); 
     initSPIFFS();
     initWiFi();
-    initWebServer();
+    //initWebServer();
 
     preferences.end();
 
@@ -409,6 +536,25 @@ void setup() {
     delay(1000);
 
     loadNoditronFile();
+    bool success = Ping.ping("repairnow.ew.r.appspot.com", 3);
+ 
+if(!success){
+    Serial.println("Ping failed");
+    return;
+}
+ 
+Serial.println("Ping succesful.");
+
+    delay(4000);
+
+    // server address, port and URL
+    //socketIO.begin("192.168.1.22", 80, "/socket.io/?EIO=4");
+    socketIO.begin("repairnow.ew.r.appspot.com", 80, "/socket.io/?EIO=4");
+
+    // event handler
+    socketIO.onEvent(socketIOEvent);
+
+    Serial.write("WSS INIT");
 }
 
 // ----------------------------------------------------------------------------
@@ -416,6 +562,8 @@ void setup() {
 // ----------------------------------------------------------------------------
 
 void loop() {
-    ws.cleanupClients();
+    //ws.cleanupClients();
+    
+    socketIO.loop();
 }
 

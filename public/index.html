@@ -11,6 +11,7 @@
       name="description"
       content="noditron"
     />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -158,7 +159,7 @@
     }
 
     window.nodes.upload = () => {
-      if (window.ws) {
+      if (window.socket) {
         let storeGraph = JSON.parse(JSON.stringify(window.graph.serialize()))
         delete storeGraph.config;
         delete storeGraph.extra;
@@ -170,7 +171,7 @@
           delete node.outputs;
           delete node.mode;
         }
-        window.ws.send(JSON.stringify({'save': storeGraph}));
+        window.socket.emit("setNodework", storeGraph);
         window.showSnackbar("nodework sent to nodi.box!")
       }
     }
