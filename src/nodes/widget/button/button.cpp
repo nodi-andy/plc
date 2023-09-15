@@ -32,8 +32,6 @@ void Button::setup() {
 
     Serial.print(">>> Setup Button, PORT: ");
     Serial.println(port);
-
-    Serial.println(">>> Button setup done.");
 }
 
 int Button::onExecute() {

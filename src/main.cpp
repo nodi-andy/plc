@@ -37,6 +37,9 @@ static uint8_t mapFile[MAX_MESSAGE_SIZE];
 
 Map nodemap;
 Preferences preferences;
+DynamicJsonDocument doc(10240);
+JsonObject root;
+JsonObject rootArray;
 
 #define USE_SERIAL Serial
 
@@ -63,9 +66,7 @@ void loadNoditronFile() {
 
 
 void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length) {
-
     char * sptr = NULL;
-    DynamicJsonDocument doc(1024);
     String eventName, jsonData;
     File file;
     int id;
@@ -79,11 +80,13 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
 
             // join default namespace (no auto join in Socket.IO V3)
             socketIO.send(sIOtype_CONNECT, "/");
+            //socketIO.sendEVENT("nodi.box");
+            
             break;
         case sIOtype_EVENT:
-
+        { 
             id = strtol((char *)payload, &sptr, 10);
-            USE_SERIAL.printf("[IOc] get event: %s id: %d\n", payload, id);
+            //USE_SERIAL.printf("[IOc] get event: %s id: %d\n", payload, id);
             if(id) {
               payload = (uint8_t *)sptr;
             }
@@ -98,18 +101,25 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
 
             eventName = doc[0].as<String>();
             jsonData = doc[1].as<String>();
-            USE_SERIAL.printf("[IOc] event name: %s\n", eventName.c_str());
 
-            Serial.print("INPUT: ");
+
+            /*Serial.print("INPUT: ");
             Serial.print(jsonData.length());
             Serial.print(",");
-            Serial.println(jsonData.c_str());
+            Serial.println(jsonData.c_str());*/
+
+            if (eventName == "setNodework") {
+                jsonData.getBytes(mapFile, jsonData.length() + 1);
+                file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
+                file.write(mapFile, jsonData.length()+1);
+                file.close();
+                loadNoditronFile();
+            } else if (eventName == "updateNode") {
+                nodemap.state = mapState::UPDATE_NODE;
+            }
             
-            jsonData.getBytes(mapFile, jsonData.length() + 1);
-            file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
-            file.write(mapFile, jsonData.length()+1);
-            file.close();
-            loadNoditronFile();
+
+        }
             break;
         case sIOtype_ACK:
             USE_SERIAL.printf("[IOc] get ack: %u\n", length);
@@ -124,6 +134,7 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
             USE_SERIAL.printf("[IOc] get binary ack: %u\n", length);
             break;
     }
+
 }
 
 // ----------------------------------------------------------------------------
@@ -268,9 +279,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         memcpy(mapFile, wsInput, strlen((char *)wsInput));
         mapFile[info->len] = '\0';  // Add the null-terminator
 
-        DynamicJsonDocument doc(10240);
         deserializeJson(doc, wsInput);
-        JsonObject root = doc.as<JsonObject>();
+        root = doc.as<JsonObject>();
         if ( root["save"].isNull() == false) {
             notifyClients((const char*)mapFile);
             File file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
@@ -379,14 +389,6 @@ void onEvent(AsyncWebSocket       *server,
 }
 
 
-// ----------------------------------------------------------------------------
-// Web server initialization
-// ----------------------------------------------------------------------------
-
-String processor(const String &var) {
-    return String(var == "STATE" && onboard_led.on ? "on" : "off");
-}
-
 void initWebServer() {
     //ws.onEvent(onEvent);
     //server.addHandler(&ws);
@@ -395,9 +397,8 @@ void initWebServer() {
     server.begin();
 }
 
-
-void noditronTask( void * pvParameters ){
-  Serial.print("noditron task is running.");
+void noditronTask( void * pvParameters ) {
+  Serial.print("noditron task is running on core: ");
   Serial.println(xPortGetCoreID());
 
   for(;;){
@@ -406,7 +407,6 @@ void noditronTask( void * pvParameters ){
     if (nodemap.state == mapState::UPDATE) {
         nodemap.clear();
 
-        DynamicJsonDocument doc(10240);
         memcpy(wsInput, mapFile, strlen((char *)mapFile));
 
         deserializeJson(doc, wsInput);
@@ -431,9 +431,21 @@ void noditronTask( void * pvParameters ){
 
         nodemap.report();
         nodemap.state = mapState::RUN;
-    }
-    
-    else if (nodemap.state == mapState::RUN) {
+    }  
+    else if (nodemap.state == mapState::UPDATE_NODE) {
+        int id = doc[1]["nodeID"].as<int>();
+        USE_SERIAL.printf("[updateNode] id: %d\n", id);
+        if (nodemap.nodes[id]) {
+            nodemap.nodes[id]->props = doc[1]["newData"];
+            nodemap.nodes[id]->setup();
+            nodemap.state = mapState::RUN;
+        }
+    } 
+    else if (nodemap.state == mapState::ADD_NODE) {
+        int id = doc[1]["id"].as<int>();
+        USE_SERIAL.printf("[addNode] id: %d\n", id);
+        nodemap.addNode(doc[1]);
+    }else if (nodemap.state == mapState::RUN) {
         for (auto n : nodemap.nodes) {
             if (n.second) {
                 if (n.second->onExecute()) {
@@ -459,6 +471,9 @@ void noditronTask( void * pvParameters ){
                 }
             }
         }
+    }
+    else if (nodemap.state == mapState::STOP) {
+        nodemap.state = mapState::STOPPED;
     }
     vTaskDelay(10);
   } 
@@ -533,28 +548,28 @@ void setup() {
     preferences.end();
 
     xTaskCreatePinnedToCore(noditronTask, "noditron task", 20000, NULL, 10, &noditronTaskHandle, 1);
-    delay(1000);
+    delay(100);
 
     loadNoditronFile();
-    bool success = Ping.ping("repairnow.ew.r.appspot.com", 3);
+    bool success = Ping.ping("noditron.com", 3);
  
-if(!success){
-    Serial.println("Ping failed");
-    return;
-}
- 
-Serial.println("Ping succesful.");
+    if(!success){
+        Serial.println("noditron.com: NC");
+        return;
+    }
+    
+    Serial.println("noditron.com: OK");
 
-    delay(4000);
+    delay(100);
 
     // server address, port and URL
-    //socketIO.begin("192.168.1.22", 80, "/socket.io/?EIO=4");
-    socketIO.begin("repairnow.ew.r.appspot.com", 80, "/socket.io/?EIO=4");
+    socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
+    //socketIO.begin("noditron.com", 80, "/socket.io/?EIO=4");
 
     // event handler
     socketIO.onEvent(socketIOEvent);
 
-    Serial.write("WSS INIT");
+    Serial.write("SocketIO: init");
 }
 
 // ----------------------------------------------------------------------------

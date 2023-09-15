@@ -10,7 +10,7 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 //var gateway = `ws://${window.location.hostname}/ws`;
 var websocket = null;// new WebSocket(gateway);
 
-const socket = io(window.location.hostname);
+const socket = io("http://"+ window.location.hostname + ":8080");
 window.socket = socket;
 
 // Event handler for when the connection is established
@@ -21,12 +21,22 @@ socket.on("connect", () => {
 
 socket.on("setNodework", (message) => {
     // Handle incoming messages here
-    onMessage(message);
+    window.graph.configure(message, false);
+    window.graph.start();
 });
 
+socket.on("updateNode", (message) => {
+    // Handle incoming messages here
+    const nodeData = JSON.parse(message);
+    Object.assign(window.graph._nodes_by_id[nodeData.nodeID], nodeData.newData);
+    window.canvas.dirty_canvas = true;
+});
 // Event handler for custom events from the server
 socket.on("custom-event-from-server", (data) => {
     console.log("Received data from the server:", data);
+});
+socket.on("nodi.box", (data) => {
+    console.log("nodi.box:", data);
 });
 
 socket.on("disconnect", () => {

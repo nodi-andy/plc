@@ -252,9 +252,7 @@ export default class LGraphNode {
         if (this.boxcolor) {
             o.boxcolor = this.boxcolor;
         }
-        if (this.shape) {
-            o.shape = this.shape;
-        }
+
 
         if (this.onSerialize) {
             if (this.onSerialize(o)) {

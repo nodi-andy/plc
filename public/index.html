@@ -120,8 +120,9 @@
         node.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
         window.graph.add(node, false);
       }
-
       window.graph.afterChange();
+      
+      window.socket.emit("addNode", window.graph._nodes_by_id[node.id].clone());
     }
 
     window.nodes.remNode = () => {
@@ -173,6 +174,12 @@
         }
         window.socket.emit("setNodework", storeGraph);
         window.showSnackbar("nodework sent to nodi.box!")
+      }
+    }
+
+    window.nodes.update = (id, changedNodeData) => {
+      if (window.socket) {
+        window.socket.emit("updateNode", {"nodeID":id, "newData": changedNodeData});
       }
     }
 

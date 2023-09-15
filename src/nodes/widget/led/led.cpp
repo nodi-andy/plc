@@ -8,6 +8,9 @@ void LED::setup() {
     title = "LED";
     name = "LED";
     desc = "Show value of input";
+    Serial.println("LED setup: ");
+
+    vals.clear();
     
     // Iterate through the properties object
     for (JsonPair property : props["properties"].as<JsonObject>()) {
@@ -15,10 +18,12 @@ void LED::setup() {
       const char* propertyName = property.key().c_str();
       
       // Call your addInput function with propertyName
-      Serial.print("Adding property: ");
-      Serial.println(propertyName);
       addProp(propertyName);
       vals[propertyName] = props["properties"][propertyName]["value"].as<int>();
+      Serial.print("Adding property: ");
+      Serial.print(propertyName);
+      Serial.print(" = ");
+      Serial.println(vals[propertyName]);
     }
 
     port = vals["port"];

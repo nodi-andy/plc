@@ -826,9 +826,6 @@ export default class LGraphCanvas {
             }
             node.graph.beforeChange( /*?*/); //node
 
-            var fApplyMultiNode = function (node) {
-                node.shape = v;
-            };
 
             var graphcanvas = LGraphCanvas.active_canvas;
             if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
@@ -2038,6 +2035,8 @@ export default class LGraphCanvas {
 
                 this.dirty_canvas = true;
                 this.dirty_bgcanvas = true;
+                window.nodes.update(this.node_dragged.id, {pos:this.node_dragged.pos});
+
             }
 
             if (this.resizing_node && !this.live_mode) {
@@ -2133,11 +2132,7 @@ export default class LGraphCanvas {
             }
             this.selected_group_resizing = false;
 
-            var node = this.graph.getNodeOnPos(
-                e.canvasX,
-                e.canvasY,
-                this.visible_nodes
-            );
+            var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes);
 
             if (this.dragging_rectangle) {
                 if (this.graph) {
@@ -2279,6 +2274,8 @@ export default class LGraphCanvas {
                 if (this.onNodeMoved)
                     this.onNodeMoved(this.node_dragged);
                 this.graph.afterChange(this.node_dragged);
+                window.nodes.update(this.node_dragged.id, {pos:this.node_dragged.pos});
+
                 this.node_dragged = null;
             } //no node being dragged
             else {

@@ -38,31 +38,35 @@ export default class WidgetLed extends LGraphNode {
         }
     }
 
+    updateState(val) {
+        this.properties.state.value = val;
+        window.nodes.update(this.id, {"properties": this.properties});
+    }
+
     onExecute(update) {
         if (this.properties.set.inpValue == 1) {
-            this.properties.state.value = 1;
+            this.updateState(1);
             this.properties.set.inpValue = null;
         }
 
         if (this.properties.clear.inpValue == 1) {
-            this.properties.state.value = 0;
+            this.updateState(0);
             this.properties.clear.inpValue = null;
         }
 
         if (this.properties.toggle.inpValue == 1) {
             if ( this.properties.state.value == 1) {
-                this.properties.state.value = 0;
+                this.updateState(0);
                 this.properties.state.outValue = this.properties.state.value;
             } else {
-                this.properties.state.value = 1;
+                this.updateState(1);
                 this.properties.state.outValue = this.properties.state.value;
             }
             this.properties.toggle.inpValue = null;
         }
 
         if (update && this.properties.state.inpValue != null) {
-            this.properties.state.value = this.properties.state.inpValue;
-            this.properties.state.value = parseInt(this.properties.state.value);
+            this.updateState(parseInt(this.properties.state.inpValue));
             this.properties.state.inpValue = null;
         }
     }
@@ -74,6 +78,7 @@ export default class WidgetLed extends LGraphNode {
             local_pos[1] < this.size[1] * 0.75) {
             this.properties.state.inpValue = this.properties.state.value ? 0 : 1;
             this.update = true;
+
             return true;
         }
     }
