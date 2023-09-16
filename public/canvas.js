@@ -396,9 +396,7 @@ export default class LGraphCanvas {
                     continue;
                 }
 
-                if (node.flags &&
-                    node.flags.skip_repeated_outputs &&
-                    node.findOutputSlot(entry[0]) != -1) {
+                if (node.findOutputSlot(entry[0]) != -1) {
                     continue;
                 } //skip the ones already on
                 var label = entry[0];
@@ -1469,7 +1467,7 @@ export default class LGraphCanvas {
             //when clicked on top of a node
             //and it is not interactive
             if (node && this.allow_interaction && !skip_action && !this.read_only) {
-                if (!this.live_mode && !node.flags.pinned) {
+                if (!this.live_mode ) {
                     this.bringToFront(node);
                 } //if it wasn't selected?
 
@@ -1648,7 +1646,7 @@ export default class LGraphCanvas {
                     if (!this.read_only) {
                         for (var i = 0; i < this.visible_links.length; ++i) {
                             var link = this.visible_links[i];
-                            var center = link._pos;
+                            var center = link.pos;
                             if (!center ||
                                 e.canvasX < center[0] - 4 ||
                                 e.canvasX > center[0] + 4 ||
@@ -1997,7 +1995,7 @@ export default class LGraphCanvas {
                 var over_link = null;
                 for (var i = 0; i < this.visible_links.length; ++i) {
                     var link = this.visible_links[i];
-                    var center = link._pos;
+                    var center = link.pos;
                     if (!center ||
                         e.canvasX < center[0] - 4 ||
                         e.canvasX > center[0] + 4 ||
@@ -3993,7 +3991,7 @@ export default class LGraphCanvas {
     }
     //used by this.over_link_center
     drawLinkTooltip(ctx, link) {
-        var pos = link._pos;
+        var pos = link.pos;
         ctx.fillStyle = "black";
         ctx.beginPath();
         ctx.arc(pos[0], pos[1], 3, 0, Math.PI * 2);
@@ -4586,9 +4584,9 @@ export default class LGraphCanvas {
         ctx.stroke();
         //end line shape
         var pos = this.computeConnectionPoint([start_x, start_y], [end_x, end_y], 0.5, start_dir, end_dir, link);
-        if (link && link._pos) {
-            link._pos[0] = pos[0];
-            link._pos[1] = pos[1];
+        if (link && link.pos) {
+            link.pos[0] = pos[0];
+            link.pos[1] = pos[1];
         }
 
         //render arrow in the middle
@@ -5182,7 +5180,7 @@ export default class LGraphCanvas {
 
             ctx.fillStyle = group.color || "#335";
             ctx.strokeStyle = group.color || "#335";
-            var pos = group._pos;
+            var pos = group.pos;
             var size = group._size;
             ctx.globalAlpha = 0.25 * this.editor_alpha;
             ctx.beginPath();

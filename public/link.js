@@ -11,7 +11,7 @@ export default class LLink {
         this.target_slot = target_slot;
 
         this._data = null;
-        this._pos = new Float32Array(2); //center
+        this.pos = new Float32Array(2); //center
     }
     configure(o) {
         if (o.constructor === Array) {
@@ -226,9 +226,9 @@ export default class LLink {
         ctx.stroke();
         //end line shape
         var pos = canvas.computeConnectionPoint([start_x, start_y], [end_x, end_y], 0.5, start_dir, end_dir, link);
-        if (link && link._pos) {
-            link._pos[0] = pos[0];
-            link._pos[1] = pos[1];
+        if (link && link.pos) {
+            link.pos[0] = pos[0];
+            link.pos[1] = pos[1];
         }
 
         //render arrow in the middle

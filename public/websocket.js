@@ -1,4 +1,5 @@
 import { LiteGraph } from "./litegraph.js";
+import LGraphNode from "./node.js"
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
 import NodiBoxB3 from "./nodes/nodi.box/b3.js";
@@ -9,13 +10,16 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 
 //var gateway = `ws://${window.location.hostname}/ws`;
 var websocket = null;// new WebSocket(gateway);
-
-const socket = io("http://"+ window.location.hostname + ":8080");
+var uri = window.location.hostname
+if (window.location.hostname == "localhost") uri += ":8080";
+const socket = io(uri);
 window.socket = socket;
 
 // Event handler for when the connection is established
 socket.on("connect", () => {
     console.log("Connected to the server!");
+    socket.emit('updateMe');
+
     onOpen();
 });
 
@@ -25,10 +29,16 @@ socket.on("setNodework", (message) => {
     window.graph.start();
 });
 
+socket.on("addNode", (message) => {
+    // Handle incoming messages here
+    let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
+    newNode.configure(message);
+    window.graph.add(newNode);
+});
+
 socket.on("updateNode", (message) => {
     // Handle incoming messages here
-    const nodeData = JSON.parse(message);
-    Object.assign(window.graph._nodes_by_id[nodeData.nodeID], nodeData.newData);
+    Object.assign(window.graph._nodes_by_id[message.nodeID], message.newData);
     window.canvas.dirty_canvas = true;
 });
 // Event handler for custom events from the server

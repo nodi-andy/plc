@@ -183,8 +183,8 @@ void initWiFi() {
     
     int AP_Enabled = 0; //preferences.getInt("AP_Enabled", 1);
     int STA_Enabled = 1; //preferences.getInt("STA_Enabled", 0);
-    String SSID_stored = preferences.getString("SSID", "");
-    String PW_stored = preferences.getString("PW", "");
+    String SSID_stored = preferences.getString("SSID", "DHLAN");
+    String PW_stored = preferences.getString("PW", "w123qweasd");
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
     Serial.print("AP mode: ");
     Serial.println(AP_Enabled);
@@ -563,8 +563,8 @@ void setup() {
     delay(100);
 
     // server address, port and URL
-    socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
-    //socketIO.begin("noditron.com", 80, "/socket.io/?EIO=4");
+    //socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
+    socketIO.begin("noditron.com", 80, "/socket.io/?EIO=4");
 
     // event handler
     socketIO.onEvent(socketIOEvent);

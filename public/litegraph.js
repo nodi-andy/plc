@@ -447,12 +447,8 @@ export var LiteGraph = (global.LiteGraph = {
         if (!node.properties) {
             node.properties = {};
         }
-        if (!node.properties_info) {
-            node.properties_info = [];
-        }
-        if (!node.flags) {
-            node.flags = {};
-        }
+
+
         if (!node.size) {
             node.size = node.computeSize();
             //call onresize?
@@ -460,9 +456,7 @@ export var LiteGraph = (global.LiteGraph = {
         if (!node.pos) {
             node.pos = LiteGraph.DEFAULT_POSITION.concat();
         }
-        if (!node.mode) {
-            node.mode = LiteGraph.ALWAYS;
-        }
+
 
         //extra options
         if (options) {
@@ -985,7 +979,7 @@ class LGraph {
 
         for (var j = 0; j < nodes.length; ++j) {
             var node = nodes[j];
-            if (node.mode == LiteGraph.ALWAYS && node.onExecute) {
+            if ( node.onExecute) {
                 node.doExecute(node.update);
                 node.update = false;
             }
@@ -1102,13 +1096,11 @@ class LGraph {
 
             if (node.constructor === LiteGraph.Subgraph &&
                 eventname != "onExecute") {
-                if (node.mode == mode) {
                     node.sendEventToAllNodes(eventname, params, mode);
-                }
                 continue;
             }
 
-            if (!node[eventname] || node.mode != mode) {
+            if (!node[eventname] ) {
                 continue;
             }
             if (params === undefined) {
@@ -2018,24 +2010,11 @@ class LGraphGroup {
             ? LGraphCanvas.node_colors.pale_blue.groupcolor
             : "#AAA";
         this._bounding = new Float32Array([10, 10, 140, 80]);
-        this._pos = this._bounding.subarray(0, 2);
+        this.pos = this._bounding.subarray(0, 2);
         this._size = this._bounding.subarray(2, 4);
         this._nodes = [];
         this.graph = null;
 
-        Object.defineProperty(this, "pos", {
-            set: function (v) {
-                if (!v || v.length < 2) {
-                    return;
-                }
-                this._pos[0] = v[0];
-                this._pos[1] = v[1];
-            },
-            get: function () {
-                return this._pos;
-            },
-            enumerable: true
-        });
 
         Object.defineProperty(this, "size", {
             set: function (v) {
@@ -2072,8 +2051,8 @@ class LGraphGroup {
         };
     }
     move(deltax, deltay, ignore_nodes) {
-        this._pos[0] += deltax;
-        this._pos[1] += deltay;
+        this.pos[0] += deltax;
+        this.pos[1] += deltay;
         if (ignore_nodes) {
             return;
         }
@@ -2574,9 +2553,7 @@ class ContextMenu {
                 element.childNodes[1].node_prop = value.value;
                 element.childNodes[1].addEventListener('blur', function(event) {
                     if (event.target.value == "") event.target.value = "null"
-                    if (this.node.properties_info[this.node_prop]?.type == "string") {
-                        event.target.value = "\"" + event.target.value + "\""
-                    }
+
                     this.node.properties[this.node_prop] = JSON.parse(event.target.value);
                     console.log('Input edited and focus lost:', event.target.value);
                 });

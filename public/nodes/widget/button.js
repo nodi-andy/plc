@@ -24,7 +24,7 @@ export default class WidgetButton extends LGraphNode{
         for(let input of this.inputs) {
             input.value = null;
         }
-        this.onMouseUp();
+        this.reset();
     }
 
     onDrawForeground(ctx) {
@@ -96,10 +96,14 @@ export default class WidgetButton extends LGraphNode{
         // do not remove input
     }
 
-    onMouseUp(/*e*/) {
+    reset() {
         this.newState = 0;
         this.properties.state.value = this.properties.release.value;
         this.properties.state.outValue = this.properties.state.value;
+    }
+
+    onMouseUp(/*e*/) {
+        this.reset();
         window.nodes.update(this.id, {"newState": this.newState});
 
         this.setDirtyCanvas(true);

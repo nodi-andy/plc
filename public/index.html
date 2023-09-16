@@ -121,8 +121,10 @@
         window.graph.add(node, false);
       }
       window.graph.afterChange();
-      
-      window.socket.emit("addNode", window.graph._nodes_by_id[node.id].clone());
+      delete window.graph._nodes_by_id[node.id].graph;
+      window.socket.emit("addNode", window.graph._nodes_by_id[node.id]);
+      window.graph._nodes_by_id[node.id].graph = window.graph;
+
     }
 
     window.nodes.remNode = () => {
@@ -167,10 +169,8 @@
         delete storeGraph.groups;
         for(let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
-          delete node.flags;
           delete node.inputs;
           delete node.outputs;
-          delete node.mode;
         }
         window.socket.emit("setNodework", storeGraph);
         window.showSnackbar("nodework sent to nodi.box!")

@@ -67,35 +67,15 @@ export default class LGraphNode {
         this.size = [window.LiteGraph.NODE_WIDTH, 60];
         this.graph = null;
         this.update = false;
-        this._pos = [0, 0];
-
-        Object.defineProperty(this, "pos", {
-            set: function (v) {
-                if (!v || v.length < 2) {
-                    return;
-                }
-                this._pos[0] = v[0];
-                this._pos[1] = v[1];
-            },
-            get: function () {
-                return this._pos;
-            },
-            enumerable: true
-        });
+        this.pos = [0, 0];
 
         this.id = -1; //not know till not added
         this.type = null;
-
-        //inputs available: array of inputs
         this.inputs = [];
         this.outputs = [];
-        this.connections = [];
-
-        //local data
         this.properties = {}; //for the values
-        this.properties_info = []; //for the info
 
-        this.flags = {};
+
     }
     /**
          * configure a node from an object containing the serialized info
@@ -198,9 +178,7 @@ export default class LGraphNode {
             type: this.type,
             pos: this.pos,
             size: this.size,
-            flags: window.LiteGraph.cloneObject(this.flags),
             order: this.order,
-            mode: this.mode
         };
 
         //special case for when there were errors
@@ -759,7 +737,6 @@ export default class LGraphNode {
             default:
                 return false;
         }
-        this.mode = modeTo;
         return true;
     }
     /**
@@ -903,16 +880,7 @@ export default class LGraphNode {
             //used to mark events in graph
             var target_connection = node.inputs[link_info.target_slot];
 
-            if (node.mode === window.LiteGraph.ON_TRIGGER) {
-                // generate unique trigger ID if not present
-                if (!options.action_call)
-                    options.action_call = this.id + "_trigg_" + Math.floor(Math.random() * 9999);
-                if (node.onExecute) {
-                    // -- wrapping node.onExecute(param); --
-                    node.doExecute(param, options);
-                }
-            }
-            else if (node.onAction) {
+             if (node.onAction) {
                 // generate unique action ID if not present
                 if (!options.action_call)
                     options.action_call = this.id + "_act_" + Math.floor(Math.random() * 9999);
@@ -989,10 +957,8 @@ export default class LGraphNode {
                 o[i] = extra_info[i];
             }
         }
-        if (!this.properties_info) {
-            this.properties_info = {};
-        }
-        this.properties_info[name] = o;
+
+
         if (!this.properties) {
             this.properties = {};
         }
@@ -1211,25 +1177,7 @@ export default class LGraphNode {
         }
         this.setDirtyCanvas(true, true);
     }
-    /**
-         * add an special connection to this node (used for special kinds of graphs)
-         * @method addConnection
-         * @param {string} name
-         * @param {string} type string defining the input type ("vec3","number",...)
-         * @param {[x,y]} pos position of the connection inside the node
-         * @param {string} direction if is input or output
-         */
-    addConnection(name, type, pos, direction) {
-        var o = {
-            name: name,
-            type: type,
-            pos: pos,
-            direction: direction,
-            links: null
-        };
-        this.connections.push(o);
-        return o;
-    }
+
     /**
          * computes the minimum size of a node according to its inputs and output slots
          * @method computeSize
@@ -1329,16 +1277,6 @@ export default class LGraphNode {
     getPropertyInfo(property) {
         var info = null;
 
-        //there are several ways to define info about a property
-        //legacy mode
-        if (this.properties_info) {
-            for (var i = 0; i < this.properties_info.length; ++i) {
-                if (this.properties_info[i].name == property) {
-                    info = this.properties_info[i];
-                    break;
-                }
-            }
-        }
         //litescene mode using the constructor
         if (this.constructor["@" + property])
             info = this.constructor["@" + property];
@@ -2194,44 +2132,7 @@ export default class LGraphNode {
         };
         return img;
     }
-    //safe LGraphNode action execution (not sure if safe)
-    /*
-    LGraphNode.prototype.executeAction = function(action)
-    {
-        if(action == "") return false;
-    
-        if( action.indexOf(";") != -1 || action.indexOf("}") != -1)
-        {
-            this.trace("Error: Action contains unsafe characters");
-            return false;
-        }
-    
-        var tokens = action.split("(");
-        var func_name = tokens[0];
-        if( typeof(this[func_name]) != "function")
-        {
-            this.trace("Error: Action not found on node: " + func_name);
-            return false;
-        }
-    
-        var code = action;
-    
-        try
-        {
-            var _foo = eval;
-            eval = null;
-            (new Function("with(this) { " + code + "}")).call(this);
-            eval = _foo;
-        }
-        catch (err)
-        {
-            this.trace("Error executing action {" + action + "} :" + err);
-            return false;
-        }
-    
-        return true;
-    }
-    */
+   
     /* Allows to get onMouseMove and onMouseUp events even if the mouse is out of focus */
     captureInput(v) {
         if (!this.graph || !this.graph.list_of_graphcanvas) {
@@ -2258,11 +2159,7 @@ export default class LGraphNode {
          **/
     pin(v) {
         this.graph._version++;
-        if (v === undefined) {
-            this.flags.pinned = !this.flags.pinned;
-        } else {
-            this.flags.pinned = v;
-        }
+
     }
     localToScreen(x, y, graphcanvas) {
         return [
@@ -2272,8 +2169,8 @@ export default class LGraphNode {
     }
 
     setPos(x, y) {
-        this._pos[0] = x;
-        this._pos[1] = y;
+        this.pos[0] = x;
+        this.pos[1] = y;
         this.alignToGrid();
     }
 }

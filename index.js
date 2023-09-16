@@ -15,16 +15,27 @@ io.on('connection', socket => {
     nodeWorkJSON = msg;
     socket.broadcast.emit('setNodework', msg);
   });
+
   socket.on('addNode', msg => {
+    console.log(msg);
     socket.broadcast.emit('addNode', msg);
     nodeWorkJSON.nodes[msg.id] = msg;
     console.log("[addNode]");
+    console.log(nodeWorkJSON);
   });
+
   socket.on('updateNode', msg => {
     socket.broadcast.emit('updateNode', msg);
-    nodeWorkJSON.nodes[msg.nodeID] = msg.newData;
+    Object.assign(nodeWorkJSON.nodes[msg.nodeID], msg.newData);
+    console.log(nodeWorkJSON);
   });
-  //io.emit('setNodework', nodeWorkJSON);
+
+  socket.on('updateMe', () => {
+    io.to(socket.id).emit("setNodework", nodeWorkJSON);
+    console.log("[updateNewClient]");
+  });
+  console.log("[newClient]");
+
 });
 app.use(express.static('data'));
 server.listen(8080)
