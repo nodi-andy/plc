@@ -23,6 +23,11 @@ export default function NavBar({ openDrawer, setOpenDrawer, showSaveAsFiles, sho
     setOpenDrawer( open );
   };
 
+  const cleanNodework = () => {
+    window.socket.emit("clean", {});
+  };
+
+
   const list = () => (
     <Box
       sx={{ width: 250 }}
@@ -52,6 +57,12 @@ export default function NavBar({ openDrawer, setOpenDrawer, showSaveAsFiles, sho
           </ListItem>
 
         <ListSubheader>Nodework</ListSubheader>
+        <ListItem key='cleanNodework' disablePadding>
+          <ListItemButton onClick={cleanNodework}>
+            <ListItemIcon> <FileOpenOutlinedIcon /> </ListItemIcon>
+            <ListItemText primary={'Clean'} />
+          </ListItemButton>
+        </ListItem>
         <ListItem key='myneeds1' disablePadding>
           <ListItemButton onClick={showFiles}>
             <ListItemIcon> <FileOpenOutlinedIcon /> </ListItemIcon>

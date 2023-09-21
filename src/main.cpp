@@ -103,10 +103,10 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
             jsonData = doc[1].as<String>();
 
 
-            /*Serial.print("INPUT: ");
+            Serial.print("INPUT: ");
             Serial.print(jsonData.length());
             Serial.print(",");
-            Serial.println(jsonData.c_str());*/
+            Serial.println(jsonData.c_str());
 
             if (eventName == "setNodework") {
                 jsonData.getBytes(mapFile, jsonData.length() + 1);
@@ -116,6 +116,14 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
                 loadNoditronFile();
             } else if (eventName == "updateNode") {
                 nodemap.state = mapState::UPDATE_NODE;
+            } else if (eventName == "addNode") {
+                nodemap.state = mapState::ADD_NODE;
+            } else if (eventName == "remNode") {
+                nodemap.state = mapState::REM_NODE;
+            } else if (eventName == "addLink") {
+                nodemap.state = mapState::ADD_LINK;
+            } else if (eventName == "remLink") {
+                nodemap.state = mapState::REM_LINK;
             }
             
 
@@ -431,21 +439,33 @@ void noditronTask( void * pvParameters ) {
 
         nodemap.report();
         nodemap.state = mapState::RUN;
-    }  
-    else if (nodemap.state == mapState::UPDATE_NODE) {
+    } else if (nodemap.state == mapState::UPDATE_NODE) {
         int id = doc[1]["nodeID"].as<int>();
         USE_SERIAL.printf("[updateNode] id: %d\n", id);
         if (nodemap.nodes[id]) {
+            USE_SERIAL.printf("[updateNode.found] id: %d\n", id);
             nodemap.nodes[id]->props = doc[1]["newData"];
             nodemap.nodes[id]->setup();
-            nodemap.state = mapState::RUN;
         }
-    } 
-    else if (nodemap.state == mapState::ADD_NODE) {
+        nodemap.state = mapState::RUN;
+    } else if (nodemap.state == mapState::ADD_NODE) {
         int id = doc[1]["id"].as<int>();
         USE_SERIAL.printf("[addNode] id: %d\n", id);
         nodemap.addNode(doc[1]);
-    }else if (nodemap.state == mapState::RUN) {
+        nodemap.state = mapState::RUN;
+    } else if (nodemap.state == mapState::REM_NODE) {
+        int id = doc[1]["id"].as<int>();
+        USE_SERIAL.printf("[remNode] id: %d\n", id);
+        nodemap.state = mapState::RUN;
+    } else if (nodemap.state == mapState::ADD_LINK) {
+        int id = doc[1]["id"].as<int>();
+        USE_SERIAL.printf("[addLink] id: %d\n", id);
+        nodemap.state = mapState::RUN;
+    } else if (nodemap.state == mapState::REM_LINK) {
+        int id = doc[1]["id"].as<int>();
+        USE_SERIAL.printf("[remLink] id: %d\n", id);
+        nodemap.state = mapState::RUN;
+    } else if (nodemap.state == mapState::RUN) {
         for (auto n : nodemap.nodes) {
             if (n.second) {
                 if (n.second->onExecute()) {
@@ -563,8 +583,8 @@ void setup() {
     delay(100);
 
     // server address, port and URL
-    //socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
-    socketIO.begin("noditron.com", 80, "/socket.io/?EIO=4");
+    socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
+    //socketIO.begin("noditron.com", 80, "/socket.io/?EIO=4");
 
     // event handler
     socketIO.onEvent(socketIOEvent);

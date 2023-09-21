@@ -8,7 +8,7 @@ export default class WidgetLed extends LGraphNode {
     static title_mode = LiteGraph.NO_TITLE;
     constructor() {
         super();
-        this.setProperty("state", "number", 0, "state", {input: false, output: false});
+        this.setProperty("state", "number", 0, "state", {input: true, output: false});
         this.setProperty("set", "number", 0, "set", {input: false, output: false});
         this.setProperty("clear", "number", 0, "clear", {input: false, output: false});
         this.setProperty("toggle", "number", 0, "toggle", {input: false, output: false});
@@ -17,6 +17,8 @@ export default class WidgetLed extends LGraphNode {
         this.setProperty("port", "number", null, "port", {input: false, output: false});
         this.setProperty("color", "string", "FF3333", "color", {input: false, output: false});
         this.size = [64, 64];
+        this.type = WidgetLed.type;
+
     }
 
     onDrawForeground(ctx) {
@@ -47,11 +49,13 @@ export default class WidgetLed extends LGraphNode {
         if (this.properties.set.inpValue == 1) {
             this.updateState(1);
             this.properties.set.inpValue = null;
+            this.properties.state.outValue = this.properties.state.value;
         }
 
         if (this.properties.clear.inpValue == 1) {
             this.updateState(0);
             this.properties.clear.inpValue = null;
+            this.properties.state.outValue = this.properties.state.value;
         }
 
         if (this.properties.toggle.inpValue == 1) {
@@ -68,6 +72,7 @@ export default class WidgetLed extends LGraphNode {
         if (update && this.properties.state.inpValue != null) {
             this.updateState(parseInt(this.properties.state.inpValue));
             this.properties.state.inpValue = null;
+            this.properties.state.outValue = this.properties.state.value;
         }
     }
 

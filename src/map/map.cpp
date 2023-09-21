@@ -23,7 +23,7 @@ void Map::addNode(JsonObject json)
 {
     std::string type = json["type"].as<std::string>();
     Serial.println("");
-    Serial.print("> Add Node: ");
+    Serial.printf("> Add Node: %s", type.c_str());
 
     Node* newNode = RegistryManager::getInstance().createNode(type);
     newNode->setup();

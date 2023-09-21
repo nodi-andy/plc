@@ -3,7 +3,7 @@
 #include "node.h"
 #include "../nodes/link.h"
 
-enum mapState { RUN, STOP, STOPPED, UPDATE, UPDATE_NODE, ADD_NODE }; 
+enum mapState { RUN, STOP, STOPPED, UPDATE, UPDATE_NODE, ADD_NODE, REM_NODE, ADD_LINK, REM_LINK }; 
 class Map
 {
     public:

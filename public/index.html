@@ -132,10 +132,9 @@
           graph.beforeChange();
 
           var fApplyMultiNode = function (node) {
-              if (node.removable === false) {
-                  return;
-              }
               graph.remove(node);
+              window.socket.emit("remNode", {"nodeID":node});
+
           };
 
           var graphcanvas = LGraphCanvas.active_canvas;
@@ -177,6 +176,12 @@
       }
     }
 
+    window.nodes.move = (id, changedNodeData) => {
+      if (window.socket) {
+        window.socket.emit("moveNode", {"nodeID":id, "newData": changedNodeData});
+      }
+    }
+    
     window.nodes.update = (id, changedNodeData) => {
       if (window.socket) {
         window.socket.emit("updateNode", {"nodeID":id, "newData": changedNodeData});

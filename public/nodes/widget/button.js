@@ -2,11 +2,11 @@ import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
 
 export default class WidgetButton extends LGraphNode{
+    static type = "widget/button";
     static title = "Button";
     static desc = "Triggers an event";
     static title_mode = LiteGraph.NO_TITLE;
     static font = "Arial";
-    static type = "widget/button";
 
     constructor() {
         super();
@@ -21,6 +21,7 @@ export default class WidgetButton extends LGraphNode{
         this.size = [64, 64];
         this.newState = false;
         this.margin = 12;
+        this.type = WidgetButton.type
         for(let input of this.inputs) {
             input.value = null;
         }

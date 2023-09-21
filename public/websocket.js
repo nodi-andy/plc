@@ -1,5 +1,6 @@
 import { LiteGraph } from "./litegraph.js";
 import LGraphNode from "./node.js"
+import LLink from "./link.js"
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
 import NodiBoxB3 from "./nodes/nodi.box/b3.js";
@@ -32,8 +33,29 @@ socket.on("setNodework", (message) => {
 socket.on("addNode", (message) => {
     // Handle incoming messages here
     let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
-    newNode.configure(message);
     window.graph.add(newNode);
+});
+
+socket.on("addLink", (msg) => {
+    // Handle incoming messages here
+    window.graph._nodes_by_id[msg.origin_id].connect(msg.origin_slot, msg.target_id, msg.target_slot);
+});
+
+socket.on("remNode", (message) => {
+    var graph = window.graph;
+    graph.remove(message.nodeID);
+
+});
+
+socket.on("clean", (message) => {
+    window.graph.clear();
+
+});
+
+socket.on("moveNode", (message) => {
+    // Handle incoming messages here
+    Object.assign(window.graph._nodes_by_id[message.nodeID], message.newData);
+    window.canvas.dirty_canvas = true;
 });
 
 socket.on("updateNode", (message) => {
