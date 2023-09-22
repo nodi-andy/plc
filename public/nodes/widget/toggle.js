@@ -18,6 +18,8 @@ export default class WidgetToggle extends LGraphNode{
         this.setProperty("color", "string",  "#A00", "color", {input: false, output: false});
         this.properties.out.value = false;
         this.size = [64, 64];
+        this.type = WidgetToggle.type;
+
     }
 
     onDrawForeground(ctx) {

@@ -779,10 +779,6 @@ class LGraph {
         this.nodes_actioning = [];
         this.nodes_executedAction = [];
 
-        //subgraph_data
-        this.inputs = {};
-        this.outputs = {};
-
         //notify canvas to redraw
         this.change();
 
@@ -986,7 +982,7 @@ class LGraph {
 
         while (pending.length) {
             var current = pending.shift();
-            if (!current.inputs) {
+            if (!current.getInputs()) {
                 continue;
             }
             if (!visited[current.id] && current != node) {
@@ -994,7 +990,7 @@ class LGraph {
                 ancestors.push(current);
             }
 
-            for (var i = 0; i < current.inputs.length; ++i) {
+            for (var i = 0; i < current.getInputs().length; ++i) {
                 var input = current.getInputNode(i);
                 if (input && ancestors.indexOf(input) == -1) {
                     pending.push(input);
@@ -1138,6 +1134,9 @@ class LGraph {
 
         return node; //to chain actions
     }
+    removeNodeByID(nodeID) {
+        this.remove(this._nodes_by_id[nodeID]);
+    }
 
     /**
          * Removes a node from the graph
@@ -1158,27 +1157,27 @@ class LGraph {
 
         var i, links, link;
         //disconnect inputs
-        if (node.inputs) {
-            for (var i = 0; i < node.inputs.length; i++) {
-                links = node.inputs[i].links;
+        if (node.getInputs()) {
+            for (i = 0; i < node.getInputs().length; i++) {
+                links = node.getInputs()[i].links;
                 if (links) {
                         for (link of links) {
                         node.disconnectInput(link);
-                        this.removeLink(link)
+                        window.socket.emit("remLink", {"id": link.id});
+                        this.removeLink(link);
                     }
                 }
             }
         }
 
         //disconnect outputs
-        if (node.outputs) {
-            for (i = 0; i < node.outputs.length; i++) {
-                links = node.outputs[i].links;
-                if (links) {
-                    for (link of links) {
-                        node.disconnectOutput(link);
-                        this.removeLink(link)
-                    }
+        for (i = 0; i < node.getOutputs().length; i++) {
+            links = node.getOutputs()[i].links;
+            if (links) {
+                for (link of links) {
+                    node.disconnectOutput(link);
+                    window.socket.emit("remLink", {"id": link.id});
+                    this.removeLink(link);
                 }
             }
         }
@@ -1323,7 +1322,6 @@ class LGraph {
          * @method checkNodeTypes
          */
     checkNodeTypes() {
-        var changes = false;
         for (var i = 0; i < this._nodes.length; i++) {
             var node = this._nodes[i];
             var ctor = LiteGraph.registered_node_types[node.type];
@@ -1332,17 +1330,10 @@ class LGraph {
             }
             console.log("node being replaced by newer version: " + node.type);
             var newnode = LiteGraph.createNode(node.type);
-            changes = true;
             this._nodes[i] = newnode;
             newnode.configure(node.serialize());
             newnode.graph = this;
             this._nodes_by_id[newnode.id] = newnode;
-            if (node.inputs) {
-                newnode.inputs = node.inputs.concat();
-            }
-            if (node.outputs) {
-                newnode.outputs = node.outputs.concat();
-            }
         }
     }
     // ********** GLOBALS *****************
@@ -1366,254 +1357,8 @@ class LGraph {
             this.onTrigger(action, param);
         }
     }
-    /**
-         * Tell this graph it has a global graph input of this type
-         * @method addGlobalInput
-         * @param {String} name
-         * @param {String} type
-         * @param {*} value [optional]
-         */
-    addInput(name, type, value) {
-        var input = this.inputs[name];
-        if (input) {
-            //already exist
-            return;
-        }
+    
 
-        this.beforeChange();
-        this.inputs[name] = { name: name, type: type, value: value };
-        this._version++;
-        this.afterChange();
-
-        if (this.onInputAdded) {
-            this.onInputAdded(name, type);
-        }
-
-        if (this.onInputsOutputsChange) {
-            this.onInputsOutputsChange();
-        }
-    }
-    /**
-         * Assign a data to the global graph input
-         * @method setGlobalInputData
-         * @param {String} name
-         * @param {*} data
-         */
-    setInputData(name, data) {
-        var input = this.inputs[name];
-        if (!input) {
-            return;
-        }
-        input.value = data;
-    }
-    /**
-         * Returns the current value of a global graph input
-         * @method getInputData
-         * @param {String} name
-         * @return {*} the data
-         */
-    getInputData(name) {
-        var input = this.inputs[name];
-        if (!input) {
-            return null;
-        }
-        return input.value;
-    }
-    /**
-         * Changes the name of a global graph input
-         * @method renameInput
-         * @param {String} old_name
-         * @param {String} new_name
-         */
-    renameInput(old_name, name) {
-        if (name == old_name) {
-            return;
-        }
-
-        if (!this.inputs[old_name]) {
-            return false;
-        }
-
-        if (this.inputs[name]) {
-            console.error("there is already one input with that name");
-            return false;
-        }
-
-        this.inputs[name] = this.inputs[old_name];
-        delete this.inputs[old_name];
-        this._version++;
-
-        if (this.onInputRenamed) {
-            this.onInputRenamed(old_name, name);
-        }
-
-        if (this.onInputsOutputsChange) {
-            this.onInputsOutputsChange();
-        }
-    }
-    /**
-         * Changes the type of a global graph input
-         * @method changeInputType
-         * @param {String} name
-         * @param {String} type
-         */
-    changeInputType(name, type) {
-        if (!this.inputs[name]) {
-            return false;
-        }
-
-        if (this.inputs[name].type &&
-            String(this.inputs[name].type).toLowerCase() ==
-            String(type).toLowerCase()) {
-            return;
-        }
-
-        this.inputs[name].type = type;
-        this._version++;
-        if (this.onInputTypeChanged) {
-            this.onInputTypeChanged(name, type);
-        }
-    }
-    /**
-         * Removes a global graph input
-         * @method removeInput
-         * @param {String} name
-         * @param {String} type
-         */
-    removeInput(name) {
-        if (!this.inputs[name]) {
-            return false;
-        }
-
-        delete this.inputs[name];
-        this._version++;
-
-        if (this.onInputRemoved) {
-            this.onInputRemoved(name);
-        }
-
-        if (this.onInputsOutputsChange) {
-            this.onInputsOutputsChange();
-        }
-        return true;
-    }
-    /**
-         * Creates a global graph output
-         * @method addOutput
-         * @param {String} name
-         * @param {String} type
-         * @param {*} value
-         */
-    addOutput(name, type, value) {
-        this.outputs[name] = { name: name, type: type, value: value };
-        this._version++;
-
-        if (this.onOutputAdded) {
-            this.onOutputAdded(name, type);
-        }
-
-        if (this.onInputsOutputsChange) {
-            this.onInputsOutputsChange();
-        }
-    }
-    /**
-         * Assign a data to the global output
-         * @method setOutputData
-         * @param {String} name
-         * @param {String} value
-         */
-    setOutputData(name, value) {
-        var output = this.outputs[name];
-        if (!output) {
-            return;
-        }
-        output.value = value;
-    }
-    /**
-         * Returns the current value of a global graph output
-         * @method getOutputData
-         * @param {String} name
-         * @return {*} the data
-         */
-    getOutputData(name) {
-        var output = this.outputs[name];
-        if (!output) {
-            return null;
-        }
-        return output.value;
-    }
-    /**
-         * Renames a global graph output
-         * @method renameOutput
-         * @param {String} old_name
-         * @param {String} new_name
-         */
-    renameOutput(old_name, name) {
-        if (!this.outputs[old_name]) {
-            return false;
-        }
-
-        if (this.outputs[name]) {
-            console.error("there is already one output with that name");
-            return false;
-        }
-
-        this.outputs[name] = this.outputs[old_name];
-        delete this.outputs[old_name];
-        this._version++;
-
-        if (this.onOutputRenamed) {
-            this.onOutputRenamed(old_name, name);
-        }
-
-        if (this.onInputsOutputsChange) {
-            this.onInputsOutputsChange();
-        }
-    }
-    /**
-         * Changes the type of a global graph output
-         * @method changeOutputType
-         * @param {String} name
-         * @param {String} type
-         */
-    changeOutputType(name, type) {
-        if (!this.outputs[name]) {
-            return false;
-        }
-
-        if (this.outputs[name].type &&
-            String(this.outputs[name].type).toLowerCase() ==
-            String(type).toLowerCase()) {
-            return;
-        }
-
-        this.outputs[name].type = type;
-        this._version++;
-        if (this.onOutputTypeChanged) {
-            this.onOutputTypeChanged(name, type);
-        }
-    }
-    /**
-         * Removes a global graph output
-         * @method removeOutput
-         * @param {String} name
-         */
-    removeOutput(name) {
-        if (!this.outputs[name]) {
-            return false;
-        }
-        delete this.outputs[name];
-        this._version++;
-
-        if (this.onOutputRemoved) {
-            this.onOutputRemoved(name);
-        }
-
-        if (this.onInputsOutputsChange) {
-            this.onInputsOutputsChange();
-        }
-        return true;
-    }
     triggerInput(name, value) {
         var nodes = this.findNodesByTitle(name);
         for (var i = 0; i < nodes.length; ++i) {
@@ -1702,7 +1447,6 @@ class LGraph {
         if (!link) {
             return;
         }
-        window.socket.emit("remLink", {"nodeID":link_id});
 
         var node = this.getNodeById(link.target_id);
         if (node) {
@@ -1817,6 +1561,7 @@ class LGraph {
         if (nodes) {
             for (var i = 0, l = nodes.length; i < l; ++i) {
                 var n_info = nodes[i]; //stored info
+                if (!n_info) continue;
                 var node = LiteGraph.createNode(n_info.type, n_info.title);
                 if (!node) {
                     if (LiteGraph.debug) {
@@ -1840,6 +1585,7 @@ class LGraph {
             //configure nodes afterwards so they can reach each other
             for (var i = 0, l = nodes.length; i < l; ++i) {
                 var n_info = nodes[i];
+                if (!n_info) continue;
                 var node = this.getNodeById(n_info.id);
                 if (node) {
                     node.configure(n_info);

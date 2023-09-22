@@ -133,7 +133,7 @@
 
           var fApplyMultiNode = function (node) {
               graph.remove(node);
-              window.socket.emit("remNode", {"nodeID":node});
+              window.socket.emit("remNode", {"id":node.id});
 
           };
 
@@ -142,7 +142,9 @@
               fApplyMultiNode(graphcanvas.selected_nodes[i]);
           }
 
+          window.socket.emit("remLink", {"id":canvas.selectedLink});
           graph.removeLink(canvas.selectedLink);
+
           graph.afterChange();
       if (graphcanvas.selected_nodes && graphcanvas.selected_nodes[0]) {
             graphcanvas.selected_nodes[0].setDirtyCanvas(true, true);
@@ -168,8 +170,6 @@
         delete storeGraph.groups;
         for(let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
-          delete node.inputs;
-          delete node.outputs;
         }
         window.socket.emit("setNodework", storeGraph);
         window.showSnackbar("nodework sent to nodi.box!")

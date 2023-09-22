@@ -37,7 +37,6 @@ class MathMult extends LGraphNode {
                 //this.label += val
                 val = parseInt(val);
                 if (val == null || isNaN(val)) val = 0;
-                //if (inX < this.inputs.length - 1) this.label += " + "
                 ret *= parseInt(val);
             }
             this.label = ret

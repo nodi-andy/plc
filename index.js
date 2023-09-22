@@ -30,11 +30,10 @@ io.on('connection', socket => {
   });
 
   socket.on('remNode', msg => {
-    console.log(msg);
-    socket.broadcast.emit('remNode', msg);
-    nodeWorkJSON.nodes[msg.id] = msg;
     console.log("[remNode]");
-    console.log(nodeWorkJSON);
+    console.log(msg);
+    socket.broadcast.emit('remNode', msg.id);
+    nodeWorkJSON.nodes[msg.id] = msg;
   });
 
   socket.on('updateNode', msg => {
@@ -44,18 +43,23 @@ io.on('connection', socket => {
   });
 
   socket.on('addLink', msg => {
+    console.log("[addLink] ", msg.id);
+
     socket.broadcast.emit('addLink', msg);
     if (msg.id) {
       nodeWorkJSON.links[msg.id] = msg;
     }
   });
+
   socket.on('moveNode', msg => {
     socket.broadcast.emit('moveNode', msg);
     Object.assign(nodeWorkJSON.nodes[msg.nodeID], msg.newData);
   });
 
   socket.on('remLink', msg => {
+    console.log("[remLink] ", msg.id);
     socket.broadcast.emit('remLink', msg);
+    nodeWorkJSON.links = nodeWorkJSON.links.filter(obj => obj.id !== msg.id);
   });
 
 

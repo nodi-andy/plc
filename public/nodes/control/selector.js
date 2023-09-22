@@ -13,9 +13,9 @@ class Selector extends LGraphNode{
     onExecute(update) {
         if (update && isNaN(this.properties.SelIn) == false && this.properties.SelIn > 0) {
 
-            var v = this.properties[this.inputs[this.properties.SelIn]?.name]
+            var v = this.properties.SelIn.value;
             this.setOutputData(1, v); // select output feature missing, const 1
-            this.properties[this.inputs[this.properties.SelIn].name] = null
+            this.properties.SelIn = null
         }
     }
     onNodeInputAdd() {

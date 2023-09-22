@@ -73,7 +73,7 @@ export default class WidgetNumber extends LGraphNode {
     }
 
     onAfterExecute() {
-        for(let input of this.inputs) {
+        for(let input of this.getInputs()) {
             input._data = null;
         }
     }

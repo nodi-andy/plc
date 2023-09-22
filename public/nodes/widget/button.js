@@ -22,7 +22,7 @@ export default class WidgetButton extends LGraphNode{
         this.newState = false;
         this.margin = 12;
         this.type = WidgetButton.type
-        for(let input of this.inputs) {
+        for(let input of this.getInputs()) {
             input.value = null;
         }
         this.reset();
@@ -65,10 +65,10 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onExecute() {
-        for(let n = 0; n < this.inputs.length; n++) {
+        for(let n = 0; n < this.getInputs().length; n++) {
             if (this.getInputData(n) != null) {
-                this.properties[this.inputs[n]?.name] = this.getInputData(n);
-                this.inputs[n].value = null;
+                this.properties[this.getInputs()[n]?.name] = this.getInputData(n);
+                this.getInputs()[n].value = null;
             }
         }
         this.output = null;
@@ -81,12 +81,12 @@ export default class WidgetButton extends LGraphNode{
         
         this.setDirtyCanvas(true, true);
         if (this.output != null) {
-            if (this.inputs[0]?.link == null) {
+            if (this.getInputs()[0]?.link == null) {
                 this.setOutputData(0, this.output);
             } else {
                 this.setOutputData(0, this.properties.A);
             }
-            for(let input of this.inputs) {
+            for(let input of this.getInputs()) {
                 input.value = null;
             }
         }

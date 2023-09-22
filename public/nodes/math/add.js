@@ -38,7 +38,6 @@ class MathAdd extends LGraphNode {
 
                 //this.label += val
                 val = parseInt(val);
-                //if (inX < this.inputs.length - 1) this.label += " + "
                 ret += parseInt(val);
             }
             this.label = ret

@@ -25,25 +25,30 @@ socket.on("connect", () => {
 });
 
 socket.on("setNodework", (message) => {
-    // Handle incoming messages here
     window.graph.configure(message, false);
     window.graph.start();
 });
 
 socket.on("addNode", (message) => {
-    // Handle incoming messages here
     let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
+    newNode.id = message.id;
+    newNode.type = message.type;
+    newNode.pos = message.pos;
+    newNode.size = message.size;
     window.graph.add(newNode);
 });
 
 socket.on("addLink", (msg) => {
-    // Handle incoming messages here
     window.graph._nodes_by_id[msg.origin_id].connect(msg.origin_slot, msg.target_id, msg.target_slot);
+});
+
+socket.on("remLink", (msg) => {
+    window.graph.removeLink(msg.id);
 });
 
 socket.on("remNode", (message) => {
     var graph = window.graph;
-    graph.remove(message.nodeID);
+    graph.removeNodeByID(message);
 
 });
 
@@ -63,6 +68,7 @@ socket.on("updateNode", (message) => {
     Object.assign(window.graph._nodes_by_id[message.nodeID], message.newData);
     window.canvas.dirty_canvas = true;
 });
+
 // Event handler for custom events from the server
 socket.on("custom-event-from-server", (data) => {
     console.log("Received data from the server:", data);
