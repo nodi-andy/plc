@@ -27,6 +27,7 @@ socket.on("connect", () => {
 socket.on("setNodework", (message) => {
     window.graph.configure(message, false);
     window.graph.start();
+    window.canvas.dirty_canvas = true;
 });
 
 socket.on("addNode", (message) => {
@@ -34,32 +35,41 @@ socket.on("addNode", (message) => {
     newNode.id = message.id;
     newNode.type = message.type;
     newNode.pos = message.pos;
-    newNode.size = message.size;
+    newNode.setSize(message.size);
     window.graph.add(newNode);
+    window.canvas.dirty_canvas = true;
 });
 
 socket.on("addLink", (msg) => {
     window.graph._nodes_by_id[msg.origin_id].connect(msg.origin_slot, msg.target_id, msg.target_slot);
+    window.canvas.dirty_canvas = true;
 });
 
 socket.on("remLink", (msg) => {
     window.graph.removeLink(msg.id);
+    window.canvas.dirty_canvas = true;
 });
 
 socket.on("remNode", (message) => {
-    var graph = window.graph;
-    graph.removeNodeByID(message);
+    window.graph.removeNodeByID(message);
+    window.canvas.dirty_canvas = true;
 
 });
 
 socket.on("clean", (message) => {
     window.graph.clear();
-
+    window.canvas.dirty_canvas = true;
 });
 
 socket.on("moveNode", (message) => {
     // Handle incoming messages here
     Object.assign(window.graph._nodes_by_id[message.nodeID], message.newData);
+    window.canvas.dirty_canvas = true;
+});
+
+socket.on("setSize", (message) => {
+    // Handle incoming messages here
+    window.graph._nodes_by_id[message.id].setSize(message.size, false);
     window.canvas.dirty_canvas = true;
 });
 

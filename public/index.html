@@ -113,42 +113,31 @@
     window.nodes.addNode = (name) => {
       name = name.toLowerCase();
       console.log(name)
-      window.graph.beforeChange();
+      //window.graph.beforeChange();
       var node = LiteGraph.createNode(name);
       if (node) {
         let view = window.canvas.ds;
         node.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
-        window.graph.add(node, false);
+        //window.graph.add(node, false);
       }
-      window.graph.afterChange();
-      delete window.graph._nodes_by_id[node.id].graph;
-      window.socket.emit("addNode", window.graph._nodes_by_id[node.id]);
-      window.graph._nodes_by_id[node.id].graph = window.graph;
+      //window.graph.afterChange();
+      //delete window.graph._nodes_by_id[node.id].graph;
+      window.socket.emit("addNode", node);
+      //window.graph._nodes_by_id[node.id].graph = window.graph;
 
     }
 
     window.nodes.remNode = () => {
         var graph = window.graph;
-          graph.beforeChange();
 
-          var fApplyMultiNode = function (node) {
-              graph.remove(node);
-              window.socket.emit("remNode", {"id":node.id});
-
-          };
-
-          var graphcanvas = LGraphCanvas.active_canvas;
-          for (var i in graphcanvas.selected_nodes) {
-              fApplyMultiNode(graphcanvas.selected_nodes[i]);
-          }
-
-          window.socket.emit("remLink", {"id":canvas.selectedLink});
-          graph.removeLink(canvas.selectedLink);
-
-          graph.afterChange();
-      if (graphcanvas.selected_nodes && graphcanvas.selected_nodes[0]) {
-            graphcanvas.selected_nodes[0].setDirtyCanvas(true, true);
-      }
+        var graphcanvas = LGraphCanvas.active_canvas;
+        for (var node in graphcanvas.selected_nodes) {
+            // graph.remove(graphcanvas.selected_nodes[i]);
+            window.socket.emit("remNode", {"id" : node.id});
+        }
+        
+        if (canvas.selectedLink) window.socket.emit("remLink", {"id": canvas.selectedLink});
+          
     }
 
     window.nodes.editNode = () => {

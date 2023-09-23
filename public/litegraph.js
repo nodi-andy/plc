@@ -450,7 +450,7 @@ export var LiteGraph = (global.LiteGraph = {
 
 
         if (!node.size) {
-            node.size = node.computeSize();
+            node.setSize(node.computeSize());
             //call onresize?
         }
         if (!node.pos) {

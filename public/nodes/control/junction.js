@@ -14,7 +14,7 @@ class Junction extends LGraphNode {
         this.setProperty("value", "number", 0, " ", {input: false, output: false, pos : [16, 16], shape: LiteGraph.CIRCLE_SHAPE});
         this.setProperty("out", "number", 0, " ", {input: false, output: true, pos : [16, 16], shape: LiteGraph.CIRCLE_SHAPE});
 
-        this.size = [32, 32];
+        this.setSize([32, 32]);
         this._shape = LiteGraph.CIRCLE_SHAPE;
     }
 

@@ -23,7 +23,7 @@ export default class Interval extends LGraphNode {
         this.last_off = 0;
         this.triggered = false;
         this.newState = 0;
-        this.size = [64, 64];
+        this.setSize([64, 64]);
     }
 
     /*getProps() {

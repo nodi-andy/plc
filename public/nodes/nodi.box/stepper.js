@@ -16,7 +16,7 @@ export default class Stepper extends LGraphNode{
         this.setProperty("dir port", "number", 14, "Direction Port", {input: false, output: false});
         this.setProperty("enable port", "number", 32, "Enable Port" , {input: false, output: false});
         this.num = 0;
-        this.size = [64, 64];
+        this.setSize([64, 64]);
     }
 
     onDrawForeground(ctx) {

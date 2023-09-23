@@ -16,7 +16,7 @@ export default class WidgetLed extends LGraphNode {
         this.setProperty("label", "string", null, "LED", {input: false, output: false});
         this.setProperty("port", "number", null, "port", {input: false, output: false});
         this.setProperty("color", "string", "FF3333", "color", {input: false, output: false});
-        this.size = [64, 64];
+        this.setSize([64, 64]);
         this.type = WidgetLed.type;
 
     }

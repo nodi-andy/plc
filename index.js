@@ -15,7 +15,7 @@ io.on('connection', socket => {
     console.log("[clean]");
 
     nodeWorkJSON = {nodes: [], links: []};
-    socket.broadcast.emit('clean', msg);
+    io.emit('clean', msg);
   });
   socket.on('setNodework', msg => {
     nodeWorkJSON = msg;
@@ -23,16 +23,17 @@ io.on('connection', socket => {
   });
 
   socket.on('addNode', msg => {
-    console.log("[addNode]");
-    console.log(msg);
-    socket.broadcast.emit('addNode', msg);
+    //console.log("[addNode]");
+    //console.log(msg);
+    msg.id = nodeWorkJSON.nodes.length;
     nodeWorkJSON.nodes[msg.id] = msg;
+    io.emit('addNode', msg);
   });
 
   socket.on('remNode', msg => {
-    console.log("[remNode]");
-    console.log(msg);
-    socket.broadcast.emit('remNode', msg.id);
+    //console.log("[remNode]");
+    //console.log(msg);
+    io.emit('remNode', msg.id);
     nodeWorkJSON.nodes[msg.id] = msg;
   });
 
@@ -54,6 +55,17 @@ io.on('connection', socket => {
   socket.on('moveNode', msg => {
     socket.broadcast.emit('moveNode', msg);
     Object.assign(nodeWorkJSON.nodes[msg.nodeID], msg.newData);
+  });
+
+  socket.on('setSize', msg => {
+   // console.log("[setSize]: ",msg.id, nodeWorkJSON.nodes[msg.id]);
+    if (msg.id != null && nodeWorkJSON.nodes[msg.id]) {
+      console.log("[setSize]: ");
+      console.log(msg);
+      console.log(nodeWorkJSON.nodes);
+      nodeWorkJSON.nodes[msg.id].size = msg.size;
+      socket.broadcast.emit('setSize', msg);
+    }
   });
 
   socket.on('remLink', msg => {

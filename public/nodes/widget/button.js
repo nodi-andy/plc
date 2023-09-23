@@ -18,7 +18,7 @@ export default class WidgetButton extends LGraphNode{
         this.setProperty("port", "number", null, "port", {input: false, output: false});
         this.setProperty("color", "string",  "gray", "color", {input: false, output: false});
 
-        this.size = [64, 64];
+        this.setSize([64, 64]);
         this.newState = false;
         this.margin = 12;
         this.type = WidgetButton.type
@@ -65,10 +65,10 @@ export default class WidgetButton extends LGraphNode{
     }
 
     onExecute() {
-        for(let n = 0; n < this.getInputs().length; n++) {
-            if (this.getInputData(n) != null) {
-                this.properties[this.getInputs()[n]?.name] = this.getInputData(n);
-                this.getInputs()[n].value = null;
+        for(let input in this.getInputs()) {
+            if (this.properties[input.name].inpuValue != null) {
+                this.properties[input.name].value = this.properties[input.name].inpValue;
+                this.properties[input.name].inpValue = null;
             }
         }
         this.output = null;

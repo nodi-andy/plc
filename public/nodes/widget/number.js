@@ -13,7 +13,7 @@ export default class WidgetNumber extends LGraphNode {
         super();
         this.setProperty("value", "number", 0, " ", {input: false, output: false});
         this.setProperty("read", "number", 0, "read", {input: false, output: false});
-        this.size = [64, 64];
+        this.setSize([64, 64]);
         this.old_y = -1;
         this._remainder = 0;
         this._precision = 0;

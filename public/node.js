@@ -64,7 +64,7 @@ supported callbacks:
 export default class LGraphNode {
     constructor(title) {
         this.title = title;
-        this.size = [window.LiteGraph.NODE_WIDTH, 60];
+        this.setSize([window.LiteGraph.NODE_WIDTH, 60]);
         this.graph = null;
         this.update = false;
         this.pos = [0, 0];
@@ -772,13 +772,13 @@ export default class LGraphNode {
          * @method setSize
          * @param {vec2} size
          */
-    setSize(size) {
+    setSize(size, update = true) {
         if (!this.constructor.fixsize) {
             this.size = [window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[0] / window.LiteGraph.CANVAS_GRID_SIZE),
             window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE)];
         }
-        if (this.onResize)
-            this.onResize(this.size);
+        if (this.onResize) this.onResize(this.size);
+        if (update) window.socket.emit("setSize", {id: this.id, size:this.size});
     }
     /**
          * add a new property to this node
