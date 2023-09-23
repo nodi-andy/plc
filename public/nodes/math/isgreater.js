@@ -14,6 +14,7 @@ class MathIsGreater extends LGraphNode {
         this.setProperty("in2", "number", 0, " ", {input: false, output: false});
         this.setProperty("value", "number", 0, " ", {input: false, output: true});
         this.label = ""
+        this.type = MathIsGreater.type;
     }
 
     onExecute(update) {

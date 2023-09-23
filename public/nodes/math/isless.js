@@ -15,6 +15,7 @@ class MathIsLess extends LGraphNode {
         this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.label = ""
         this._result = []; //only used for arrays
+        this.type = MathIsLess.type;
     }
 
     onExecute(update) {

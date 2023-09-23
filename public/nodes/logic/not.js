@@ -11,6 +11,7 @@ class logicNot extends LGraphNode{
         this.properties = {};
         this.setProperty("in", "number", 0, " ", {input: true, output: false});
         this.setProperty("out", "number", 0, " ", {input: false, output: true});
+        this.type = logicNot.type;
     }
     
     onExecute(update) {

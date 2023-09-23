@@ -1,7 +1,3 @@
-//*********************************************************************************
-// LGraphCanvas: LGraph renderer CLASS
-//*********************************************************************************
-
 /**
  * This class is in charge of rendering one graph inside a canvas. And provides all the interaction required.
  * Valid callbacks are: onNodeSelected, onNodeDeselected, onShowNodePanel, onNodeDblClicked
@@ -13,7 +9,6 @@
  * @param {Object} options [optional] { skip_rendering, autoresize, viewport }
  */
 import { NodiEnums } from "./enums.js";
-
 import DragAndScale from "./view.js"
 import { LiteGraph } from "./litegraph.js"
 
@@ -409,11 +404,7 @@ export default class LGraphCanvas {
         if (this.onMenuNodeOutputs) {
             entries = this.onMenuNodeOutputs(entries);
         }
-        if (LiteGraph.do_add_triggers_slots) { //canvas.allow_addOutSlot_onExecuted
-            if (node.findOutputSlot("onExecuted") == -1) {
-                entries.push({ content: "On Executed", value: ["onExecuted", LiteGraph.EVENT, { nameLocked: true }], className: "event" }); //, opts: {}
-            }
-        }
+
         // add callback for modifing the menu elements onMenuNodeOutputs
         if (node.onMenuNodeOutputs) {
             var retEntries = node.onMenuNodeOutputs(entries);
@@ -425,241 +416,16 @@ export default class LGraphCanvas {
             return;
         }
 
-        var menu = new LiteGraph.ContextMenu(
-            entries,
-            {
-                event: e,
-                callback: inner_clicked,
-                parentMenu: prev_menu,
-                node: node
-            },
-            ref_window
-        );
-
-        function inner_clicked(v, e, prev) {
-            if (!node) {
-                return;
-            }
-
-            if (v.callback) {
-                v.callback.call(that, node, v, e, prev);
-            }
-
-            if (!v.value) {
-                return;
-            }
-
-            var value = v.value[1];
-
-            if (value &&
-                (value.constructor === Object || value.constructor === Array)) {
-                //submenu why?
-                var entries = [];
-                for (var i in value) {
-                    entries.push({ content: i, value: value[i] });
-                }
-                new LiteGraph.ContextMenu(entries, {
-                    event: e,
-                    callback: inner_clicked,
-                    parentMenu: prev_menu,
-                    node: node
-                });
-                return false;
-            } else {
-                node.graph.beforeChange();
-                node.addOutput(v.value[0], v.value[1], v.value[2]);
-
-                if (node.onNodeOutputAdd) { // a callback to the node when adding a slot
-                    node.onNodeOutputAdd(v.value);
-                }
-                node.setDirtyCanvas(true, true);
-                node.graph.afterChange();
-            }
-        }
-
         return false;
     }
-    static onShowMenuNodeProperties(value, options, e, prev_menu, node) {
-        if (!node || !node.properties) {
-            return;
-        }
 
-        var canvas = LGraphCanvas.active_canvas;
-        var ref_window = canvas.getCanvasWindow();
 
-        var entries = [];
-        for (var i in node.properties) {
-            var value = node.properties[i] !== undefined ? node.properties[i] : " ";
-            if (typeof value == "object")
-                value = JSON.stringify(value);
-            var info = node.getPropertyInfo(i);
-            if (info.type == "enum" || info.type == "combo")
-                value = LGraphCanvas.getPropertyPrintableValue(value, info.values);
-
-            //value could contain invalid html characters, clean that
-            value = LGraphCanvas.decodeHTML(value);
-            entries.push({
-                content: "<span class='property_name'>" +
-                    (info.label ? info.label : i) +
-                    "</span>" +
-                    "<span class='property_value'>" +
-                    value +
-                    "</span>",
-                value: i,
-                callback: inner_clicked
-            });
-        }
-        if (!entries.length) {
-            return;
-        }
-
-        var menu = new LiteGraph.ContextMenu(
-            entries,
-            {
-                event: e,
-                callback: inner_clicked,
-                parentMenu: prev_menu,
-                allow_html: true,
-                node: node
-            },
-            ref_window
-        );
-
-        function inner_clicked(v, options, e, prev) {
-            if (!node) {
-                return;
-            }
-            var rect = this.getBoundingClientRect();
-            canvas.showEditPropertyValue(node, v.value, {
-                position: [rect.left, rect.top]
-            });
-        }
-
-        return false;
-    }
     static decodeHTML(str) {
         var e = document.createElement("div");
         e.innerText = str;
         return e.innerHTML;
     }
-    static onMenuResizeNode(value, options, e, menu, node) {
-        if (!node) {
-            return;
-        }
-
-        var fApplyMultiNode = function (node) {
-            node.setSize(node.computeSize());
-            if (node.onResize)
-                node.onResize(node.size);
-        };
-
-        var graphcanvas = LGraphCanvas.active_canvas;
-        if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
-            fApplyMultiNode(node);
-        } else {
-            for (var i in graphcanvas.selected_nodes) {
-                fApplyMultiNode(graphcanvas.selected_nodes[i]);
-            }
-        }
-
-        node.setDirtyCanvas(true, true);
-    }
-    // TODO refactor :: this is used fot title but not for properties!
-    static onShowPropertyEditor(item, options, e, menu, node) {
-        var input_html = "";
-        var property = item.property || "title";
-        var value = node[property];
-
-        // TODO refactor :: use createDialog ?
-        var dialog = document.createElement("div");
-        dialog.is_modified = false;
-        dialog.className = "graphdialog";
-        dialog.innerHTML =
-            "<span class='name'></span><input autofocus type='text' class='value'/><button>OK</button>";
-        dialog.close = function () {
-            if (dialog.parentNode) {
-                dialog.parentNode.removeChild(dialog);
-            }
-        };
-        var title = dialog.querySelector(".name");
-        title.innerText = property;
-        var input = dialog.querySelector(".value");
-        if (input) {
-            input.value = value;
-            input.addEventListener("blur", function (e) {
-                this.focus();
-            });
-            input.addEventListener("keydown", function (e) {
-                dialog.is_modified = true;
-                if (e.keyCode == 27) {
-                    //ESC
-                    dialog.close();
-                } else if (e.keyCode == 13) {
-                    inner(); // save
-                } else if (e.keyCode != 13 && e.target.localName != "textarea") {
-                    return;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-            });
-        }
-
-        var graphcanvas = LGraphCanvas.active_canvas;
-        var canvas = graphcanvas.canvas;
-
-        var rect = canvas.getBoundingClientRect();
-        var offsetx = -20;
-        var offsety = -20;
-        if (rect) {
-            offsetx -= rect.left;
-            offsety -= rect.top;
-        }
-
-        if (event) {
-            dialog.style.left = event.clientX + offsetx + "px";
-            dialog.style.top = event.clientY + offsety + "px";
-        } else {
-            dialog.style.left = canvas.width * 0.5 + offsetx + "px";
-            dialog.style.top = canvas.height * 0.5 + offsety + "px";
-        }
-
-        var button = dialog.querySelector("button");
-        button.addEventListener("click", inner);
-        canvas.parentNode.appendChild(dialog);
-
-        if (input)
-            input.focus();
-
-        var dialogCloseTimer = null;
-        dialog.addEventListener("mouseleave", function (e) {
-            if (LiteGraph.dialog_close_on_mouse_leave)
-                if (!dialog.is_modified && LiteGraph.dialog_close_on_mouse_leave)
-                    dialogCloseTimer = setTimeout(dialog.close, LiteGraph.dialog_close_on_mouse_leave_delay); //dialog.close();
-        });
-        dialog.addEventListener("mouseenter", function (e) {
-            if (LiteGraph.dialog_close_on_mouse_leave)
-                if (dialogCloseTimer)
-                    clearTimeout(dialogCloseTimer);
-        });
-
-        function inner() {
-            if (input)
-                setValue(input.value);
-        }
-
-        function setValue(value) {
-            if (item.type == "number") {
-                value = Number(value);
-            } else if (item.type == "boolean") {
-                value = Boolean(value);
-            }
-            node[property] = value;
-            if (dialog.parentNode) {
-                dialog.parentNode.removeChild(dialog);
-            }
-            node.setDirtyCanvas(true, true);
-        }
-    }
+    
     static getPropertyPrintableValue(value, values) {
         if (!values)
             return String(value);
@@ -679,158 +445,7 @@ export default class LGraphCanvas {
             return String(value) + " (" + desc_value + ")";
         }
     }
-    static onMenuNodeCollapse(value, options, e, menu, node) {
-        node.graph.beforeChange( /*?*/);
-
-        var fApplyMultiNode = function (node) {
-            node.collapse();
-        };
-
-        var graphcanvas = LGraphCanvas.active_canvas;
-        if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
-            fApplyMultiNode(node);
-        } else {
-            for (var i in graphcanvas.selected_nodes) {
-                fApplyMultiNode(graphcanvas.selected_nodes[i]);
-            }
-        }
-
-        node.graph.afterChange( /*?*/);
-    }
-    static onMenuNodePin(value, options, e, menu, node) {
-        node.pin();
-    }
-    static onMenuNodeMode(value, options, e, menu, node) {
-        new LiteGraph.ContextMenu(
-            LiteGraph.NODE_MODES,
-            { event: e, callback: inner_clicked, parentMenu: menu, node: node }
-        );
-
-        function inner_clicked(v) {
-            if (!node) {
-                return;
-            }
-            var kV = Object.values(LiteGraph.NODE_MODES).indexOf(v);
-            var fApplyMultiNode = function (node) {
-                if (kV >= 0 && LiteGraph.NODE_MODES[kV])
-                    node.changeMode(kV);
-                else {
-                    console.warn("unexpected mode: " + v);
-                    node.changeMode(LiteGraph.ALWAYS);
-                }
-            };
-
-            var graphcanvas = LGraphCanvas.active_canvas;
-            if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
-                fApplyMultiNode(node);
-            } else {
-                for (var i in graphcanvas.selected_nodes) {
-                    fApplyMultiNode(graphcanvas.selected_nodes[i]);
-                }
-            }
-        }
-
-        return false;
-    }
-    static onMenuNodeColors(value, options, e, menu, node) {
-        if (!node) {
-            throw "no node for color";
-        }
-
-        var values = [];
-        values.push({
-            value: null,
-            content: "<span style='display: block; padding-left: 4px;'>No color</span>"
-        });
-
-        for (var i in LGraphCanvas.node_colors) {
-            var color = LGraphCanvas.node_colors[i];
-            var value = {
-                value: i,
-                content: "<span style='display: block; color: #999; padding-left: 4px; border-left: 8px solid " +
-                    color.color +
-                    "; background-color:" +
-                    color.bgcolor +
-                    "'>" +
-                    i +
-                    "</span>"
-            };
-            values.push(value);
-        }
-        new LiteGraph.ContextMenu(values, {
-            event: e,
-            callback: inner_clicked,
-            parentMenu: menu,
-            node: node
-        });
-
-        function inner_clicked(v) {
-            if (!node) {
-                return;
-            }
-
-            var color = v.value ? LGraphCanvas.node_colors[v.value] : null;
-
-            var fApplyColor = function (node) {
-                if (color) {
-                        node.color = color.color;
-                        node.bgcolor = color.bgcolor;
-                } else {
-                    delete node.color;
-                    delete node.bgcolor;
-                }
-            };
-
-            var graphcanvas = LGraphCanvas.active_canvas;
-            if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
-                fApplyColor(node);
-            } else {
-                for (var i in graphcanvas.selected_nodes) {
-                    fApplyColor(graphcanvas.selected_nodes[i]);
-                }
-            }
-            node.setDirtyCanvas(true, true);
-        }
-
-        return false;
-    }
-    static onMenuNodeShapes(value, options, e, menu, node) {
-        if (!node) {
-            throw "no node passed";
-        }
-
-        new LiteGraph.ContextMenu(LiteGraph.VALID_SHAPES, {
-            event: e,
-            callback: inner_clicked,
-            parentMenu: menu,
-            node: node
-        });
-
-        function inner_clicked(v) {
-            if (!node) {
-                return;
-            }
-            node.graph.beforeChange( /*?*/); //node
-
-
-            var graphcanvas = LGraphCanvas.active_canvas;
-            if (!graphcanvas.selected_nodes || Object.keys(graphcanvas.selected_nodes).length <= 1) {
-                fApplyMultiNode(node);
-            } else {
-                for (var i in graphcanvas.selected_nodes) {
-                    fApplyMultiNode(graphcanvas.selected_nodes[i]);
-                }
-            }
-
-            node.graph.afterChange( /*?*/); //node
-            node.setDirtyCanvas(true);
-        }
-
-        return false;
-    }
-
-
-    /**
+        /**
          * clears all the data inside
          *
          * @method clear

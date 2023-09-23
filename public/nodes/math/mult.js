@@ -14,6 +14,7 @@ class MathMult extends LGraphNode {
         this.setProperty("in2", "number", 0, " ", {input: true, output: false});
         this.setProperty("out", "number", 0, " ", {input: false, output: true});
         this.label = ""
+        this.type = MathMult.type;
     }
 
     onNodeInputAdd() {

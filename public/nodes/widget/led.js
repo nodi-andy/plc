@@ -5,7 +5,7 @@ export default class WidgetLed extends LGraphNode {
     static type = "widget/led";
     static title = " ";
     static desc = "LED";
-    static title_mode = LiteGraph.NO_TITLE;
+    
     constructor() {
         super();
         this.setProperty("state", "number", 0, "state", {input: true, output: false});
@@ -40,37 +40,37 @@ export default class WidgetLed extends LGraphNode {
         }
     }
 
-    updateState(val) {
-        this.properties.state.value = val;
+    updateProp(name, val) {
+        this.properties[name].value = val;
         window.nodes.update(this.id, {"properties": this.properties});
     }
 
     onExecute(update) {
         if (this.properties.set.inpValue == 1) {
-            this.updateState(1);
+            this.updateProp("state", 1);
             this.properties.set.inpValue = null;
             this.properties.state.outValue = this.properties.state.value;
         }
 
         if (this.properties.clear.inpValue == 1) {
-            this.updateState(0);
+            this.updateProp("state", 0);
             this.properties.clear.inpValue = null;
             this.properties.state.outValue = this.properties.state.value;
         }
 
         if (this.properties.toggle.inpValue == 1) {
             if ( this.properties.state.value == 1) {
-                this.updateState(0);
+                this.updateProp("state", 0);
                 this.properties.state.outValue = this.properties.state.value;
             } else {
-                this.updateState(1);
+                this.updateProp("state", 1);
                 this.properties.state.outValue = this.properties.state.value;
             }
             this.properties.toggle.inpValue = null;
         }
 
         if (update && this.properties.state.inpValue != null) {
-            this.updateState(parseInt(this.properties.state.inpValue));
+            this.updateProp("state", parseInt(this.properties.state.inpValue));
             this.properties.state.inpValue = null;
             this.properties.state.outValue = this.properties.state.value;
         }

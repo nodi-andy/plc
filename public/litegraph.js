@@ -130,7 +130,6 @@ export var LiteGraph = (global.LiteGraph = {
     
     alt_drag_do_clone_nodes: false, // [true!] very handy, ALT click to clone and drag the new node
 
-    do_add_triggers_slots: false, // [true!] will create and connect event slots when using action/events connections, !WILL CHANGE node mode when using onTrigger (enable mode colors), onExecuted does not need this
     
     allow_multi_output_for_events: true, // [false!] being events, it is strongly reccomended to use them sequentually, one by one
 
@@ -937,23 +936,17 @@ class LGraph {
             }
         }
 
-
-
-            this.fixedtime += this.fixedtime_lapse;
-            if (this.onExecuteStep) {
-                this.onExecuteStep();
-            }
+        this.fixedtime += this.fixedtime_lapse;
+        if (this.onExecuteStep) {
+            this.onExecuteStep();
+        }
 
 
 
-            if (this.onAfterExecute) {
-                this.onAfterExecute();
-            }
+        if (this.onAfterExecute) {
+            this.onAfterExecute();
+        }
         
-
-
-
-
         var now = NodiEnums.getTime();
         var elapsed = now - start;
         if (elapsed == 0) {

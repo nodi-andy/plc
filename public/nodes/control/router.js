@@ -14,6 +14,7 @@ class Filter extends LGraphNode{
         this.setProperty("out", "number", 0, " ", {input: false, output: true});
 
         this.selected = 0;
+        this.type = Filter.type;
     }
 
     onExecute(update) {

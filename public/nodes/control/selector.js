@@ -3,13 +3,17 @@ import { LiteGraph } from "../../litegraph.js";
 
 class Selector extends LGraphNode{
     static type = "control/selector";
+    static title = "SEL";
+    static desc = "selects an output";
 
     constructor() {
         super();
-        this.addInput("SelIn", "number" );
-        this.addInput("a", "number");
-        this.addOutput("out", "number");
+        this.setProperty("SelIn", "number", 0, "sel", {input: true, output: false});
+        this.setProperty("a", "number", 0, "a", {input: true, output: false});
+        this.setProperty("out", "number", 0, "out", {input: false, output: true});
+        this.type = Selector.type;
     }
+
     onExecute(update) {
         if (update && isNaN(this.properties.SelIn) == false && this.properties.SelIn > 0) {
 
@@ -18,19 +22,11 @@ class Selector extends LGraphNode{
             this.properties.SelIn = null
         }
     }
+
     onNodeInputAdd() {
         return LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
     }
 
-    getProps() {
-        return [
-            ["gate", "number", 0, ""]
-        ];
-    }
 }
-
-Selector.title = "SEL";
-Selector.desc = "selects an output";
-Selector.title_mode = LiteGraph.CENTRAL_TITLE;
 
 LiteGraph.registerNodeType(Selector.type, Selector);

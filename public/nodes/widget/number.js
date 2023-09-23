@@ -18,6 +18,8 @@ export default class WidgetNumber extends LGraphNode {
         this._remainder = 0;
         this._precision = 0;
         this.mouse_captured = false;
+        this.type = WidgetNumber.type;
+
     }
 
     onDrawForeground(ctx) {
@@ -136,9 +138,15 @@ export default class WidgetNumber extends LGraphNode {
 
     }
 
+    updateProp(name, val) {
+        this.properties[name].value = val;
+        window.nodes.update(this.id, {"properties": this.properties});
+    }
+
     setValue(val) {
-        this.properties.value.value = val;
         this.update = true;
+        this.updateProp("value", val);
+
         this.properties.value.outValue = this.properties.value.value;
     }
 }

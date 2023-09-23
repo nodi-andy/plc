@@ -16,6 +16,7 @@ class Junction extends LGraphNode {
 
         this.setSize([32, 32]);
         this._shape = LiteGraph.CIRCLE_SHAPE;
+        this.type = Junction.type;
     }
 
     onExecute(update) {

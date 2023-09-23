@@ -13,6 +13,7 @@ class logicOr extends LGraphNode{
         this.setProperty("in1", "number", 0, " ", {input: true, output: false});
         this.setProperty("in2", "number", 0, " ", {input: true, output: false});
         this.setProperty("value", "number", 0, " ", {input: false, output: true});
+        this.type = logicOr.type;
     }
     onExecute(update) {
            if (update) {

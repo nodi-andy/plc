@@ -5,14 +5,13 @@ class EventCounter extends WidgetNumber{
     static type = "math/counter";
     static title = "Counter";
     static desc = "Counts events";
-    static title_mode = LiteGraph.NO_TITLE;
 
     constructor() {
         super();
         this.setProperty("inc", "number", 0, "+", {input: true, output: false});
         this.setProperty("dec", "number", 0, "-", {input: false, output: false});
+        this.type = EventCounter.type;
     }
-
 
     onDrawForeground(ctx) {
         ctx.fillStyle = "#AAA";
@@ -28,27 +27,29 @@ class EventCounter extends WidgetNumber{
     }
 
     onMouseUp(e, pos) {
-
         if (this.mouse_captured) {
             this.mouse_captured = false;
             this.captureInput(false);
         }
         this.setDirtyCanvas(true);
-
     }
 
+    updateProp(name, val) {
+        this.properties[name].value = val;
+        window.nodes.update(this.id, {"properties": this.properties});
+    }
 
     onExecute(update) {
         if (update) {
             super.exec(update);
             if (this.properties.inc.inpValue !== null && isNaN(this.properties.inc.inpValue) == false) {
-                this.properties.value.value = parseInt(this.properties.value.value) + parseInt(this.properties.inc.inpValue);
+                this.updateProp("value", parseInt(this.properties.value.value) + parseInt(this.properties.inc.inpValue))
                 this.properties.value.outValue = this.properties.value.value;
                 this.properties.inc.inpValue = null;
             }
 
             if (this.properties.dec.value !== null && isNaN(this.properties.dec.value) == false) {
-                this.properties.value.value -= parseInt(this.properties.dec.value);
+                this.updateProp("value", parseInt(this.properties.value.value) - parseInt(this.properties.inc.inpValue))
                 this.properties.value.outValue = this.properties.value.value;
                 this.properties.dec.value = null;
             }

@@ -24,6 +24,7 @@ export default class Interval extends LGraphNode {
         this.triggered = false;
         this.newState = 0;
         this.setSize([64, 64]);
+        this.type = Interval.type;
     }
 
     /*getProps() {

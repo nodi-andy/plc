@@ -70,7 +70,7 @@ io.on('connection', socket => {
 
   socket.on('remLink', msg => {
     console.log("[remLink] ", msg.id);
-    socket.broadcast.emit('remLink', msg);
+    io.emit('remLink', msg);
     nodeWorkJSON.links = nodeWorkJSON.links.filter(obj => obj.id !== msg.id);
   });
 

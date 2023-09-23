@@ -37,12 +37,7 @@ export default class WidgetToggle extends LGraphNode{
         ctx.fillRect(x, y, size, size);
 
         ctx.fillStyle = this.properties.state.value ? this.properties.color.value : "#000";
-        ctx.fillRect(
-            x + size * margin,
-            y + size * margin,
-            size * (1 - margin * 2),
-            size * (1 - margin * 2)
-        );
+        ctx.fillRect(x + size * margin, y + size * margin, size * (1 - margin * 2), size * (1 - margin * 2));
 
 
         if (this.properties.label.length) {
@@ -52,10 +47,16 @@ export default class WidgetToggle extends LGraphNode{
         }
     }
 
+    updateProp(name, val) {
+        this.properties[name].value = val;
+        window.nodes.update(this.id, {"properties": this.properties});
+    }
+
     onExecute() {
         if (this.properties.state.inpValue == 0 && this.properties.state.value == 1) {
             this.properties.out.outValue = this.properties.release.value;
             this.properties.state.value = this.properties.state.inpValue;
+            this.updateProp("state", this.properties.state.value);
             this.properties.state.outValue = this.properties.state.value;
             this.properties.state.inpValue = null;
         }
@@ -63,6 +64,7 @@ export default class WidgetToggle extends LGraphNode{
         if (this.properties.state.inpValue == 1 && this.properties.state.value == 0) {
             this.properties.out.outValue = this.properties.press.value;
             this.properties.state.value = this.properties.state.inpValue;
+            this.updateProp("state", this.properties.state.value);
             this.properties.state.outValue = this.properties.state.value;
             this.properties.state.inpValue = null;
         }

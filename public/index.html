@@ -118,10 +118,7 @@
       if (node) {
         let view = window.canvas.ds;
         node.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
-        //window.graph.add(node, false);
       }
-      //window.graph.afterChange();
-      //delete window.graph._nodes_by_id[node.id].graph;
       window.socket.emit("addNode", node);
       //window.graph._nodes_by_id[node.id].graph = window.graph;
 
@@ -133,7 +130,7 @@
         var graphcanvas = LGraphCanvas.active_canvas;
         for (var node in graphcanvas.selected_nodes) {
             // graph.remove(graphcanvas.selected_nodes[i]);
-            window.socket.emit("remNode", {"id" : node.id});
+            window.socket.emit("remNode", {"id" : graphcanvas.selected_nodes[node].id});
         }
         
         if (canvas.selectedLink) window.socket.emit("remLink", {"id": canvas.selectedLink});
