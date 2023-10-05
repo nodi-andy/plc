@@ -1,65 +1,49 @@
-import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
+import LGraphNode from "../../node.js";
+import ButtonCore from "./button_server.mjs"
 
-export default class WidgetButton extends LGraphNode{
-    static type = "widget/button";
-    static title = "Button";
-    static desc = "Triggers an event";
-    static title_mode = LiteGraph.NO_TITLE;
-    static font = "Arial";
+export default class WidgetButton extends ButtonCore {
+    static margin = 12;
 
     constructor() {
         super();
-        this.setProperty("state", "number", 0, " ", {input: false, output: true});
-        this.setProperty("press", "number", 1, " ", {input: false, output: false});
-        this.setProperty("release", "number", 0, " ", {input: false, output: false});
-        this.setProperty("in", "number", null, "in", {input: false, output: false});
-        this.setProperty("label", "string", "B1", "label", {input: false, output: false});
-        this.setProperty("port", "number", null, "port", {input: false, output: false});
-        this.setProperty("color", "string",  "gray", "color", {input: false, output: false});
-
-        this.setSize([64, 64]);
-        this.newState = false;
-        this.margin = 12;
-        this.type = WidgetButton.type
-        for(let input of this.getInputs()) {
-            input.value = null;
-        }
-        this.reset();
+        this.properties = {}
+        ButtonCore.setup(this.properties);
+        this.widget = new LGraphNode();
+        this.widgets = [this.widget];
     }
 
     onDrawForeground(ctx) {
         
-        if (this.newState == 1) {
+        if (this.properties.state.inpValue == 1) {
             this.margin = 16;
         } else {
             this.margin = 14;
             ctx.fillStyle = "black";
-            ctx.fillRect(this.margin + 2, this.margin + 2, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
+            ctx.fillRect(this.margin + 2, this.margin + 2, this.widget.size[0] - this.margin * 2, this.widget.size[1] - this.margin * 2);
         }
 
         ctx.fillStyle = this.properties.color.value;
-        ctx.fillRect(this.margin, this.margin, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
+        ctx.fillRect(this.margin, this.margin, this.widget.size[0] - this.margin * 2, this.widget.size[1] - this.margin * 2);
 
         if (this.properties.label || this.properties.label.value === 0) {
             var font_size = this.properties.font_size || 30;
             ctx.textAlign = "center";
-            ctx.fillStyle = this.newState ? "black" : "white";
-            ctx.font = font_size + "px " + WidgetButton.font;
-            ctx.fillText(this.properties.label.value, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
+            ctx.fillStyle = this.properties.state.inpValue ? "black" : "white";
+            ctx.font = font_size + "px Arial";
+            ctx.fillText(this.properties.label.value, this.widget.size[0] * 0.5, this.widget.size[1] * 0.5 + font_size * 0.3);
             ctx.textAlign = "left";
         }
     }
 
     onMouseDown(e, local_pos) {
-        if (local_pos[0] > this.margin && local_pos[1] > this.margin && local_pos[0] < this.size[0] - this.margin && local_pos[1] < this.size[1] - this.margin) {
-            this.newState = 1;
+        if (local_pos[0] > WidgetButton.margin && local_pos[1] > WidgetButton.margin && local_pos[0] < this.widget.size[0] - WidgetButton.margin && local_pos[1] < this.widget.size[1] - WidgetButton.margin) {
             this.properties.state.value = this.properties.press.value;
             this.properties.state.outValue = this.properties.state.value;
-            window.nodes.update(this.id, {"newState": this.newState});
+            window.nodes.update(this.id, {"state": {"inpValue" : 1}});
             return true;
         }
-        this.setDirtyCanvas(true);
+        this.graph.setDirtyCanvas(true);
 
         return false;
     }
@@ -72,14 +56,14 @@ export default class WidgetButton extends LGraphNode{
             }
         }
         this.output = null;
-        if (this.newState == 0 && this.state == 1) {
+        if (this.inpValue == 0 && this.state == 1) {
             this.output = this.properties.release;
         } 
-        if (this.newState == 1 && this.state == 0) {
+        if (this.inpValue == 1 && this.state == 0) {
             this.output = this.properties.press;
         }
         
-        this.setDirtyCanvas(true, true);
+        this.graph.setDirtyCanvas(true, true);
         if (this.output != null) {
             if (this.getInputs()[0]?.link == null) {
                 this.setOutputData(0, this.output);
@@ -90,30 +74,16 @@ export default class WidgetButton extends LGraphNode{
                 input.value = null;
             }
         }
-        this.state = this.newState;
-    }
-
-    onAfterExecute() {
-        // do not remove input
-    }
-
-    reset() {
-        this.newState = 0;
-        this.properties.state.value = this.properties.release.value;
-        this.properties.state.outValue = this.properties.state.value;
     }
 
     onMouseUp(/*e*/) {
-        this.reset();
-        window.nodes.update(this.id, {"newState": this.newState});
+        ButtonCore.reset(this.properties);
+        window.nodes.update(this.id, {"state": {"inpValue" : 0}});
 
-        this.setDirtyCanvas(true);
+        this.graph.setDirtyCanvas(true);
 
     }
 
-    hwSetState(v) {
-        this.newState = !v;
-    }
 }
 
 LiteGraph.registerNodeType(WidgetButton.type, WidgetButton);

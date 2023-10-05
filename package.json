@@ -31,7 +31,7 @@
     "http-proxy": "^1.18.1"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node index.mjs",
     "deploy": "gcloud app deploy",
     "debug": "set PORT=8080 &&  react-scripts start",
     "build": "set \"GENERATE_SOURCEMAP=false\" &&  react-scripts build",

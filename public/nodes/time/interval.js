@@ -1,4 +1,4 @@
-import { NodiEnums } from "../../enums.js";
+import { NodiEnums } from "../../enums.mjs";
 
 import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";

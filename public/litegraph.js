@@ -1,6 +1,6 @@
-import { NodiEnums } from "../../enums.js";
+import { NodiEnums } from "../../enums.mjs";
 import LGraphCanvas from "./canvas.js"
-import LLink from "./link.js"
+import LLink from "./link.mjs"
 import LGraphNode from "./node.js"
 /**
  * The Global Scope. It contains all the registered node classes.
@@ -448,22 +448,21 @@ export var LiteGraph = (global.LiteGraph = {
         }
 
 
-        if (!node.size) {
-            node.setSize(node.computeSize());
-            //call onresize?
-        }
-        if (!node.pos) {
-            node.pos = LiteGraph.DEFAULT_POSITION.concat();
-        }
-
+        node.widget.setSize(node.widget.computeSize());
+        node.widget.pos = LiteGraph.DEFAULT_POSITION.concat();
+        node.type = type;
 
         //extra options
-        if (options) {
-            for (var i in options) {
-                node.properties[i] = options[i];
+        if (options?.properties) {
+            for (var i in options.properties) {
+                node.properties[i] = options.properties[i];
             }
         }
 
+        if (options?.widget) {
+            node.widget.pos = options.widget.pos;
+            node.pos = options.widget.pos;
+        }
         // callback
         if ( node.onNodeCreated ) {
             node.onNodeCreated();
@@ -774,7 +773,6 @@ class LGraph {
 
         this.catch_errors = true;
 
-        this.nodes_executing = [];
         this.nodes_actioning = [];
         this.nodes_executedAction = [];
 
@@ -901,14 +899,10 @@ class LGraph {
          * @param {number} limit max number of nodes to execute (used to execute from start to a node)
          */
     runStep(num, do_not_catch_errors, limit) {
-        num = num || 1;
-
         var start = NodiEnums.getTime();
         this.globaltime = 0.001 * (start - this.starttime);
 
-        var nodes = this._nodes_executable
-            ? this._nodes_executable
-            : this._nodes;
+        var nodes = this._nodes;
 
         if (!nodes) {
             return;
@@ -931,7 +925,7 @@ class LGraph {
         for (var j = 0; j < nodes.length; ++j) {
             var node = nodes[j];
             if ( node.onExecute) {
-                node.doExecute(node.update);
+                node.onExecute(node.update);
                 node.update = false;
             }
         }
@@ -957,7 +951,6 @@ class LGraph {
         this.iteration += 1;
         this.elapsed_time = (now - this.last_update_time) * 0.001;
         this.last_update_time = now;
-        this.nodes_executing = [];
         this.nodes_actioning = [];
         this.nodes_executedAction = [];
     }
@@ -1300,7 +1293,7 @@ class LGraph {
         var nRet = null;
         for (var i = nodes_list.length - 1; i >= 0; i--) {
             var n = nodes_list[i];
-            if (n.isPointInside(x, y, margin)) {
+            if (n.widget.isPointInside(x, y, margin)) {
 
                 return n;
 
@@ -1385,23 +1378,7 @@ class LGraph {
         this._version++;
         this.sendActionToCanvas("onConnectionChange");
     }
-    /**
-         * returns if the graph is in live mode
-         * @method isLive
-         */
-    isLive() {
-        if (!this.list_of_graphcanvas) {
-            return false;
-        }
 
-        for (var i = 0; i < this.list_of_graphcanvas.length; ++i) {
-            var c = this.list_of_graphcanvas[i];
-            if (c.live_mode) {
-                return true;
-            }
-        }
-        return false;
-    }
     /**
          * clears the triggered slot animation in all links (stop visual animation)
          * @method clearTriggeredSlots
@@ -1555,7 +1532,7 @@ class LGraph {
             for (var i = 0, l = nodes.length; i < l; ++i) {
                 var n_info = nodes[i]; //stored info
                 if (!n_info) continue;
-                var node = LiteGraph.createNode(n_info.type, n_info.title);
+                var node = LiteGraph.createNode(n_info.type, n_info.title, n_info);
                 if (!node) {
                     if (LiteGraph.debug) {
                         console.log(

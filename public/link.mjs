@@ -1,4 +1,4 @@
-import { NodiEnums } from "./enums.js";
+import { NodiEnums } from "./enums.mjs";
 
 //this is the class in charge of storing link information
 export default class LLink {
@@ -24,10 +24,10 @@ export default class LLink {
         } else {
             this.id = o.id;
             this.type = o.type;
-            this.origin_id = o.origin_id;
-            this.origin_slot = o.origin_slot;
-            this.target_id = o.target_id;
-            this.target_slot = o.target_slot;
+            this.origin_id = o.from;
+            this.origin_slot = o.fromSlot;
+            this.target_id = o.to;
+            this.target_slot = o.toSlot;
         }
     }
     serialize() {

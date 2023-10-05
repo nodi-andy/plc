@@ -1,14 +1,60 @@
-const express = require('express')
+import express from 'express';
+import http from 'http';
+import { Server as socketIOServer } from 'socket.io';
+import NodeWork from './public/nodework.mjs';
+import './public/nodes/widget/button_server.mjs';
+import './public/nodes/widget/led_server.mjs';
 
 const app = express()
-const server = require('http').Server(app);
-const io = require('socket.io')(server, {
-    cors: {
-      origin: '*',
+const server = http.createServer(app);
+const io = new socketIOServer(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+
+var nodeWorkJSON = new NodeWork();
+
+
+setInterval(() => {
+  nodeWorkJSON.nodes.forEach(node => {
+    let c = NodeWork.getType(node.type);
+    console.log(node?.properties?.state?.inpValue)
+    //console.log(c)
+    if (node.cmds?.length) {
+      mergeObjects(node.properties, node.cmds[0])
+      node.cmds.shift();
+    }
+    try {
+      if (c.run(node.properties) == true) {
+        io.emit('updateNode', {nodeID: node.id, newData: node.properties});
+      }
+    } catch (e) {
+      console.log(e);
     }
   });
 
-var nodeWorkJSON = {nodes: [], links: []};
+  nodeWorkJSON.links.forEach(link => {
+    let dataFromNode = nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue;
+    if(dataFromNode !== null) {
+      nodeWorkJSON.nodes[link.to].properties[link.toSlot].inpValue = dataFromNode;
+      nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue = null;
+    }
+  });
+}, "100");
+
+function mergeObjects(objA, objB) {
+  const mergedObject = { ...objA };
+
+  for (const keyA in objB) {
+    for (const keyB in objB[keyA]) {
+      mergedObject[keyA][keyB] = objB[keyA][keyB];
+    }
+  }
+
+  return mergedObject;
+}
 
 io.on('connection', socket => {
   socket.on('clean', msg => {
@@ -39,17 +85,19 @@ io.on('connection', socket => {
 
   socket.on('updateNode', msg => {
     socket.broadcast.emit('updateNode', msg);
-    Object.assign(nodeWorkJSON.nodes[msg.nodeID], msg.newData);
+    if (nodeWorkJSON.nodes[msg.nodeID].cmds == undefined) nodeWorkJSON.nodes[msg.nodeID].cmds = [];
+    nodeWorkJSON.nodes[msg.nodeID].cmds.push(msg.newData);
     //console.log(nodeWorkJSON);
   });
 
   socket.on('addLink', msg => {
-    console.log("[addLink] ", msg.id);
+    console.log("[addLink] ", msg);
+    msg.id = nodeWorkJSON.links.length;
 
-    socket.broadcast.emit('addLink', msg);
-    if (msg.id) {
+    if (msg.id != null) {
       nodeWorkJSON.links[msg.id] = msg;
     }
+    io.emit('addLink', msg);
   });
 
   socket.on('moveNode', msg => {
@@ -84,5 +132,3 @@ io.on('connection', socket => {
 });
 app.use(express.static('data'));
 server.listen(8080)
-
-module.exports = server;

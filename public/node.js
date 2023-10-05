@@ -1,68 +1,11 @@
-import { NodiEnums } from "./enums.js";
+import { NodiEnums } from "./enums.mjs";
 
-import LLink from "./link.js"
-// *************************************************************
-//   Node CLASS                                          *******
-// *************************************************************
+import LLink from "./link.mjs"
+import NodeCore from "./node_core.mjs";
 
-/*
-title: string
-pos: [x,y]
-size: [x,y]
-
-input|output: every connection
-    +  { name:string, type:string, pos: [x,y]=Optional, direction: "input"|"output", links: Array });
-
-general properties:
-    + clip_area: if you render outside the node, it will be clipped
-    + unsafe_execution: not allowed for safe execution
-    + skip_repeated_outputs: when adding new outputs, it wont show if there is one already connected
-    + resizable: if set to false it wont be resizable with the mouse
-    + horizontal: slots are distributed horizontally
-    + widgets_start_y: widgets start at y distance from the top of the node
-
-flags object:
-    + collapsed: if it is collapsed
-
-supported callbacks:
-    + onAdded: when added to graph (warning: this is called BEFORE the node is configured when loading)
-    + onRemoved: when removed from graph
-    + onStart:	when the graph starts playing
-    + onStop:	when the graph stops playing
-    + onDrawForeground: render the inside widgets inside the node
-    + onDrawBackground: render the background area inside the node (only in edit mode)
-    + onMouseDown
-    + onMouseMove
-    + onMouseUp
-    + onMouseEnter
-    + onMouseLeave
-    + onExecute: execute the node
-    + onPropertyChanged: when a property is changed in the panel (return true to skip default behaviour)
-    + getProps: returns an array of possible inputs
-    + onBounding: in case this node has a bigger bounding than the node itself (the callback receives the bounding as [x,y,w,h])
-    + onDblClick: double clicked in the node
-    + onInputDblClick: input slot double clicked (can be used to automatically create a node connected)
-    + onOutputDblClick: output slot double clicked (can be used to automatically create a node connected)
-    + onConfigure: called after the node has been configured
-    + onSerialize: to add extra info when serializing (the callback receives the object that should be filled with the data)
-    + onSelected
-    + onDeselected
-    + onDropItem : DOM item dropped over the node
-    + onDropFile : file dropped over the node
-    + onConnectInput : if returns false the incoming connection will be canceled
-    + onConnectionsChange : a connection changed (new one or removed) (LiteGraph.INPUT or LiteGraph.OUTPUT, slot, true if connected, link_info, input_info )
-    + onAction: action slot triggered
-    + getExtraMenuOptions: to add option to context menu
-*/
-
-/**
- * Base Class for all the node type classes
- * @class LGraphNode
- * @param {String} name a name for the node
- */
-
-export default class LGraphNode {
+export default class LGraphNode extends NodeCore {
     constructor(title) {
+        super();
         this.title = title;
         this.setSize([window.LiteGraph.NODE_WIDTH, 60]);
         this.graph = null;
@@ -111,8 +54,8 @@ export default class LGraphNode {
             this.title = this.constructor.title;
         }
 
-        for (let i = 0; i < this.getInputs().length; ++i) {
-            var input = this.getInputs()[i];
+        for (let i = 0; i < NodeCore.getInputs(this.properties).length; ++i) {
+            var input = NodeCore.getInputs(this.properties)[i];
             var link_info = this.graph ? this.graph.links[input.link] : null;
             if (this.onConnectionsChange)
                 this.onConnectionsChange(window.LiteGraph.INPUT, i, true, link_info, input); //link_info has been created now, so its updated
@@ -122,8 +65,8 @@ export default class LGraphNode {
 
         }
 
-        for (let i = 0; i < this.getOutputs().length; ++i) {
-            var output = this.getOutputs()[i];
+        for (let i = 0; i < NodeCore.getOutputs(this.properties).length; ++i) {
+            var output = NodeCore.getOutputs(this.properties)[i];
             if (!output.links) {
                 continue;
             }
@@ -253,280 +196,7 @@ export default class LGraphNode {
     getTitle() {
         return this.title || this.constructor.title;
     }
-    /**
-         * sets the value of a property
-         * @method setProperty
-         * @param {String} name
-         * @param {*} value
-         */
-    setProperty(name, type, value, label, extra_info) {
-        if (!this.properties) {
-            this.properties = {};
-        }
-        this.properties[name] = {}
-        if (value === this.properties[name])
-            return;
-        var prev_value = this.properties[name];
-        var prop = this.properties[name];
-        prop.name = name;
-        prop.value = value;
-        prop.type = type;
-        prop.label = label;
-        if (extra_info) {
-            for (var i in extra_info) {
-                this.properties[name][i] = extra_info[i];
-            }
-        }
-        if (this.onPropertyChanged) {
-            if (this.onPropertyChanged(name, value, prev_value) === false) //abort change
-                this.properties[name] = prev_value;
-        }
-        if (prop.input) {
-            this.addInput(name, type, value, label, extra_info)
-        }
-        if (prop.output) {
-            this.addOutput(name, type, extra_info, label )
-        }
-        if (this.widgets) //widgets could be linked to properties
-            for (var i = 0; i < this.widgets.length; ++i) {
-                var w = this.widgets[i];
-                if (!w)
-                    continue;
-                if (w.options.property == name) {
-                    w.value = value;
-                    break;
-                }
-            }
-    }
-    // Execution *************************
-    /**
-         * sets the output data
-         * @method setOutputData
-         * @param {number} slot
-         * @param {*} data
-         */
-    setOutputData(slot, data) {
-
-        //this maybe slow and a niche case
-        //if(slot && slot.constructor === String)
-        //	slot = this.findOutputSlot(slot);
-        if (slot == -1 || slot >= this.getOutputs().length) {
-            return;
-        }
-
-        var output_info = this.getOutputs()[slot];
-        if (!output_info) {
-            return;
-        }
-
-        //store data in the output itself in case we want to debug
-        output_info._data = data;
-
-    }
-
-    /**
-         * Retrieves the input data (data traveling through the connection) from one slot
-         * @method getInputData
-         * @param {number} slot
-         * @param {boolean} force_update if set to true it will force the connected node of this slot to output data into this link
-         * @return {*} data or if it is not connected returns undefined
-         */
-    getInputData(slot, force_update) {
-        return this.getInputs()[slot]?.value;
-    }
-
-    /**
-         * Retrieves the input data from one slot using its name instead of slot number
-         * @method getInputDataByName
-         * @param {String} slot_name
-         * @param {boolean} force_update if set to true it will force the connected node of this slot to output data into this link
-         * @return {*} data or if it is not connected returns null
-         */
-    getInputDataByName(slot_name,
-        force_update) {
-        var slot = this.findInputSlot(slot_name);
-        if (slot == -1) {
-            return null;
-        }
-        return this.getInputData(slot, force_update);
-    }
-    /**
-         * tells you if there is a connection in one input slot
-         * @method isInputConnected
-         * @param {number} slot
-         * @return {boolean}
-         */
-    isInputConnected(slot) {
-        return slot < this.getInputs().length && this.getInputs()[slot]?.links.length > 0;
-    }
-
-    /**
-         * Returns the link info in the connection of an input slot
-         * @method getInputLink
-         * @param {number} slot
-         * @return {LLink} object or null
-         */
-    getInputLink(slot) {
-        if (!this.getInputs()) {
-            return null;
-        }
-        if (slot < this.getInputs().length) {
-            var slot_info = this.getInputs()[slot];
-            return this.graph.links[slot_info.link];
-        }
-        return null;
-    }
-    /**
-         * returns the node connected in the input slot
-         * @method getInputNode
-         * @param {number} slot
-         * @return {LGraphNode} node or null
-         */
-    getInputNode(slot) {
-
-        if (slot >= this.getInputs().length) {
-            return null;
-        }
-        var input = this.getInputs()[slot];
-        if (!input || input.link === null) {
-            return null;
-        }
-        var link_info = this.graph.links[input.link];
-        if (!link_info) {
-            return null;
-        }
-        return this.graph.getNodeById(link_info.origin_id);
-    }
-
-    getInputByName(name) {
-        if (this.properties) {
-            return Object.values(this.properties).filter(obj => (obj.input == true && obj.name == name))[0];
-        } else {
-            return [];
-        }
-    }
-    setInputDataByName(name, val) {
-        for (let i = 0; i < this.getInputs().length; i++) {
-            if (this.getInputs()[i].name === name) {
-              this.getInputs()[i].value = val;
-            }
-          }
-    }
-    getInputIndexByName(name) {
-        return Object.values(this.properties).filter(obj => (obj.input == true)).findIndex(el => el.name === name);
-    }
-    getInputNameByIndex(index) {
-        return getInputByIndex(index).name;
-    }
-    getInputByIndex(index) {
-        return Object.values(this.properties).filter(obj => (obj.input == true))[index];
-    }
-    /**
-         * tells you the last output data that went in that slot
-         * @method getOutputData
-         * @param {number} slot
-         * @return {Object}  object or null
-         */
-    getOutputData(slot) {
-        if (!this.getOutputs()) {
-            return null;
-        }
-        if (slot >= this.getOutputs().length) {
-            return null;
-        }
-
-        var info = this.getOutputs()[slot];
-        return info.value;
-    }
-
-    getOutputByName(name) {
-        for (let i = 0; i < this.getOutputs().length; i++) {
-            if (this.getOutputs()[i].name === name) {
-              return this.getOutputs()[i];
-            }
-          }
-    }
-
-    getOutputDataByName(name) {
-        for (let i = 0; i < this.getOutputs().length; i++) {
-            if (this.getOutputs()[i].name === name) {
-              return this.getOutputs()[i].value;
-            }
-          }
-    }
-    setOutputDataByName(name, val) {
-        for (let i = 0; i < this.getOutputs().length; i++) {
-            if (this.getOutputs()[i].name === name) {
-              this.getOutputs()[i].value = val;
-            }
-          }
-    }
-
-    /**
-         * tells you if there is a connection in one output slot
-         * @method isOutputConnected
-         * @param {number} slot
-         * @return {boolean}
-         */
-    isOutputConnected(slot) {
-        if (!this.getOutputs()) {
-            return false;
-        }
-        return (
-            slot < this.getOutputs().length &&
-            this.getOutputs()[slot].links &&
-            this.getOutputs()[slot].links.length
-        );
-    }
-    /**
-         * tells you if there is any connection in the output slots
-         * @method isAnyOutputConnected
-         * @return {boolean}
-         */
-    isAnyOutputConnected() {
-        if (!this.getOutputs()) {
-            return false;
-        }
-        for (var i = 0; i < this.getOutputs().length; ++i) {
-            if (this.getOutputs()[i].links && this.getOutputs()[i].links.length) {
-                return true;
-            }
-        }
-        return false;
-    }
-    /**
-         * retrieves all the nodes connected to this output slot
-         * @method getOutputNodes
-         * @param {number} slot
-         * @return {array}
-         */
-    getOutputNodes(slot) {
-        if (!this.getOutputs() || this.getOutputs().length == 0) {
-            return null;
-        }
-
-        if (slot >= this.getOutputs().length) {
-            return null;
-        }
-
-        var output = this.getOutputs()[slot];
-        if (!output.links || output.links.length == 0) {
-            return null;
-        }
-
-        var r = [];
-        for (var i = 0; i < output.links.length; i++) {
-            var link_id = output.links[i];
-            var link = this.graph.links[link_id];
-            if (link) {
-                var target_node = this.graph.getNodeById(link.target_id);
-                if (target_node) {
-                    r.push(target_node);
-                }
-            }
-        }
-        return r;
-    }
+    
     addOnTriggerInput() {
         var trigS = this.findInputSlot("onTrigger");
         if (trigS == -1) { //!trigS || 
@@ -554,63 +224,7 @@ export default class LGraphNode {
 
         }
     }
-    changeMode(modeTo) {
-        switch (modeTo) {
-            case window.LiteGraph.ON_EVENT:
-                // this.addOnExecutedOutput();
-                break;
-
-            case window.LiteGraph.ON_TRIGGER:
-                this.addOnTriggerInput();
-                this.addOnExecutedOutput();
-                break;
-
-            case window.LiteGraph.NEVER:
-                break;
-
-            case window.LiteGraph.ALWAYS:
-                break;
-
-            case window.LiteGraph.ON_REQUEST:
-                break;
-
-            default:
-                return false;
-        }
-        return true;
-    }
-    /**
-         * Triggers the node code execution, place a boolean/counter to mark the node as being executed
-         * @method execute
-         * @param {*} param
-         * @param {*} options
-         */
-    doExecute(param, options) {
-        options = options || {};
-        if (this.onExecute) {
-
-            // enable this to give the event an ID
-            if (!options.action_call)
-                options.action_call = this.id + "_exec_" + Math.floor(Math.random() * 9999);
-
-            this.graph.nodes_executing[this.id] = true; //.push(this.id);
-
-            this.onExecute(param, options);
-
-            this.graph.nodes_executing[this.id] = false; //.pop();
-
-
-            // save execution/action ref
-            this.exec_version = this.graph.iteration;
-            if (options && options.action_call) {
-                this.action_call = options.action_call; // if (param)
-                this.graph.nodes_executedAction[this.id] = options.action_call;
-            }
-        }
-        this.execute_triggered = 2; // the nFrames it will be used (-- each step), means "how old" is the event
-        if (this.onAfterExecuteNode)
-            this.onAfterExecuteNode(param, options); // callback
-    }
+    
     /**
          * Triggers an action, wrapped by logics to control execution flow
          * @method actionDo
@@ -649,15 +263,15 @@ export default class LGraphNode {
          * @param {*} param
          */
     trigger(action, param, options) {
-        if (!this.getOutputs() || !this.getOutputs().length) {
+        if (!NodeCore.getOutputs(this.properties) || !NodeCore.getOutputs(this.properties).length) {
             return;
         }
 
         if (this.graph)
             this.graph._last_trigger_time = NodiEnums.getTime();
 
-        for (var i = 0; i < this.getOutputs().length; ++i) {
-            var output = this.getOutputs()[i];
+        for (var i = 0; i < NodeCore.getOutputs(this.properties).length; ++i) {
+            var output = NodeCore.getOutputs(this.properties)[i];
             if (!output || output.type !== NodiEnums.EVENT || (action && output.name != action))
                 continue;
             this.triggerSlot(i, param, null, options);
@@ -672,7 +286,7 @@ export default class LGraphNode {
          */
     triggerSlot(slot, param, link_id, options) {
         options = options || {};
-        if (!this.getOutputs()) {
+        if (!NodeCore.getOutputs(this.properties)) {
             return;
         }
 
@@ -684,7 +298,7 @@ export default class LGraphNode {
         if (slot.constructor !== Number)
             console.warn("slot must be a number, use node.trigger('name') if you want to use a string");
 
-        var output = this.getOutputs()[slot];
+        var output = NodeCore.getOutputs(this.properties)[slot];
         if (!output) {
             return;
         }
@@ -738,11 +352,11 @@ export default class LGraphNode {
          * @param {Number} link_id [optional] in case you want to trigger and specific output link in a slot
          */
     clearTriggeredSlot(slot, link_id) {
-        if (!this.getOutputs()) {
+        if (!NodeCore.getOutputs(this.properties)) {
             return;
         }
 
-        var output = this.getOutputs()[slot];
+        var output = NodeCore.getOutputs(this.properties)[slot];
         if (!output) {
             return;
         }
@@ -773,6 +387,7 @@ export default class LGraphNode {
          * @param {vec2} size
          */
     setSize(size, update = true) {
+        if (size == null) return;
         if (!this.constructor.fixsize) {
             this.size = [window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[0] / window.LiteGraph.CANVAS_GRID_SIZE),
             window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE)];
@@ -826,10 +441,10 @@ export default class LGraphNode {
             }
         }
 
-        if (!this.getOutputs()) {
-            this.getOutputs() = [];
+        if (!NodeCore.getOutputs(this.properties)) {
+            NodeCore.getOutputs(this.properties) = [];
         }
-        this.getOutputs().push(output);
+        NodeCore.getOutputs(this.properties).push(output);
         if (this.onOutputAdded) {
             this.onOutputAdded(output);
         }
@@ -856,10 +471,10 @@ export default class LGraphNode {
                 }
             }
 
-            if (!this.getOutputs()) {
-                this.getOutputs() = [];
+            if (!NodeCore.getOutputs(this.properties)) {
+                NodeCore.getOutputs(this.properties) = [];
             }
-            this.getOutputs().push(o);
+            NodeCore.getOutputs(this.properties).push(o);
             if (this.onOutputAdded) {
                 this.onOutputAdded(o);
             }
@@ -879,12 +494,12 @@ export default class LGraphNode {
          */
     removeOutput(slot) {
         this.disconnectOutput(slot);
-        this.getOutputs().splice(slot, 1);
-        for (var i = slot; i < this.getOutputs().length; ++i) {
-            if (!this.getOutputs()[i] || !this.getOutputs()[i].links) {
+        NodeCore.getOutputs(this.properties).splice(slot, 1);
+        for (var i = slot; i < NodeCore.getOutputs(this.properties).length; ++i) {
+            if (!NodeCore.getOutputs(this.properties)[i] || !NodeCore.getOutputs(this.properties)[i].links) {
                 continue;
             }
-            var links = this.getOutputs()[i].links;
+            var links = NodeCore.getOutputs(this.properties)[i].links;
             for (var j = 0; j < links.length; ++j) {
                 var link = this.graph.links[links[j]];
                 if (!link) {
@@ -927,27 +542,16 @@ export default class LGraphNode {
          * @method addInput
          * @param {string} name
          * @param {string} type string defining the input type ("vec3","number",...), it its a generic one use 0
-         * @param {Object} extra_info this can be used to have special properties of an input (label, color, position, etc)
          */
-    addInput(name, type, defaultValue, label, extra_info) {
+    addInput(props, name, type, defaultValue, label) {
         type = type || "number";
         defaultValue = defaultValue || 0;
         label = label || name;
         var input = { name: name, type: type, link: null, label: label };
-        if (extra_info) {
-            for (var i in extra_info) {
-                input[i] = extra_info[i];
-            }
-        }
 
-        this.getInputs().push(input);
+        props[name] = input;
         this.setSize(this.computeSize());
 
-        if (this.onInputAdded) {
-            this.onInputAdded(input);
-        }
-
-        window.LiteGraph.registerNodeAndSlotType(this, type);
         this.setDirtyCanvas(true, true);
         return input;
     }
@@ -956,7 +560,7 @@ export default class LGraphNode {
     removeInputByName(name) {
         this.updateProperties(name, "input", false);
 
-        let slot = this.getInputs().findIndex(item => item.name === name)
+        let slot = NodeCore.getInputs(this.properties).findIndex(item => item.name === name)
         if (slot >= 0) {
             this.removeInput(slot);
         }
@@ -965,7 +569,7 @@ export default class LGraphNode {
 
     removeOutputByName(name) {
         this.updateProperties(name, "output", false);
-        let slot = this.getOutputs().findIndex(item => item.name === name)
+        let slot = NodeCore.getOutputs(this.properties).findIndex(item => item.name === name)
         if (slot >= 0) {
             this.removeOutput(slot);
         }
@@ -978,12 +582,12 @@ export default class LGraphNode {
          */
     removeInput(slot) {
         this.disconnectInput(slot);
-        var slot_info = this.getInputs().splice(slot, 1);
-        for (var i = slot; i < this.getInputs().length; ++i) {
-            if (!this.getInputs()[i]) {
+        var slot_info = NodeCore.getInputs(this.properties).splice(slot, 1);
+        for (var i = slot; i < NodeCore.getInputs(this.properties).length; ++i) {
+            if (!NodeCore.getInputs(this.properties)[i]) {
                 continue;
             }
-            var link = this.graph.links[this.getInputs()[i].link];
+            var link = this.graph.links[NodeCore.getInputs(this.properties)[i].link];
             if (!link) {
                 continue;
             }
@@ -1007,9 +611,9 @@ export default class LGraphNode {
             return this.constructor.size.concat();
         }
 
-        var rows = Math.max(this.getInputs().length , this.getInputs().length);
+        var rows = Math.max(NodeCore.getInputs(this.properties).length , NodeCore.getInputs(this.properties).length);
         if (rows < 1) rows = 1;
-        var size = out || new Float32Array([0, 0]);
+        var size = [out, out] || new Float32Array([0, 0]);
         rows = Math.max(rows, 1);
         var font_size = window.LiteGraph.NODE_TEXT_SIZE; //although it should be graphcanvas.inner_text_font size
 
@@ -1017,8 +621,8 @@ export default class LGraphNode {
         var output_width = 0;
 
 
-        for (var i = 0, l = this.getInputs().length; i < l; ++i) {
-            var input = this.getInputs()[i];
+        for (var i = 0, l = NodeCore.getInputs(this.properties).length; i < l; ++i) {
+            var input = NodeCore.getInputs(this.properties)[i];
             var text = input.label || input.name || "";
             var text_width = compute_text_size(text);
             if (input_width < text_width) {
@@ -1026,9 +630,9 @@ export default class LGraphNode {
             }
         }
 
-        if (this.getOutputs()) {
-            for (let i = 0, l = this.getOutputs().length; i < l; ++i) {
-                var output = this.getOutputs()[i];
+        if (NodeCore.getOutputs(this.properties)) {
+            for (let i = 0, l = NodeCore.getOutputs(this.properties).length; i < l; ++i) {
+                var output = NodeCore.getOutputs(this.properties)[i];
                 let text = output.label || output.name || "";
                 let text_width = compute_text_size(text);
                 if (output_width < text_width) {
@@ -1207,10 +811,7 @@ export default class LGraphNode {
     isPointInside(x, y, margin, skip_title) {
         margin = margin || 0;
 
-        var margin_top = this.graph && this.graph.isLive() ? 0 : window.LiteGraph.NODE_TITLE_HEIGHT;
-        if (skip_title) {
-            margin_top = 0;
-        }
+        var margin_top = 0;
         if (this.pos[0] - 4 - margin < x &&
             this.pos[0] + this.size[0] + 4 + margin > x &&
             this.pos[1] - margin_top - margin < y &&
@@ -1229,9 +830,9 @@ export default class LGraphNode {
     getSlotInPosition(x, y) {
         //search for inputs
         var link_pos = new Float32Array(2);
-        if (this.getInputs()) {
-            for (var i = 0, l = this.getInputs().length; i < l; ++i) {
-                var input = this.getInputs()[i];
+        if (NodeCore.getInputs(this.properties)) {
+            for (var i = 0, l = NodeCore.getInputs(this.properties).length; i < l; ++i) {
+                var input = NodeCore.getInputs(this.properties)[i];
                 this.getConnectionPos(true, i, link_pos);
                 if (Math.isInsideRectangle(
                     x,
@@ -1246,9 +847,9 @@ export default class LGraphNode {
             }
         }
 
-        if (this.getOutputs()) {
-            for (let i = 0, l = this.getOutputs().length; i < l; ++i) {
-                var output = this.getOutputs()[i];
+        if (NodeCore.getOutputs(this.properties)) {
+            for (let i = 0, l = NodeCore.getOutputs(this.properties).length; i < l; ++i) {
+                var output = NodeCore.getOutputs(this.properties)[i];
                 this.getConnectionPos(false, i, link_pos);
                 if (Math.isInsideRectangle(
                     x,
@@ -1265,359 +866,7 @@ export default class LGraphNode {
 
         return null;
     }
-    /**
-         * returns the input slot with a given name (used for dynamic slots), -1 if not found
-         * @method findInputSlot
-         * @param {string} name the name of the slot
-         * @param {boolean} returnObj if the obj itself wanted
-         * @return {number_or_object} the slot (-1 if not found)
-         */
-    findInputSlot(name, returnObj) {
-        if (!this.getInputs()) {
-            return -1;
-        }
-        for (var i = 0, l = this.getInputs().length; i < l; ++i) {
-            if (name == this.getInputs()[i].name) {
-                return !returnObj ? i : this.getInputs()[i];
-            }
-        }
-        return -1;
-    }
-    /**
-         * returns the output slot with a given name (used for dynamic slots), -1 if not found
-         * @method findOutputSlot
-         * @param {string} name the name of the slot
-         * @param {boolean} returnObj if the obj itself wanted
-         * @return {number_or_object} the slot (-1 if not found)
-         */
-    findOutputSlot(name, returnObj) {
-        returnObj = returnObj || false;
-        if (!this.getOutputs()) {
-            return -1;
-        }
-        for (var i = 0, l = this.getOutputs().length; i < l; ++i) {
-            if (name == this.getOutputs()[i].name) {
-                return !returnObj ? i : this.getOutputs()[i];
-            }
-        }
-        return -1;
-    }
-    // TODO refactor: USE SINGLE findInput/findOutput functions! :: merge options
-    /**
-         * returns the first free input slot
-         * @method findInputSlotFree
-         * @param {object} options
-         * @return {number_or_object} the slot (-1 if not found)
-         */
-    findInputSlotFree(optsIn) {
-        if (optsIn == null)  optsIn = {};
-        var optsDef = {
-            returnObj: false,
-            typesNotAccepted: []
-        };
-        var opts = Object.assign(optsDef, optsIn);
-        if (!this.getInputs()) {
-            return -1;
-        }
-        for (var i = 0, l = this.getInputs().length; i < l; ++i) {
-            if (this.getInputs()[i].links && this.getInputs()[i].links != null) {
-                continue;
-            }
-            if (opts.typesNotAccepted && opts.typesNotAccepted.includes && opts.typesNotAccepted.includes(this.getInputs()[i].type)) {
-                continue;
-            }
-            return !opts.returnObj ? i : this.getInputs()[i];
-        }
-        return -1;
-    }
-    /**
-         * returns the first output slot free
-         * @method findOutputSlotFree
-         * @param {object} options
-         * @return {number_or_object} the slot (-1 if not found)
-         */
-    findOutputSlotFree(optsIn) {
-        if (optsIn == null)  optsIn = {};
-        var optsDef = {
-            returnObj: false,
-            typesNotAccepted: []
-        };
-        var opts = Object.assign(optsDef, optsIn);
-        if (!this.getOutputs()) {
-            return -1;
-        }
-        for (var i = 0, l = this.getOutputs().length; i < l; ++i) {
-            if (this.getOutputs()[i].links && this.getOutputs()[i].links != null) {
-                continue;
-            }
-            if (opts.typesNotAccepted && opts.typesNotAccepted.includes && opts.typesNotAccepted.includes(this.getOutputs()[i].type)) {
-                continue;
-            }
-            return !opts.returnObj ? i : this.getOutputs()[i];
-        }
-        return -1;
-    }
-    /**
-         * findSlotByType for INPUTS
-         */
-    findInputSlotByType(type, returnObj, preferFreeSlot, doNotUseOccupied) {
-        return this.findSlotByType(true, type, returnObj, preferFreeSlot, doNotUseOccupied);
-    }
-    /**
-         * findSlotByType for OUTPUTS
-         */
-    findOutputSlotByType(type, returnObj, preferFreeSlot, doNotUseOccupied) {
-        return this.findSlotByType(false, type, returnObj, preferFreeSlot, doNotUseOccupied);
-    }
-    /**
-         * returns the output (or input) slot with a given type, -1 if not found
-         * @method findSlotByType
-         * @param {boolean} input uise inputs instead of outputs
-         * @param {string} type the type of the slot
-         * @param {boolean} returnObj if the obj itself wanted
-         * @param {boolean} preferFreeSlot if we want a free slot (if not found, will return the first of the type anyway)
-         * @return {number_or_object} the slot (-1 if not found)
-         */
-    findSlotByType(input, type, returnObj, preferFreeSlot, doNotUseOccupied) {
-        input = input || false;
-        returnObj = returnObj || false;
-        preferFreeSlot = preferFreeSlot || false;
-        doNotUseOccupied = doNotUseOccupied || false;
-        var aSlots = input ? this.getInputs() : this.getOutputs();
-        if (!aSlots) {
-            return -1;
-        }
-        // !! empty string type is considered 0, * !!
-        if (type == "" || type == "*")
-            type = 0;
-        for (var i = 0, l = aSlots.length; i < l; ++i) {
-            var aSource = (type + "").toLowerCase().split(",");
-            var aDest = aSlots[i].type == "0" || aSlots[i].type == "*" ? "0" : aSlots[i].type;
-            aDest = (aDest + "").toLowerCase().split(",");
-            for (let sI = 0; sI < aSource.length; sI++) {
-                for (let dI = 0; dI < aDest.length; dI++) {
-                    if (aSource[sI] == "_event_")
-                        aSource[sI] = window.LiteGraph.EVENT;
-                    if (aDest[sI] == "_event_")
-                        aDest[sI] = window.LiteGraph.EVENT;
-                    if (aSource[sI] == "*")
-                        aSource[sI] = 0;
-                    if (aDest[sI] == "*")
-                        aDest[sI] = 0;
-                    if (aSource[sI] == aDest[dI]) {
-                        if (preferFreeSlot && aSlots[i].links && aSlots[i].links !== null)
-                            continue;
-                        return !returnObj ? i : aSlots[i];
-                    }
-                }
-            }
-        }
-        // if didnt find some, stop checking for free slots
-        if (preferFreeSlot && !doNotUseOccupied) {
-            for (let i = 0, l = aSlots.length; i < l; ++i) {
-                let aSource = (type + "").toLowerCase().split(",");
-                let aDest = aSlots[i].type == "0" || aSlots[i].type == "*" ? "0" : aSlots[i].type;
-                aDest = (aDest + "").toLowerCase().split(",");
-                for (let sI = 0; sI < aSource.length; sI++) {
-                    for (let dI = 0; dI < aDest.length; dI++) {
-                        if (aSource[sI] == "*")
-                            aSource[sI] = 0;
-                        if (aDest[sI] == "*")
-                            aDest[sI] = 0;
-                        if (aSource[sI] == aDest[dI]) {
-                            return !returnObj ? i : aSlots[i];
-                        }
-                    }
-                }
-            }
-        }
-        return -1;
-    }
-
-    getInputs() {
-        if (this.properties) {
-            return Object.values(this.properties).filter(obj => (obj.input == true));
-        } else {
-            return [];
-        }
-    }
-
-    getOutputs() {
-        if (this.properties) {
-            return Object.values(this.properties).filter(obj => (obj.output == true));
-        } else {
-            return [];
-        }
-    }
-
-    /**
-         * connect this node output to the input of another node
-         * @method connect
-         * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
-         * @param {LGraphNode} node the target node
-         * @param {number_or_string} target_slot the input slot of the target node (could be the number of the slot or the string with the name of the slot, or -1 to connect a trigger)
-         * @return {Object} the link_info is created, otherwise null
-         */
-    connect(slot, target_node, target_slot) {
-        if (!this.graph) {
-            //could be connected before adding it to a graph
-            console.log(
-                "Connect: Error, node doesn't belong to any graph. Nodes must be added first to a graph before connecting them."
-            ); //due to link ids being associated with graphs
-            return null;
-        }
-
-        //seek for the output slot
-        if (slot.constructor === String) {
-            slot = this.getOutputByName(slot);
-            if (slot == -1) {
-                if (window.LiteGraph.debug) {
-                    console.log("Connect: Error, no slot:" + slot);
-                }
-                return null;
-            }
-        } else if (!this.getOutputs() || slot >= this.getOutputs().length) {
-            if (window.LiteGraph.debug) {
-                console.log("Connect: Error, slot number not found");
-            }
-            return null;
-        }
-
-
-        if (target_node && target_node.constructor === Number) {
-            target_node = this.graph.getNodeById(target_node);
-        }
-        if (!target_node) {
-            throw "target node is null";
-        }
-
-        //seek for the output slot
-        if (target_slot.constructor === String) {
-            target_slot = target_node.getInputByName(target_slot);
-        } 
-
-        var changed = false;
-
-        var link_info = null;
-
-        // allow target node to change slot
-        if (target_node.onBeforeConnectInput) {
-            // This way node can choose another slot (or make a new one?)
-            target_slot = target_node.onBeforeConnectInput(target_slot); //callback
-        }
-
-        //allows nodes to block connection, callback
-        if (target_node.onConnectInput) {
-            if (target_node.onConnectInput(target_slot, output.type, output, this, slot) === false) {
-                return null;
-            }
-        }
-        if (this.onConnectOutput) { // callback
-            if (this.onConnectOutput(slot, input.type, input, target_node, target_slot) === false) {
-                return null;
-            }
-        }
-
-        this.graph.beforeChange();
-        changed = true;
-
-        //create link class
-        link_info = new LLink(this.graph.getNextID(), "number", this.id,slot.name, target_node.id, target_slot.name);
-
-        //add to graph links list
-        this.graph.links[link_info.id] = link_info;
-
-        if (slot.links == null) slot.links = [];
-        if (target_slot.links == null) target_slot.links = [];
-        slot.links.push(link_info.id);
-        target_slot.links.push(link_info.id);
-        if (this.graph) {
-            this.graph._version++;
-        }
-        if (this.onConnectionsChange) {
-            this.onConnectionsChange(window.LiteGraph.OUTPUT, slot, true, link_info, slot);
-        } //link_info has been created now, so its updated
-        if (target_node.onConnectionsChange) {
-            target_node.onConnectionsChange(window.LiteGraph.INPUT, target_slot, true, link_info,input );
-        }
-        if (this.graph && this.graph.onNodeConnectionChange) {
-            this.graph.onNodeConnectionChange(window.LiteGraph.INPUT, target_node, target_slot, this, slot);
-            this.graph.onNodeConnectionChange(window.LiteGraph.OUTPUT, this, slot, target_node, target_slot );
-        }
-
-        this.setDirtyCanvas(false, true);
-        this.graph.afterChange();
-        this.graph.connectionChange(this, link_info);
-
-        return link_info;
-    }
-    /**
-         * disconnect one output to an specific node
-         * @method disconnectOutput
-         * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
-         * @param {LGraphNode} target_node the target node to which this slot is connected [Optional, if not target_node is specified all nodes will be disconnected]
-         * @return {boolean} if it was disconnected successfully
-         */
-    disconnectOutput(link) {
-        var output = this.getOutputByName(link.origin_slot);
-        if (!output) {
-            return false;
-        }
-
-        var link_id = link.id;
-        if (link_id != null && output?.links) {
-            // Find the index of the value you want to remove
-            let indexToRemove = output.links.indexOf(link_id);
-
-            // Check if the value exists in the array
-            if (indexToRemove !== -1) {
-                // Use splice to remove the value
-                output.links.splice(indexToRemove, 1);
-                console.log(`Removed ${link_id} from the array.`);
-            } else {
-                console.log(`${link_id} not found in the array.`);
-            }
-
-        } //link != null
-
-        this.setDirtyCanvas(false, true);
-        if (this.graph)
-            this.graph.connectionChange(this);
-        return true;
-    }
-    /**
-         * disconnect one input
-         * @method disconnectInput
-         * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
-         * @return {boolean} if it was disconnected successfully
-         */
-    disconnectInput(link) {
-        var input = this.getInputByName(link.target_slot);
-        if (!input) {
-            return false;
-        }
-
-        var link_id = link.id;
-        if (link_id != null) {
-            // Find the index of the value you want to remove
-            let indexToRemove = input.links.indexOf(link_id);
-
-            // Check if the value exists in the array
-            if (indexToRemove !== -1) {
-                // Use splice to remove the value
-                input.links.splice(indexToRemove, 1);
-                console.log(`Removed ${link_id} from the array.`);
-            } else {
-                console.log(`${link_id} not found in the array.`);
-            }
-
-        } //link != null
-
-        this.setDirtyCanvas(false, true);
-        if (this.graph)
-            this.graph.connectionChange(this);
-        return true;
-    }
+    
     //
          // returns the center of a connection point in canvas coords
          // @method getConnectionPos
@@ -1629,16 +878,16 @@ export default class LGraphNode {
     getConnectionPos(is_input, slot_number, out) {
         out = out || new Float32Array(2);
         var num_slots = 0;
-        if (is_input && this.getInputs()) {
-            num_slots = this.getInputs().length;
+        if (is_input && NodeCore.getInputs(this.properties)) {
+            num_slots = NodeCore.getInputs(this.properties).length;
         }
-        if (!is_input && this.getOutputs()) {
-            num_slots = this.getOutputs().length;
+        if (!is_input && NodeCore.getOutputs(this.properties)) {
+            num_slots = NodeCore.getOutputs(this.properties).length;
         }
 
-        if (!is_input && num_slots > slot_number && this.getOutputs()[slot_number].pos) {
-            out[0] = this.pos[0] + this.getOutputs()[slot_number].pos[0];
-            out[1] = this.pos[1] + this.getOutputs()[slot_number].pos[1];
+        if (!is_input && num_slots > slot_number && NodeCore.getOutputs(this.properties)[slot_number].pos) {
+            out[0] = this.pos[0] + NodeCore.getOutputs(this.properties)[slot_number].pos[0];
+            out[1] = this.pos[1] + NodeCore.getOutputs(this.properties)[slot_number].pos[1];
             return out;
         }
 
@@ -1681,79 +930,6 @@ export default class LGraphNode {
             this.pos[1] = gridSize * (Math.round(this.pos[1] / gridSize) + 0.5) - this.size[1] / 2;
         }
     }
-    /* Console output */
-    trace(msg) {
-        if (!this.console) {
-            this.console = [];
-        }
-
-        this.console.push(msg);
-        if (this.console.length > LGraphNode.MAX_CONSOLE) {
-            this.console.shift();
-        }
-
-        if (this.graph.onNodeTrace)
-            this.graph.onNodeTrace(this, msg);
-    }
-    /* Forces to redraw or the main canvas (LGraphNode) or the bg canvas (links) */
-    setDirtyCanvas(dirty_foreground,
-        dirty_background) {
-        if (!this.graph) {
-            return;
-        }
-        this.graph.sendActionToCanvas("setDirty", [
-            dirty_foreground,
-            dirty_background
-        ]);
-    }
-    loadImage(url) {
-        var img = new Image();
-        img.src = window.LiteGraph.node_images_path + url;
-        img.ready = false;
-
-        var that = this;
-        img.onload = function () {
-            this.ready = true;
-            that.setDirtyCanvas(true);
-        };
-        return img;
-    }
-   
-    /* Allows to get onMouseMove and onMouseUp events even if the mouse is out of focus */
-    captureInput(v) {
-        if (!this.graph || !this.graph.list_of_graphcanvas) {
-            return;
-        }
-
-        var list = this.graph.list_of_graphcanvas;
-
-        for (var i = 0; i < list.length; ++i) {
-            var c = list[i];
-            //releasing somebody elses capture?!
-            if (!v && c.node_capturing_input != this) {
-                continue;
-            }
-
-            //change
-            c.node_capturing_input = v ? this : null;
-        }
-    }
-
-    /**
-         * Forces the node to do not move or realign on Z
-         * @method pin
-         **/
-    pin(v) {
-        this.graph._version++;
-
-    }
-    localToScreen(x, y, graphcanvas) {
-        return [
-            (x + this.pos[0]) * graphcanvas.scale + graphcanvas.offset[0],
-            (y + this.pos[1]) * graphcanvas.scale + graphcanvas.offset[1]
-        ];
-    }
-
     setPos(x, y) {
         this.pos[0] = x;
         this.pos[1] = y;

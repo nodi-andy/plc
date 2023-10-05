@@ -1,6 +1,6 @@
 import { LiteGraph } from "./litegraph.js";
 import LGraphNode from "./node.js"
-import LLink from "./link.js"
+import LLink from "./link.mjs"
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
 import NodiBoxB3 from "./nodes/nodi.box/b3.js";
@@ -12,21 +12,21 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 //var gateway = `ws://${window.location.hostname}/ws`;
 var websocket = null;// new WebSocket(gateway);
 var uri = window.location.hostname
-if (window.location.hostname == "localhost") uri += ":8080";
+if (window.location.hostname.includes(".") == false) uri += ":8080";
 const socket = io(uri);
 window.socket = socket;
 
 // Event handler for when the connection is established
 socket.on("connect", () => {
     console.log("Connected to the server!");
-    socket.emit('updateMe');
+    socket.emit('updateMe');!
 
     onOpen();
 });
 
 socket.on("setNodework", (message) => {
     window.graph.configure(message, false);
-    window.graph.start();
+    //window.graph.start();
     window.canvas.dirty_canvas = true;
 });
 
@@ -34,14 +34,14 @@ socket.on("addNode", (message) => {
     let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
     newNode.id = message.id;
     newNode.type = message.type;
-    newNode.pos = message.pos;
-    newNode.setSize(message.size);
+    newNode.widget.pos = message.widget.pos;
+    newNode.widget.setSize(message.widget.size);
     window.graph.add(newNode);
     window.canvas.dirty_canvas = true;
 });
 
 socket.on("addLink", (msg) => {
-    window.graph._nodes_by_id[msg.origin_id].connect(msg.origin_slot, msg.target_id, msg.target_slot);
+    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.id);
     window.canvas.dirty_canvas = true;
 });
 
@@ -63,7 +63,7 @@ socket.on("clean", (message) => {
 
 socket.on("moveNode", (message) => {
     // Handle incoming messages here
-    Object.assign(window.graph._nodes_by_id[message.nodeID], message.newData);
+    Object.assign(window.graph._nodes_by_id[message.nodeID].widget, message.newData);
     window.canvas.dirty_canvas = true;
 });
 
@@ -73,10 +73,23 @@ socket.on("setSize", (message) => {
     window.canvas.dirty_canvas = true;
 });
 
+function mergeObjects(objA, objB) {
+  const mergedObject = { ...objA };
+
+  for (const keyA in objB) {
+    for (const keyB in objB[keyA]) {
+      mergedObject[keyA][keyB] = objB[keyA][keyB];
+    }
+  }
+
+  return mergedObject;
+}
+
 socket.on("updateNode", (message) => {
     // Handle incoming messages here
-    Object.assign(window.graph._nodes_by_id[message.nodeID], message.newData);
+    window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData);
     window.canvas.dirty_canvas = true;
+    window.canvas.dirty_bgcanvas = true;
 });
 
 // Event handler for custom events from the server

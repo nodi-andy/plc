@@ -76,7 +76,7 @@
     // why loading the scripts one by one? 
     // Because the IoT device can not keep more than 10 TCP connections open
     await loadJS("./node.js", false);
-    await loadJS("./link.js", false);
+    await loadJS("./link.mjs", false);
     await loadJS("./view.js", false);
     await loadJS("./litegraph.js", false);
     await loadJS("./nodes/widget/button.js", false);
@@ -117,7 +117,7 @@
       var node = LiteGraph.createNode(name);
       if (node) {
         let view = window.canvas.ds;
-        node.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
+        node.widget.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
       }
       window.socket.emit("addNode", node);
       //window.graph._nodes_by_id[node.id].graph = window.graph;
@@ -202,8 +202,7 @@
 
     if (localStorage.selected == null) localStorage.selected = "nodework_0"
     graph.configure(JSON.parse(localStorage.files)[localStorage.selected])
-    graph.start()
-    canvas.showSearchBox();
+   // graph.start()
 
     window.addEventListener('resize', function () { canvas.resize() })
 
