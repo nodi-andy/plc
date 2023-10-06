@@ -33,6 +33,16 @@ export default class LEDCore extends NodeCore {
             prop.state.outValue = prop.state.value;
             return true;
         }
+
+        if (prop.toggle.inpValue == 1) {
+            if ( prop.state.value == 1) {
+                prop.state.value = 0;
+            } else {
+                prop.state.value = 1;
+            }
+            prop.toggle.inpValue = null;
+            return true;
+        }
         return false;
     }
 }

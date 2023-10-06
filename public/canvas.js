@@ -1459,10 +1459,10 @@ export default class LGraphCanvas {
             if (this.resizing_node) {
                 //convert mouse to node space
                 var desired_size = [e.canvasX - this.resizing_node.widget.pos[0], e.canvasY - this.resizing_node.widget.pos[1]];
-                var min_size = this.resizing_node.computeSize();
+                var min_size = this.resizing_node.widget.computeSize();
                 desired_size[0] = Math.max(min_size[0], desired_size[0]);
                 desired_size[1] = Math.max(min_size[1], desired_size[1]);
-                this.resizing_node.setSize(desired_size);
+                this.resizing_node.widget.setSize(desired_size);
 
                 this.canvas.style.cursor = "se-resize";
                 this.dirty_canvas = true;
@@ -3863,7 +3863,6 @@ export default class LGraphCanvas {
         var x = pos[0] - node.widget.pos[0];
         var y = pos[1] - node.widget.pos[1];
         var width = node.widget.size[0];
-        var that = this;
 
         for (var i = 0; i < node.widgets.length; ++i) {
             var w = node.widgets[i];
@@ -3931,7 +3930,7 @@ export default class LGraphCanvas {
     adjustNodesSize() {
         var nodes = this.graph._nodes;
         for (var i = 0; i < nodes.length; ++i) {
-            nodes[i].setSize(nodes[i].computeSize());
+            nodes[i].widget.setSize(nodes[i].computeSize());
         }
         this.setDirty(true, true);
     }

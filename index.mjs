@@ -3,6 +3,7 @@ import http from 'http';
 import { Server as socketIOServer } from 'socket.io';
 import NodeWork from './public/nodework.mjs';
 import './public/nodes/widget/button_server.mjs';
+import './public/nodes/widget/toggle_server.mjs';
 import './public/nodes/widget/led_server.mjs';
 
 const app = express()
@@ -28,7 +29,7 @@ setInterval(() => {
     }
     try {
       if (c.run(node.properties) == true) {
-        io.emit('updateNode', {nodeID: node.id, newData: node.properties});
+        io.emit('updateNode', {nodeID: node.id, newData: {"properties": node.properties}});
       }
     } catch (e) {
       console.log(e);
@@ -86,7 +87,7 @@ io.on('connection', socket => {
   socket.on('updateNode', msg => {
     socket.broadcast.emit('updateNode', msg);
     if (nodeWorkJSON.nodes[msg.nodeID].cmds == undefined) nodeWorkJSON.nodes[msg.nodeID].cmds = [];
-    nodeWorkJSON.nodes[msg.nodeID].cmds.push(msg.newData);
+    nodeWorkJSON.nodes[msg.nodeID].cmds.push(msg.newData.properties);
     //console.log(nodeWorkJSON);
   });
 
@@ -102,7 +103,7 @@ io.on('connection', socket => {
 
   socket.on('moveNode', msg => {
     socket.broadcast.emit('moveNode', msg);
-    Object.assign(nodeWorkJSON.nodes[msg.nodeID], msg.newData);
+    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.newData;
   });
 
   socket.on('setSize', msg => {
@@ -111,7 +112,7 @@ io.on('connection', socket => {
       console.log("[setSize]: ");
       console.log(msg);
       console.log(nodeWorkJSON.nodes);
-      nodeWorkJSON.nodes[msg.id].size = msg.size;
+      nodeWorkJSON.nodes[msg.id].widget.size = msg.size;
       socket.broadcast.emit('setSize', msg);
     }
   });

@@ -1,37 +1,32 @@
 import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
+import ToggleCore from "./toggle_server.mjs";
 
-export default class WidgetToggle extends LGraphNode{
+export default class WidgetToggle extends ToggleCore{
     static type = "widget/toggle";
     static title = " ";
     static desc = "Toggles between true or false";
     static title_mode = LiteGraph.NO_TITLE;
+
     constructor() {
         super();
-        this.setProperty("state", "number", 1, " ", {input: false, output: false});
-        this.setProperty("press", "number", 1, " ", {input: false, output: false});
-        this.setProperty("release", "number", 0, " ", {input: false, output: false});
-        this.setProperty("out", "number", 0, " ", {input: false, output: true});
-        this.setProperty("in", "number", null, "in", {input: false, output: false});
-        this.setProperty("label", "string", "B1", "label", {input: false, output: false});
-        this.setProperty("port", "number", null, "port", {input: false, output: false});
-        this.setProperty("color", "string",  "#A00", "color", {input: false, output: false});
-        this.properties.out.value = false;
-        this.setSize([64, 64]);
+        this.properties = {}
         this.type = WidgetToggle.type;
-
+        ToggleCore.setup(this.properties);
+        this.widget = new LGraphNode();
+        this.widgets = [this.widget];
     }
 
     onDrawForeground(ctx) {
-        var size = this.size[1] * 0.5;
+        var size = this.widget.size[1] * 0.5;
         var margin = 0.25;
-        var y = this.size[1] * 0.25;
+        var y = this.widget.size[1] * 0.25;
         var w = 0;
         if (this.title.trim().length) {
             ctx.font = this.properties.font || (size * 0.8).toFixed(0) + "px Arial";
             w = ctx.measureText(this.title).width;
         }
-        var x = (this.size[0] - (w + size)) * 0.5;
+        var x = (this.widget.size[0] - (w + size)) * 0.5;
 
         ctx.fillStyle = "#AAA";
         ctx.fillRect(x, y, size, size);
@@ -71,16 +66,11 @@ export default class WidgetToggle extends LGraphNode{
     }
     
     onMouseDown(e, local_pos) {
-        if (local_pos[0] > this.size[0] * 0.25 &&
-            local_pos[1] >  this.size[0] * 0.25 &&
-            local_pos[0] < this.size[0] * 0.75 &&
-            local_pos[1] < this.size[1] * 0.75) {
-            this.graph._version++;
-            this.trigger("e", this.properties.value);
-            this.properties.state.inpValue = !this.properties.state.value
+        if (local_pos[0] > this.widget.size[0] * 0.25 && local_pos[1] > this.widget.size[0] * 0.25 && local_pos[0] < this.widget.size[0] * 0.75 && local_pos[1] < this.widget.size[1] * 0.75) {
+            window.nodes.update(this.id, {"state": {"inpValue" : 1}});
             return true;
         }
     }
 }
 
-LiteGraph.registerNodeType(WidgetToggle.type, WidgetToggle);
+LiteGraph.registerNodeType(WidgetToggle.type, WidgetToggle); 

@@ -12,8 +12,6 @@ export default class NodeCore {
         this.graph = null;
         this.update = false;
         this.pos = [0, 0];
-
-        this.id = -1; //not know till not added
         this.properties = {}; //for the values
     }
     /**

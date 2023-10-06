@@ -7,12 +7,9 @@ export default class LGraphNode extends NodeCore {
     constructor(title) {
         super();
         this.title = title;
-        this.setSize([window.LiteGraph.NODE_WIDTH, 60]);
+        this.setSize([window.LiteGraph.NODE_WIDTH, 64]);
         this.graph = null;
         this.update = false;
-        this.pos = [0, 0];
-
-        this.id = -1; //not know till not added
         this.properties = {}; //for the values
     }
     /**
@@ -452,7 +449,7 @@ export default class LGraphNode extends NodeCore {
         if (window.LiteGraph.auto_load_slot_types)
             window.LiteGraph.registerNodeAndSlotType(this, type, true);
 
-        this.setSize(this.computeSize());
+        this.setSize(this.widget.computeSize());
         this.setDirtyCanvas(true, true);
         return output;
     }
@@ -484,7 +481,7 @@ export default class LGraphNode extends NodeCore {
 
         }
 
-        this.setSize(this.computeSize());
+        this.setSize(this.widget.computeSize());
         this.setDirtyCanvas(true, true);
     }
     /**
@@ -509,7 +506,7 @@ export default class LGraphNode extends NodeCore {
             }
         }
 
-        this.setSize(this.computeSize());
+        this.setSize(this.widget.computeSize());
         if (this.onOutputRemoved) {
             this.onOutputRemoved(slot);
         }
@@ -550,7 +547,7 @@ export default class LGraphNode extends NodeCore {
         var input = { name: name, type: type, link: null, label: label };
 
         props[name] = input;
-        this.setSize(this.computeSize());
+        this.setSize(this.widget.computeSize());
 
         this.setDirtyCanvas(true, true);
         return input;
@@ -593,7 +590,7 @@ export default class LGraphNode extends NodeCore {
             }
             link.target_slot -= 1;
         }
-        this.setSize(this.computeSize());
+        this.setSize(this.widget.computeSize());
         if (this.onInputRemoved) {
             this.onInputRemoved(slot, slot_info[0]);
         }
@@ -773,7 +770,7 @@ export default class LGraphNode extends NodeCore {
             throw "window.LiteGraph addWidget('combo',...) requires to pass values in options: { values:['red','blue'] }";
         }
         this.widgets.push(w);
-        this.setSize(this.computeSize());
+        this.setSize(this.widget.computeSize());
         return w;
     }
     addCustomWidget(custom_widget) {

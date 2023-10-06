@@ -170,7 +170,7 @@
     
     window.nodes.update = (id, changedNodeData) => {
       if (window.socket) {
-        window.socket.emit("updateNode", {"nodeID":id, "newData": changedNodeData});
+        window.socket.emit("updateNode", {"nodeID":id, "newData": {"properties": changedNodeData}});
       }
     }
 

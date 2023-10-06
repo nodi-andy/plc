@@ -423,8 +423,6 @@ export var LiteGraph = (global.LiteGraph = {
             return null;
         }
 
-        var prototype = base_class.prototype || base_class;
-
         title = title || base_class.title || type;
 
         var node = null;
@@ -451,7 +449,10 @@ export var LiteGraph = (global.LiteGraph = {
         node.widget.setSize(node.widget.computeSize());
         node.widget.pos = LiteGraph.DEFAULT_POSITION.concat();
         node.type = type;
-
+        if (options) {
+            node.id = options.id;
+            node.widget.id = options.id;
+        }
         //extra options
         if (options?.properties) {
             for (var i in options.properties) {
@@ -1081,39 +1082,21 @@ class LGraph {
 
 
         //nodes
-        if (node.id != -1 && this._nodes_by_id[node.id] != null) {
+        if (node.id == null || (node.id != -1 && this._nodes_by_id[node.id] != null)) {
             console.warn(
                 "LiteGraph: there is already a node with this ID, changing it"
             );
             node.id = this.getNextID();
         }
 
-        if (this._nodes.length >= LiteGraph.MAX_NUMBER_OF_NODES) {
-            throw "LiteGraph: max number of nodes in a graph reached";
-        }
-
-        //give him an id
-        if (node.id == null || node.id == -1) {
-            node.id = this.getNextID();
-        }
-
         node.graph = this;
-        this._version++;
-
         this._nodes.push(node);
         this._nodes_by_id[node.id] = node;
-
-        if (node.onAdded) {
-            node.onAdded(this);
-        }
 
         if (this.config.align_to_grid) {
             node.alignToGrid();
         }
 
-        if (this.onNodeAdded) {
-            this.onNodeAdded(node);
-        }
 
         this.setDirtyCanvas(true);
         this.change();
@@ -1168,7 +1151,6 @@ class LGraph {
             }
         }
 
-        //node.id = -1; //why?
         //callback
         if (node.onRemoved) {
             node.onRemoved();
@@ -1549,14 +1531,15 @@ class LGraph {
                 }
 
                 node.id = n_info.id; //id it or it will create a new id
+                node.widget.id = n_info.id;
                 this.add(node, true); //add before configure, otherwise configure cannot create links
             }
 
             //configure nodes afterwards so they can reach each other
-            for (var i = 0, l = nodes.length; i < l; ++i) {
-                var n_info = nodes[i];
+            for (i = 0, l = nodes.length; i < l; ++i) {
+                n_info = nodes[i];
                 if (!n_info) continue;
-                var node = this.getNodeById(n_info.id);
+                node = this.getNodeById(n_info.id);
                 if (node) {
                     node.configure(n_info);
                 }

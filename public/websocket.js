@@ -33,6 +33,7 @@ socket.on("setNodework", (message) => {
 socket.on("addNode", (message) => {
     let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
     newNode.id = message.id;
+    newNode.widget.id = message.id;
     newNode.type = message.type;
     newNode.widget.pos = message.widget.pos;
     newNode.widget.setSize(message.widget.size);
@@ -69,7 +70,7 @@ socket.on("moveNode", (message) => {
 
 socket.on("setSize", (message) => {
     // Handle incoming messages here
-    window.graph._nodes_by_id[message.id].setSize(message.size, false);
+    window.graph._nodes_by_id[message.id].widget.setSize(message.size, false);
     window.canvas.dirty_canvas = true;
 });
 
@@ -87,7 +88,7 @@ function mergeObjects(objA, objB) {
 
 socket.on("updateNode", (message) => {
     // Handle incoming messages here
-    window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData);
+    window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData.properties);
     window.canvas.dirty_canvas = true;
     window.canvas.dirty_bgcanvas = true;
 });
