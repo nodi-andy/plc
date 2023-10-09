@@ -107,8 +107,6 @@ export default class LGraphNode extends NodeCore {
         var o = {
             id: this.id,
             type: this.type,
-            pos: this.pos,
-            size: this.size,
             order: this.order,
         };
 

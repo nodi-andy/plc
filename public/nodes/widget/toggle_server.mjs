@@ -30,7 +30,7 @@ export default class ToggleCore extends NodeCore {
             }
         }
 
-        if (prop.state?.inpValue == 1) {
+        if (prop.state && prop.state.inpValue == 1) {
             if (prop.state.value) {
                 prop.state.value = 0;
                 prop.state.outValue = prop.release.value;

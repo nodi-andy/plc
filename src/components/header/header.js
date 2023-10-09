@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate  } from 'react-router-dom'
 
 import AppBar from '@mui/material/AppBar';
-import {Box, Fab} from '@mui/material';
+import {Box} from '@mui/material';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
@@ -10,21 +10,16 @@ import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
-import SendAndArchiveOutlinedIcon from '@mui/icons-material/SendAndArchiveOutlined';
-import WifiIcon from '@mui/icons-material/Wifi';
 
     
-export default function Header({ setOpenDrawer, showConnection } ) {
+export default function Header({ setOpenDrawer } ) {
     const history = useNavigate ()
     const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
-  const [burnClickable, setBurnClickable] = useState(false)
 
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-  window.showBurn = (v) => {
-    setBurnClickable(v);
-  };
+
 
   const handleMobileMenuClose = () => {
     setMobileMoreAnchorEl(null);
@@ -109,39 +104,13 @@ export default function Header({ setOpenDrawer, showConnection } ) {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
-        <Toolbar>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="open drawer"
-            sx={{ mr: 2 }}
-            onClick={handleHamburgerMenuOpen}
-            >
+        <Toolbar variant="dense">
+          <IconButton size="large" edge="start" color="inherit" aria-label="open drawer" sx={{ mr: 2 }} onClick={handleHamburgerMenuOpen}>
             <MenuIcon />
           </IconButton>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ display: { xs: 'none', sm: 'block' } }}
-          >
+          <Typography variant="h6" noWrap component="div" sx={{ display: { xs: 'none', sm: 'block' } }}>
             Noditron
           </Typography>
-
-          <Box sx={{ flexGrow: 1 }} />
-          {false &&  <Fab variant="extended" onClick={()=>showConnection(true)}>
-        <WifiIcon />
-      </Fab> }
-      <Fab
-        color="error"
-        variant="extended"
-        disabled = {!burnClickable}
-        onClick={() => {
-          window.nodes.upload();
-        }}>
-        <SendAndArchiveOutlinedIcon />
-      </Fab>
         </Toolbar>
       </AppBar>
       {renderMobileMenu}

@@ -2,6 +2,7 @@ import { NodiEnums } from "../../enums.mjs";
 import LGraphCanvas from "./canvas.js"
 import LLink from "./link.mjs"
 import LGraphNode from "./node.js"
+import NodeCore from "./node_core.mjs";
 /**
  * The Global Scope. It contains all the registered node classes.
  *
@@ -1075,11 +1076,8 @@ class LGraph {
          * @method add
          * @param {LGraphNode} node the instance of the node
          */
-    add(node, skip_compute_order) {
-        if (!node) {
-            return;
-        }
-
+    add(node) {
+        if (!node) return;
 
         //nodes
         if (node.id == null || (node.id != -1 && this._nodes_by_id[node.id] != null)) {
@@ -1103,6 +1101,7 @@ class LGraph {
 
         return node; //to chain actions
     }
+
     removeNodeByID(nodeID) {
         this.remove(this._nodes_by_id[nodeID]);
     }
@@ -1126,22 +1125,20 @@ class LGraph {
 
         var i, links, link;
         //disconnect inputs
-        if (node.getInputs()) {
-            for (i = 0; i < node.getInputs().length; i++) {
-                links = node.getInputs()[i].links;
-                if (links) {
-                        for (link of links) {
-                        node.disconnectInput(link);
-                        window.socket.emit("remLink", {"id": link.id});
-                        this.removeLink(link);
-                    }
+        for (i = 0; i < NodeCore.getInputs(this.properties).length; i++) {
+            links = NodeCore.getInputs(this.properties)[i].links;
+            if (links) {
+                    for (link of links) {
+                    node.disconnectInput(link);
+                    window.socket.emit("remLink", {"id": link.id});
+                    this.removeLink(link);
                 }
             }
         }
 
         //disconnect outputs
-        for (i = 0; i < node.getOutputs().length; i++) {
-            links = node.getOutputs()[i].links;
+        for (i = 0; i < NodeCore.getOutputs(this.properties).length; i++) {
+            links = NodeCore.getOutputs(this.properties)[i].links;
             if (links) {
                 for (link of links) {
                     node.disconnectOutput(link);
@@ -1195,9 +1192,7 @@ class LGraph {
          * @param {Number} id
          */
     getNodeById(id) {
-        if (id == null) {
-            return null;
-        }
+        if (id == null) return null;
         return this._nodes_by_id[id];
     }
     /**
@@ -1223,7 +1218,7 @@ class LGraph {
          * @return {Array} a list with all the nodes of this type
          */
     findNodesByType(type, result) {
-        var type = type.toLowerCase();
+        type = type.toLowerCase();
         result = result || [];
         result.length = 0;
         for (var i = 0, l = this._nodes.length; i < l; ++i) {
@@ -1353,7 +1348,8 @@ class LGraph {
         }
         this.sendActionToCanvas("onAfterChange", this);
     }
-    connectionChange(node, link_info) {
+    
+    connectionChange(node) {
         if (this.onConnectionChange) {
             this.onConnectionChange(node);
         }

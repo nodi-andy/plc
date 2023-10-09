@@ -15,7 +15,7 @@ export default class WidgetButton extends ButtonCore {
 
     onDrawForeground(ctx) {
         
-        if (this.properties.state.inpValue == 1) {
+        if (this.properties.state.value == 1) {
             this.margin = 16;
         } else {
             this.margin = 14;
@@ -29,7 +29,7 @@ export default class WidgetButton extends ButtonCore {
         if (this.properties.label || this.properties.label.value === 0) {
             var font_size = this.properties.font_size || 30;
             ctx.textAlign = "center";
-            ctx.fillStyle = this.properties.state.inpValue ? "black" : "white";
+            ctx.fillStyle = this.properties.state.value ? "black" : "white";
             ctx.font = font_size + "px Arial";
             ctx.fillText(this.properties.label.value, this.widget.size[0] * 0.5, this.widget.size[1] * 0.5 + font_size * 0.3);
             ctx.textAlign = "left";

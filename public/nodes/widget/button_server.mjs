@@ -29,16 +29,19 @@ export default class ButtonCore extends NodeCore {
                 prop[input].inpValue = null;
             }
         }
-        if (prop.state?.inpValue == 0 && prop.state?.value == 1) {
+        if (prop.state && prop.state.inpValue == 0 && prop.state.value == 1) {
             prop.state.outValue = prop.release.value;
             ret = true;
         } 
-        if (prop.state?.inpValue == 1 && prop.state?.value == 0) {
+        if (prop.state && prop.state.inpValue == 1 && prop.state.value == 0) {
             prop.state.outValue = prop.press.value;
             ret = true;
         }
         
-        if (prop.state) prop.state.value = prop.state.inpValue;
+        if (prop.state && prop.state.inpValue != null) {
+             prop.state.value = prop.state.inpValue;
+             prop.state.inpValue = null;
+        }
         return ret;
     }
 

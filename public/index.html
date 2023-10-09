@@ -125,16 +125,13 @@
     }
 
     window.nodes.remNode = () => {
-        var graph = window.graph;
 
         var graphcanvas = LGraphCanvas.active_canvas;
         for (var node in graphcanvas.selected_nodes) {
-            // graph.remove(graphcanvas.selected_nodes[i]);
             window.socket.emit("remNode", {"id" : graphcanvas.selected_nodes[node].id});
         }
         
-        if (canvas.selectedLink) window.socket.emit("remLink", {"id": canvas.selectedLink});
-          
+        if (canvas.selectedLink != null) window.socket.emit("remLink", {"id": canvas.selectedLink});
     }
 
     window.nodes.editNode = () => {

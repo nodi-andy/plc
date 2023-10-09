@@ -5,6 +5,7 @@ import NodeWork from './public/nodework.mjs';
 import './public/nodes/widget/button_server.mjs';
 import './public/nodes/widget/toggle_server.mjs';
 import './public/nodes/widget/led_server.mjs';
+import './public/nodes/widget/number_server.mjs';
 
 const app = express()
 const server = http.createServer(app);
@@ -21,9 +22,9 @@ var nodeWorkJSON = new NodeWork();
 setInterval(() => {
   nodeWorkJSON.nodes.forEach(node => {
     let c = NodeWork.getType(node.type);
-    console.log(node?.properties?.state?.inpValue)
+    //if (node?.properties?.state?.inpValue) console.log(node?.properties?.state?.inpValue)
     //console.log(c)
-    if (node.cmds?.length) {
+    if (node.cmds && node.cmds.length) {
       mergeObjects(node.properties, node.cmds[0])
       node.cmds.shift();
     }
@@ -40,10 +41,13 @@ setInterval(() => {
     let dataFromNode = nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue;
     if(dataFromNode !== null) {
       nodeWorkJSON.nodes[link.to].properties[link.toSlot].inpValue = dataFromNode;
-      nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue = null;
     }
   });
-}, "100");
+
+  nodeWorkJSON.links.forEach(link => {
+    nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue = null;
+  });
+}, "20");
 
 function mergeObjects(objA, objB) {
   const mergedObject = { ...objA };
@@ -72,6 +76,7 @@ io.on('connection', socket => {
   socket.on('addNode', msg => {
     //console.log("[addNode]");
     //console.log(msg);
+    if (!msg) return;
     msg.id = nodeWorkJSON.nodes.length;
     nodeWorkJSON.nodes[msg.id] = msg;
     io.emit('addNode', msg);
@@ -81,11 +86,12 @@ io.on('connection', socket => {
     //console.log("[remNode]");
     //console.log(msg);
     io.emit('remNode', msg.id);
-    nodeWorkJSON.nodes[msg.id] = msg;
+    nodeWorkJSON.nodes = nodeWorkJSON.nodes.splice(msg.id, 1);
   });
 
   socket.on('updateNode', msg => {
     socket.broadcast.emit('updateNode', msg);
+    if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID].cmds == undefined) nodeWorkJSON.nodes[msg.nodeID].cmds = [];
     nodeWorkJSON.nodes[msg.nodeID].cmds.push(msg.newData.properties);
     //console.log(nodeWorkJSON);
@@ -103,7 +109,10 @@ io.on('connection', socket => {
 
   socket.on('moveNode', msg => {
     socket.broadcast.emit('moveNode', msg);
-    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.newData;
+    if (msg.nodeID) return;
+    if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
+    if (nodeWorkJSON.nodes[msg.nodeID].widget == null) return;
+    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.newData.pos;
   });
 
   socket.on('setSize', msg => {

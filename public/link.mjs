@@ -181,8 +181,8 @@ export default class LLink {
                 let originType = "";
                 let targetType = "";
                 if (link) {
-                    originType = canvas.graph._nodes_by_id[link.target_id]?.constructor.type;
-                    targetType = canvas.graph._nodes_by_id[link.origin_id]?.constructor.type;
+                    originType = canvas.graph._nodes_by_id[link.target_id].constructor.type;
+                    targetType = canvas.graph._nodes_by_id[link.origin_id].constructor.type;
                 }
                 if (targetType != "control/junction") {
                     if (start_dir == NodiEnums.RIGHT) {

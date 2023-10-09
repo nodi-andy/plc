@@ -1,30 +1,32 @@
 import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
+import NumberCore from "./number_server.mjs";
 
-export default class WidgetNumber extends LGraphNode {
+export default class WidgetNumber extends NumberCore {
     static title = "Number";
     static desc = "Widget to select number value";
     static title_mode = LiteGraph.NO_TITLE;
-    static type = "widget/number";
     static pixels_threshold = 10;
     static markers_color = "#666";
 
     constructor() {
-        super();
-        this.setProperty("value", "number", 0, " ", {input: false, output: false});
-        this.setProperty("read", "number", 0, "read", {input: false, output: false});
-        this.setSize([64, 64]);
-        this.old_y = -1;
-        this._remainder = 0;
-        this._precision = 0;
-        this.mouse_captured = false;
-        this.type = WidgetNumber.type;
 
+        super();
+        this.properties = {}
+        NumberCore.setup(this.properties);
+        this.type = NumberCore.type;
+
+        this.widget = new LGraphNode();
+        this.widgets = [this.widget];
+        this.widgets.old_y = -1;
+        this.widget._remainder = 0;
+        this.widget._precision = 0;
+        this.widget.mouse_captured = false;
     }
 
     onDrawForeground(ctx) {
-        var x = this.size[0] * 0.5;
-        var h = this.size[1];
+        var x = this.widget.size[0] * 0.5;
+        var h = this.widget.size[1];
         if (h > 30) {
             ctx.font = (h * 0.3).toFixed(1) + "px Arial";
             ctx.fillStyle = WidgetNumber.markers_color;
@@ -82,7 +84,7 @@ export default class WidgetNumber extends LGraphNode {
 
     onPropertyChanged(name, value) {
         var t = (1 + "").split(".");
-        this._precision = t.length > 1 ? t[1].length : 0;
+        this.widget._precision = t.length > 1 ? t[1].length : 0;
         this.updateView = true;
         this.update = true;
     }
@@ -91,10 +93,8 @@ export default class WidgetNumber extends LGraphNode {
         if (this.is_selected !== true) {
             return false
         } else {
-            this.old_y = e.canvasY;
-            this.captureInput(true);
-            this.mouse_captured = true;
-            this.setDirtyCanvas(true);
+            this.widget.old_y = e.canvasY;
+            this.widget.mouse_captured = true;
             return true;
         }
     }
@@ -124,23 +124,20 @@ export default class WidgetNumber extends LGraphNode {
 
     onMouseUp(e, pos) {
         if (e.click_time < 200) {
-            var steps = pos[1] > this.size[1] * 0.5 ? -1 : 1;
+            var steps = pos[1] > this.widget.size[1] * 0.5 ? -1 : 1;
             this.setValue( Math.clamp(this.properties.value.value + steps * 1));
             this.graph._version++;
-            this.setDirtyCanvas(true);
         }
 
-        if (this.mouse_captured) {
-            this.mouse_captured = false;
-            this.captureInput(false);
+        if (this.widget.mouse_captured) {
+            this.widget.mouse_captured = false;
         }
-        this.setDirtyCanvas(true);
 
     }
 
     updateProp(name, val) {
         this.properties[name].value = val;
-        window.nodes.update(this.id, {"properties": this.properties});
+        window.nodes.update(this.id, this.properties);
     }
 
     setValue(val) {
@@ -150,6 +147,5 @@ export default class WidgetNumber extends LGraphNode {
         this.properties.value.outValue = this.properties.value.value;
     }
 }
-
 
 LiteGraph.registerNodeType(WidgetNumber.type, WidgetNumber);

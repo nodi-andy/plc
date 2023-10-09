@@ -9,9 +9,7 @@ import LLink from "./link.mjs";
 export default class NodeCore {
     constructor(title) {
         this.title = title;
-        this.graph = null;
         this.update = false;
-        this.pos = [0, 0];
         this.properties = {}; //for the values
     }
     /**
@@ -209,7 +207,6 @@ export default class NodeCore {
         properties[name] = {}
         if (value === properties[name])
             return;
-        var prev_value = properties[name];
         var prop = properties[name];
         prop.name = name;
         prop.value = value;
@@ -221,27 +218,6 @@ export default class NodeCore {
                 properties[name][i] = extra_info[i];
             }
         }
-        /*if (this.onPropertyChanged) {
-            if (this.onPropertyChanged(name, value, prev_value) === false) //abort change
-                properties[name] = prev_value;
-        }
-        if (prop.input) {
-            this.addInput(name, type, value, label, extra_info)
-        }
-        if (prop.output) {
-            this.addOutput(name, type, extra_info, label )
-        }
-        if (this.widgets) //widgets could be linked to properties
-            for (i = 0; i < this.widgets.length; ++i) {
-                var w = this.widgets[i];
-                if (!w)
-                    continue;
-                if (w.options.property == name) {
-                    w.value = value;
-                    break;
-                }
-            }
-            */
     }
     
     // Execution *************************
@@ -278,7 +254,7 @@ export default class NodeCore {
          * @return {*} data or if it is not connected returns undefined
          */
     getInputData(slot, force_update) {
-        return NodeCore.getInputs(this.properties)[slot]?.value;
+        return NodeCore.getInputs(this.properties)[slot].value;
     }
 
     /**
@@ -303,7 +279,7 @@ export default class NodeCore {
          * @return {boolean}
          */
     isInputConnected(slot) {
-        return slot < NodeCore.getInputs(this.properties).length && NodeCore.getInputs(this.properties)[slot]?.links.length > 0;
+        return slot < NodeCore.getInputs(this.properties).length && NodeCore.getInputs(this.properties)[slot].links.length > 0;
     }
 
     /**
@@ -837,7 +813,7 @@ export default class NodeCore {
         }
 
 
-        if (target_node?.constructor === Number) {
+        if (target_node && target_node.constructor === Number) {
             target_node = this.graph.getNodeById(target_node);
         }
         if (!target_node) {
@@ -901,7 +877,7 @@ export default class NodeCore {
         }
 
         var link_id = link.id;
-        if (link_id != null && output?.links) {
+        if (link_id != null && output && output.links) {
             // Find the index of the value you want to remove
             let indexToRemove = output.links.indexOf(link_id);
 

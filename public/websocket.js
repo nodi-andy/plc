@@ -138,13 +138,11 @@ function onOpen(event) {
     LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
 
     window.updateNodeList();
-    window.showBurn(true);
     console.log('Connection opened');
 }
 
 function onClose(event) {
     console.log('Connection closed');
-    if (window.showBurn) window.showBurn(false);
     setTimeout(initWebSocket, 2000);
 }
 

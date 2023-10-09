@@ -1639,7 +1639,7 @@ export default class LGraphCanvas {
                 this.dragging_canvas = false;
 
                 if (this.node_over && this.node_over.onMouseUp) {
-                    this.node_over.onMouseUp(e, [e.canvasX - this.node_over.pos[0], e.canvasY - this.node_over.pos[1]], this);
+                    this.node_over.onMouseUp(e, [e.canvasX - this.node_over.widget.pos[0], e.canvasY - this.node_over.widget.pos[1]], this);
                 }
                 if (this.node_capturing_input &&
                     this.node_capturing_input.onMouseUp) {
@@ -1726,38 +1726,18 @@ export default class LGraphCanvas {
     */
     isOverNodeInput(node, canvasx, canvasy, slot_pos) {
 
-            for (var i = 0, l = NodeCore.getInputs(node.properties).length; i < l; ++i) {
-                var input = NodeCore.getInputs(node.properties)[i];
-                var link_pos = node.widget.getConnectionPos(true, i);
-                var is_inside = false;
-                if (node.horizontal) {
-                    is_inside = Math.isInsideRectangle(
-                        canvasx,
-                        canvasy,
-                        link_pos[0] - 5,
-                        link_pos[1] - 10,
-                        10,
-                        20
-                    );
-                } else {
-                    is_inside = Math.isInsideRectangle(
-                        canvasx,
-                        canvasy,
-                        link_pos[0] - 10,
-                        link_pos[1] - 5,
-                        40,
-                        10
-                    );
+        for (var i = 0, l = NodeCore.getInputs(node.properties).length; i < l; ++i) {
+            var link_pos = node.widget.getConnectionPos(true, i);
+            var is_inside = Math.isInsideRectangle(canvasx, canvasy, link_pos[0] - 10, link_pos[1] - 5, 40, 10 );
+            if (is_inside) {
+                if (slot_pos) {
+                    slot_pos[0] = link_pos[0];
+                    slot_pos[1] = link_pos[1];
                 }
-                if (is_inside) {
-                    if (slot_pos) {
-                        slot_pos[0] = link_pos[0];
-                        slot_pos[1] = link_pos[1];
-                    }
-                    return i;
-                }
+                return i;
             }
-        return -1;
+        }
+        return null;
     }
     /**
          * returns the INDEX if a position (in graph space) is on top of a node output slot
@@ -1766,28 +1746,9 @@ export default class LGraphCanvas {
     isOverNodeOutput(node, canvasx, canvasy, slot_pos) {
 
         for (var i = 0, l = NodeCore.getOutputs(node.properties).length; i < l; ++i) {
-            var output = NodeCore.getOutputs(node.properties)[i];
             var link_pos = node.widget.getConnectionPos(false, i);
             var is_inside = false;
-            if (node.horizontal) {
-                is_inside = Math.isInsideRectangle(
-                    canvasx,
-                    canvasy,
-                    link_pos[0] - 5,
-                    link_pos[1] - 10,
-                    10,
-                    20
-                );
-            } else {
-                is_inside = Math.isInsideRectangle(
-                    canvasx,
-                    canvasy,
-                    link_pos[0] - 10,
-                    link_pos[1] - 5,
-                    40,
-                    10
-                );
-            }
+            is_inside = Math.isInsideRectangle(canvasx, canvasy, link_pos[0] - 10, link_pos[1] - 5, 40, 10);
             if (is_inside) {
                 if (slot_pos) {
                     slot_pos[0] = link_pos[0];
@@ -2102,14 +2063,6 @@ export default class LGraphCanvas {
         }
     }
     processNodeDblClicked(n) {
-        if (this.onShowNodePanel) {
-            this.onShowNodePanel(n);
-        }
-
-        else {
-            this.showShowNodePanel(n);
-        }
-
         if (this.onNodeDblClicked) {
             this.onNodeDblClicked(n);
         }

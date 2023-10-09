@@ -21,7 +21,6 @@ class EventCounter extends WidgetNumber{
     }
 
     onMouseDown(e, pos) {
-        this.captureInput(true);
         this.setDirtyCanvas(true);
         return false;
     }
@@ -29,14 +28,13 @@ class EventCounter extends WidgetNumber{
     onMouseUp(e, pos) {
         if (this.mouse_captured) {
             this.mouse_captured = false;
-            this.captureInput(false);
         }
         this.setDirtyCanvas(true);
     }
 
     updateProp(name, val) {
         this.properties[name].value = val;
-        window.nodes.update(this.id, {"properties": this.properties});
+        window.nodes.update(this.id, this.properties);
     }
 
     onExecute(update) {

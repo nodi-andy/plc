@@ -44,7 +44,7 @@ export default class WidgetToggle extends ToggleCore{
 
     updateProp(name, val) {
         this.properties[name].value = val;
-        window.nodes.update(this.id, {"properties": this.properties});
+        window.nodes.update(this.id, this.properties);
     }
 
     onExecute() {
