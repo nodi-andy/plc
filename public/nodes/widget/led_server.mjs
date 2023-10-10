@@ -59,4 +59,4 @@ export default class LEDCore extends NodeCore {
     }
 }
 
-NodeWork.registerType(LEDCore.type, LEDCore)
+NodeWork.registerType(LEDCore)

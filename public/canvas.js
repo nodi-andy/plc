@@ -2304,11 +2304,6 @@ export default class LGraphCanvas {
             var n = nodes[i];
             if (n) {
 
-                //skip rendering nodes in live mode
-                if (!n.onDrawBackground && !n.onDrawForeground) {
-                    continue;
-                }
-
                 if (!Math.overlapBounding(this.visible_area, n.widget.getBounding(temp))) {
                     continue;
                 } //out of the visible area
@@ -3079,13 +3074,11 @@ export default class LGraphCanvas {
         ctx.strokeStyle = fgcolor;
         ctx.fillStyle = bgcolor;
 
-        var title_height = LiteGraph.NODE_TITLE_HEIGHT;
         var low_quality = this.ds.scale < 0.5;
-        var title = String(node.widget.getTitle());
+        var title = String(node.title);
         //render node area depending on shape
         var shape = node._shape || node.constructor.shape || LiteGraph.ROUND_SHAPE;
 
-        var title_mode = node.constructor.title_mode;
 
 
         var area = tmp_area;
@@ -3094,7 +3087,6 @@ export default class LGraphCanvas {
         area[2] = size[0]; //w
         area[3] = size[1]; //h
 
-        var old_alpha = ctx.globalAlpha;
 
         //full node shape
 
@@ -3127,164 +3119,18 @@ export default class LGraphCanvas {
             node.onDrawBackground(ctx, this, this.canvas, this.graph_mouse);
         }
 
-        //title bg (remember, it is rendered ABOVE the node)
-        if ( title_mode == LiteGraph.TRANSPARENT_TITLE) {
-            if (title_mode != LiteGraph.TRANSPARENT_TITLE &&
-                (node.constructor.title_color || this.render_title_colored)) {
-                var title_color = node.constructor.title_color || fgcolor;
 
-
-                //* gradient test
-                if (this.use_gradients) {
-                    var grad = LGraphCanvas.gradients[title_color];
-                    if (!grad) {
-                        grad = LGraphCanvas.gradients[title_color] = ctx.createLinearGradient(0, 0, 400, 0);
-                        grad.addColorStop(0, title_color); // TODO refactor: validate color !! prevent DOMException
-                        grad.addColorStop(1, "#000");
-                    }
-                    ctx.fillStyle = grad;
-                } else {
-                    ctx.fillStyle = title_color;
-                }
-
-                //ctx.globalAlpha = 0.5 * old_alpha;
-                ctx.beginPath();
-                if (shape == LiteGraph.BOX_SHAPE || low_quality) {
-                    ctx.rect(0, 0, size[0] + 1, 0);
-                } else if (shape == LiteGraph.ROUND_SHAPE || shape == LiteGraph.CARD_SHAPE) {
-                    ctx.roundRect(
-                        0,
-                        0,
-                        size[0] + 1,
-                        0,
-                        [this.round_radius, this.round_radius, 0, 0]
-                    );
-                }
-                ctx.fill();
-                ctx.shadowColor = "transparent";
-            }
-
-            var colState = false;
-            if (LiteGraph.node_box_coloured_by_mode) {
-                if (LiteGraph.NODE_MODES_COLORS[node.mode]) {
-                    colState = LiteGraph.NODE_MODES_COLORS[node.mode];
-                }
-            }
-            if (LiteGraph.node_box_coloured_when_on) {
-                colState = node.action_triggered ? "#FFF" : (node.execute_triggered ? "#AAA" : colState);
-            }
-
-            //title box
-            var box_size = 10;
-            if (node.onDrawTitleBox) {
-                node.onDrawTitleBox(ctx, title_height, size, this.ds.scale);
-            } else if (shape == LiteGraph.ROUND_SHAPE ||
-                shape == LiteGraph.CIRCLE_SHAPE ||
-                shape == LiteGraph.CARD_SHAPE) {
-                if (low_quality) {
-                    ctx.fillStyle = "black";
-                    ctx.beginPath();
-                    ctx.arc(
-                        title_height * 0.5,
-                        title_height * -0.5,
-                        box_size * 0.5 + 1,
-                        0,
-                        Math.PI * 2
-                    );
-                    ctx.fill();
-                }
-
-                ctx.fillStyle = node.boxcolor || colState || LiteGraph.NODE_DEFAULT_BOXCOLOR;
-                if (low_quality)
-                    ctx.fillRect(title_height * 0.5 - box_size * 0.5, title_height * -0.5 - box_size * 0.5, box_size, box_size);
-
-                else {
-                    ctx.beginPath();
-                    ctx.arc(
-                        title_height * 0.5,
-                        title_height * -0.5,
-                        box_size * 0.5,
-                        0,
-                        Math.PI * 2
-                    );
-                    ctx.fill();
-                }
-            } else {
-                if (low_quality) {
-                    ctx.fillStyle = "black";
-                    ctx.fillRect(
-                        (title_height - box_size) * 0.5 - 1,
-                        (title_height + box_size) * -0.5 - 1,
-                        box_size + 2,
-                        box_size + 2
-                    );
-                }
-                ctx.fillStyle = node.boxcolor || colState || LiteGraph.NODE_DEFAULT_BOXCOLOR;
-                ctx.fillRect(
-                    (title_height - box_size) * 0.5,
-                    (title_height + box_size) * -0.5,
-                    box_size,
-                    box_size
-                );
-            }
-            ctx.globalAlpha = old_alpha;
-
-            //title text
-            if (node.onDrawTitleText) {
-                node.onDrawTitleText(
-                    ctx,
-                    title_height,
-                    size,
-                    this.ds.scale,
-                    this.title_text_font,
-                    selected
-                );
-            }
-            if (!low_quality) {
-                ctx.font = this.title_text_font;
-
-                if (title) {
-                    if (selected) {
-                        ctx.fillStyle = LiteGraph.NODE_SELECTED_TITLE_COLOR;
-                    } else {
-                        ctx.fillStyle =
-                            node.constructor.title_text_color ||
-                            this.node_title_color;
-                    }
-
-                        ctx.textAlign = "left";
-                        ctx.fillText(
-                            title,
-                            title_height,
-                            LiteGraph.NODE_TITLE_TEXT_Y - title_height
-                        );
-                    
-                }
-            }
-
-            
-            //custom title render
-            if (node.onDrawTitle) {
-                node.onDrawTitle(ctx);
-            }
-        }
-        if (title_mode == LiteGraph.CENTRAL_TITLE) {
             let fontSize = 30;
             ctx.font = fontSize + "px Arial";
             ctx.textAlign = "center";
             ctx.fillStyle = "white";
             ctx.fillText(title, node.widget.size[0] / 2, (node.widget.size[1] + fontSize) / 2);
-        }
         //render selection marker
         if (selected) {
             if (node.onBounding) {
                 node.onBounding(area);
             }
 
-            if (title_mode == LiteGraph.TRANSPARENT_TITLE) {
-                area[1] -= title_height;
-                area[3] += title_height;
-            }
             ctx.lineWidth = 1;
             ctx.globalAlpha = 0.8;
             ctx.beginPath();

@@ -11,6 +11,7 @@ export default class WidgetButton extends ButtonCore {
         ButtonCore.setup(this.properties);
         this.widget = new LGraphNode();
         this.widgets = [this.widget];
+        this.title = " ";
     }
 
     onDrawForeground(ctx) {

@@ -22,6 +22,7 @@ export default class WidgetNumber extends NumberCore {
         this.widget._remainder = 0;
         this.widget._precision = 0;
         this.widget.mouse_captured = false;
+        this.title = " ";
     }
 
     onDrawForeground(ctx) {
@@ -82,14 +83,14 @@ export default class WidgetNumber extends NumberCore {
         }
     }
 
-    onPropertyChanged(name, value) {
+    onPropertyChanged(/*name, value*/) {
         var t = (1 + "").split(".");
         this.widget._precision = t.length > 1 ? t[1].length : 0;
         this.updateView = true;
         this.update = true;
     }
 
-    onMouseDown(e, pos) {
+    onMouseDown(e, /*pos*/) {
         if (this.is_selected !== true) {
             return false
         } else {

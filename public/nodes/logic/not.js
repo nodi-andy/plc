@@ -1,25 +1,40 @@
-import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
+import LGraphNode from "../../node.js";
+import NotCore from "./not_core.mjs"
 
-class logicNot extends LGraphNode{
-    static type = "logic/not";
-    static title = "NOT";
-    static desc = "Return the logical negation";
-    static title_mode = LiteGraph.CENTRAL_TITLE;
+class logicNot extends NotCore{
     constructor() {
         super();
         this.properties = {};
-        this.setProperty("in", "number", 0, " ", {input: true, output: false});
-        this.setProperty("out", "number", 0, " ", {input: false, output: true});
-        this.type = logicNot.type;
+        logicNot.setup(this.properties);
+        this.widget = new LGraphNode();
+        this.widget.setSize([64, 128]);
+        this.widgets = [this.widget];
+        this.type = logicNot.type
+        this.title = logicNot.title;
     }
-    
+
     onExecute(update) {
         if (update) {
-            var ret = this.properties.in.value ? 0 : 1;
-            this.properties.out.value = ret;
+            let ret = true;
+            for (let input of Object.values(this.properties)) {
+                if (input.input == true && input.inpValue !== null) {
+                    input.value = input.inpValue;
+                    input.inpValue = null;
+                }
+            }
+            for (let input of Object.values(this.properties)) {
+                if (input.input == true && !input.value) {
+                    ret = false;
+                    break;
+                }
+            }
+            ret = ret ? 1 : 0;
+            this.properties.value.outValue = ret;
+            this.update = false;
         }
     }
+
 }
 
 LiteGraph.registerNodeType(logicNot.type, logicNot);

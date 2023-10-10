@@ -6,6 +6,10 @@ import './public/nodes/widget/button_server.mjs';
 import './public/nodes/widget/toggle_server.mjs';
 import './public/nodes/widget/led_server.mjs';
 import './public/nodes/widget/number_server.mjs';
+import './public/nodes/logic/and_core.mjs';
+import './public/nodes/logic/or_core.mjs';
+import './public/nodes/logic/not_core.mjs';
+import './public/nodes/math/add_core.mjs';
 
 const app = express()
 const server = http.createServer(app);
@@ -109,7 +113,7 @@ io.on('connection', socket => {
 
   socket.on('moveNode', msg => {
     socket.broadcast.emit('moveNode', msg);
-    if (msg.nodeID) return;
+    if (msg.nodeID == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID].widget == null) return;
     nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.newData.pos;

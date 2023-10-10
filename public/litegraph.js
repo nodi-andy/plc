@@ -447,7 +447,7 @@ export var LiteGraph = (global.LiteGraph = {
         }
 
 
-        node.widget.setSize(node.widget.computeSize());
+        node.widget.setSize(node.widget.computeSize(node.properties));
         node.widget.pos = LiteGraph.DEFAULT_POSITION.concat();
         node.type = type;
         if (options) {
@@ -1511,21 +1511,6 @@ class LGraph {
                 var n_info = nodes[i]; //stored info
                 if (!n_info) continue;
                 var node = LiteGraph.createNode(n_info.type, n_info.title, n_info);
-                if (!node) {
-                    if (LiteGraph.debug) {
-                        console.log(
-                            "Node not found or has errors: " + n_info.type
-                        );
-                    }
-
-                    //in case of error we create a replacement node to avoid losing info
-                    node = new LGraphNode();
-                    node.last_serialization = n_info;
-                    node.has_errors = true;
-                    error = true;
-                    //continue;
-                }
-
                 node.id = n_info.id; //id it or it will create a new id
                 node.widget.id = n_info.id;
                 this.add(node, true); //add before configure, otherwise configure cannot create links

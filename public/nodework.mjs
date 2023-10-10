@@ -1,8 +1,8 @@
 export default class NodeWork {
     static typeList = []
 
-    static registerType (type, className) {
-        NodeWork.typeList[type] = className;
+    static registerType (className) {
+        NodeWork.typeList[className.type] = className;
     }
 
     static getType (type) {

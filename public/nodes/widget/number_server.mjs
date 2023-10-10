@@ -44,4 +44,4 @@ export default class NumberCore extends NodeCore {
 
 }
 
-NodeWork.registerType(NumberCore.type, NumberCore)
+NodeWork.registerType(NumberCore)

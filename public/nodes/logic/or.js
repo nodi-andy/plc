@@ -1,23 +1,22 @@
-import LGraphNode from "../../node.js";
 import { LiteGraph } from "../../litegraph.js";
+import LGraphNode from "../../node.js";
+import OrCore from "./or_core.mjs"
 
-class logicOr extends LGraphNode{
-    static type = "logic/or";
-    static title = "OR";
-    static desc = "Return true if at least one input is true";
-    static title_mode = LiteGraph.CENTRAL_TITLE;
-    
+class logicOr extends OrCore{
     constructor() {
         super();
         this.properties = {};
-        this.setProperty("in1", "number", 0, " ", {input: true, output: false});
-        this.setProperty("in2", "number", 0, " ", {input: true, output: false});
-        this.setProperty("value", "number", 0, " ", {input: false, output: true});
-        this.type = logicOr.type;
+        OrCore.setup(this.properties);
+        this.widget = new LGraphNode();
+        this.widget.setSize([64, 128]);
+        this.widgets = [this.widget];
+        this.type = OrCore.type
+        this.title = OrCore.title;
     }
+
     onExecute(update) {
-           if (update) {
-            let ret = false;
+        if (update) {
+            let ret = true;
             for (let input of Object.values(this.properties)) {
                 if (input.input == true && input.inpValue !== null) {
                     input.value = input.inpValue;
@@ -25,8 +24,8 @@ class logicOr extends LGraphNode{
                 }
             }
             for (let input of Object.values(this.properties)) {
-                if (input.input == true && input.value) {
-                    ret = true;
+                if (input.input == true && !input.value) {
+                    ret = false;
                     break;
                 }
             }
@@ -35,11 +34,7 @@ class logicOr extends LGraphNode{
             this.update = false;
         }
     }
-    getProps() {
-        return [
-            ["or", "boolean"]
-        ];
-    }
+
 }
 
 LiteGraph.registerNodeType(logicOr.type, logicOr);

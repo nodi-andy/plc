@@ -52,4 +52,4 @@ export default class ToggleCore extends NodeCore {
 
 }
 
-NodeWork.registerType(ToggleCore.type, ToggleCore)
+NodeWork.registerType(ToggleCore)

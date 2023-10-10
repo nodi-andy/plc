@@ -10,7 +10,6 @@ export default class LGraphNode extends NodeCore {
         this.setSize([window.LiteGraph.NODE_WIDTH, 64]);
         this.graph = null;
         this.update = false;
-        this.properties = {}; //for the values
     }
     /**
          * configure a node from an object containing the serialized info
@@ -479,7 +478,7 @@ export default class LGraphNode extends NodeCore {
 
         }
 
-        this.setSize(this.widget.computeSize());
+        this.setSize(this.widget.computeSize(this.properties));
         this.setDirtyCanvas(true, true);
     }
     /**
@@ -601,14 +600,14 @@ export default class LGraphNode extends NodeCore {
          * @param {number} minHeight
          * @return {number} the total size
          */
-    computeSize(out) {
+    computeSize(props) {
         if (this.constructor.size) {
             return this.constructor.size.concat();
         }
 
-        var rows = Math.max(NodeCore.getInputs(this.properties).length , NodeCore.getInputs(this.properties).length);
+        var rows = Math.max(NodeCore.getInputs(props).length , NodeCore.getInputs(props).length);
         if (rows < 1) rows = 1;
-        var size = [out, out] || new Float32Array([0, 0]);
+        var size = [0, 0];
         rows = Math.max(rows, 1);
         var font_size = window.LiteGraph.NODE_TEXT_SIZE; //although it should be graphcanvas.inner_text_font size
 
@@ -616,8 +615,8 @@ export default class LGraphNode extends NodeCore {
         var output_width = 0;
 
 
-        for (var i = 0, l = NodeCore.getInputs(this.properties).length; i < l; ++i) {
-            var input = NodeCore.getInputs(this.properties)[i];
+        for (var i = 0, l = NodeCore.getInputs(props).length; i < l; ++i) {
+            var input = NodeCore.getInputs(props)[i];
             var text = input.label || input.name || "";
             var text_width = compute_text_size(text);
             if (input_width < text_width) {
@@ -625,14 +624,12 @@ export default class LGraphNode extends NodeCore {
             }
         }
 
-        if (NodeCore.getOutputs(this.properties)) {
-            for (let i = 0, l = NodeCore.getOutputs(this.properties).length; i < l; ++i) {
-                var output = NodeCore.getOutputs(this.properties)[i];
-                let text = output.label || output.name || "";
-                let text_width = compute_text_size(text);
-                if (output_width < text_width) {
-                    output_width = text_width;
-                }
+        for (let i = 0, l = NodeCore.getOutputs(props).length; i < l; ++i) {
+            var output = NodeCore.getOutputs(props)[i];
+            let text = output.label || output.name || "";
+            let text_width = compute_text_size(text);
+            if (output_width < text_width) {
+                output_width = text_width;
             }
         }
 
@@ -644,26 +641,6 @@ export default class LGraphNode extends NodeCore {
 
         size[1] = (this.constructor.slot_start_y || 0) + rows * window.LiteGraph.NODE_SLOT_HEIGHT;
 
-        var widgets_height = 0;
-        if (this.widgets && this.widgets.length) {
-            for (let i = 0, l = this.widgets.length; i < l; ++i) {
-                if (this.widgets[i].computeSize)
-                    widgets_height += this.widgets[i].computeSize(size[0])[1] + 4;
-
-                else
-                    widgets_height += window.LiteGraph.NODE_WIDGET_HEIGHT + 4;
-            }
-            widgets_height += 8;
-        }
-
-        //compute height using widgets height
-        if (this.widgets_up)
-            size[1] = Math.max(size[1], widgets_height);
-        else if (this.widgets_start_y != null)
-            size[1] = Math.max(size[1], widgets_height + this.widgets_start_y);
-
-        else
-            size[1] += widgets_height;
 
         function compute_text_size(text) {
             if (!text) {

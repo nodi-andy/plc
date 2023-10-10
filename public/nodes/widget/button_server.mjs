@@ -52,4 +52,4 @@ export default class ButtonCore extends NodeCore {
 
 }
 
-NodeWork.registerType(ButtonCore.type, ButtonCore)
+NodeWork.registerType(ButtonCore)
