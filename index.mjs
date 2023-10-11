@@ -10,6 +10,13 @@ import './public/nodes/logic/and_core.mjs';
 import './public/nodes/logic/or_core.mjs';
 import './public/nodes/logic/not_core.mjs';
 import './public/nodes/math/add_core.mjs';
+import './public/nodes/math/mult_core.mjs';
+import './public/nodes/math/counter_core.mjs';
+import './public/nodes/math/isequal_core.mjs';
+import './public/nodes/math/isless_core.mjs';
+import './public/nodes/math/isgreater_core.mjs';
+import './public/nodes/time/interval_core.mjs';
+import './public/nodes/control/junction_core.mjs';
 
 const app = express()
 const server = http.createServer(app);
@@ -71,6 +78,10 @@ io.on('connection', socket => {
 
     nodeWorkJSON = {nodes: [], links: []};
     io.emit('clean', msg);
+  });
+
+  socket.on('connected', msg => {
+    console.log("[connected]");
   });
   socket.on('setNodework', msg => {
     nodeWorkJSON = msg;

@@ -15,15 +15,7 @@ export default class NumberCore extends NodeCore {
 
     static run(prop) {
         let ret = false;
-        for(let input in prop) {
-            if (prop[input].input == false) continue;
-            if (input.name == "state") continue;
-            if (prop[input].inpValue != null) {
-                ret = true;
-                prop[input].value = prop[input].inpValue;
-                prop[input].inpValue = null;
-            }
-        }
+
         if (prop.value.inpValue != null) {
             prop.value.value = parseInt(prop.value.inpValue);
             prop.value.inpValue = null;
@@ -32,7 +24,7 @@ export default class NumberCore extends NodeCore {
         }
         if (prop.read.inpValue != null) {
             prop.read.inpValue = null;
-            prop.value.outValue = prop.value.value;
+            prop.read.outValue = prop.value.value;
             ret = true;
         }
         return ret;

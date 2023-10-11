@@ -77,11 +77,8 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
             break;
         case sIOtype_CONNECT:
             USE_SERIAL.printf("[IOc] Connected to url: %s\n", payload);
-
-            // join default namespace (no auto join in Socket.IO V3)
-            socketIO.send(sIOtype_CONNECT, "/");
-            //socketIO.sendEVENT("nodi.box");
-            
+            nodemap.state = mapState::ID;
+           
             break;
         case sIOtype_EVENT:
         { 
@@ -439,6 +436,11 @@ void noditronTask( void * pvParameters ) {
 
         nodemap.report();
         nodemap.state = mapState::RUN;
+    } else if (nodemap.state == mapState::ID) {
+      String msg = "connected";
+      String &rmsg = msg;
+      socketIO.sendEVENT(rmsg);
+      nodemap.state = mapState::RUN;
     } else if (nodemap.state == mapState::UPDATE_NODE) {
         int id = doc[1]["nodeID"].as<int>();
         USE_SERIAL.printf("[updateNode] id: %d\n", id);
@@ -491,8 +493,7 @@ void noditronTask( void * pvParameters ) {
                 }
             }
         }
-    }
-    else if (nodemap.state == mapState::STOP) {
+    } else if (nodemap.state == mapState::STOP) {
         nodemap.state = mapState::STOPPED;
     }
     vTaskDelay(10);
@@ -523,9 +524,8 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
         case WStype_CONNECTED:
             {
                 Serial.printf("[WSc] Connected to url: %s\n",  payload);
+                // send message to server when Connected
 
-			    // send message to server when Connected
-				//socketIO.sendTXT("Connected");
             }
             break;
         case WStype_TEXT:

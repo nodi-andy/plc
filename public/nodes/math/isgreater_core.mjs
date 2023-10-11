@@ -1,17 +1,17 @@
 import NodeWork from "../../nodework.mjs";
 import NodeCore from "../../node_core.mjs";
 
-export default class MathAddCore extends NodeCore {
-    static type = "math/add";
-    static title = "+";
-    static desc = "Add";
+export default class MathIsGreater extends NodeCore {
+    static type = "math/isgreater";
+    static title = "?>";
+    static desc = "Is greater";
 
     static setup(prop) {
         NodeCore.setProperty(prop, "in1", "number", 0, " ", {input: true, output: false});
         NodeCore.setProperty(prop, "in2", "number", 0, " ", {input: true, output: false});
         NodeCore.setProperty(prop, "value", "number", 0, " ", {input: false, output: true});
-        this.type = MathAddCore.type
-        MathAddCore.reset(prop);
+        this.type = MathIsGreater.type
+        MathIsGreater.reset(prop);
     }
 
     static run(prop) {
@@ -26,7 +26,7 @@ export default class MathAddCore extends NodeCore {
         }
         if (!inpChanged) return false;
 
-        prop.value.outValue = prop.in1.value + prop.in2.value;
+        prop.value.outValue = (prop.in1.value > prop.in2.value);
         return true;
     }
 
@@ -36,4 +36,4 @@ export default class MathAddCore extends NodeCore {
 
 }
 
-NodeWork.registerType(MathAddCore)
+NodeWork.registerType(MathIsGreater)

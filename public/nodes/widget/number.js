@@ -101,7 +101,7 @@ export default class WidgetNumber extends NumberCore {
     }
 
     onMouseMove(e) {
-        if (!this.mouse_captured) {
+        if (!this.widget.mouse_captured) {
             return;
         }
 
@@ -114,13 +114,11 @@ export default class WidgetNumber extends NumberCore {
         }
         this.old_y = e.canvasY;
 
-        var steps = this._remainder + delta / WidgetNumber.pixels_threshold;
-        this._remainder = steps % 1;
+        var steps = this.widget._remainder + delta / WidgetNumber.pixels_threshold;
+        this.widget._remainder = steps % 1;
         steps = steps | 0;
 
         this.setValue( Math.clamp(this.properties.value.value + steps * 1));
-        this.graph._version++;
-        this.setDirtyCanvas(true);
     }
 
     onMouseUp(e, pos) {
@@ -129,23 +127,17 @@ export default class WidgetNumber extends NumberCore {
             this.setValue( Math.clamp(this.properties.value.value + steps * 1));
             this.graph._version++;
         }
-
-        if (this.widget.mouse_captured) {
-            this.widget.mouse_captured = false;
-        }
-
+        this.widget.mouse_captured = false;
     }
 
     updateProp(name, val) {
-        this.properties[name].value = val;
+        this.properties[name].inpValue = val;
         window.nodes.update(this.id, this.properties);
     }
 
     setValue(val) {
         this.update = true;
         this.updateProp("value", val);
-
-        this.properties.value.outValue = this.properties.value.value;
     }
 }
 

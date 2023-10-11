@@ -88,129 +88,43 @@ export default class LLink {
         //begin line shape
         ctx.beginPath();
         for (var i = 0; i < num_sublines; i += 1) {
-            var offsety = (i - (num_sublines - 1) * 0.5) * 5;
-
-            var start_offset_x = 0;
-            var start_offset_y = 0;
-            var end_offset_x = 0;
-            var end_offset_y = 0;
-            if (canvas.links_render_mode == NodiEnums.SPLINE_LINK) {
-                ctx.moveTo(a[0], a[1] + offsety);
-                switch (start_dir) {
-                    case NodiEnums.LEFT:
-                        start_offset_x = dist * -0.25;
-                        break;
-                    case NodiEnums.RIGHT:
-                        start_offset_x = dist * 0.25;
-                        break;
-                    case NodiEnums.UP:
-                        start_offset_y = dist * -0.25;
-                        break;
-                    case NodiEnums.DOWN:
-                        start_offset_y = dist * 0.25;
-                        break;
-                }
-                switch (end_dir) {
-                    case NodiEnums.LEFT:
-                        end_offset_x = dist * -0.25;
-                        break;
-                    case NodiEnums.RIGHT:
-                        end_offset_x = dist * 0.25;
-                        break;
-                    case NodiEnums.UP:
-                        end_offset_y = dist * -0.25;
-                        break;
-                    case NodiEnums.DOWN:
-                        end_offset_y = dist * 0.25;
-                        break;
-                }
-                ctx.bezierCurveTo(
-                    a[0] + start_offset_x,
-                    a[1] + start_offset_y + offsety,
-                    b[0] + end_offset_x,
-                    b[1] + end_offset_y + offsety,
-                    b[0],
-                    b[1] + offsety
-                );
-            } else if (canvas.links_render_mode == NodiEnums.LINEAR_LINK) {
-                ctx.moveTo(a[0], a[1] + offsety);
-                switch (start_dir) {
-                    case NodiEnums.LEFT:
-                        start_offset_x = -1;
-                        break;
-                    case NodiEnums.RIGHT:
-                        start_offset_x = 1;
-                        break;
-                    case NodiEnums.UP:
-                        start_offset_y = -1;
-                        break;
-                    case NodiEnums.DOWN:
-                        start_offset_y = 1;
-                        break;
-                }
-                switch (end_dir) {
-                    case NodiEnums.LEFT:
-                        end_offset_x = -1;
-                        break;
-                    case NodiEnums.RIGHT:
-                        end_offset_x = 1;
-                        break;
-                    case NodiEnums.UP:
-                        end_offset_y = -1;
-                        break;
-                    case NodiEnums.DOWN:
-                        end_offset_y = 1;
-                        break;
-                }
-                var l = 15;
-                ctx.lineTo(
-                    a[0] + start_offset_x * l,
-                    a[1] + start_offset_y * l + offsety
-                );
-                ctx.lineTo(
-                    b[0] + end_offset_x * l,
-                    b[1] + end_offset_y * l + offsety
-                );
-                ctx.lineTo(b[0], b[1] + offsety);
-            } else if (canvas.links_render_mode == NodiEnums.STRAIGHT_LINK) {
-                ctx.moveTo(a[0], a[1]);
-                var start_x = a[0];
-                var start_y = a[1];
-                var end_x = b[0];
-                var end_y = b[1];
-                let originType = "";
-                let targetType = "";
-                if (link) {
-                    originType = canvas.graph._nodes_by_id[link.target_id].constructor.type;
-                    targetType = canvas.graph._nodes_by_id[link.origin_id].constructor.type;
-                }
-                if (targetType != "control/junction") {
-                    if (start_dir == NodiEnums.RIGHT) {
-                        start_x += 32;
-                    } else {
-                        start_y += 32;
-                    }
-                }
-                if (originType != "control/junction") {
-                    if (end_dir == NodiEnums.LEFT) {
-                        end_x -= 32;
-                    } else {
-                        end_y -= 32;
-                    }
-                }
-                ctx.lineTo(start_x, start_y);
-                if (targetType == "control/junction" || originType == "control/junction") {
-                    ctx.lineTo(end_x, start_y);
-                    ctx.lineTo(end_x, end_y);
+           
+            ctx.moveTo(a[0], a[1]);
+            var start_x = a[0];
+            var start_y = a[1];
+            var end_x = b[0];
+            var end_y = b[1];
+            let originType = "";
+            let targetType = "";
+            if (link) {
+                originType = canvas.graph._nodes_by_id[link.target_id].constructor.type;
+                targetType = canvas.graph._nodes_by_id[link.origin_id].constructor.type;
+            }
+            if (targetType != "control/junction") {
+                if (start_dir == NodiEnums.RIGHT) {
+                    start_x += 32;
                 } else {
-                    ctx.lineTo((start_x + end_x) * 0.5, start_y);
-                    ctx.lineTo((start_x + end_x) * 0.5, end_y);
+                    start_y += 32;
                 }
+            }
+            if (originType != "control/junction") {
+                if (end_dir == NodiEnums.LEFT) {
+                    end_x -= 32;
+                } else {
+                    end_y -= 32;
+                }
+            }
+            ctx.lineTo(start_x, start_y);
+            if (targetType == "control/junction" || originType == "control/junction") {
+                ctx.lineTo(end_x, start_y);
                 ctx.lineTo(end_x, end_y);
-                ctx.lineTo(b[0], b[1]);
             } else {
-                return;
-            } //unknown
+                ctx.lineTo((start_x + end_x) * 0.5, start_y);
+                ctx.lineTo((start_x + end_x) * 0.5, end_y);
+            }
+            ctx.lineTo(end_x, end_y);
+            ctx.lineTo(b[0], b[1]);
+
         }
 
         //rendering the outline of the connection can be a little bit slow
@@ -276,17 +190,6 @@ export default class LLink {
             ctx.beginPath();
             ctx.arc(pos[0], pos[1], 5, 0, Math.PI * 2);
             ctx.fill();
-
-
-            //selection
-            /*
-            if (this.selected) {
-                ctx.fillStyle = "#000";
-
-                ctx.beginPath();
-                ctx.arc(pos[0], pos[1], 5, 0, Math.PI * 2);
-                ctx.fill();
-            }*/
         }
 
     }

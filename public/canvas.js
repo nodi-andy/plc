@@ -2900,14 +2900,14 @@ export default class LGraphCanvas {
 
             var doStroke = true;
 
-            if (low_quality)
+            //if (low_quality)
                 ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8); //faster
-            else {
+            /*else {
                 ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
                 ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
                 ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
                 ctx.closePath();
-            }
+            }*/
             ctx.fill();
 
             //render name
@@ -3297,7 +3297,6 @@ export default class LGraphCanvas {
         start_dir = start_dir || LiteGraph.RIGHT;
         end_dir = end_dir || LiteGraph.LEFT;
 
-        var dist = Math.distance(a, b);
         ctx.setLineDash([]);
         if (this.render_connections_border && this.ds.scale > 0.6) {
             ctx.lineWidth = this.connections_width + 4;
@@ -3317,45 +3316,7 @@ export default class LGraphCanvas {
             var start_offset_y = 0;
             var end_offset_x = 0;
             var end_offset_y = 0;
-            if (this.links_render_mode == LiteGraph.SPLINE_LINK) {
-                ctx.moveTo(a[0], a[1] + offsety);
-                switch (start_dir) {
-                    case LiteGraph.LEFT:
-                        start_offset_x = dist * -0.25;
-                        break;
-                    case LiteGraph.RIGHT:
-                        start_offset_x = dist * 0.25;
-                        break;
-                    case LiteGraph.UP:
-                        start_offset_y = dist * -0.25;
-                        break;
-                    case LiteGraph.DOWN:
-                        start_offset_y = dist * 0.25;
-                        break;
-                }
-                switch (end_dir) {
-                    case LiteGraph.LEFT:
-                        end_offset_x = dist * -0.25;
-                        break;
-                    case LiteGraph.RIGHT:
-                        end_offset_x = dist * 0.25;
-                        break;
-                    case LiteGraph.UP:
-                        end_offset_y = dist * -0.25;
-                        break;
-                    case LiteGraph.DOWN:
-                        end_offset_y = dist * 0.25;
-                        break;
-                }
-                ctx.bezierCurveTo(
-                    a[0] + start_offset_x,
-                    a[1] + start_offset_y + offsety,
-                    b[0] + end_offset_x,
-                    b[1] + end_offset_y + offsety,
-                    b[0],
-                    b[1] + offsety
-                );
-            } else if (this.links_render_mode == LiteGraph.LINEAR_LINK) {
+             if (this.links_render_mode == LiteGraph.LINEAR_LINK) {
                 ctx.moveTo(a[0], a[1] + offsety);
                 switch (start_dir) {
                     case LiteGraph.LEFT:
@@ -3454,64 +3415,6 @@ export default class LGraphCanvas {
             link.pos[1] = pos[1];
         }
 
-        //render arrow in the middle
-        if (this.ds.scale >= 0.6 && this.highquality_render && end_dir != LiteGraph.CENTER) {
-            //render arrow
-            if (this.render_connection_arrows) {
-                //compute two points in the connection
-                var posA = this.computeConnectionPoint(a, b, 0.25, start_dir, end_dir);
-                var posB = this.computeConnectionPoint(a, b, 0.26, start_dir, end_dir);
-                var posC = this.computeConnectionPoint(a, b, 0.75, start_dir, end_dir);
-                var posD = this.computeConnectionPoint(a, b, 0.76, start_dir, end_dir);
-
-                //compute the angle between them so the arrow points in the right direction
-                var angleA = 0;
-                var angleB = 0;
-                if (this.render_curved_connections) {
-                    angleA = -Math.atan2(posB[0] - posA[0], posB[1] - posA[1]);
-                    angleB = -Math.atan2(posD[0] - posC[0], posD[1] - posC[1]);
-                } else {
-                    angleB = angleA = b[1] > a[1] ? 0 : Math.PI;
-                }
-
-                //render arrow
-                ctx.save();
-                ctx.translate(posA[0], posA[1]);
-                ctx.rotate(angleA);
-                ctx.beginPath();
-                ctx.moveTo(-5, -3);
-                ctx.lineTo(0, +7);
-                ctx.lineTo(+5, -3);
-                ctx.fill();
-                ctx.restore();
-                ctx.save();
-                ctx.translate(posC[0], posC[1]);
-                ctx.rotate(angleB);
-                ctx.beginPath();
-                ctx.moveTo(-5, -3);
-                ctx.lineTo(0, +7);
-                ctx.lineTo(+5, -3);
-                ctx.fill();
-                ctx.restore();
-            }
-
-            //circle
-            ctx.beginPath();
-            ctx.arc(pos[0], pos[1], 5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        //render flowing points
-        if (flow) {
-            ctx.fillStyle = color;
-            for (let i = 0; i < 5; ++i) {
-                var f = (NodiEnums.getTime() * 0.001 + i * 0.2) % 1;
-                let pos = this.computeConnectionPoint(a, b, f, start_dir, end_dir);
-                ctx.beginPath();
-                ctx.arc(pos[0], pos[1], 5, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-        }
     }
     //returns the link center point based on curvature
     computeConnectionPoint(a, b, t, start_dir, end_dir, link) {
