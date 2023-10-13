@@ -90,8 +90,9 @@ export default class WidgetNumber extends NumberCore {
         this.update = true;
     }
 
-    onMouseDown(e, /*pos*/) {
-        if (this.is_selected !== true) {
+    onMouseDown(e, local_pos) {
+        let margin = [this.widget.size[0] * 0.2, this.widget.size[1] * 0.2];
+        if (local_pos[0] > margin[0] && local_pos[1] > margin[1] && local_pos[0] < this.widget.size[0] - margin[0] && local_pos[1] < this.widget.size[1] - margin[1]) {
             return false
         } else {
             this.widget.old_y = e.canvasY;

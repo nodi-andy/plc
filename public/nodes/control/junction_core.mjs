@@ -7,8 +7,7 @@ export default class JunctionCore extends NodeCore {
     static desc = "Junction";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "value", "number", 0, " ", {input: true, output: false});
-        this.type = JunctionCore.type
+        NodeCore.setProperty(prop, "value", "number", 0, " ", {input: true, output: true});
         JunctionCore.reset(prop);
     }
 

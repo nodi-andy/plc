@@ -88,7 +88,9 @@ function mergeObjects(objA, objB) {
 
 socket.on("updateNode", (message) => {
     // Handle incoming messages here
-    window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData.properties);
+    if (window.graph._nodes_by_id[message.nodeID]) {
+        window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData.properties);
+    }
     window.canvas.dirty_canvas = true;
     window.canvas.dirty_bgcanvas = true;
 });

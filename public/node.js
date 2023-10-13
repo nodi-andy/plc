@@ -10,6 +10,7 @@ export default class LGraphNode extends NodeCore {
         this.setSize([window.LiteGraph.NODE_WIDTH, 64]);
         this.graph = null;
         this.update = false;
+        this.type = null;
     }
     /**
          * configure a node from an object containing the serialized info
@@ -382,9 +383,9 @@ export default class LGraphNode extends NodeCore {
          */
     setSize(size, update = true) {
         if (size == null) return;
-        if (!this.constructor.fixsize) {
+        if (!this.fixsize) {
             this.size = [window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[0] / window.LiteGraph.CANVAS_GRID_SIZE),
-            window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE)];
+                         window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE)];
         }
         if (this.onResize) this.onResize(this.size);
         if (update) window.socket.emit("setSize", {id: this.id, size:this.size});
@@ -412,6 +413,7 @@ export default class LGraphNode extends NodeCore {
             this.properties = {};
         }
         this.properties[name] = default_value;
+
         return o;
     }
 
@@ -601,6 +603,10 @@ export default class LGraphNode extends NodeCore {
          * @return {number} the total size
          */
     computeSize(props) {
+        if (this.fixsize) {
+            this.size = this.fixsize;
+            return this.fixsize;
+        }
         if (this.constructor.size) {
             return this.constructor.size.concat();
         }
@@ -849,6 +855,10 @@ export default class LGraphNode extends NodeCore {
 
     getConnectionPos(is_input, slot_number, out) {
         out = out || new Float32Array(2);
+        if (this.type == "control/junction") {
+            out = [this.pos[0] + 8, this.pos[1] + 8];
+            return out;
+        }
         var num_slots = 0;
         if (is_input && NodeCore.getInputs(this.properties)) {
             num_slots = NodeCore.getInputs(this.properties).length;
@@ -890,7 +900,7 @@ export default class LGraphNode extends NodeCore {
     alignToGrid() {
 
         let gridSize = window.LiteGraph.CANVAS_GRID_SIZE
-        if (this.constructor.type == "control/junction" ) gridSize /= 4;
+        if (this.type == "control/junction" ) gridSize /= 4;
         if (this.size[0] >= gridSize) {
             this.pos[0] = gridSize * Math.round(this.pos[0] / gridSize);
         } else {

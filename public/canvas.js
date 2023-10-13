@@ -1614,7 +1614,7 @@ export default class LGraphCanvas {
                 this.node_dragged.widget.pos[0] = Math.round(this.node_dragged.widget.pos[0]);
                 this.node_dragged.widget.pos[1] = Math.round(this.node_dragged.widget.pos[1]);
                 if (this.graph.config.align_to_grid || this.align_to_grid) {
-                    this.node_dragged.widget.alignToGrid();
+                    this.node_dragged.widget.alignToGrid(this.node_dragged);
                 }
                 if (this.onNodeMoved)
                     this.onNodeMoved(this.node_dragged);
@@ -2932,15 +2932,14 @@ export default class LGraphCanvas {
         i = 0;
         for ([id, slot] of Object.entries(node.properties)) {
             if (slot.output == false) continue;
-            var slot_type = slot.type;
-            var slot_shape = slot.shape;
+            slot_type = slot.type;
 
             //change opacity of incompatible slots when dragging a connection
             if (this.connecting_input) {
                 ctx.globalAlpha = 0.4 * editor_alpha;
             }
 
-            var pos = node.widget.getConnectionPos(false, i, slot_pos);
+            pos = node.widget.getConnectionPos(false, i, slot_pos);
             pos[0] -= node.widget.pos[0];
             pos[1] -= node.widget.pos[1];
             if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
@@ -2957,21 +2956,8 @@ export default class LGraphCanvas {
                     this.default_connection_color_byType[slot_type] ||
                     this.default_connection_color.output_off;
             ctx.beginPath();
-            doStroke = true;
-
-            if (low_quality)
-                ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8);
-            else {
-                ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
-                ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
-                ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
-                ctx.closePath();
-            }
-    
-
+            ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8);
             ctx.fill();
-            if (!low_quality && doStroke)
-                ctx.stroke();
 
             //render output name
             if (render_text) {

@@ -49,7 +49,10 @@ setInterval(() => {
   });
 
   nodeWorkJSON.links.forEach(link => {
-    let dataFromNode = nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue;
+    let dataFromNode = null;
+    if (nodeWorkJSON.nodes[link.from]) {
+      dataFromNode = nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue;
+    }
     if(dataFromNode !== null) {
       nodeWorkJSON.nodes[link.to].properties[link.toSlot].inpValue = dataFromNode;
     }
