@@ -144,6 +144,15 @@ io.on('connection', socket => {
     }
   });
 
+  
+  socket.on('event_name', msg => {
+    console.log("[event] ", msg.now);
+  });
+
+  socket.on('id', msg => {
+    console.log("[event] ", msg.id);
+  });
+
   socket.on('remLink', msg => {
     console.log("[remLink] ", msg.id);
     io.emit('remLink', msg);
@@ -155,8 +164,8 @@ io.on('connection', socket => {
     io.to(socket.id).emit("setNodework", nodeWorkJSON);
     console.log("[updateNewClient]");
   });
+  io.to(socket.id).emit("id", "");
   console.log("[newClient]");
-
 });
 app.use(express.static('data'));
 server.listen(8080)

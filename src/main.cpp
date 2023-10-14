@@ -5,14 +5,13 @@
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
-#include "WiFi.h"
+#include <WiFi.h>
 #include <ESP32Ping.h>
-
+#include <WiFiClientSecure.h>
 #include <WebSocketsClient.h>
 #include <SocketIOclient.h>
 
 SocketIOclient socketIO;
-
 
 #define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
 
@@ -65,8 +64,8 @@ void loadNoditronFile() {
 }
 
 
-void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length) {
-    char * sptr = NULL;
+/*void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length) {
+        char * sptr = NULL;
     String eventName, jsonData;
     File file;
     int id;
@@ -83,7 +82,7 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
         case sIOtype_EVENT:
         { 
             id = strtol((char *)payload, &sptr, 10);
-            //USE_SERIAL.printf("[IOc] get event: %s id: %d\n", payload, id);
+            USE_SERIAL.printf("[IOc] get event: %s id: %d\n", payload, id);
             if(id) {
               payload = (uint8_t *)sptr;
             }
@@ -141,7 +140,40 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
     }
 
 }
+*/
 
+void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length) {
+    switch(type) {
+        case sIOtype_DISCONNECT:
+            USE_SERIAL.printf("[IOc] Disconnected!\n");
+            break;
+        case sIOtype_CONNECT:
+            USE_SERIAL.printf("[IOc] Connected to url: %s\n", payload);
+
+            // join default namespace (no auto join in Socket.IO V3)
+            socketIO.send(sIOtype_CONNECT, "/");
+            break;
+        case sIOtype_EVENT:
+        {
+
+            nodemap.orders.push(string((char*)payload));
+            
+        }
+            break;
+        case sIOtype_ACK:
+            USE_SERIAL.printf("[IOc] get ack: %u\n", length);
+            break;
+        case sIOtype_ERROR:
+            USE_SERIAL.printf("[IOc] get error: %u\n", length);
+            break;
+        case sIOtype_BINARY_EVENT:
+            USE_SERIAL.printf("[IOc] get binary: %u\n", length);
+            break;
+        case sIOtype_BINARY_ACK:
+            USE_SERIAL.printf("[IOc] get binary ack: %u\n", length);
+            break;
+    }
+}
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -200,7 +232,6 @@ void initWiFi() {
         WiFi.mode(WIFI_AP_STA);
     } else if (AP_Enabled && !STA_Enabled) {
         WiFi.mode(WIFI_AP);
-
     } else if (!AP_Enabled && STA_Enabled) {
         WiFi.mode(WIFI_STA);
     } else {
@@ -368,32 +399,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     }
 }
 
-void onEvent(AsyncWebSocket       *server,
-             AsyncWebSocketClient *client,
-             AwsEventType          type,
-             void                 *arg,
-             uint8_t              *data,
-             size_t                len) {
-
-    switch (type) {
-        case WS_EVT_CONNECT:
-            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-            //ws.text(client->id(), mapFile, strlen((const char*)mapFile));
-            sendConnectionSettings();
-            break;
-        case WS_EVT_DISCONNECT:
-            Serial.printf("WebSocket client #%u disconnected\n", client->id());
-            break;
-        case WS_EVT_DATA:
-            handleWebSocketMessage(arg, data, len);
-            break;
-        case WS_EVT_PONG:
-        case WS_EVT_ERROR:
-            break;
-    }
-}
-
-
 void initWebServer() {
     //ws.onEvent(onEvent);
     //server.addHandler(&ws);
@@ -408,66 +413,111 @@ void noditronTask( void * pvParameters ) {
 
   for(;;){
     //Serial.println(nodemap.state);
+    
+    if (nodemap.orders.size()) {
+        string order = nodemap.orders.front(); 
+        nodemap.orders.pop();
+        USE_SERIAL.printf("[nodework:order] order: %s\n", order.c_str());
 
-    if (nodemap.state == mapState::UPDATE) {
-        nodemap.clear();
-
-        memcpy(wsInput, mapFile, strlen((char *)mapFile));
-
-        deserializeJson(doc, wsInput);
-        JsonObject root = doc.as<JsonObject>();
-
-        JsonArray nodes = root["nodes"];
-        for (JsonVariant kv : nodes) {
-            JsonObject node = kv.as<JsonObject>();
-            nodemap.addNode(node);
+        char * sptr = NULL;
+        int id = strtol(order.c_str(), &sptr, 10);
+        if(id) {
+            order = sptr;
         }
 
-        JsonArray links = root["links"];
-        for (JsonVariant kv : links) {
-            JsonArray linkData = kv.as<JsonArray>();
-            int id = linkData[0].as<int>();
-            int fromNode = linkData[1].as<int>();
-            std::string fromPort = linkData[2].as<std::string>();
-            int toNode = linkData[3].as<int>();
-            std::string toPort = linkData[4].as<std::string>();
-            nodemap.addLink(id, fromNode, fromPort, toNode, toPort);
+        DeserializationError error = deserializeJson(doc, order.c_str(), order.length());
+        if(error) {
+            USE_SERIAL.print(F("deserializeJson() failed: "));
+            USE_SERIAL.println(error.c_str());
+            return;
         }
 
-        nodemap.report();
-        nodemap.state = mapState::RUN;
-    } else if (nodemap.state == mapState::ID) {
-      String msg = "connected";
-      String &rmsg = msg;
-      socketIO.sendEVENT(rmsg);
-      nodemap.state = mapState::RUN;
-    } else if (nodemap.state == mapState::UPDATE_NODE) {
-        int id = doc[1]["nodeID"].as<int>();
-        USE_SERIAL.printf("[updateNode] id: %d\n", id);
-        if (nodemap.nodes[id]) {
-            USE_SERIAL.printf("[updateNode.found] id: %d\n", id);
-            nodemap.nodes[id]->props = doc[1]["newData"];
-            nodemap.nodes[id]->setup();
-        }
-        nodemap.state = mapState::RUN;
-    } else if (nodemap.state == mapState::ADD_NODE) {
-        int id = doc[1]["id"].as<int>();
-        USE_SERIAL.printf("[addNode] id: %d\n", id);
-        nodemap.addNode(doc[1]);
-        nodemap.state = mapState::RUN;
-    } else if (nodemap.state == mapState::REM_NODE) {
-        int id = doc[1]["id"].as<int>();
-        USE_SERIAL.printf("[remNode] id: %d\n", id);
-        nodemap.state = mapState::RUN;
-    } else if (nodemap.state == mapState::ADD_LINK) {
-        int id = doc[1]["id"].as<int>();
-        USE_SERIAL.printf("[addLink] id: %d\n", id);
-        nodemap.state = mapState::RUN;
-    } else if (nodemap.state == mapState::REM_LINK) {
-        int id = doc[1]["id"].as<int>();
-        USE_SERIAL.printf("[remLink] id: %d\n", id);
-        nodemap.state = mapState::RUN;
-    } else if (nodemap.state == mapState::RUN) {
+        String eventName = doc[0];
+        USE_SERIAL.printf("[nodework:event] name: %s\n", eventName.c_str());
+
+        if (eventName == "upload") {
+            nodemap.clear();
+
+            //    jsonData.getBytes(mapFile, jsonData.length() + 1);
+            //    file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
+            //    file.write(mapFile, jsonData.length()+1);
+            //    file.close();
+            //    loadNoditronFile();
+
+            memcpy(wsInput, mapFile, strlen((char *)mapFile));
+
+            deserializeJson(doc, wsInput);
+            JsonObject root = doc.as<JsonObject>();
+
+            JsonArray nodes = root["nodes"];
+            for (JsonVariant kv : nodes) {
+                JsonObject node = kv.as<JsonObject>();
+                nodemap.addNode(node);
+            }
+
+            JsonArray links = root["links"];
+            for (JsonVariant kv : links) {
+                JsonArray linkData = kv.as<JsonArray>();
+                int id = linkData[0].as<int>();
+                int fromNode = linkData[1].as<int>();
+                std::string fromPort = linkData[2].as<std::string>();
+                int toNode = linkData[3].as<int>();
+                std::string toPort = linkData[4].as<std::string>();
+                nodemap.addLink(id, fromNode, fromPort, toNode, toPort);
+            }
+
+            nodemap.report();
+            nodemap.state = mapState::RUN;
+        } else if (eventName == "id") {
+            /*
+        // creat JSON message for Socket.IO (event)
+        DynamicJsonDocument doc(1024);
+        JsonArray array = doc.to<JsonArray>();
+
+        // add evnet name
+        // Hint: socket.on('event_name', ....
+        array.add("id");
+
+        // add payload (parameters) for the event
+        JsonObject param1 = array.createNestedObject();
+        param1["now"] = "nodi.box";
+*/
+        // JSON to String (serializion)
+        String output;
+        //serializeJson(doc, output);
+        //USE_SERIAL.printf("[OUTPUT] name: %s\n", output.c_str());
+        output = "[\"id\",{\"now\":\"nodi.box\"}]";
+        // Send event
+        socketIO.sendEVENT(output);
+        } else if (eventName == "update") {
+            int id = doc[1]["nodeID"].as<int>();
+            USE_SERIAL.printf("[updateNode] id: %d\n", id);
+            if (nodemap.nodes[id]) {
+                USE_SERIAL.printf("[updateNode.found] id: %d\n", id);
+                nodemap.nodes[id]->props = doc[1]["newData"];
+                nodemap.nodes[id]->setup();
+            }
+            nodemap.state = mapState::RUN;
+        } else if (eventName == "add") {
+            int id = doc[1]["id"].as<int>();
+            USE_SERIAL.printf("[addNode] id: %d\n", id);
+            //nodemap.addNode(doc[1]);
+            nodemap.state = mapState::RUN;
+        } else if (eventName == "rem") {
+            int id = doc[1]["id"].as<int>();
+            USE_SERIAL.printf("[remNode] id: %d\n", id);
+            nodemap.state = mapState::RUN;
+        } else if (eventName == "link") {
+            int id = doc[1]["id"].as<int>();
+            USE_SERIAL.printf("[addLink] id: %d\n", id);
+            nodemap.state = mapState::RUN;
+        } else if (eventName == "unlink") {
+            int id = doc[1]["id"].as<int>();
+            USE_SERIAL.printf("[remLink] id: %d\n", id);
+            nodemap.state = mapState::RUN;
+        } 
+        
+
         for (auto n : nodemap.nodes) {
             if (n.second) {
                 if (n.second->onExecute()) {
@@ -493,8 +543,7 @@ void noditronTask( void * pvParameters ) {
                 }
             }
         }
-    } else if (nodemap.state == mapState::STOP) {
-        nodemap.state = mapState::STOPPED;
+
     }
     vTaskDelay(10);
   } 
@@ -581,7 +630,7 @@ void setup() {
     Serial.println("noditron.com: OK");
 
     delay(100);
-
+    
     // server address, port and URL
     socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
     //socketIO.begin("noditron.com", 80, "/socket.io/?EIO=4");
@@ -595,10 +644,38 @@ void setup() {
 // ----------------------------------------------------------------------------
 // Main control loop
 // ----------------------------------------------------------------------------
+unsigned long messageTimestamp = 0;
 
 void loop() {
     //ws.cleanupClients();
     
     socketIO.loop();
+    uint64_t now = millis();
+
+    if(now - messageTimestamp > 2000) {
+        messageTimestamp = now;
+
+        // creat JSON message for Socket.IO (event)
+        DynamicJsonDocument doc(1024);
+        JsonArray array = doc.to<JsonArray>();
+
+        // add evnet name
+        // Hint: socket.on('event_name', ....
+        array.add("event_name");
+
+        // add payload (parameters) for the event
+        JsonObject param1 = array.createNestedObject();
+        param1["now"] = (uint32_t) now;
+
+        // JSON to String (serializion)
+        String output;
+        serializeJson(doc, output);
+
+        // Send event
+        socketIO.sendEVENT(output);
+
+        // Print JSON for debugging
+        USE_SERIAL.println(output);
+    }
 }
 
