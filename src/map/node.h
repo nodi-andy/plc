@@ -4,20 +4,28 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#define NULL_DATA INT_MAX;
+using namespace std;
 
 // Base class for all FBs
 class Node
 {
+    private:
+      JsonObject widgets;
+      StaticJsonDocument<2024> jsondoc;
+
     public:
+    string jsonString;
+
+      JsonObject props;
         virtual ~Node() {}
-        virtual std::string getType() const = 0;
+        virtual string getType() const = 0;
         virtual Node* createInstance() const = 0;
         static int const ON = 1;
         static int const OFF = 0;
-        JsonObject props;
-        std::string name;
-        std::string title;
-        std::string desc;
+        string name;
+        string title;
+        string desc;
         int id;
         int port = -1;
         int value = 0;
@@ -26,22 +34,26 @@ class Node
         int newstate = 0;
         virtual void setup();
         virtual int onExecute();
-        static std::unordered_map<std::string, Node*> nodeReg;
 
         void setupVals();
-        std::unordered_map<std::string, std::array<int*, 2>> inputVals;
-        std::unordered_map<std::string, int> vals;
-        std::unordered_map<std::string, std::array<int*, 2>> outputVals;
-        std::unordered_map<std::string, int*> inputs;
-        void addProp(std::string name);
-        void addInput(std::string name);
-        void setInput(std::string name, int* val);
-        int* getInput(std::string name);
+        unordered_map<string, array<int, 3>> vals;
+        void addProp(string name);
+        void addInput(string name);
+        void setInput(string name, int val);
+        void clearInput(string name);
+        int  getInput(string name);
+        int  hasInput(string name);
+
         
-        void addOutput(std::string name);
-        int* getOutput(std::string name);
-        std::unordered_map<std::string, int*> outputs;
-        void setOutput(std::string name, int* val);
+        void addOutput(string name);
+        int  getOutput(string name);
+        void setOutput(string name, int val);
+
+        void setProps(JsonObject props);
+        JsonObject getProps();
+        void setProp(string key, string name, int val);
+        int  getProp(string key, string name = "value");
+
 };
 
 

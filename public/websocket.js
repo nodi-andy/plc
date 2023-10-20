@@ -16,10 +16,16 @@ if (window.location.hostname.includes(".") == false) uri += ":8080";
 const socket = io(uri);
 window.socket = socket;
 
+window.socket.sendToServer = (msg, obj) => {
+    window.socket.emit(msg, obj);
+    console.log(msg);
+
+}
+
 // Event handler for when the connection is established
 socket.on("connect", () => {
     console.log("Connected to the server!");
-    socket.emit('updateMe');!
+    socket.sendToServer('updateMe');
 
     onOpen();
 });
@@ -28,6 +34,10 @@ socket.on("setNodework", (message) => {
     window.graph.configure(message, false);
     //window.graph.start();
     window.canvas.dirty_canvas = true;
+});
+
+socket.on("id", (message) => {
+    socket.sendToServer("id", {id: "browser"});
 });
 
 socket.on("addNode", (message) => {
@@ -57,7 +67,7 @@ socket.on("remNode", (message) => {
 
 });
 
-socket.on("clean", (message) => {
+socket.on("clear", (message) => {
     window.graph.clear();
     window.canvas.dirty_canvas = true;
 });
@@ -75,15 +85,17 @@ socket.on("setSize", (message) => {
 });
 
 function mergeObjects(objA, objB) {
-  const mergedObject = { ...objA };
-
-  for (const keyA in objB) {
-    for (const keyB in objB[keyA]) {
-      mergedObject[keyA][keyB] = objB[keyA][keyB];
+    for (let key in objB) {
+        if (objA[key]) {
+            for (let subKey in objB[key]) {
+              objA[key][subKey] = objB[key][subKey];
+            }
+        } else {
+            // Add the new key-value pair to objB
+            objB[key] = objA[key];
+        }
     }
-  }
-
-  return mergedObject;
+    return objA;
 }
 
 socket.on("updateNode", (message) => {

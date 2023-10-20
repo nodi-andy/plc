@@ -11,7 +11,7 @@ void Counter::setup() {
     name = "events/counter";
 
     // Iterate through the properties object
-    for (JsonPair property : props["properties"].as<JsonObject>()) {
+    /*for (JsonPair property : props["properties"].as<JsonObject>()) {
       JsonObject propObj = property.value().as<JsonObject>();
       const char* propertyName = property.key().c_str();
       
@@ -20,36 +20,36 @@ void Counter::setup() {
       Serial.println(propertyName);
       addProp(propertyName);
       vals[propertyName] = props["properties"][propertyName]["value"].as<int>();
-    }
+    }*/
 }
 
 int Counter::onExecute() {
     bool update = false;
-    if (getInput("inc") != nullptr && *(getInput("inc")) != INT_MAX) {
-        newvalue += *getInput("inc");
+    if (getInput("inc") != INT_MAX) {
+        newvalue += getInput("inc");
         Serial.print("Increment: ");
         update = true;
-        setInput("inc", NULL);
+        setInput("inc", INT_MAX);
     }
 
-    if (getInput("dec") != nullptr && *(getInput("dec")) != INT_MAX) {
-        newvalue -= *getInput("dec");
+    if (getInput("dec") != INT_MAX) {
+        newvalue -= getInput("dec");
         Serial.print("Decrement: ");
         update = true;
-        setInput("dec", NULL);
+        setInput("dec", INT_MAX);
     }
 
-    if (getInput("set") != nullptr && *(getInput("set")) != INT_MAX) {
-        newvalue = *getInput("set");
+    if (getInput("set") != INT_MAX) {
+        newvalue = getInput("set");
         update = true;
         //Serial.print("Reset");
-        setInput("set", NULL);
+        setInput("set", INT_MAX);
     }
     
-    vals["value"] = newvalue;
+    vals["value"][1] = newvalue;
     if (update) {
-        Serial.println(vals["value"]);
-        setOutput("value", &vals["value"]);
+        Serial.println(vals["value"][1]);
+        setOutput("value", vals["value"][1]);
     }
     return update;
 }

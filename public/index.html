@@ -119,7 +119,7 @@
         let view = window.canvas.ds;
         node.widget.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
       }
-      window.socket.emit("addNode", node);
+      window.socket.sendToServer("addNode", node);
       //window.graph._nodes_by_id[node.id].graph = window.graph;
 
     }
@@ -128,10 +128,10 @@
 
         var graphcanvas = LGraphCanvas.active_canvas;
         for (var node in graphcanvas.selected_nodes) {
-            window.socket.emit("remNode", {"id" : graphcanvas.selected_nodes[node].id});
+            window.socket.sendToServer("remNode", {"id" : graphcanvas.selected_nodes[node].id});
         }
         
-        if (canvas.selectedLink != null) window.socket.emit("remLink", {"id": canvas.selectedLink});
+        if (canvas.selectedLink != null) window.socket.sendToServer("remLink", {"id": canvas.selectedLink});
     }
 
     window.nodes.editNode = () => {
@@ -154,20 +154,20 @@
         for(let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
         }
-        window.socket.emit("setNodework", storeGraph);
+        window.socket.sendToServer("setNodework", storeGraph);
         window.showSnackbar("nodework sent to nodi.box!")
       }
     }
 
     window.nodes.move = (id, changedNodeData) => {
       if (window.socket) {
-        window.socket.emit("moveNode", {"nodeID":id, "newData": changedNodeData});
+        window.socket.sendToServer("moveNode", {"nodeID":id, "moveTo": changedNodeData});
       }
     }
     
     window.nodes.update = (id, changedNodeData) => {
       if (window.socket) {
-        window.socket.emit("updateNode", {"nodeID":id, "newData": {"properties": changedNodeData}});
+        window.socket.sendToServer("updateNode", {"nodeID":id, "newData": {"properties": changedNodeData}});
       }
     }
 

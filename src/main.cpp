@@ -56,7 +56,6 @@ void loadNoditronFile() {
                 Serial.print(",");
                 Serial.println((const char*)mapFile);
             file.close();
-            nodemap.state = mapState::UPDATE;
         }	
     /*} else {
         Serial.println("Default File not found");
@@ -76,7 +75,6 @@ void loadNoditronFile() {
             break;
         case sIOtype_CONNECT:
             USE_SERIAL.printf("[IOc] Connected to url: %s\n", payload);
-            nodemap.state = mapState::ID;
            
             break;
         case sIOtype_EVENT:
@@ -110,16 +108,6 @@ void loadNoditronFile() {
                 file.write(mapFile, jsonData.length()+1);
                 file.close();
                 loadNoditronFile();
-            } else if (eventName == "updateNode") {
-                nodemap.state = mapState::UPDATE_NODE;
-            } else if (eventName == "addNode") {
-                nodemap.state = mapState::ADD_NODE;
-            } else if (eventName == "remNode") {
-                nodemap.state = mapState::REM_NODE;
-            } else if (eventName == "addLink") {
-                nodemap.state = mapState::ADD_LINK;
-            } else if (eventName == "remLink") {
-                nodemap.state = mapState::REM_LINK;
             }
             
 
@@ -415,25 +403,18 @@ void noditronTask( void * pvParameters ) {
     //Serial.println(nodemap.state);
     
     if (nodemap.orders.size()) {
-        string order = nodemap.orders.front(); 
+        DynamicJsonDocument djsondoc(4048);
+        string order = nodemap.orders.front();
         nodemap.orders.pop();
-        USE_SERIAL.printf("[nodework:order] order: %s\n", order.c_str());
+        USE_SERIAL.printf("[nodework:new_order] : %s\n", order.c_str());
 
         char * sptr = NULL;
-        int id = strtol(order.c_str(), &sptr, 10);
-        if(id) {
-            order = sptr;
-        }
-
-        DeserializationError error = deserializeJson(doc, order.c_str(), order.length());
-        if(error) {
-            USE_SERIAL.print(F("deserializeJson() failed: "));
-            USE_SERIAL.println(error.c_str());
-            return;
-        }
-
-        String eventName = doc[0];
-        USE_SERIAL.printf("[nodework:event] name: %s\n", eventName.c_str());
+        int msgid = strtol(order.c_str(), &sptr, 10);
+        if(msgid) order = sptr;
+        deserializeJson(djsondoc, order.c_str(), order.length());
+        String eventName = djsondoc[0];
+        int id = djsondoc[1]["nodeID"].as<int>();
+        USE_SERIAL.printf("[nodework:event] id: %d, name: %s\n", id, eventName.c_str());
 
         if (eventName == "upload") {
             nodemap.clear();
@@ -446,8 +427,8 @@ void noditronTask( void * pvParameters ) {
 
             memcpy(wsInput, mapFile, strlen((char *)mapFile));
 
-            deserializeJson(doc, wsInput);
-            JsonObject root = doc.as<JsonObject>();
+            deserializeJson(djsondoc, wsInput);
+            JsonObject root = djsondoc.as<JsonObject>();
 
             JsonArray nodes = root["nodes"];
             for (JsonVariant kv : nodes) {
@@ -467,85 +448,85 @@ void noditronTask( void * pvParameters ) {
             }
 
             nodemap.report();
-            nodemap.state = mapState::RUN;
+        } else if (eventName == "clear") {
+            nodemap.clear();
         } else if (eventName == "id") {
-            /*
-        // creat JSON message for Socket.IO (event)
-        DynamicJsonDocument doc(1024);
-        JsonArray array = doc.to<JsonArray>();
+            socketIO.sendEVENT("[\"id\",{\"id\":\"nodi.box\"}]");
+        } else if (eventName == "updateMe") {
+            
+        } else if (eventName == "moveNode") {
+            USE_SERIAL.printf("[nodework:move] name: %s\n", eventName.c_str());
+            
+        } else if (eventName == "updateNode") {
 
-        // add evnet name
-        // Hint: socket.on('event_name', ....
-        array.add("id");
-
-        // add payload (parameters) for the event
-        JsonObject param1 = array.createNestedObject();
-        param1["now"] = "nodi.box";
-*/
-        // JSON to String (serializion)
-        String output;
-        //serializeJson(doc, output);
-        //USE_SERIAL.printf("[OUTPUT] name: %s\n", output.c_str());
-        output = "[\"id\",{\"now\":\"nodi.box\"}]";
-        // Send event
-        socketIO.sendEVENT(output);
-        } else if (eventName == "update") {
-            int id = doc[1]["nodeID"].as<int>();
             USE_SERIAL.printf("[updateNode] id: %d\n", id);
             if (nodemap.nodes[id]) {
                 USE_SERIAL.printf("[updateNode.found] id: %d\n", id);
-                nodemap.nodes[id]->props = doc[1]["newData"];
-                nodemap.nodes[id]->setup();
+                nodemap.nodes[id]->setProps(djsondoc[1]["newData"]["properties"]);
             }
-            nodemap.state = mapState::RUN;
-        } else if (eventName == "add") {
-            int id = doc[1]["id"].as<int>();
-            USE_SERIAL.printf("[addNode] id: %d\n", id);
-            //nodemap.addNode(doc[1]);
-            nodemap.state = mapState::RUN;
-        } else if (eventName == "rem") {
-            int id = doc[1]["id"].as<int>();
+        } else if (eventName == "addNode") {
+            int newID = nodemap.getID();
+            djsondoc[1]["nodeID"] = newID;
+            USE_SERIAL.printf("[event::addNode] id: %d\n", newID);
+            nodemap.addNode(djsondoc[1]);
+        } else if (eventName == "remNode") {
             USE_SERIAL.printf("[remNode] id: %d\n", id);
-            nodemap.state = mapState::RUN;
-        } else if (eventName == "link") {
-            int id = doc[1]["id"].as<int>();
+        } else if (eventName == "addLink") {
+            int fromNode        = djsondoc[1]["from"].as<int>();
+            int toNode          = djsondoc[1]["to"].as<int>();
+            string fromPort     = djsondoc[1]["fromSlot"].as<string>();
+            string toPort       = djsondoc[1]["toSlot"].as<string>();
+            nodemap.addLink(id, fromNode, fromPort, toNode, toPort);
             USE_SERIAL.printf("[addLink] id: %d\n", id);
-            nodemap.state = mapState::RUN;
-        } else if (eventName == "unlink") {
+        } else if (eventName == "remlink") {
             int id = doc[1]["id"].as<int>();
             USE_SERIAL.printf("[remLink] id: %d\n", id);
-            nodemap.state = mapState::RUN;
-        } 
-        
-
-        for (auto n : nodemap.nodes) {
-            if (n.second) {
-                if (n.second->onExecute()) {
-                    std::string msg = "{\"update\": {\"id\":" + std::to_string(n.second->id) + ", \"state\":" + std::to_string(n.second->state) + ", \"value\":" + std::to_string(n.second->value) + "}}";
-                    //ws.textAll(msg.c_str(), msg.length());
-                }
-            }
         }
-        
-        for (auto n : nodemap.links) {
-            if (n.second) {
-                n.second->onExecute();
-            }
-        }
-
-        // Clean output after all links are done
-        for (auto n : nodemap.nodes) {
-            if (n.second) {
-                for (auto output : n.second->outputs) {
-                    n.second->setOutput(output.first, nullptr);
-                    /*Serial.print("Clean output:" );
-                    Serial.println(output.first.c_str());*/
-                }
-            }
-        }
-
     }
-    vTaskDelay(10);
+
+    for (auto n : nodemap.nodes) {
+        if (n.second) {
+            if (n.second->onExecute()) {
+                string msg;
+
+                StaticJsonDocument<512> sjsondoc;
+                JsonArray arr = sjsondoc.to<JsonArray>();
+                arr.add("updateNode");
+
+                JsonObject data = arr.createNestedObject();
+
+                data["nodeID"] = n.second->id;
+                JsonObject newData = data.createNestedObject("newData");
+                newData["properties"] = n.second->getProps();
+                arr.add(data);
+                
+                serializeJson(sjsondoc, msg);
+                socketIO.sendEVENT(msg.c_str());
+                USE_SERIAL.printf("[Run:updateNode] id: %s\n", msg.c_str());
+            }
+        }
+    }
+    
+    for (auto n : nodemap.links) {
+        if (n.second) {
+            n.second->onExecute();
+        }
+    }
+
+    // Clean output after all links are done
+    for (auto n : nodemap.nodes) {
+        Node *node = n.second;
+        if (node) {
+            JsonObject props = node->getProps();
+
+            for (JsonPair p : props) {
+                string propName = p.key().c_str();
+                node->setProp(propName, "outValue", INT_MAX);
+            }
+        }
+    }
+
+    vTaskDelay(50);
   } 
 }
 
@@ -672,10 +653,11 @@ void loop() {
         serializeJson(doc, output);
 
         // Send event
-        socketIO.sendEVENT(output);
+        //socketIO.sendEVENT(output);
 
         // Print JSON for debugging
-        USE_SERIAL.println(output);
+        //USE_SERIAL.println(output);
+        //USE_SERIAL.println(nodemap.nodes.size());
     }
 }
 

@@ -10,7 +10,7 @@ void LogicAnd::setup() {
     name = "logic/and";
 
     //Serial.print(" And inputs:");
-    for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
+    /*for( const auto& inputObj : props["inputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addInput(inputObj["name"].as<std::string>());
         inputVals[inputObj["name"].as<std::string>()][0] = 0;
@@ -20,7 +20,7 @@ void LogicAnd::setup() {
     for( const auto& inputObj : props["outputs"].as<JsonArray>() ) {
         Serial.println(inputObj["name"].as<std::string>().c_str());
         addOutput(inputObj["name"].as<std::string>());
-    }
+    }*/
 
     value = 1;
 }
@@ -28,7 +28,7 @@ void LogicAnd::setup() {
 int LogicAnd::onExecute() {
     bool update = false;
     value = 1;
-    for (auto& input : inputs) {
+    /*for (auto& input : inputs) {
       if (input.second) {
         update = true;
         inputVals[input.first][0] = input.second;
@@ -43,10 +43,10 @@ int LogicAnd::onExecute() {
         value = 0;
         break;
       }
-    }
+    }*/
 
     if (update) {
-        setOutput("v", &value);
+        setOutput("v", value);
         Serial.println("AND gate output ");
     }
     return 0;

@@ -604,14 +604,14 @@ export default class NodeCore {
 
     updateProperties(name, type, val) {
         this.properties[name][type] = val;
-        window.socket.emit("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
+        window.socket.sendToServer("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
 
     }
     addInputByName(name) {
         this.updateProperties(name, "input", true);
         let prop = this.properties[name];
         this.addInput(name, prop.type, prop.defaultValue, prop.label)
-        window.socket.emit("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
+        window.socket.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
 
         window.updateEditDialog();
     }

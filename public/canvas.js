@@ -1452,7 +1452,9 @@ export default class LGraphCanvas {
 
                 this.dirty_canvas = true;
                 this.dirty_bgcanvas = true;
-                window.nodes.move(this.node_dragged.id, {pos:this.node_dragged.widget.pos});
+                if (delta[0] != 0 && delta[1] != 0) {
+                    window.nodes.move(this.node_dragged.id, {pos:this.node_dragged.widget.pos});
+                }
 
             }
 
@@ -1588,13 +1590,13 @@ export default class LGraphCanvas {
                         slot = this.isOverNodeInput(node, e.canvasX, e.canvasY);
                         if (slot != null) {
                             let input = node.getInputByIndex(slot);
-                            window.socket.emit("addLink", {from: this.connecting_node.id, fromSlot: this.connecting_output.name, to: node.id, toSlot: input.name});
+                            window.socket.sendToServer("addLink", {from: this.connecting_node.id, fromSlot: this.connecting_output.name, to: node.id, toSlot: input.name});
                         }
                     } else if (this.connecting_input) {
                         slot = this.isOverNodeOutput(node, e.canvasX, e.canvasY);
                         if (slot != null) {
                             let output = node.getOutputByIndex(slot);
-                            window.socket.emit("addLink", {to: this.connecting_node.id, toSlot: this.connecting_input.name, from: node.id, fromSlot: output.name});
+                            window.socket.sendToServer("addLink", {to: this.connecting_node.id, toSlot: this.connecting_input.name, from: node.id, fromSlot: output.name});
                         }
                     }
                 }

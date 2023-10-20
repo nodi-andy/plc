@@ -388,7 +388,7 @@ export default class LGraphNode extends NodeCore {
                          window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE)];
         }
         if (this.onResize) this.onResize(this.size);
-        if (update) window.socket.emit("setSize", {id: this.id, size:this.size});
+        //if (update) window.socket.sendToServer("setSize", {id: this.id, size:this.size});
     }
     /**
          * add a new property to this node
@@ -514,14 +514,14 @@ export default class LGraphNode extends NodeCore {
 
     updateProperties(name, type, val) {
         this.properties[name][type] = val;
-        window.socket.emit("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
+        window.socket.sendToServer("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
 
     }
     addInputByName(name) {
         this.updateProperties(name, "input", true);
         let prop = this.properties[name];
         this.addInput(name, prop.type, prop.defaultValue, prop.label)
-        window.socket.emit("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
+        window.socket.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
 
         window.updateEditDialog();
     }

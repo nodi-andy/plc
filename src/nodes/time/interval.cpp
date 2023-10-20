@@ -11,7 +11,7 @@ void Interval::setup() {
     defaultPressed = 0;
     defaultReleased = 0;
     
-    if (props["properties"].containsKey("ton")) {
+    /*if (props["properties"].containsKey("ton")) {
       if (props["properties"]["ton"].as<std::string>().length() > 0 ) {
         defaultTOn = props["properties"]["ton"]["value"].as<int>() * 1000;
       }
@@ -31,7 +31,7 @@ void Interval::setup() {
     defaultReleased = 0;
     if (props["properties"].containsKey("release")) {
       defaultReleased = props["properties"]["release"]["value"].as<int>();
-    }
+    }*/
 
     state = defaultReleased;
     ton = defaultTOn;
@@ -48,13 +48,13 @@ int Interval::onExecute() {
 
   bool update = false;
   if (getInput("ton")) {
-      ton = *getInput("ton");
-      setInput("ton", NULL);
+      ton = getInput("ton");
+      setInput("ton", INT_MAX);
   }
 
   if (getInput("toff")) {
-      ton = *getInput("toff");
-      setInput("toff", NULL);
+      ton = getInput("toff");
+      setInput("toff", INT_MAX);
   }
 
   //Serial.print("Interval run: ");
@@ -81,11 +81,8 @@ int Interval::onExecute() {
   update = (state != newstate);
   state = newstate;
   if (update) {
-    setOutput("state", &value);
+    setOutput("state", value);
     Serial.print("Interval output: ");
-    Serial.print((uintptr_t)&value);
-    Serial.print(" : ");
-    Serial.println(value);
   }
   return 0;
 }

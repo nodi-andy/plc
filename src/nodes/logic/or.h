@@ -21,7 +21,7 @@ class LogicOr : public Node
 
     private:
     int value;
-    int *output;
+    int output;
 };
 
 static bool counterRegistered = []() {

@@ -28,10 +28,40 @@ const io = new socketIOServer(server, {
 
 
 var nodeWorkJSON = new NodeWork();
+var cmds = [];
 
+class UniqueIDGenerator {
+  constructor() {
+      this.nextID = 0;
+      this.usedIDs = new Set();
+  }
+
+  getID() {
+      while (this.usedIDs.has(this.nextID)) {
+          this.nextID++;
+      }
+      this.usedIDs.add(this.nextID);
+      return this.nextID;
+  }
+
+  removeID(idToRemove) {
+      if (this.usedIDs.has(idToRemove)) {
+          this.usedIDs.delete(idToRemove);
+      }
+  }
+}
+const idGenerator = new UniqueIDGenerator();
 
 setInterval(() => {
-  nodeWorkJSON.nodes.forEach(node => {
+
+  // proxy
+  if (cmds && cmds.length) {
+    let socketID = cmds.who;
+    io.to(socketID).emit(cmds.what, socketID);
+    cmds.shift();
+  }
+
+  /*nodeWorkJSON.nodes.forEach(node => {
     let c = NodeWork.getType(node.type);
     //if (node?.properties?.state?.inpValue) console.log(node?.properties?.state?.inpValue)
     //console.log(c)
@@ -40,7 +70,7 @@ setInterval(() => {
       node.cmds.shift();
     }
     try {
-      if (c.run(node.properties) == true) {
+      if (c && c.run && c.run(node.properties) == true) {
         io.emit('updateNode', {nodeID: node.id, newData: {"properties": node.properties}});
       }
     } catch (e) {
@@ -60,7 +90,7 @@ setInterval(() => {
 
   nodeWorkJSON.links.forEach(link => {
     nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue = null;
-  });
+  });*/
 }, "20");
 
 function mergeObjects(objA, objB) {
@@ -76,11 +106,11 @@ function mergeObjects(objA, objB) {
 }
 
 io.on('connection', socket => {
-  socket.on('clean', msg => {
-    console.log("[clean]");
+  socket.on('clear', msg => {
+    console.log("[clear]");
 
     nodeWorkJSON = {nodes: [], links: []};
-    io.emit('clean', msg);
+    io.emit('clear', msg);
   });
 
   socket.on('connected', msg => {
@@ -92,11 +122,14 @@ io.on('connection', socket => {
   });
 
   socket.on('addNode', msg => {
-    //console.log("[addNode]");
+    console.log("[addNode]");
     //console.log(msg);
     if (!msg) return;
-    msg.id = nodeWorkJSON.nodes.length;
-    nodeWorkJSON.nodes[msg.id] = msg;
+    if (msg.nodeID != null) {
+      nodeWorkJSON.nodes[msg.nodeID] = msg;
+    }
+
+    nodeWorkJSON.nodes[msg.nodeID] = msg;
     io.emit('addNode', msg);
   });
 
@@ -108,29 +141,35 @@ io.on('connection', socket => {
   });
 
   socket.on('updateNode', msg => {
+    console.log("[updateNode] ", msg);
+
     socket.broadcast.emit('updateNode', msg);
+    /*if (msg.newData == null) return;
+    if (msg.nodeID == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID].cmds == undefined) nodeWorkJSON.nodes[msg.nodeID].cmds = [];
-    nodeWorkJSON.nodes[msg.nodeID].cmds.push(msg.newData.properties);
+    nodeWorkJSON.nodes[msg.nodeID].cmds.push(msg.newData.properties);*/
     //console.log(nodeWorkJSON);
   });
 
   socket.on('addLink', msg => {
-    console.log("[addLink] ", msg);
-    msg.id = nodeWorkJSON.links.length;
+    if (!msg) return;
 
-    if (msg.id != null) {
-      nodeWorkJSON.links[msg.id] = msg;
+    console.log("[addLink] ", msg);
+
+    if (msg.nodeID != null) {
+      nodeWorkJSON.links[msg.nodeID] = msg;
     }
     io.emit('addLink', msg);
   });
 
   socket.on('moveNode', msg => {
+    console.log("[moveNode] ", msg);
     socket.broadcast.emit('moveNode', msg);
-    if (msg.nodeID == null) return;
+    /*if (msg.nodeID == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID].widget == null) return;
-    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.newData.pos;
+    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.newData.pos;*/
   });
 
   socket.on('setSize', msg => {
@@ -151,6 +190,7 @@ io.on('connection', socket => {
 
   socket.on('id', msg => {
     console.log("[event] ", msg.id);
+    socket.devType = msg.id;
   });
 
   socket.on('remLink', msg => {
@@ -159,13 +199,14 @@ io.on('connection', socket => {
     nodeWorkJSON.links = nodeWorkJSON.links.filter(obj => obj.id !== msg.id);
   });
 
-
   socket.on('updateMe', () => {
-    io.to(socket.id).emit("setNodework", nodeWorkJSON);
-    console.log("[updateNewClient]");
+    if (cmds == null) cmds = [];
+    cmds.push({"who": socket.id, "what" : "updateMe"});
+    //io.to(socket.id).emit("setNodework", nodeWorkJSON);
+    //console.log("[updateNewClient]");
   });
   io.to(socket.id).emit("id", "");
-  console.log("[newClient]");
+  //console.log("[newClient]");
 });
 app.use(express.static('data'));
 server.listen(8080)

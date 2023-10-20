@@ -15,7 +15,7 @@ void Stepper::setup() {
     stepPort = 27;
     dirPort = 14;
     enablePort = 32;
-    if(props["properties"].containsKey("step port") > 0 ) {
+    /*if(props["properties"].containsKey("step port") > 0 ) {
       stepPort = props["properties"]["step port"]["value"].as<int>();
     }
     
@@ -26,7 +26,7 @@ void Stepper::setup() {
     if(props["properties"].containsKey("enable port") > 0 ) {
       enablePort = props["properties"]["enable port"]["value"].as<int>();
     }
-
+*/
     pos = 0;
     //Serial.print(" And inputs:");
     /*
@@ -37,14 +37,14 @@ void Stepper::setup() {
         props["properties"][inputObj["name"]] = nullptr;
     }
 */
-    addInput("pos");
+   /* addInput("pos");
     addInput("speed");
     if (props["properties"]["pos"]["input"] == true) {
       posGiven = 1;
     }
     if (props["properties"]["speed"]["input"] == true) {
       speedGiven = 1;
-    }
+    }*/
 
     //Serial.print(" And outputs:");
     /*
@@ -79,18 +79,18 @@ int Stepper::onExecute() {
     //speedGiven = 0;
 
 
-    if (getInput("pos") != nullptr && targetPos != *getInput("pos") && *getInput("pos") != INT_MAX) {
-      targetPos = *getInput("pos");
+    if (targetPos != getInput("pos") && getInput("pos") != INT_MAX) {
+      targetPos = getInput("pos");
       Serial.print("Stepper.targetPos.changed: ");
       Serial.print(targetPos);
       Serial.print("speed is: ");
       Serial.println(speed);
-      setInput("pos", NULL);
+      setInput("pos", INT_MAX);
     }
 
 
-    if (getInput("speed") != nullptr  && *getInput("speed") != INT_MAX) {
-      targetSpeed = *getInput("speed");
+    if (getInput("speed") != INT_MAX) {
+      targetSpeed = getInput("speed");
       Serial.print("Stepper.speed.changed: ");
       Serial.println(targetSpeed);
       setSpeed(targetSpeed);
@@ -98,21 +98,21 @@ int Stepper::onExecute() {
       Serial.print(posGiven);
       Serial.print("  speedGiven: ");
       Serial.println(speedGiven);
-      setInput("speed", NULL);
+      setInput("speed", INT_MAX);
     }
 
-    if (getInput("reset") != nullptr && 1 != *getInput("reset") && *getInput("reset") != INT_MAX) {
+    if (1 != getInput("reset") && getInput("reset") != INT_MAX) {
       Serial.println("Stepper.resetted ");
       pos = 0;
       targetPos = 0;
-      inputVals["reset"][0] = nullptr;
-      inputVals["pos"][0] = nullptr;
-      inputVals["speed"][0] = nullptr;
-      setInput("reset", NULL);
+      vals["reset"][0] = INT_MAX;
+      vals["pos"][0] = INT_MAX;
+      vals["speed"][0] = INT_MAX;
+      setInput("reset", INT_MAX);
     }
 
-    setOutput("pos", &pos);
-    setOutput("speed", &speed);
+    setOutput("pos", pos);
+    setOutput("speed", speed);
     if (posGiven == 0 && speedGiven == 1) {
         targetPos = targetSpeed > 0 ? pos + 1000 : targetPos = pos - 1000;
         //Serial.print("Speed control: Stepper.pos: ");

@@ -9,25 +9,21 @@ void Toggle::setup() {
     name = "Toggle";
     desc = "Show value of input";
 
-    if (props["properties"].containsKey("port")) {
+    /*if (props["properties"].containsKey("port")) {
       port = props["properties"]["port"].as<int>();
       if (port >= 0) pinMode(port, OUTPUT);
     }
     if (props["properties"].containsKey("value")) {
       value = props["properties"]["value"].as<int>();
-    }
+    }*/
     state = newstate = value;
     addInput("a");
 }
 
 int Toggle::onExecute() {
     int ret = 0;
-    int* input = getInput("a");
-    if (input) {
-      newstate = *input;
-    } else {
-      newstate = value;
-    }
+    int newstate = getInput("a");
+
     digitalWrite(port, newstate);
     ret = (newstate != state);
     if (ret) {

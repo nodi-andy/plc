@@ -10,7 +10,7 @@ void Operation::setup() {
     title = "Math Operation";
     desc = "Read input";
 
-    if (props["properties"].containsKey("A")) {
+    /*if (props["properties"].containsKey("A")) {
       defaultA = props["properties"]["A"].as<int>();
     }
 
@@ -20,48 +20,48 @@ void Operation::setup() {
 
     addInput("value1");
     addInput("value2");
-    addOutput("result");
+    addOutput("result");*/
 }
 
 int Operation::onExecute() {
     value = 0;
-    int *inpA = getInput("A");
-    int *inpB = getInput("B");
+    int inpA = getInput("A");
+    int inpB = getInput("B");
 
-    if (inpA == 0) inpA = &defaultA;
-    if (inpB == 0) inpB = &defaultB;
+    if (inpA == 0) inpA = defaultA;
+    if (inpB == 0) inpB = defaultB;
 
     if (myVariant == "==") {
-        value = (*inpA == *inpB);
+        value = (inpA == inpB);
     } else if (myVariant == "+") {
-        value = *inpA + *inpB;
+        value = inpA + inpB;
         //Serial.print("OP+: ");
         //Serial.println(value);
     } else if (myVariant == "-") {
-        value = *inpA - *inpB;
+        value = inpA - inpB;
     } else if (myVariant == "*") {
-        value = (*inpA) * (*inpB);
+        value = (inpA) * (inpB);
     } else if (myVariant == "/") {
-        if ((*inpB) != 0) {
-            value = (*inpA) / (*inpB);
+        if ((inpB) != 0) {
+            value = (inpA) / (inpB);
         }
     } else if (myVariant == ">") {
-        value = *inpA > *inpB;
+        value = inpA > inpB;
     } else if (myVariant == "<") {
-        value = *inpA < *inpB;
+        value = inpA < inpB;
     } else if (myVariant == ">=") {
-        value = *inpA >= *inpB;
+        value = inpA >= inpB;
     } else if (myVariant == "<=") {
-        value = *inpA > *inpB;
+        value = inpA > inpB;
     } else if (myVariant == "%") {
-        value = *inpA % *inpB;
+        value = inpA % inpB;
     } else if (myVariant == "^") {
-        value = *inpA ^ *inpB;
+        value = inpA ^ inpB;
     } else if (myVariant == "max") {
-        value = std::max(*inpA, *inpB);
+        value = std::max(inpA, inpB);
     } else if (myVariant == "min") {
-        value = std::min(*inpA, *inpB);
+        value = std::min(inpA, inpB);
     }
-    setOutput(0, &value);
+    setOutput(0, value);
     return 0;
 }

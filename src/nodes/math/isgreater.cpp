@@ -14,25 +14,25 @@ void IsGreater::setup() {
 int IsGreater::onExecute() {
     bool update = false;
     output = NULL;
-    if (getInput("in1") != nullptr && *(getInput("in1")) != INT_MAX) {
-        A = *getInput("in1");
+    if (getInput("in1") != INT_MAX) {
+        A = getInput("in1");
         Serial.print("A gate:");
         Serial.println(A);
         update = true;
-        setInput("in1", NULL);
+        setInput("in1", INT_MAX);
     }
 
-    if (getInput("in2") != nullptr && *(getInput("in2")) != INT_MAX) {
-        B = *getInput("in2");
+    if (getInput("in2") != INT_MAX) {
+        B = getInput("in2");
         Serial.print("B gate:");
         Serial.println(B);
         update = true;
-        setInput("in1", NULL);
+        setInput("in1", INT_MAX);
     }
  
     if (update) {
-        vals["value"] = (A > B);
-        setOutput("v", &vals["value"]);
+        vals["value"][1] = (A > B);
+        setOutput("v", vals["value"][1]);
         Serial.println("IsEqual output ");
     }
     return 0;

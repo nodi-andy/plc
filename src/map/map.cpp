@@ -1,6 +1,9 @@
 #include <unordered_map>
 #include "map.h"
 
+Map::Map() {
+    nextID = 0;
+}
 Map::~Map()
 {
     clear();
@@ -10,30 +13,22 @@ void Map::addNode(int id, Node* newNode)
 {
     if (newNode) {
         nodes[id] = newNode;
+        Serial.printf("[Map::addNode] ID=%d type = %s \n ", id, newNode->getType().c_str());
         newNode->setup();
-        Serial.print("> Node added: ");
-        Serial.print(" ID : ");
-        Serial.print(id);
-        Serial.print(" Type : ");
-        Serial.println(newNode->getType().c_str());
     }
 }
 
 void Map::addNode(JsonObject json)
 {
-    std::string type = json["type"].as<std::string>();
-    Serial.println("");
-    Serial.printf("> Add Node: %s", type.c_str());
+    string type = json["type"].as<std::string>();
+    Serial.printf("[Map::addNode]: %s\n", type.c_str());
 
     Node* newNode = RegistryManager::getInstance().createNode(type);
-    newNode->setup();
     if (newNode != nullptr) {
-        newNode->props = json;
-        newNode->id = json["id"].as<int>();
+        newNode->setProps(json["properties"]);
+        newNode->id = json["nodeID"].as<int>();
         addNode(newNode->id, newNode);
-        Serial.print(newNode->id);
-        Serial.print(" : ");
-        Serial.print(newNode->desc.c_str());
+        Serial.printf("[Map:addNode:done] %d : %d\n", newNode->id, newNode->desc.c_str());
         Serial.print(" : ");
         Serial.print(newNode->getType().c_str());
         Serial.println("");
@@ -44,25 +39,16 @@ void Map::addLinkToList(int id, Node* newNode)
 {
     newNode->id = id;
     links[id] = newNode;
-    Serial.println("addLinkToList: ");
-    Serial.print(id);
+    Serial.printf("addLinkToList: %d\n", id);
 
     newNode->setup();
     Serial.println("> Link added");
 }
 
-void Map::addLink(int linkID, int fromNode, std::string fromOutput, int toNode, std::string toOutput)
+void Map::addLink(int linkID, int fromNode, string fromOutput, int toNode, string toOutput)
 {
-    Serial.print("> New link: ");
-    Serial.print(linkID);
-    Serial.print(" From:");
-    Serial.print(fromNode);
-    Serial.print(" Port:");
-    Serial.print(fromOutput.c_str());
-    Serial.print(" To:");
-    Serial.print(toNode);
-    Serial.print(" Port:");
-    Serial.println(toOutput.c_str());
+    Serial.printf("[addLink] : linkID = %d  From: %d.%s To:%d.%s\n", linkID, fromNode, fromOutput.c_str(), toNode, toOutput.c_str());
+
     Link* link = new Link(nodes[fromNode], fromOutput, nodes[toNode], toOutput);
     addLinkToList(linkID, link);
 }
@@ -71,9 +57,28 @@ void Map::clear()
 {
     nodes.clear();
     links.clear();
-    Serial.println("> All cleared");
+    usedIDs.clear();
+    nextID = 0;
+    Serial.println("[Map::clear]");
 }
 
+string Map::toJSON() {
+    StaticJsonDocument<1000> doc;
+    JsonObject map = doc.to<JsonObject>();
+
+    JsonArray jsNodes = map.createNestedArray("nodes");
+
+    Serial.println("nodemap to json");
+    for (auto n : nodes) {
+       jsNodes[n.second->id] = jsNodes.createNestedObject();
+       jsNodes[n.second->id]["properties"] = n.second->getProps();
+    }
+    /*JsonArray jsLinks = map.createNestedArray("links");
+
+    for (auto n : links) {
+       jsLinks[n.second->id] = n.second->getProps()
+    }*/
+}
 void Map::report() {
     Serial.println("");
     Serial.println(">>>>>>>");
@@ -95,4 +100,16 @@ void Map::report() {
     }
     Serial.println(">>>>>>>");
     Serial.println("");
+}
+
+int Map::getID() {
+    while (usedIDs.count(nextID)) {
+        nextID++;
+    }
+    usedIDs.insert(nextID);
+    return nextID;
+}
+
+void Map::removeID(int idToRemove) {
+   usedIDs.erase(idToRemove);
 }

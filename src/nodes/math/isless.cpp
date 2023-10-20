@@ -19,19 +19,19 @@ void IsLess::setup() {
 
 int IsLess::onExecute() {
     bool update = false;
-    output = NULL;
+    output = 0;
     if (getInput("a")) {
-        A = *getInput("a");
-        setInput("a", NULL);
+        A = getInput("a");
+        setInput("a", INT_MAX);
         Serial.print("A gate:");
         Serial.println(A);
         update = true;
     }
     
     if (getInput("b")) {
-        B = *getInput("b");
-        setInput("b", NULL);
-        output = &value;
+        B = getInput("b");
+        setInput("b", INT_MAX);
+        output = value;
         Serial.print("B gate:");
         Serial.println(B);
         update = true;
@@ -39,7 +39,7 @@ int IsLess::onExecute() {
  
     if (update) {
         value = (A < B);
-        output = &value;
+        output = value;
         setOutput("v", output);
         Serial.println("IsEqual output ");
     }

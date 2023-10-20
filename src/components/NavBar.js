@@ -24,7 +24,7 @@ export default function NavBar({ openDrawer, setOpenDrawer, showSaveAsFiles, sho
   };
 
   const cleanNodework = () => {
-    window.socket.emit("clean", {});
+    window.socket.sendToServer("clear", {});
   };
 
 

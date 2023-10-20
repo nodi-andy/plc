@@ -13,8 +13,8 @@ void IsEqual::setup() {
     addInput("b");
     addOutput("v");
 
-    A = props["properties"]["a"].as<int>();
-    B = props["properties"]["b"].as<int>();
+    A = this->getProp("a", "value");
+    B = this->getProp("b", "value");
     value = 1;
     state = 0;
 }
@@ -22,15 +22,15 @@ void IsEqual::setup() {
 int IsEqual::onExecute() {
     bool update = false;
     if (getInput("a")) {
-        A = *getInput("a");
-        setInput("a", NULL);
+        A = getInput("a");
+        setInput("a", INT_MAX);
         Serial.print("A gate:");
         Serial.println(A);
         update = true;
     }
     if (getInput("b")) {
-        B = *getInput("b");
-        setInput("b", NULL);
+        B = getInput("b");
+        setInput("b", INT_MAX);
         Serial.print("B gate:");
         Serial.println(B);
         update = true;
@@ -38,7 +38,7 @@ int IsEqual::onExecute() {
  
     if (update) {
         value = (A == B);
-        setOutput("v", &value);
+        setOutput("v", value);
         Serial.print("IsEqual output ");
         Serial.println(value);
     }

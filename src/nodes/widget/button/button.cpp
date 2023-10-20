@@ -8,7 +8,7 @@ Button::Button(int portNr) {
 void Button::setup() {
     title = "Button";
     desc = "Read input";
-    JsonObject jsonProp = props["properties"];
+    /*JsonObject jsonProp = props["properties"];
 
     // Iterate through the properties object
     for (JsonPair property : props["properties"].as<JsonObject>()) {
@@ -20,9 +20,9 @@ void Button::setup() {
       Serial.println(propertyName);
       addProp(propertyName);
       vals[propertyName] = props["properties"][propertyName]["value"].as<int>();
-    }
+    }*/
 
-    port = vals["port"];
+    port = getProp("port", "value");
     if (port >= 0) {
       pinMode(port, INPUT);
       pinMode(port, INPUT_PULLUP);
@@ -41,50 +41,37 @@ int Button::onExecute() {
   if (port >= 0) {
 
     value = 1;
-    int newState = digitalRead(port);
-
+    if (hasInput("state")) {
+      setProp("state", "value", getInput("state"));
+      clearInput("state");
+    }
+    int newState = digitalRead(port) || getProp("state");
+    //Serial.print("New state: ");
+    //Serial.println(newState);
     if (state == newState) return false;
 
-
-    /*if ( inputVals.count("in") ) {
+    if (newState == 0) {
+      //output = &vals["press"];
+      setProp("state", "value", getProp("press", "value"));
+      setProp("state", "outValue", getProp("press", "value"));
+      Serial.println("Button state EdgeDown: ");
       updateOutput = true;
-      if (newState == 0) {
-        Serial.println("Button conduct EdgeDown: ");
-        if (defaultPress && *defaultPress) {
-          output = inputVals["in"][0];
-        } else {
-          output = &NULL_DATA;
-        }
-      } 
-      if (newState == 1) {
-        Serial.println("Button conduct EdgeUp: ");
-        if (defaultRelease && *defaultRelease) {
-          output = inputVals["in"][0];
-        } else {
-          output = &NULL_DATA;
-        }
-      } 
-    } else */{
-      if (newState == 0) {
-        output = &vals["press"];
-        Serial.println("Button state EdgeDown: ");
-        updateOutput = true;
-      } 
-      if (newState == 1) {
-        output = &vals["release"];
-        Serial.println("Button state EdgeUp: ");
-        updateOutput = true;
-      }
+    }
+
+    if (newState == 1) {
+      //output = &vals["release"];
+      setProp("state", "value", getProp("release", "value"));
+      setProp("state", "outValue", getProp("release", "value"));
+      Serial.println("Button state EdgeUp: ");
+      updateOutput = true;
     }
     state = newState;
   }
   
   if (updateOutput) {
-    setOutput("state", output);
+    //setOutput("state", output);
     Serial.print("Button output: ");
-    if (output) {
-      Serial.println(*output);
-    }
+    Serial.println(getProp("state", "value"));
   }
   return true;
 }

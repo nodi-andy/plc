@@ -10,7 +10,7 @@ void Number::setup() {
     desc = "Show value of input";
 
     // Iterate through the properties object
-    for (JsonPair property : props["properties"].as<JsonObject>()) {
+    /*for (JsonPair property : props["properties"].as<JsonObject>()) {
       JsonObject propObj = property.value().as<JsonObject>();
       
       // Check if the "input" property is true
@@ -41,7 +41,7 @@ void Number::setup() {
 
     if (props["properties"].containsKey("value")) {
       value = props["properties"]["value"]["value"].as<int>();
-    }
+    }*/
 
     newvalue = value;
 }
@@ -50,12 +50,12 @@ int Number::onExecute() {
     int ret = 0;
     bool update = false;
     if (getInput("set")) {
-        newvalue = *getInput("set");
-        setInput("set", NULL);
+        newvalue = getInput("set");
+        setInput("set", INT_MAX);
         update = true;
     }
     if (getInput("read")) {
-        setInput("read", NULL);
+        setInput("read", INT_MAX);
         update = true;
     }
 
@@ -64,7 +64,7 @@ int Number::onExecute() {
     if (update) {
         Serial.print("Number changed: ");
         Serial.println(value);
-        setOutput("get", &value);
+        setOutput("get", value);
     }
     return ret;
 }

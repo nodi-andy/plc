@@ -7,7 +7,7 @@ export default class LEDCore extends NodeCore {
     static desc = "LED";
     
     static setup(prop) {
-        NodeCore.setProperty(prop, "state", "number", 0, "state", {input: true, output: false});
+        NodeCore.setProperty(prop, "state", "number", 0, " ", {input: true, output: false});
         NodeCore.setProperty(prop, "set", "number", 0, "set", {input: false, output: false});
         NodeCore.setProperty(prop, "clear", "number", 0, "clear", {input: false, output: false});
         NodeCore.setProperty(prop, "toggle", "number", 0, "toggle", {input: false, output: false});

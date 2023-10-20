@@ -18,7 +18,6 @@ class Button : public Node
 
     private:
     int defaultPressVal;
-    int NULL_DATA = INT_MAX;
     int defaultReleaseVal;
     int *defaultPress;
     int *defaultRelease;

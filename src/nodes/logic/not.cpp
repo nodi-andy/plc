@@ -15,18 +15,18 @@ void LogicNot::setup() {
 
 int LogicNot::onExecute() {
     bool update = false;
-    output = NULL;
-    int *inpA = getInput("a");
-    if (inpA) {
-        value = !(*inpA);
-        setInput("a", NULL);
+    output = 0;
+    int inpA = getInput("a");
+    if (inpA != INT_MAX) {
+        value = !(inpA);
+        setInput("a", INT_MAX);
         Serial.print("A gate:");
         Serial.println(value);
         update = true;
     }
  
     if (update) {
-        output = &value;
+        output = value;
         setOutput("v", output);
         Serial.println("NOT gate output ");
     }

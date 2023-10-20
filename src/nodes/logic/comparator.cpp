@@ -15,7 +15,7 @@ void Comparator::setup() {
 }
 
 int Comparator::onExecute() {
-    value = (*getInput("A") == *getInput("B"));
-    this->setOutput(0, &value);
+    value = (getInput("A") == getInput("B"));
+    this->setOutput(0, value);
     return 0;
 }

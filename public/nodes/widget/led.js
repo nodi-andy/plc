@@ -28,14 +28,15 @@ export default class WidgetLed extends LEDCore {
         ctx.stroke();
 
         if (this.properties.label.value) {
+            ctx.font = "12px Arial";
             ctx.textAlign = "center";
             ctx.fillStyle = "#AAA";
             ctx.fillText(this.properties.label.value, this.widget.size[0] * 0.5, 10);
         }
     }
 
-    updateProp(name, val) {
-        this.properties[name].value = val;
+    updateProp(key, name, val) {
+        this.properties[key][name] = val;
         window.nodes.update(this.id, this.properties);
     }
 
@@ -75,7 +76,7 @@ export default class WidgetLed extends LEDCore {
             local_pos[1] >  this.widget.size[0] * 0.25 &&
             local_pos[0] < this.widget.size[0] * 0.75 &&
             local_pos[1] < this.widget.size[1] * 0.75) {
-            this.properties.state.inpValue = this.properties.state.value ? 0 : 1;
+            this.updateProp("state", "inpValue", this.properties.state.value ? 0 : 1)
             this.update = true;
 
             return true;

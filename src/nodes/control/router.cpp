@@ -11,7 +11,7 @@ void Router::setup() {
     name = "control/filter";
 
     // Iterate through the properties object
-    for (JsonPair property : props["properties"].as<JsonObject>()) {
+    /*for (JsonPair property : props["properties"].as<JsonObject>()) {
         JsonObject propObj = property.value().as<JsonObject>();
         
         // Check if the "input" property is true
@@ -38,26 +38,26 @@ void Router::setup() {
             Serial.println(propertyName);
             addOutput(propertyName);
         }
-    }
+    }*/
 
 }
 
 int Router::onExecute() {
     bool update = false;
 
-    if (getInput("in")) {
+    if (getInput("in") != INT_MAX) {
         Serial.print("Router c: ");
-        Serial.print(*getInput("in"));
+        Serial.print(getInput("in"));
         Serial.print(" : ");
-        Serial.println(props["properties"]["pass"]["value"].as<int>());
+        Serial.println(getProp("pass", "value"));
 
-        if (*getInput("in") == props["properties"]["pass"]["value"].as<int>()) {
-            value = *getInput("in");
-            setOutput("out", &value);
+        if (getInput("in") == getProp("pass", "value")) {
+            value = getInput("in");
+            setOutput("out", value);
             Serial.print("Router: output ");
             Serial.println(value);
         }
-        setInput("in", NULL);
+        setInput("in", INT_MAX);
     }
     return 0;
 }

@@ -449,15 +449,15 @@ export var LiteGraph = (global.LiteGraph = {
 
         node.widget.setSize(node.widget.computeSize(node.properties));
         node.widget.pos = LiteGraph.DEFAULT_POSITION.concat();
-        node.type = type;
+        if (node.type == null) node.type = type;
         if (options) {
             node.id = options.id;
             node.widget.id = options.id;
         }
         //extra options
-        if (options?.properties) {
-            for (var i in options.properties) {
-                node.properties[i] = options.properties[i];
+        if (options) {
+            for (var i in options) {
+                node.properties[i] = options[i];
             }
         }
 
@@ -1130,7 +1130,7 @@ class LGraph {
             if (links) {
                     for (link of links) {
                     node.disconnectInput(link);
-                    window.socket.emit("remLink", {"id": link.id});
+                    window.socket.sendToServer("remLink", {"nodeID": link.id});
                     this.removeLink(link);
                 }
             }
@@ -1142,7 +1142,7 @@ class LGraph {
             if (links) {
                 for (link of links) {
                     node.disconnectOutput(link);
-                    window.socket.emit("remLink", {"id": link.id});
+                    window.socket.sendToServer("remLink", {"nodeID": link.id});
                     this.removeLink(link);
                 }
             }
