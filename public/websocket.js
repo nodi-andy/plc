@@ -52,7 +52,7 @@ socket.on("nodeAdded", (message) => {
 });
 
 socket.on("addLink", (msg) => {
-    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.id);
+    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
     window.canvas.dirty_canvas = true;
 });
 
@@ -69,7 +69,7 @@ socket.on("addIoT", (msg) => {
 });
 
 socket.on("remLink", (msg) => {
-    window.graph.removeLink(msg.id);
+    window.graph.removeLink(msg.nodeID);
     window.canvas.dirty_canvas = true;
 });
 

@@ -20,7 +20,7 @@ export default class LinkCore {
             this.target_slot = o[4];
             this.type = o[5];
         } else {
-            this.id = o.id;
+            this.id = o.nodeID;
             this.type = o.type;
             this.origin_id = o.from;
             this.origin_slot = o.fromSlot;

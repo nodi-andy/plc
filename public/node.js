@@ -384,7 +384,7 @@ export default class LGraphNode extends NodeCore {
                          window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE)];
         }
         if (this.onResize) this.onResize(this.size);
-        //if (update) window.socket.sendToServer("setSize", {id: this.id, size:this.size});
+        if (update) window.socket.sendToServer("setSize", {id: this.id, size:this.size});
     }
     /**
          * add a new property to this node
