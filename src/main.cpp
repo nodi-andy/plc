@@ -448,6 +448,29 @@ void noditronTask( void * pvParameters ) {
             }
 
             nodemap.report();
+        } else if (eventName == "getNodework") {
+            StaticJsonDocument<2024> jsondoc;
+            JsonArray array = jsondoc.to<JsonArray>();
+            array.add("setNodework");
+
+            JsonObject map = array.createNestedObject();
+
+            map["nodes"] = array.createNestedArray();
+            for (auto n : nodemap.nodes) {
+                JsonObject newNode = map["nodes"].createNestedObject();
+                newNode["type"] = n.second->getType();
+                newNode["properties"] = n.second->getProps();
+            }
+
+            JsonArray jsonLinks = array.createNestedArray();
+            for (auto n : nodemap.links) {
+                jsonLinks.add(n.second->getProps());
+            }
+
+            string msg;
+            serializeJson(jsondoc, msg);
+            socketIO.sendEVENT(msg.c_str());
+            USE_SERIAL.printf("[getMap] : %s\n", msg.c_str());
         } else if (eventName == "clear") {
             nodemap.clear();
         } else if (eventName == "id") {
@@ -458,17 +481,34 @@ void noditronTask( void * pvParameters ) {
             USE_SERIAL.printf("[nodework:move] name: %s\n", eventName.c_str());
             
         } else if (eventName == "updateNode") {
-
             USE_SERIAL.printf("[updateNode] id: %d\n", id);
             if (nodemap.nodes[id]) {
                 USE_SERIAL.printf("[updateNode.found] id: %d\n", id);
                 nodemap.nodes[id]->setProps(djsondoc[1]["newData"]["properties"]);
             }
+        } else if (eventName == "updateSlot") {
+            USE_SERIAL.printf("[updateSlot] id: %d\n", id);
+            if (nodemap.nodes[id]) {
+                USE_SERIAL.printf("[updateSlot.found] id: %d\n", id);
+                nodemap.nodes[id]->setInput(djsondoc[1]["newData"]["prop"].as<string>(), djsondoc[1]["newData"]["value"].as<int>());
+            }
         } else if (eventName == "addNode") {
-            int newID = nodemap.getID();
-            djsondoc[1]["nodeID"] = newID;
-            USE_SERIAL.printf("[event::addNode] id: %d\n", newID);
+            StaticJsonDocument<2024> jsondoc;
+            JsonArray array = jsondoc.to<JsonArray>();
+            array.add("nodeAdded");
+            
+            //int newID = nodemap.getID();
+            //djsondoc[1]["nodeID"] = newID;
+            USE_SERIAL.printf("[event::addNode] id: %d\n", djsondoc[1].as<int>());
             nodemap.addNode(djsondoc[1]);
+
+            array.add(djsondoc[1]);
+            string msg;
+            serializeJson(jsondoc, msg);
+            socketIO.sendEVENT(msg.c_str());
+
+        } else if (eventName == "movedNode") {
+            
         } else if (eventName == "remNode") {
             USE_SERIAL.printf("[remNode] id: %d\n", id);
         } else if (eventName == "addLink") {

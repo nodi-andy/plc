@@ -7,5 +7,6 @@ export default class NodiBoxB1 extends WidgetButton {
         this.properties.label.value = "1";
         this.properties.color.value = "#3399ff";
         this.type = WidgetButton.type;
+        this.device = "nodi.box";
     }
 }

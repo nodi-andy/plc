@@ -22,7 +22,7 @@ export default class WidgetToggle extends ToggleCore{
         var margin = 0.25;
         var y = this.widget.size[1] * 0.25;
         var w = 0;
-        if (this.title.trim().length) {
+        if (this.title?.trim().length) {
             ctx.font = this.properties.font || (size * 0.8).toFixed(0) + "px Arial";
             w = ctx.measureText(this.title).width;
         }

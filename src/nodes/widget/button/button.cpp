@@ -8,19 +8,6 @@ Button::Button(int portNr) {
 void Button::setup() {
     title = "Button";
     desc = "Read input";
-    /*JsonObject jsonProp = props["properties"];
-
-    // Iterate through the properties object
-    for (JsonPair property : props["properties"].as<JsonObject>()) {
-      JsonObject propObj = property.value().as<JsonObject>();
-      const char* propertyName = property.key().c_str();
-      
-      // Call your addInput function with propertyName
-      Serial.print("Adding property: ");
-      Serial.println(propertyName);
-      addProp(propertyName);
-      vals[propertyName] = props["properties"][propertyName]["value"].as<int>();
-    }*/
 
     port = getProp("port", "value");
     if (port >= 0) {

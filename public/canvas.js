@@ -3063,43 +3063,38 @@ export default class LGraphCanvas {
         ctx.fillStyle = bgcolor;
 
         var low_quality = this.ds.scale < 0.5;
-        var title = String(node.title);
+        var title = node.title;
         //render node area depending on shape
         var shape = node._shape || node.constructor.shape || LiteGraph.ROUND_SHAPE;
-
-
-
         var area = tmp_area;
         area[0] = 0; //x
         area[1] = 0; //y
         area[2] = size[0]; //w
         area[3] = size[1]; //h
 
-
         //full node shape
-
-            ctx.beginPath();
-            if (shape == LiteGraph.BOX_SHAPE || low_quality) {
-                ctx.fillRect(area[0], area[1], area[2], area[3]);
-            } else if (shape == LiteGraph.ROUND_SHAPE ||
-                shape == LiteGraph.CARD_SHAPE) {
-                ctx.roundRect(
-                    area[0],
-                    area[1],
-                    area[2],
-                    area[3],
-                    shape == LiteGraph.CARD_SHAPE ? [this.round_radius, this.round_radius, 0, 0] : [this.round_radius]
-                );
-            } else if (shape == LiteGraph.CIRCLE_SHAPE) {
-                ctx.arc(
-                    size[0] * 0.5,
-                    size[1] * 0.5,
-                    size[0] * 0.5,
-                    0,
-                    Math.PI * 2
-                );
-            }
-            ctx.fill();
+        ctx.beginPath();
+        if (shape == LiteGraph.BOX_SHAPE || low_quality) {
+            ctx.fillRect(area[0], area[1], area[2], area[3]);
+        } else if (shape == LiteGraph.ROUND_SHAPE ||
+            shape == LiteGraph.CARD_SHAPE) {
+            ctx.roundRect(
+                area[0],
+                area[1],
+                area[2],
+                area[3],
+                shape == LiteGraph.CARD_SHAPE ? [this.round_radius, this.round_radius, 0, 0] : [this.round_radius]
+            );
+        } else if (shape == LiteGraph.CIRCLE_SHAPE) {
+            ctx.arc(
+                size[0] * 0.5,
+                size[1] * 0.5,
+                size[0] * 0.5,
+                0,
+                Math.PI * 2
+            );
+        }
+        ctx.fill();
             
         ctx.shadowColor = "transparent";
 
@@ -3107,12 +3102,13 @@ export default class LGraphCanvas {
             node.onDrawBackground(ctx, this, this.canvas, this.graph_mouse);
         }
 
-
+        if (title) {
             let fontSize = 30;
             ctx.font = fontSize + "px Arial";
             ctx.textAlign = "center";
             ctx.fillStyle = "white";
             ctx.fillText(title, node.widget.size[0] / 2, (node.widget.size[1] + fontSize) / 2);
+        }
         //render selection marker
         if (selected) {
             if (node.onBounding) {

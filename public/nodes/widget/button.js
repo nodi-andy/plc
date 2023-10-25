@@ -39,8 +39,8 @@ export default class WidgetButton extends ButtonCore {
 
     onMouseDown(e, local_pos) {
         if (local_pos[0] > WidgetButton.margin && local_pos[1] > WidgetButton.margin && local_pos[0] < this.widget.size[0] - WidgetButton.margin && local_pos[1] < this.widget.size[1] - WidgetButton.margin) {
-            this.properties.state.value = this.properties.press.value;
-            this.properties.state.outValue = this.properties.state.value;
+            //this.properties.state.value = this.properties.press.value;
+            //this.properties.state.outValue = this.properties.state.value;
             window.nodes.update(this.id, {"state": {"inpValue" : 1}});
             return true;
         }

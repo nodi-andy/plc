@@ -3,7 +3,6 @@
 LED::LED() {
 }
 
-// init the node
 void LED::setup() {
     title = "LED";
     name = "LED";
@@ -23,8 +22,6 @@ void LED::setup() {
 }
 
 int LED::onExecute() {
- // Serial.printf("[LED exec]\n");
-
   if (hasInput("port")) {
     setProp("port", "value", getInput("port"));
     pinMode(getProp("port"), OUTPUT);

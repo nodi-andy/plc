@@ -424,28 +424,11 @@ export var LiteGraph = (global.LiteGraph = {
             return null;
         }
 
-        title = title || base_class.title || type;
+        var node = new base_class(title);
 
-        var node = null;
-
-        if (LiteGraph.catch_exceptions) {
-            try {
-                node = new base_class(title);
-            } catch (err) {
-                console.error(err);
-                return null;
-            }
-        } else {
-            node = new base_class(title);
-        }
-
-        if (!node.title && title) {
-            node.title = title;
-        }
         if (!node.properties) {
             node.properties = {};
         }
-
 
         node.widget.setSize(node.widget.computeSize(node.properties));
         node.widget.pos = LiteGraph.DEFAULT_POSITION.concat();
@@ -454,11 +437,8 @@ export var LiteGraph = (global.LiteGraph = {
             node.id = options.id;
             node.widget.id = options.id;
         }
-        //extra options
-        if (options) {
-            for (var i in options) {
-                node.properties[i] = options[i];
-            }
+        for (var i in options) {
+            node.properties[i] = options[i];
         }
 
         if (options?.widget) {
@@ -1510,9 +1490,11 @@ class LGraph {
             for (var i = 0, l = nodes.length; i < l; ++i) {
                 var n_info = nodes[i]; //stored info
                 if (!n_info) continue;
-                var node = LiteGraph.createNode(n_info.type, n_info.title, n_info);
-                node.id = n_info.id; //id it or it will create a new id
-                node.widget.id = n_info.id;
+                var node = LiteGraph.createNode(n_info.type, n_info.title, n_info.properties);
+                node.id = n_info.nodeID; //id it or it will create a new id
+                node.widget.id = n_info.nodeID;
+                node.widget.pos = n_info.widget.pos;
+                node.widget.size = n_info.widget.size;
                 this.add(node, true); //add before configure, otherwise configure cannot create links
             }
 
@@ -1520,9 +1502,9 @@ class LGraph {
             for (i = 0, l = nodes.length; i < l; ++i) {
                 n_info = nodes[i];
                 if (!n_info) continue;
-                node = this.getNodeById(n_info.id);
+                node = this.getNodeById(n_info.nodeID);
                 if (node) {
-                    node.configure(n_info);
+                    node.configure(n_info.properties);
                 }
             }
         }

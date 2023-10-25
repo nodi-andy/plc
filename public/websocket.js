@@ -40,10 +40,10 @@ socket.on("id", (message) => {
     socket.sendToServer("id", {id: "browser"});
 });
 
-socket.on("addNode", (message) => {
+socket.on("nodeAdded", (message) => {
     let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
-    newNode.id = message.id;
-    newNode.widget.id = message.id;
+    newNode.id = message.nodeID;
+    newNode.widget.id = message.nodeID;
     newNode.type = message.type;
     newNode.widget.pos = message.widget.pos;
     newNode.widget.setSize(message.widget.size);
@@ -54,6 +54,18 @@ socket.on("addNode", (message) => {
 socket.on("addLink", (msg) => {
     window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.id);
     window.canvas.dirty_canvas = true;
+});
+
+socket.on("addIoT", (msg) => {
+    LiteGraph.registerNodeType("nodi.box/b1", NodiBoxB1);
+    LiteGraph.registerNodeType("nodi.box/b2", NodiBoxB2);
+    LiteGraph.registerNodeType("nodi.box/b3", NodiBoxB3);
+    LiteGraph.registerNodeType("nodi.box/b4", NodiBoxB4);
+    LiteGraph.registerNodeType("nodi.box/green_led", NodiBoxGreen);
+    LiteGraph.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
+    LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
+
+    window.updateNodeList();
 });
 
 socket.on("remLink", (msg) => {
@@ -74,7 +86,7 @@ socket.on("clear", (message) => {
 
 socket.on("moveNode", (message) => {
     // Handle incoming messages here
-    Object.assign(window.graph._nodes_by_id[message.nodeID].widget, message.newData);
+    Object.assign(window.graph._nodes_by_id[message.nodeID].widget, message.moveTo);
     window.canvas.dirty_canvas = true;
 });
 
@@ -143,15 +155,7 @@ function initWebSocket() {
 }
 
 function onOpen(event) {
-    LiteGraph.registerNodeType("nodi.box/b1", NodiBoxB1);
-    LiteGraph.registerNodeType("nodi.box/b2", NodiBoxB2);
-    LiteGraph.registerNodeType("nodi.box/b3", NodiBoxB3);
-    LiteGraph.registerNodeType("nodi.box/b4", NodiBoxB4);
-    LiteGraph.registerNodeType("nodi.box/green_led", NodiBoxGreen);
-    LiteGraph.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
-    LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
 
-    window.updateNodeList();
     console.log('Connection opened');
 }
 

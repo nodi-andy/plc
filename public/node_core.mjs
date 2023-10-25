@@ -10,6 +10,7 @@ export default class NodeCore {
     constructor(title) {
         this.title = title;
         this.update = false;
+        this.device = "server";
         this.properties = {}; //for the values
     }
     /**
@@ -47,9 +48,6 @@ export default class NodeCore {
             }
         }
 
-        if (!info.title) {
-            this.title = this.constructor.title;
-        }
 
         for (let i = 0; i < NodeCore.getInputs(this.properties).length; ++i) {
             var input = NodeCore.getInputs(this.properties)[i];

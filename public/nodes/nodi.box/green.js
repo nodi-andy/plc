@@ -7,6 +7,7 @@ export default class NodiBoxGreen extends WidgetLed {
         this.properties.label.value = "green";
         this.properties.color.value = "00ff00";
         this.type = WidgetLed.type;
+        this.device = "nodi.box";
     }
 }
 

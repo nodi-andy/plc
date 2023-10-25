@@ -47,10 +47,6 @@ export default class LGraphNode extends NodeCore {
             }
         }
 
-        if (!info.title) {
-            this.title = this.constructor.title;
-        }
-
         for (let i = 0; i < NodeCore.getInputs(this.properties).length; ++i) {
             var input = NodeCore.getInputs(this.properties)[i];
             var link_info = this.graph ? this.graph.links[input.link] : null;

@@ -23,7 +23,6 @@ export default class ButtonCore extends NodeCore {
         let ret = false;
         for(let input in prop) {
             if (prop[input].input == false) continue;
-            if (input.name == "state") continue;
             if (prop[input].inpValue != null) {
                 prop[input].value = prop[input].inpValue;
                 prop[input].inpValue = null;
