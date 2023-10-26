@@ -8,14 +8,14 @@ export default class TimeIntervalCore extends NodeCore {
     static desc = "Interval";
 
     static setup(prop) {
-        NodeCore.setProperty(prop,"press", "number", 1, "press", {input: false, output: false});
-        NodeCore.setProperty(prop,"release", "number", 0, "release", {input: false, output: false});
-        NodeCore.setProperty(prop,"ton", "number", 500, "release", {input: false, output: false});
-        NodeCore.setProperty(prop,"toff", "number", 500, "release", {input: false, output: false});
-        NodeCore.setProperty(prop,"state", "number", 0, "state", {input: false, output: true});
-        NodeCore.setProperty(prop,"value", "number", 0, "state", {input: false, output: false});
-        NodeCore.setProperty(prop,"lastOn", "number", 0, "state", {input: false, output: false});
-        NodeCore.setProperty(prop,"lastOff", "number", 0, "state", {input: false, output: false});
+        NodeCore.setProperty(prop,"state", {output: true});
+        NodeCore.setProperty(prop,"press", {value: 1});
+        NodeCore.setProperty(prop,"release");
+        NodeCore.setProperty(prop,"ton", {value: 500});
+        NodeCore.setProperty(prop,"toff", {value: 500});
+        NodeCore.setProperty(prop,"value");
+        NodeCore.setProperty(prop,"lastOn");
+        NodeCore.setProperty(prop,"lastOff");
         this.type = TimeIntervalCore.type
         TimeIntervalCore.reset(prop);
     }

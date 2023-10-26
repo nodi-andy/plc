@@ -74,7 +74,6 @@ export default class LLink {
         start_dir = start_dir || NodiEnums.RIGHT;
         end_dir = end_dir || NodiEnums.LEFT;
 
-        var dist = Math.distance(a, b);
         ctx.setLineDash([]);
         if (canvas.render_connections_border && canvas.ds.scale > 0.6) {
             ctx.lineWidth = canvas.connections_width + 4;

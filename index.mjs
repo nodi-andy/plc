@@ -140,10 +140,12 @@ io.on('connection', socket => {
   });
 
   socket.on('connected', msg => {
-    console.log("[connected]");
+    console.log("[connected]", msg);
   });
+
   socket.on('setNodework', msg => {
     if (socket.devType == "nodi.box") {
+      // tbd nodi.box
     } else {
       nodeWorkJSON = msg;
       socket.broadcast.emit('setNodework', msg);

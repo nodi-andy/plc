@@ -7,9 +7,11 @@ export default class MathIsGreater extends NodeCore {
     static desc = "Is greater";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", "number", 0, " ", {input: true, output: false});
-        NodeCore.setProperty(prop, "in2", "number", 0, " ", {input: true, output: false});
-        NodeCore.setProperty(prop, "value", "number", 0, " ", {input: false, output: true});
+        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
+        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
+        NodeCore.setProperty(prop, "value", {label:" ", output: true});
+        NodeCore.setProperty(prop, "yes");
+        NodeCore.setProperty(prop, "no");
         this.type = MathIsGreater.type
         MathIsGreater.reset(prop);
     }
@@ -26,7 +28,9 @@ export default class MathIsGreater extends NodeCore {
         }
         if (!inpChanged) return false;
 
-        prop.value.outValue = (prop.in1.value > prop.in2.value);
+        prop.value.value = prop.value.outValue = (prop.in1.value > prop.in2.value) ? 1 : 0;
+        if (prop.value.value == true) prop.yes.outValue = 1;
+        if (prop.value.value == false) prop.no.outValue = 1;
         return true;
     }
 

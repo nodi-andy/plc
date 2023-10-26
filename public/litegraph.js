@@ -263,10 +263,6 @@ export var LiteGraph = (global.LiteGraph = {
                     this.node_types_by_file_extension[ ext.toLowerCase() ] = base_class;
             }
         }
-        
-        // TODO one would want to know input and ouput :: this would allow trought registerNodeAndSlotType to get all the slots types
-        //console.debug("Registering "+type);
-        if (this.auto_load_slot_types) nodeTmp = new base_class(base_class.title || "tmpnode");
     },
 
     /**
@@ -283,100 +279,8 @@ export var LiteGraph = (global.LiteGraph = {
             delete this.Nodes[base_class.constructor.name];
     },
 
-    /**
-    * Save a slot type and his node
-    * @method registerSlotType
-    * @param {String|Object} type name of the node or the node constructor itself
-    * @param {String} slot_type name of the slot type (variable type), eg. string, number, array, boolean, ..
-    */
-    registerNodeAndSlotType: function(type,slot_type,out){
-        out = out || false;
-        var base_class = type.constructor === String && this.registered_node_types[type] !== "anonymous" ? this.registered_node_types[type] : type;
-        
-        var sCN = base_class.constructor.type;
-        
-        if (typeof slot_type == "string"){
-            var aTypes = slot_type.split(",");
-        }else if (slot_type == this.EVENT || slot_type == this.ACTION){
-            var aTypes = ["_event_"];
-        }else{
-            var aTypes = ["*"];
-        }
 
-        for (var i = 0; i < aTypes.length; ++i) {
-            var sT = aTypes[i]; //.toLowerCase();
-            if (sT === ""){
-                sT = "*";
-            }
-            var registerTo = out ? "registered_slot_out_types" : "registered_slot_in_types";
-            if (typeof this[registerTo][sT] == "undefined") this[registerTo][sT] = {nodes: []};
-            this[registerTo][sT].nodes.push(sCN);
-            
-            // check if is a new type
-            if (!out){
-                if (!this.slot_types_in.includes(sT.toLowerCase())){
-                    this.slot_types_in.push(sT.toLowerCase());
-                    this.slot_types_in.sort();
-                }
-            }else{
-                if (!this.slot_types_out.includes(sT.toLowerCase())){
-                    this.slot_types_out.push(sT.toLowerCase());
-                    this.slot_types_out.sort();
-                }
-            }
-        }
-    },
     
-    /**
-     * Create a new nodetype by passing a function, it wraps it with a proper class and generates inputs according to the parameters of the function.
-     * Useful to wrap simple methods that do not require properties, and that only process some input to generate an output.
-     * @method wrapFunctionAsNode
-     * @param {String} name node name with namespace (p.e.: 'math/sum')
-     * @param {Function} func
-     * @param {Array} param_types [optional] an array containing the type of every parameter, otherwise parameters will accept any type
-     * @param {String} return_type [optional] string with the return type, otherwise it will be generic
-     * @param {Object} properties [optional] properties to be configurable
-     */
-    wrapFunctionAsNode: function(
-        name,
-        func,
-        param_types,
-        return_type,
-        properties
-    ) {
-        var params = Array(func.length);
-        var code = "";
-        var names = LiteGraph.getParameterNames(func);
-        for (var i = 0; i < names.length; ++i) {
-            code +=
-                "this.addInput('" +
-                names[i] +
-                "'," +
-                (param_types && param_types[i]
-                    ? "'" + param_types[i] + "'"
-                    : "0") +
-                ");\n";
-        }
-        code +=
-            "this.addOutput('out'," +
-            (return_type ? "'" + return_type + "'" : 0) +
-            ");\n";
-        if (properties) {
-            code +=
-                "this.properties = " + JSON.stringify(properties) + ";\n";
-        }
-        var classobj = Function(code);
-        classobj.title = name.split("/").pop();
-        classobj.desc = "Generated from " + func.name;
-        classobj.prototype.onExecute = function onExecute() {
-            for (var i = 0; i < params.length; ++i) {
-                params[i] = this.getInputData(i);
-            }
-            var r = func.apply(this, params);
-            this.setOutputData(0, r);
-        };
-        this.registerNodeType(name, classobj);
-    },
 
     /**
      * Removes all previously registered node's types
@@ -873,14 +777,8 @@ class LGraph {
 
         this.sendEventToAllNodes("onStop");
     }
-    /**
-         * Run N steps (cycles) of the graph
-         * @method runStep
-         * @param {number} num number of steps to run, default is 1
-         * @param {Boolean} do_not_catch_errors [optional] if you want to try/catch errors
-         * @param {number} limit max number of nodes to execute (used to execute from start to a node)
-         */
-    runStep(num, do_not_catch_errors, limit) {
+
+    runStep() {
         var start = NodiEnums.getTime();
         this.globaltime = 0.001 * (start - this.starttime);
 
@@ -937,41 +835,7 @@ class LGraph {
         this.nodes_executedAction = [];
     }
 
-    /**
-         * Returns all the nodes that could affect this one (ancestors) by crawling all the inputs recursively.
-         * It doesn't include the node itself
-         * @method getAncestors
-         * @return {Array} an array with all the LGraphNodes that affect this node, in order of execution
-         */
-    getAncestors(node) {
-        var ancestors = [];
-        var pending = [node];
-        var visited = {};
-
-        while (pending.length) {
-            var current = pending.shift();
-            if (!current.getInputs()) {
-                continue;
-            }
-            if (!visited[current.id] && current != node) {
-                visited[current.id] = true;
-                ancestors.push(current);
-            }
-
-            for (var i = 0; i < current.getInputs().length; ++i) {
-                var input = current.getInputNode(i);
-                if (input && ancestors.indexOf(input) == -1) {
-                    pending.push(input);
-                }
-            }
-        }
-
-        ancestors.sort(function (a, b) {
-            return a.order - b.order;
-        });
-        return ancestors;
-    }
-
+    
     /**
          * Returns the amount of time the graph has been running in milliseconds
          * @method getTime
@@ -1191,37 +1055,8 @@ class LGraph {
         }
         return result;
     }
-    /**
-         * Returns a list of nodes that matches a type
-         * @method findNodesByType
-         * @param {String} type the name of the node type
-         * @return {Array} a list with all the nodes of this type
-         */
-    findNodesByType(type, result) {
-        type = type.toLowerCase();
-        result = result || [];
-        result.length = 0;
-        for (var i = 0, l = this._nodes.length; i < l; ++i) {
-            if (this._nodes[i].type.toLowerCase() == type) {
-                result.push(this._nodes[i]);
-            }
-        }
-        return result;
-    }
-    /**
-         * Returns the first node that matches a name in its title
-         * @method findNodeByTitle
-         * @param {String} name the name of the node to search
-         * @return {Node} the node or null
-         */
-    findNodeByTitle(title) {
-        for (var i = 0, l = this._nodes.length; i < l; ++i) {
-            if (this._nodes[i].title == title) {
-                return this._nodes[i];
-            }
-        }
-        return null;
-    }
+
+    
     /**
          * Returns a list of nodes that matches a name
          * @method findNodesByTitle

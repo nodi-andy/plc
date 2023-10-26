@@ -7,9 +7,9 @@ export default class CounterCore extends NodeCore {
     static desc = "Counter";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "inc", "number", 0, "inc", {input: true, output: false});
-        NodeCore.setProperty(prop, "dec", "number", 0, "dec", {input: true, output: false});
-        NodeCore.setProperty(prop, "value", "number", 0, "v", {input: false, output: true});
+        NodeCore.setProperty(prop, "inc", {input: true});
+        NodeCore.setProperty(prop, "dec", {input: true});
+        NodeCore.setProperty(prop, "value",{label:" ", output: true});
         this.type = CounterCore.type;
         prop.value.value = 0;
     }
@@ -26,6 +26,13 @@ export default class CounterCore extends NodeCore {
             prop.value.value = parseInt(prop.value.value) - parseInt(prop.dec.inpValue);
             prop.value.outValue = prop.value.value;
             prop.dec.inpValue = null;
+            return true;
+        }
+
+        if (prop.value.inpValue !== null && isNaN(prop.value.inpValue) == false) {
+            prop.value.value = parseInt(prop.value.inpValue) ;
+            prop.value.outValue = prop.value.value;
+            prop.value.inpValue = null;
             return true;
         }
 

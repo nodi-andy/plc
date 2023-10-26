@@ -7,13 +7,13 @@ export default class ToggleCore extends NodeCore {
     static desc = "Triggers an event";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "state", "number", 0, " ", {input: false, output: true});
-        NodeCore.setProperty(prop, "press", "number", 1, " ", {input: false, output: false});
-        NodeCore.setProperty(prop, "release", "number", 0, " ", {input: false, output: false});
-        NodeCore.setProperty(prop, "in", "number", null, "in", {input: false, output: false});
-        NodeCore.setProperty(prop, "label", "string", "B1", "label", {input: false, output: false});
-        NodeCore.setProperty(prop, "port", "number", null, "port", {input: false, output: false});
-        NodeCore.setProperty(prop, "color", "string",  "red", "color", {input: false, output: false});
+        NodeCore.setProperty(prop, "state", {label: " ", output: true});
+        NodeCore.setProperty(prop, "press", {value : 1});
+        NodeCore.setProperty(prop, "release");
+        NodeCore.setProperty(prop, "in", );
+        NodeCore.setProperty(prop, "label", {value: "T1"});
+        NodeCore.setProperty(prop, "port");
+        NodeCore.setProperty(prop, "color", {value: "red"});
 
         this.type = ToggleCore.type
         ToggleCore.reset(prop);

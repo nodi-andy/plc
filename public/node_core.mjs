@@ -198,23 +198,19 @@ export default class NodeCore {
          * @param {String} name
          * @param {*} value
          */
-    static setProperty(properties, name, type, value, label, extra_info) {
-        if (!properties) {
-            properties = {};
-        }
-        properties[name] = {}
-        if (value === properties[name])
-            return;
+    static setProperty(properties, name, info) {
+        if (!properties) return;
+        
+        if (!properties[name]) properties[name]  = {};
+        
         var prop = properties[name];
         prop.name = name;
-        prop.value = value;
-        prop.type = type;
-        prop.label = label;
-        var i;
-        if (extra_info) {
-            for (i in extra_info) {
-                properties[name][i] = extra_info[i];
-            }
+        prop.value = 0;
+        prop.label = name;
+        prop.input = false;
+        prop.output = false;
+        for (let i in info) {
+            prop[i] = info[i];
         }
     }
     
@@ -432,14 +428,7 @@ export default class NodeCore {
         }
         return r;
     }
-    addOnTriggerInput() {
-        var trigS = this.findInputSlot("onTrigger");
-        if (trigS == -1) { //!trigS || 
-            this.addInput("onTrigger", window.LiteGraph.EVENT, { optional: true, nameLocked: true });
-            return this.findInputSlot("onTrigger");
-        }
-        return trigS;
-    }
+
     addOnExecutedOutput() {
         var trigS = this.findOutputSlot("onExecuted");
         if (trigS == -1) { //!trigS || 
@@ -543,9 +532,6 @@ export default class NodeCore {
             this.onOutputAdded(output);
         }
 
-        if (window.LiteGraph.auto_load_slot_types)
-            window.LiteGraph.registerNodeAndSlotType(this, type, true);
-
         return output;
     }
     /**
@@ -567,9 +553,6 @@ export default class NodeCore {
             if (this.onOutputAdded) {
                 this.onOutputAdded(o);
             }
-
-            if (window.LiteGraph.auto_load_slot_types)
-                window.LiteGraph.registerNodeAndSlotType(this, info[1], true);
 
         }
     }
@@ -608,7 +591,7 @@ export default class NodeCore {
     addInputByName(name) {
         this.updateProperties(name, "input", true);
         let prop = this.properties[name];
-        this.addInput(name, prop.type, prop.defaultValue, prop.label)
+        this.addInput(name, prop.defaultValue, prop.label)
         window.socket.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
 
         window.updateEditDialog();
@@ -628,11 +611,10 @@ export default class NodeCore {
          * @param {string} type string defining the input type ("vec3","number",...), it its a generic one use 0
          * @param {Object} extra_info this can be used to have special properties of an input (label, color, position, etc)
          */
-    addInput(name, type, defaultValue, label, extra_info) {
-        type = type || "number";
+    addInput(name, defaultValue, label, extra_info) {
         defaultValue = defaultValue || 0;
         label = label || name;
-        var input = { name: name, type: type, link: null, label: label };
+        var input = { name: name, link: [], label: label };
         if (extra_info) {
             for (var i in extra_info) {
                 input[i] = extra_info[i];
@@ -645,7 +627,6 @@ export default class NodeCore {
             this.onInputAdded(input);
         }
 
-        window.LiteGraph.registerNodeAndSlotType(this, type);
         return input;
     }
     
@@ -902,9 +883,8 @@ export default class NodeCore {
          */
     disconnectInput(link) {
         var input = this.getInputByName(link.target_slot);
-        if (!input) {
-            return false;
-        }
+        if (!input) return false;
+        if (!input.links) return false;
 
         var link_id = link.id;
         if (link_id != null) {

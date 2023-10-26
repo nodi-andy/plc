@@ -128,10 +128,10 @@
 
         var graphcanvas = LGraphCanvas.active_canvas;
         for (var node in graphcanvas.selected_nodes) {
-            window.socket.sendToServer("remNode", {"id" : graphcanvas.selected_nodes[node].id});
+            window.socket.sendToServer("remNode", {"nodeID" : graphcanvas.selected_nodes[node].id});
         }
         
-        if (canvas.selectedLink != null) window.socket.sendToServer("remLink", {"id": canvas.selectedLink});
+        if (canvas.selectedLink != null) window.socket.sendToServer("remLink", {"nodeID": canvas.selectedLink});
     }
 
     window.nodes.editNode = () => {

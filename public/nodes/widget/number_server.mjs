@@ -7,8 +7,8 @@ export default class NumberCore extends NodeCore {
     static desc = "Number";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "value", "number", 0, " ", {input: false, output: false});
-        NodeCore.setProperty(prop, "read", "number", 0, "read", {input: false, output: false});
+        NodeCore.setProperty(prop, "value", {label: " "});
+        NodeCore.setProperty(prop, "read");
         this.type = NumberCore.type
         NumberCore.reset(prop);
     }

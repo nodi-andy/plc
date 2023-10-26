@@ -9,9 +9,9 @@ class Filter extends LGraphNode{
 
     constructor() {
         super();
-        this.setProperty("in", "number", 0, " ", {input: true, output: false});
-        this.setProperty("pass", "number", 0, " ", {input: false, output: false});
-        this.setProperty("out", "number", 0, " ", {input: false, output: true});
+        this.setProperty("in", {input: true});
+        this.setProperty("pass");
+        this.setProperty("out",  {output: true});
 
         this.selected = 0;
         this.type = Filter.type;

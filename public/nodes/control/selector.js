@@ -8,9 +8,9 @@ class Selector extends LGraphNode{
 
     constructor() {
         super();
-        this.setProperty("SelIn", "number", 0, "sel", {input: true, output: false});
-        this.setProperty("a", "number", 0, "a", {input: true, output: false});
-        this.setProperty("out", "number", 0, "out", {input: false, output: true});
+        this.setProperty("SelIn", "sel", {input: true});
+        this.setProperty("a", "a", {input: true});
+        this.setProperty("out", "out", {output: true});
         this.type = Selector.type;
     }
 

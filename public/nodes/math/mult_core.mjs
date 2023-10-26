@@ -7,9 +7,9 @@ export default class MathMultCore extends NodeCore {
     static desc = "Mult";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", "number", 0, " ", {input: true, output: false});
-        NodeCore.setProperty(prop, "in2", "number", 0, " ", {input: true, output: false});
-        NodeCore.setProperty(prop, "value", "number", 0, " ", {input: false, output: true});
+        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
+        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
+        NodeCore.setProperty(prop, "value", {label:" ", output: true});
         this.type = MathMultCore.type
         MathMultCore.reset(prop);
     }

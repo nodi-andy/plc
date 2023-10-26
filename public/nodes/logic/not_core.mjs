@@ -7,8 +7,8 @@ export default class NotCore extends NodeCore {
     static desc = "Not gate";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", "number", 0, " ", {input: true, output: false});
-        NodeCore.setProperty(prop, "value", "number", 0, " ", {input: false, output: true});
+        NodeCore.setProperty(prop, "in1",  {label:" ", input: true});
+        NodeCore.setProperty(prop, "value",  {label:" ", output: true});
         this.type = NotCore.type
         NotCore.reset(prop);
     }

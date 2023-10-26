@@ -7,13 +7,13 @@ export default class ButtonCore extends NodeCore {
     static desc = "Triggers an event";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "state", "number", 0, " ", {input: false, output: true});
-        NodeCore.setProperty(prop, "press", "number", 1, " ", {input: false, output: false});
-        NodeCore.setProperty(prop, "release", "number", 0, " ", {input: false, output: false});
-        NodeCore.setProperty(prop, "in", "number", null, "in", {input: false, output: false});
-        NodeCore.setProperty(prop, "label", "string", "B1", "label", {input: false, output: false});
-        NodeCore.setProperty(prop, "port", "number", null, "port", {input: false, output: false});
-        NodeCore.setProperty(prop, "color", "string",  "gray", "color", {input: false, output: false});
+        NodeCore.setProperty(prop, "state", {label: " ", output: true});
+        NodeCore.setProperty(prop, "press",  {label: " ", value: 1, input: false});
+        NodeCore.setProperty(prop, "release", {label: " ", input: false});
+        NodeCore.setProperty(prop, "in", {value: null, input: false});
+        NodeCore.setProperty(prop, "label", {value: "B1"});
+        NodeCore.setProperty(prop, "port", {value: null, input: false});
+        NodeCore.setProperty(prop, "color", {value: "gray", input: false});
 
         this.type = ButtonCore.type
         ButtonCore.reset(prop);
@@ -21,13 +21,7 @@ export default class ButtonCore extends NodeCore {
 
     static run(prop) {
         let ret = false;
-        for(let input in prop) {
-            if (prop[input].input == false) continue;
-            if (prop[input].inpValue != null) {
-                prop[input].value = prop[input].inpValue;
-                prop[input].inpValue = null;
-            }
-        }
+
         if (prop.state && prop.state.inpValue == 0 && prop.state.value == 1) {
             prop.state.outValue = prop.release.value;
             ret = true;

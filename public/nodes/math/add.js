@@ -16,6 +16,13 @@ class MathAdd extends MathAddCore{
         return MathAddCore.run(props);
     }
 
+    onDrawForeground(ctx) {
+        ctx.fillStyle = "#AAA";
+        ctx.font = "24px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("+", this.widget.size[0] * 0.5, this.widget.size[1] * 0.5);
+    }
+
 }
 
 LiteGraph.registerNodeType(MathAdd.type, MathAdd);

@@ -1,6 +1,4 @@
 import { NodiEnums } from "./enums.mjs";
-
-import LLink from "./link.mjs"
 import NodeCore from "./node_core.mjs";
 
 export default class LGraphNode extends NodeCore {
@@ -188,14 +186,6 @@ export default class LGraphNode extends NodeCore {
         return this.title || this.constructor.title;
     }
     
-    addOnTriggerInput() {
-        var trigS = this.findInputSlot("onTrigger");
-        if (trigS == -1) { //!trigS || 
-            this.addInput("onTrigger", window.LiteGraph.EVENT, { optional: true, nameLocked: true });
-            return this.findInputSlot("onTrigger");
-        }
-        return trigS;
-    }
     addOnExecutedOutput() {
         var trigS = this.findOutputSlot("onExecuted");
         if (trigS == -1) { //!trigS || 
@@ -396,8 +386,7 @@ export default class LGraphNode extends NodeCore {
          */
     addProperty(name, default_value, type, extra_info) {
 
-        if (type === undefined) type = typeof default_value
-        var o = { name: name, type: type, default_value: default_value };
+        var o = { name: name, default_value: default_value };
         if (extra_info) {
             for (var i in extra_info) {
                 o[i] = extra_info[i];
@@ -426,23 +415,19 @@ export default class LGraphNode extends NodeCore {
          */
     addOutput(name, type, extra_info, label) {
         label = label || name;
-        var output = { name: name, type: type, links: null, label: label };
+        var output = { name: name, links: null, label: label };
         if (extra_info) {
             for (var i in extra_info) {
                 output[i] = extra_info[i];
             }
         }
 
-        if (!NodeCore.getOutputs(this.properties)) {
-            NodeCore.getOutputs(this.properties) = [];
+        if (NodeCore.getOutputs(this.properties)) {
+            NodeCore.getOutputs(this.properties).push(output);
+            if (this.onOutputAdded) {
+                this.onOutputAdded(output);
+            }
         }
-        NodeCore.getOutputs(this.properties).push(output);
-        if (this.onOutputAdded) {
-            this.onOutputAdded(output);
-        }
-
-        if (window.LiteGraph.auto_load_slot_types)
-            window.LiteGraph.registerNodeAndSlotType(this, type, true);
 
         this.setSize(this.widget.computeSize());
         this.setDirtyCanvas(true, true);
@@ -463,16 +448,12 @@ export default class LGraphNode extends NodeCore {
                 }
             }
 
-            if (!NodeCore.getOutputs(this.properties)) {
-                NodeCore.getOutputs(this.properties) = [];
+            if (NodeCore.getOutputs(this.properties)) {
+                NodeCore.getOutputs(this.properties).push(o);
+                if (this.onOutputAdded) {
+                    this.onOutputAdded(o);
+                }
             }
-            NodeCore.getOutputs(this.properties).push(o);
-            if (this.onOutputAdded) {
-                this.onOutputAdded(o);
-            }
-
-            if (window.LiteGraph.auto_load_slot_types)
-                window.LiteGraph.registerNodeAndSlotType(this, info[1], true);
 
         }
 
@@ -516,7 +497,7 @@ export default class LGraphNode extends NodeCore {
     addInputByName(name) {
         this.updateProperties(name, "input", true);
         let prop = this.properties[name];
-        this.addInput(name, prop.type, prop.defaultValue, prop.label)
+        this.addInput(name, prop.defaultValue, prop.label)
         window.socket.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
 
         window.updateEditDialog();
@@ -533,13 +514,11 @@ export default class LGraphNode extends NodeCore {
          * add a new input slot to use in this node
          * @method addInput
          * @param {string} name
-         * @param {string} type string defining the input type ("vec3","number",...), it its a generic one use 0
          */
     addInput(props, name, type, defaultValue, label) {
-        type = type || "number";
         defaultValue = defaultValue || 0;
         label = label || name;
-        var input = { name: name, type: type, link: null, label: label };
+        var input = { name: name, link: null, label: label };
 
         props[name] = input;
         this.setSize(this.widget.computeSize());
@@ -782,7 +761,7 @@ export default class LGraphNode extends NodeCore {
          * @param {number} y
          * @return {boolean}
          */
-    isPointInside(x, y, margin, skip_title) {
+    isPointInside(x, y, margin) {
         margin = margin || 0;
 
         var margin_top = 0;

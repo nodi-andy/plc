@@ -10,7 +10,7 @@ class Junction extends JunctionCore{
         this.properties = {};
         JunctionCore.setup(this.properties);
         this.widget = new LGraphNode();
-        this.widget.fixsize = [16, 16];
+        this.widget.fixsize = [32, 32];
         this.widget.type = Junction.type;
         this.widget.properties = this.properties;
         this.widgets = [this.widget];
