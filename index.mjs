@@ -63,33 +63,30 @@ const idGenerator = new UniqueIDGenerator();
 
 setInterval(() => {
 
-  // proxy
-  if (cmds && cmds.length) {
-    let socketID = cmds.who;
-    io.to(socketID).emit(cmds.what, socketID);
-    cmds.shift();
-  }
-
   nodeWorkJSON.nodes.forEach(node => {
     let c = NodeWork.getType(node.type);
+    if (node.cmds && node.cmds.length) {
+      mergeObjects(node.properties, node.cmds[0].what)
+
+      if (node.device == "nodi.box") {
+          if (node.cmds[0].who != "nodi.box") {
+            iot.emit('updateNode', {nodeID: node.nodeID, newData:{properties: node.properties}});
+          } else {
+            io.emit('updateNode', {nodeID: node.nodeID, newData: {properties: node.properties}});
+          }
+      }
+      node.cmds.shift();
+    }
     if (node.device == "server") {
       //if (node?.properties?.state?.inpValue) console.log(node?.properties?.state?.inpValue)
       //console.log(c)
-      if (node.cmds && node.cmds.length) {
-        mergeObjects(node.properties, node.cmds[0])
-        node.cmds.shift();
-      }
+
       try {
         if (c && c.run && c.run(node.properties) == true) {
-          io.emit('updateNode', {nodeID: node.nodeID, newData: {"properties": node.properties}});
+          io.emit('updateNode', {nodeID: node.nodeID, newData: {properties: node.properties}});
         }
       } catch (e) {
         console.log(e);
-      }
-    } else if (node.device == "nodi.box") {
-      if (node.cmds && node.cmds.length) {
-        iot.emit('updateNode', {nodeID: node.nodeID, newData:{properties: node.cmds[0]}});
-        node.cmds.shift();
       }
     }
   });
@@ -182,14 +179,15 @@ io.on('connection', socket => {
   });
 
   socket.on('updateNode', msg => {
-    console.log("[updateNode] ", msg);
+    console.log("[updateNode] ", msg.nodeID, msg.newData.properties.state);
 
     //socket.broadcast.emit('updateNode', msg);
     if (msg.newData == null) return;
     if (msg.nodeID == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID].cmds == undefined) nodeWorkJSON.nodes[msg.nodeID].cmds = [];
-    nodeWorkJSON.nodes[msg.nodeID].cmds.push(msg.newData.properties);
+
+    nodeWorkJSON.nodes[msg.nodeID].cmds.push({who: socket.devType, what:msg.newData.properties});
     //console.log(nodeWorkJSON);
   });
 

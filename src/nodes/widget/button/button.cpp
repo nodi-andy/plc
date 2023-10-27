@@ -22,43 +22,27 @@ void Button::setup() {
 }
 
 int Button::onExecute() {
-  bool updateOutput = false;
-  bool updateVal = false;
-  output = NULL;
-  if (port >= 0) {
+  if (port <= 0) return false;
 
-    value = 1;
-    if (hasInput("state")) {
-      setProp("state", "value", getInput("state"));
-      clearInput("state");
-    }
-    int newState = digitalRead(port) || getProp("state");
-    //Serial.print("New state: ");
-    //Serial.println(newState);
-    if (state == newState) return false;
-
-    if (newState == 0) {
-      //output = &vals["press"];
-      setProp("state", "value", getProp("press", "value"));
-      setProp("state", "outValue", getProp("press", "value"));
-      Serial.println("Button state EdgeDown: ");
-      updateOutput = true;
-    }
-
-    if (newState == 1) {
-      //output = &vals["release"];
-      setProp("state", "value", getProp("release", "value"));
-      setProp("state", "outValue", getProp("release", "value"));
-      Serial.println("Button state EdgeUp: ");
-      updateOutput = true;
-    }
-    state = newState;
+  if (hasInput("state")) {
+    setProp("state", "value", getInput("state"));
+    clearInput("state");
   }
-  
-  if (updateOutput) {
-    //setOutput("state", output);
-    Serial.print("Button output: ");
-    Serial.println(getProp("state", "value"));
+  int newState = !digitalRead(port);
+  if (state == newState) return false;
+  Serial.printf("New state: %d", newState);
+
+  if (newState == 1) {
+    setProp("state", "value", 1);
+    setProp("state", "outValue", getProp("press", "value"));
+    Serial.println("Button state EdgeDown: ");
   }
+
+  if (newState == 0) {
+    setProp("state", "value", 0);
+    setProp("state", "outValue", getProp("release", "value"));
+    Serial.println("Button state EdgeUp: ");
+  }
+  state = newState;
   return true;
 }
