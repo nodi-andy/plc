@@ -44,12 +44,10 @@ export var LiteGraph = (global.LiteGraph = {
     WIDGET_SECONDARY_TEXT_COLOR: "#999",
 
     LINK_COLOR: "#6B6",
-    EVENT_LINK_COLOR: "#A86",
     CONNECTING_LINK_COLOR: "#AFA",
 
     MAX_NUMBER_OF_NODES: 1000, //avoid infinite loops
     DEFAULT_POSITION: [32, 32], //default node position
-    VALID_SHAPES: ["default", "box", "round", "card"], //,"circle"
 
     //shapes are used for nodes but also for slots
     BOX_SHAPE: 1,
@@ -66,8 +64,6 @@ export var LiteGraph = (global.LiteGraph = {
     EVENT: -1, //for outputs
     ACTION: -1, //for inputs
 
-    NODE_MODES: ["Always", "On Event", "Never", "On Trigger"], // helper, will add "On Request" and more in the future
-    NODE_MODES_COLORS:["#666","#422","#333","#224","#626"], // use with node_box_coloured_by_mode
     ALWAYS: 0,
     ON_EVENT: 1,
     NEVER: 2,
@@ -257,8 +253,8 @@ export var LiteGraph = (global.LiteGraph = {
 
         //used to know which nodes create when dragging files to the canvas
         if (base_class.supported_extensions) {
-            for (var i=0; i < base_class.supported_extensions.length; i++) {
-                var ext = base_class.supported_extensions[i];
+            for (i=0; i < base_class.supported_extensions.length; i++) {
+                ext = base_class.supported_extensions[i];
                 if(ext && ext.constructor === String)
                     this.node_types_by_file_extension[ ext.toLowerCase() ] = base_class;
             }
@@ -581,7 +577,6 @@ for (let i = 97; i <= 123; i++) {
  * supported callbacks:
     + onNodeAdded: when a new node is added to the graph
     + onNodeRemoved: when a node inside this graph is removed
-    + onNodeConnectionChange: some connection has changed in the graph (connected or disconnected)
     *
     * @class LGraph
     * @constructor
@@ -594,7 +589,6 @@ class LGraph {
         if (LiteGraph.debug) {
             console.log("Graph created");
         }
-        this.list_of_graphcanvas = null;
         this.clear();
         if (o) {
             this.configure(o);
@@ -664,51 +658,13 @@ class LGraph {
 
         //notify canvas to redraw
         this.change();
-
-        this.sendActionToCanvas("clear");
     }
-    /**
-         * Attach Canvas to this graph
-         * @method attachCanvas
-         * @param {GraphCanvas} graph_canvas
-         */
-    attachCanvas(graphcanvas) {
-        if (graphcanvas.constructor != LGraphCanvas) {
-            throw "attachCanvas expects a LGraphCanvas instance";
-        }
-        if (graphcanvas.graph && graphcanvas.graph != this) {
-            graphcanvas.graph.detachCanvas(graphcanvas);
-        }
 
-        graphcanvas.graph = this;
-
-        if (!this.list_of_graphcanvas) {
-            this.list_of_graphcanvas = [];
-        }
-        this.list_of_graphcanvas.push(graphcanvas);
-    }
     /**
-         * Detach Canvas from this graph
-         * @method detachCanvas
-         * @param {GraphCanvas} graph_canvas
-         */
-    detachCanvas(graphcanvas) {
-        if (!this.list_of_graphcanvas) {
-            return;
-        }
-
-        var pos = this.list_of_graphcanvas.indexOf(graphcanvas);
-        if (pos == -1) {
-            return;
-        }
-        graphcanvas.graph = null;
-        this.list_of_graphcanvas.splice(pos, 1);
-    }
-    /**
-         * Starts running this graph every interval milliseconds.
-         * @method start
-         * @param {number} interval amount of milliseconds between executions, if 0 then it renders to the monitor refresh rate
-         */
+     * Starts running this graph every interval milliseconds.
+     * @method start
+     * @param {number} interval amount of milliseconds between executions, if 0 then it renders to the monitor refresh rate
+     */
     start(interval) {
         if (this.status == LGraph.STATUS_RUNNING) {
             return;
@@ -719,7 +675,6 @@ class LGraph {
             this.onPlayEvent();
         }
 
-        this.sendEventToAllNodes("onStart");
 
         //launch
         this.starttime = NodiEnums.getTime();
@@ -775,7 +730,6 @@ class LGraph {
             this.execution_timer_id = null;
         }
 
-        this.sendEventToAllNodes("onStop");
     }
 
     runStep() {
@@ -861,53 +815,7 @@ class LGraph {
     getElapsedTime() {
         return this.elapsed_time;
     }
-    /**
-         * Sends an event to all the nodes, useful to trigger stuff
-         * @method sendEventToAllNodes
-         * @param {String} eventname the name of the event (function to be called)
-         * @param {Array} params parameters in array format
-         */
-    sendEventToAllNodes(eventname, params, mode) {
-        mode = mode || LiteGraph.ALWAYS;
 
-        var nodes = this._nodes_in_order ? this._nodes_in_order : this._nodes;
-        if (!nodes) {
-            return;
-        }
-
-        for (var j = 0, l = nodes.length; j < l; ++j) {
-            var node = nodes[j];
-
-            if (node.constructor === LiteGraph.Subgraph &&
-                eventname != "onExecute") {
-                    node.sendEventToAllNodes(eventname, params, mode);
-                continue;
-            }
-
-            if (!node[eventname] ) {
-                continue;
-            }
-            if (params === undefined) {
-                node[eventname]();
-            } else if (params && params.constructor === Array) {
-                node[eventname].apply(node, params);
-            } else {
-                node[eventname](params);
-            }
-        }
-    }
-    sendActionToCanvas(action, params) {
-        if (!this.list_of_graphcanvas) {
-            return;
-        }
-
-        for (var i = 0; i < this.list_of_graphcanvas.length; ++i) {
-            var c = this.list_of_graphcanvas[i];
-            if (c[action]) {
-                c[action].apply(c, params);
-            }
-        }
-    }
     getNextID() {
         for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
             if (this._nodes_by_id[i] == null && this.links[i] == null) {
@@ -940,7 +848,7 @@ class LGraph {
         }
 
 
-        this.setDirtyCanvas(true);
+        this.canvas.setDirty(true);
         this.change();
 
         return node; //to chain actions
@@ -964,8 +872,6 @@ class LGraph {
         if (node.ignore_remove) {
             return;
         } //cannot be removed
-
-        this.beforeChange(); //sure? - almost sure is wrong
 
         var i, links, link;
         //disconnect inputs
@@ -1022,11 +928,7 @@ class LGraph {
             this.onNodeRemoved(node);
         }
 
-        //close panels
-        this.sendActionToCanvas("checkPanels");
-
-        this.setDirtyCanvas(true, true);
-        this.afterChange(); //sure? - almost sure is wrong
+        this.canvas.set(true, true);
         this.change();
 
     }
@@ -1149,28 +1051,8 @@ class LGraph {
             nodes[i].setTrigger(func);
         }
     }
-    //used for undo, called before any change is made to the graph
-    beforeChange(info) {
-        if (this.onBeforeChange) {
-            this.onBeforeChange(this, info);
-        }
-        this.sendActionToCanvas("onBeforeChange", this);
-    }
-    //used to resend actions, called after any change is made to the graph
-    afterChange(info) {
-        if (this.onAfterChange) {
-            this.onAfterChange(this, info);
-        }
-        this.sendActionToCanvas("onAfterChange", this);
-    }
-    
-    connectionChange(node) {
-        if (this.onConnectionChange) {
-            this.onConnectionChange(node);
-        }
-        this._version++;
-        this.sendActionToCanvas("onConnectionChange");
-    }
+
+
 
     /**
          * clears the triggered slot animation in all links (stop visual animation)
@@ -1192,14 +1074,11 @@ class LGraph {
         if (LiteGraph.debug) {
             console.log("Graph changed");
         }
-        this.sendActionToCanvas("setDirty", [true, true]);
         if (this.on_change) {
             this.on_change(this);
         }
     }
-    setDirtyCanvas(fg, bg) {
-        this.sendActionToCanvas("setDirty", [fg, bg]);
-    }
+
     /**
          * Destroys a link
          * @method removeLink
@@ -1221,7 +1100,7 @@ class LGraph {
             node.disconnectOutput(link);
         }
         if (this.links[link_id]) {
-            this.links.splice(link_id);
+            delete this.links[link_id];
         } 
     }
     //save and recover app state ***************************************
@@ -1351,7 +1230,7 @@ class LGraph {
             this.onConfigure(data);
 
         this._version++;
-        this.setDirtyCanvas(true, true);
+        this.canvas.setDirty(true, true);
         return error;
     }
     load(url, callback) {
@@ -1410,11 +1289,7 @@ global.LGraphNode = LiteGraph.LGraphNode = LGraphNode;
 
 global.LGraphCanvas = LiteGraph.LGraphCanvas = LGraphCanvas;
 
-LGraphCanvas.link_type_colors = {
-    "-1": LiteGraph.EVENT_LINK_COLOR,
-    number: "#AAA",
-    node: "#DCA"
-};
+
 LGraphCanvas.gradients = {}; //cache of gradients
 
 

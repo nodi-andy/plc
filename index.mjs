@@ -62,7 +62,7 @@ class UniqueIDGenerator {
 const idGenerator = new UniqueIDGenerator();
 
 setInterval(() => {
-
+  try {
   nodeWorkJSON.nodes.forEach(node => {
     let c = NodeWork.getType(node.type);
     if (node.cmds && node.cmds.length) {
@@ -81,13 +81,11 @@ setInterval(() => {
       //if (node?.properties?.state?.inpValue) console.log(node?.properties?.state?.inpValue)
       //console.log(c)
 
-      try {
+
         if (c && c.run && c.run(node.properties) == true) {
           io.emit('updateNode', {nodeID: node.nodeID, newData: {properties: node.properties}});
         }
-      } catch (e) {
-        console.log(e);
-      }
+
     }
   });
 
@@ -113,6 +111,10 @@ setInterval(() => {
   nodeWorkJSON.links.forEach(link => {
     nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue = null;
   });
+
+} catch (e) {
+  console.log(e);
+}
 }, "20");
 
 function mergeObjects(objA, objB) {
@@ -228,11 +230,10 @@ io.on('connection', socket => {
 
   socket.on('setSize', msg => {
    // console.log("[setSize]: ",msg.id, nodeWorkJSON.nodes[msg.id]);
-    if (msg.id != null && nodeWorkJSON.nodes[msg.id]) {
+    if (msg.nodeID != null && nodeWorkJSON.nodes[msg.nodeID]) {
       console.log("[setSize]: ");
-      console.log(msg);
-      console.log(nodeWorkJSON.nodes);
-      nodeWorkJSON.nodes[msg.id].widget.size = msg.size;
+      console.log(msg.nodeID);
+      nodeWorkJSON.nodes[msg.nodeID].widget.size = msg.size;
       socket.broadcast.emit('setSize', msg);
     }
   });
@@ -245,7 +246,7 @@ io.on('connection', socket => {
   socket.on('id', msg => {
     console.log("[event] ", msg.id);
     socket.devType = msg.id;
-    if (socket.devType == "nodi.box") {
+    if (socket.devType == "nodi.box" || socket.devType == "esp32mcu") {
       iot = io;
       socket.to("browser_room").emit('addIoT', socket.devType);
     }
@@ -258,12 +259,12 @@ io.on('connection', socket => {
   });
 
   socket.on('remLink', msg => {
-    console.log("[remLink] ", msg.id);
+    console.log("[remLink] ", msg.nodeID);
     io.emit('remLink', msg);
-    nodeWorkJSON.links = nodeWorkJSON.links.filter(obj => obj.id !== msg.id);
+    nodeWorkJSON.links = nodeWorkJSON.links.filter(obj => obj.nodeID !== msg.nodeID);
   });
 
-  socket.on('updateMe', () => {
+  socket.on('updateMe', (msg) => {
     //if (cmds == null) cmds = [];
     //cmds.push({"who": socket.id, "what" : "updateMe"});
     if (iot) {

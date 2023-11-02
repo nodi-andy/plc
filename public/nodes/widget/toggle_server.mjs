@@ -21,22 +21,18 @@ export default class ToggleCore extends NodeCore {
 
     static run(prop) {
         let ret = false;
-        for(let input in prop) {
-            if (prop[input].input == false) continue;
-            if (input.name == "state") continue;
-            if (prop[input].inpValue != null) {
-                prop[input].value = prop[input].inpValue;
-                prop[input].inpValue = null;
-            }
-        }
 
         if (prop.state && prop.state.inpValue == 1) {
             if (prop.state.value) {
                 prop.state.value = 0;
-                prop.state.outValue = prop.release.value;
+                if (prop.in.input == false) {
+                    prop.state.outValue = prop.release.value;
+                }
             } else {
                 prop.state.value = 1;
-                prop.state.outValue = prop.press.value;
+                if (prop.in.input == false) {
+                    prop.state.outValue = prop.press.value;
+                }
             }
             prop.state.inpValue = null;
             ret = true;

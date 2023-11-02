@@ -29,12 +29,10 @@ export const NodiEnums = {
     WIDGET_SECONDARY_TEXT_COLOR: "#999",
 
     LINK_COLOR: "#6B6",
-    EVENT_LINK_COLOR: "#A86",
     CONNECTING_LINK_COLOR: "#AFA",
 
     MAX_NUMBER_OF_NODES: 1000, //avoid infinite loops
     DEFAULT_POSITION: [32, 32], //default node position
-    VALID_SHAPES: ["default", "box", "round", "card"], //,"circle"
 
     //shapes are used for nodes but also for slots
     BOX_SHAPE: 1,
@@ -51,8 +49,6 @@ export const NodiEnums = {
     EVENT: -1, //for outputs
     ACTION: -1, //for inputs
 
-    NODE_MODES: ["Always", "On Event", "Never", "On Trigger"], // helper, will add "On Request" and more in the future
-    NODE_MODES_COLORS:["#666","#422","#333","#224","#626"], // use with node_box_coloured_by_mode
     ALWAYS: 0,
     ON_EVENT: 1,
     NEVER: 2,
@@ -79,11 +75,7 @@ export const NodiEnums = {
 
 }
 
-NodiEnums.link_type_colors = {
-    "-1": NodiEnums.EVENT_LINK_COLOR,
-    number: "#AAA",
-    node: "#DCA"
-};
+
 //timer that works everywhere
 if (typeof performance != "undefined") {
     NodiEnums.getTime = performance.now.bind(performance);

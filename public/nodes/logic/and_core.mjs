@@ -20,7 +20,7 @@ export default class AndCore extends NodeCore {
             if (prop[input].input == false) continue;
             if (prop[input].inpValue != null) {
                 inpChanged = true;
-                prop[input].value = parseInt(prop[input].inpValue);
+                prop[input].value = prop[input].inpValue ? 1 : 0;
                 prop[input].inpValue = null;
             }
         }

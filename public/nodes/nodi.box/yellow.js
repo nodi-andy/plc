@@ -7,5 +7,6 @@ export default class NodiBoxYellow extends WidgetLed {
         this.properties.label.value = "yellow";
         this.properties.color.value = "FFC300";
         this.type = WidgetLed.type;
+        this.device = "nodi.box";
     }
 }

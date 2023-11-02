@@ -43,17 +43,7 @@ export default class LGraphCanvas {
             input_off: "#778",
             input_on: "#7F7",
             output_off: "#778",
-            output_on: "#7F7" //"#BBD"
-        };
-        this.default_connection_color_byType = {
-            /*number: "#7F7",
-            string: "#77F",
-            boolean: "#F77",*/
-        };
-        this.default_connection_color_byTypeOff = {
-            /*number: "#474",
-            string: "#447",
-            boolean: "#744",*/
+            output_on: "#7F7"
         };
 
         this.highquality_render = true;
@@ -109,8 +99,6 @@ export default class LGraphCanvas {
         this.onNodeMoved = null; //called after moving a node
         this.onSelectionChange = null; //called if the selection changes
         this.onConnectingChange = null; //called before any link changes
-        this.onBeforeChange = null; //called before modifying the graph
-        this.onAfterChange = null; //called after modifying the graph
 
         this.connections_width = 3;
         this.round_radius = 8;
@@ -125,19 +113,13 @@ export default class LGraphCanvas {
 
         this.viewport = options.viewport || null; //to constraint render area to a portion of the canvas
 
-
-        //link canvas and graph
-        if (graph) {
-            graph.attachCanvas(this);
-        }
+        graph.canvas = this;
+        
 
         this.setCanvas(canvas, options.skip_events);
         this.clear();
-
-        if (!options.skip_render) {
-            this.startRendering();
-        }
-
+        this.startRendering();
+        this.setGraph(graph);
         this.autoresize = options.autoresize;
     }
 
@@ -246,7 +228,6 @@ export default class LGraphCanvas {
 
         this.dirty_canvas = true;
         this.dirty_bgcanvas = true;
-        this.dirty_area = null;
 
         this.node_in_panel = null;
         this.node_widget = null;
@@ -271,16 +252,13 @@ export default class LGraphCanvas {
             return;
         }
 
+        this.graph = graph;
+
         if (!skip_clear) {
             this.clear();
         }
 
-        if (!graph && this.graph) {
-            this.graph.detachCanvas(this);
-            return;
-        }
-
-        graph.attachCanvas(this);
+        graph.canvas = this;
 
         //remove the graph stack in case a subgraph was open
         if (this._graph_stack)
@@ -323,7 +301,7 @@ export default class LGraphCanvas {
             this._graph_stack.push(this.graph);
         }
 
-        graph.attachCanvas(this);
+        graph.canvas = this;
         this.checkPanels();
         this.setDirty(true, true);
     }
@@ -341,7 +319,7 @@ export default class LGraphCanvas {
         var graph = this._graph_stack.pop();
         this.selected_nodes = {};
         this.highlighted_links = {};
-        graph.attachCanvas(this);
+        graph.canvas = this;
         this.setDirty(true, true);
         if (subgraph_node) {
             this.centerOnNode(subgraph_node);
@@ -558,31 +536,7 @@ export default class LGraphCanvas {
 
         this._events_binded = false;
     }
-    /**
-         * this function allows to render the canvas using WebGL instead of Canvas2D
-         * this is useful if you plant to render 3D objects inside your nodes, it uses litegl.js for webgl and canvas2DtoWebGL to emulate the Canvas2D calls in webGL
-         * @method enableWebGL
-         */
-    enableWebGL() {
-        if (typeof GL === undefined) {
-            throw "litegl.js must be included to use a WebGL canvas";
-        }
-        if (typeof enableWebGLCanvas === undefined) {
-            throw "webglCanvas.js must be included to use this feature";
-        }
-
-        this.gl = this.ctx = enableWebGLCanvas(this.canvas);
-        this.ctx.webgl = true;
-        this.bgcanvas = this.canvas;
-        this.bgctx = this.gl;
-        this.canvas.webgl_enabled = true;
-
-        /*
-    GL.create({ canvas: this.bgcanvas });
-    this.bgctx = enableWebGLCanvas( this.bgcanvas );
-    window.gl = this.gl;
-    */
-    }
+    
     /**
          * marks as dirty the canvas, this way it will be rendered again
          *
@@ -737,7 +691,6 @@ export default class LGraphCanvas {
                     skip_action = true;
                     if (!block_drag_node) {
                         if (this.allow_dragnodes) {
-                            this.graph.beforeChange();
                             this.node_dragged = node;
                         }
                         if (!this.selected_nodes[node.id]) {
@@ -758,7 +711,6 @@ export default class LGraphCanvas {
                 //not dragging mouse to connect two slots
                 if (!this.connecting_node) {
                     if (!skip_action && node.resizable !== false && Math.isInsideRectangle(e.canvasX, e.canvasY, node.widget.pos[0] + node.widget.size[0] - 5, node.widget.pos[1] + node.widget.size[1] - 5, 10, 10)) {
-                        this.graph.beforeChange();
                         this.resizing_node = node;
                         this.canvas.style.cursor = "se-resize";
                         skip_action = true;
@@ -837,7 +789,6 @@ export default class LGraphCanvas {
 
                     if (!block_drag_node) {
                         if (this.allow_dragnodes) {
-                            this.graph.beforeChange();
                             this.node_dragged = node;
                         }
                         if (!this.selected_nodes[node.id]) {
@@ -957,8 +908,6 @@ export default class LGraphCanvas {
         }
 
         //TODO
-        //if(this.node_selected != prev_selected)
-        //	this.onNodeSelectionChange(this.node_selected);
         this.last_mouse[0] = e.clientX;
         this.last_mouse[1] = e.clientY;
         this.last_mouseclick = NodiEnums.getTime();
@@ -986,6 +935,7 @@ export default class LGraphCanvas {
 
         return false;
     }
+
     /**
          * Called when a mouse move event has to be processed
          * @method processMouseMove
@@ -1231,13 +1181,12 @@ export default class LGraphCanvas {
         e.preventDefault();
         return false;
     }
+
     /**
          * Called when a mouse up event has to be processed
          * @method processMouseUp
          */
     processMouseUp(e) {
-
-
         var is_primary = (e.isPrimary === undefined || e.isPrimary);
 
         //early exit for extra pointer
@@ -1364,7 +1313,6 @@ export default class LGraphCanvas {
             else if (this.resizing_node) {
                 this.dirty_canvas = true;
                 this.dirty_bgcanvas = true;
-                this.graph.afterChange(this.resizing_node);
                 this.resizing_node = null;
             } else if (this.node_dragged) {
                 this.dirty_canvas = true;
@@ -1376,7 +1324,6 @@ export default class LGraphCanvas {
                 }
                 if (this.onNodeMoved)
                     this.onNodeMoved(this.node_dragged);
-                this.graph.afterChange(this.node_dragged);
                 window.nodes.move(this.node_dragged.id, {pos:this.node_dragged.widget.pos});
 
                 this.node_dragged = null;
@@ -1468,6 +1415,7 @@ export default class LGraphCanvas {
         this.zoom(e)
         return false; // prevent default
     }
+
     /**
          * returns true if a position (in graph space) is on top of a node little corner box
          * @method isOverNodeBox
@@ -1478,6 +1426,7 @@ export default class LGraphCanvas {
         }
         return false;
     }
+
     /**
          * returns the INDEX if a position (in graph space) is on top of a node input slot
          * @method isOverNodeInput
@@ -1497,6 +1446,7 @@ export default class LGraphCanvas {
         }
         return null;
     }
+
     /**
          * returns the INDEX if a position (in graph space) is on top of a node output slot
          * @method isOverNodeOuput
@@ -1518,6 +1468,7 @@ export default class LGraphCanvas {
         }
         return -1;
     }
+
     /**
          * process a key event
          * @method processKey
@@ -1610,6 +1561,7 @@ export default class LGraphCanvas {
             return false;
         }
     }
+
     copyToClipboard() {
         var clipboard_info = {
             nodes: [],
@@ -1662,13 +1614,12 @@ export default class LGraphCanvas {
             JSON.stringify(clipboard_info)
         );
     }
+
     pasteFromClipboard() {
         var data = localStorage.getItem("litegrapheditor_clipboard");
         if (!data) {
             return;
         }
-
-        this.graph.beforeChange();
 
         //create nodes
         var clipboard_info = JSON.parse(data);
@@ -1721,9 +1672,8 @@ export default class LGraphCanvas {
         }
 
         this.selectNodes(nodes);
-
-        this.graph.afterChange();
     }
+
     /**
          * process a item drop event on top the canvas
          * @method processDrop
@@ -1802,6 +1752,7 @@ export default class LGraphCanvas {
 
         return false;
     }
+
     //called if the graph doesn't have a default drop item behaviour
     checkDropItem(e) {
         if (e.dataTransfer.files.length) {
@@ -1809,17 +1760,16 @@ export default class LGraphCanvas {
             var ext = LGraphCanvas.getFileExtension(file.name).toLowerCase();
             var nodetype = LiteGraph.node_types_by_file_extension[ext];
             if (nodetype) {
-                this.graph.beforeChange();
                 var node = LiteGraph.createNode(nodetype.type);
                 node.widget.pos = [e.canvasX, e.canvasY];
                 this.graph.add(node);
                 if (node.onDropFile) {
                     node.onDropFile(file);
                 }
-                this.graph.afterChange();
             }
         }
     }
+
     processNodeDblClicked(n) {
         if (this.onNodeDblClicked) {
             this.onNodeDblClicked(n);
@@ -1827,6 +1777,7 @@ export default class LGraphCanvas {
 
         this.setDirty(true);
     }
+
     processNodeSelected(node, e) {
         this.selectNode(node, e && (e.shiftKey || e.ctrlKey));
         if (this.onNodeSelected) {
@@ -1931,8 +1882,6 @@ export default class LGraphCanvas {
          */
     deleteSelectedNodes() {
 
-        this.graph.beforeChange();
-
         for (var i in this.selected_nodes) {
             var node = this.selected_nodes[i];
 
@@ -1949,7 +1898,6 @@ export default class LGraphCanvas {
         this.current_node = null;
         this.highlighted_links = {};
         this.setDirty(true);
-        this.graph.afterChange();
     }
     /**
          * centers the camera on a given node
@@ -2037,6 +1985,7 @@ export default class LGraphCanvas {
         this.graph._nodes.splice(i, 1);
         this.graph._nodes.push(node);
     }
+
     /**
          * sends a node to the back (below all other nodes)
          * @method sendToBack
@@ -2075,7 +2024,7 @@ export default class LGraphCanvas {
          * renders the whole canvas content, by rendering in two separated canvas, one containing the background grid and the connections, and one containing the nodes)
          * @method draw
          */
-    draw(force_canvas, force_bgcanvas) {
+    draw() {
         if (!this.canvas || this.canvas.width == 0 || this.canvas.height == 0) {
             return;
         }
@@ -2119,7 +2068,7 @@ export default class LGraphCanvas {
         }
 
         //clip dirty area if there is one, otherwise work in full canvas
-        var area = this.viewport || this.dirty_area;
+        var area = this.viewport ;
         if (area) {
             ctx.save();
             ctx.beginPath();
@@ -2175,7 +2124,6 @@ export default class LGraphCanvas {
 
                 //Draw
                 this.drawNode(node, ctx);
-                drawn_nodes += 1;
 
                 //Restore
                 ctx.restore();
@@ -2192,11 +2140,9 @@ export default class LGraphCanvas {
             //current connection (the one being dragged by the mouse)
             if (this.connecting_pos != null) {
                 ctx.lineWidth = this.connections_width;
-                var link_color = null;
 
                 var connInOrOut = this.connecting_output || this.connecting_input;
 
-                var connType = connInOrOut.type;
                 var connDir = connInOrOut.dir;
                 if (connDir == null) {
                     if (this.connecting_output)
@@ -2207,30 +2153,12 @@ export default class LGraphCanvas {
                 }
                 var connShape = connInOrOut.shape;
 
-                switch (connType) {
-                    case LiteGraph.EVENT:
-                        link_color = LiteGraph.EVENT_LINK_COLOR;
-                        break;
-                    default:
-                        link_color = LiteGraph.CONNECTING_LINK_COLOR;
-                }
 
                 //the connection being dragged by the mouse
-                this.renderLink(
-                    ctx,
-                    this.connecting_pos,
-                    [this.graph_mouse[0], this.graph_mouse[1]],
-                    null,
-                    false,
-                    null,
-                    link_color,
-                    connDir,
-                    LiteGraph.CENTER
-                );
+                this.renderLink(ctx, this.connecting_pos, [this.graph_mouse[0], this.graph_mouse[1]], null, false, null, LiteGraph.CONNECTING_LINK_COLOR, connDir, LiteGraph.CENTER);
 
                 ctx.beginPath();
-                if (connType === LiteGraph.EVENT ||
-                    connShape === LiteGraph.BOX_SHAPE) {
+                if (connShape === LiteGraph.BOX_SHAPE) {
                     ctx.rect(
                         this.connecting_pos[0] - 6 + 0.5,
                         this.connecting_pos[1] - 5 + 0.5,
@@ -2353,40 +2281,6 @@ export default class LGraphCanvas {
 
     }
 
-    //Draws a button into the canvas overlay and computes if it was clicked using the immediate gui paradigm
-    drawButton(x, y, w, h, text, bgcolor, hovercolor, textcolor) {
-        var ctx = this.ctx;
-        bgcolor = bgcolor || LiteGraph.NODE_DEFAULT_COLOR;
-        hovercolor = hovercolor || "#555";
-        textcolor = textcolor || LiteGraph.NODE_TEXT_COLOR;
-        var yFix = y + LiteGraph.NODE_TITLE_HEIGHT + 2; // fix the height with the title
-        var pos = this.mouse;
-        var hover = Math.isInsideRectangle(pos[0], pos[1], x, yFix, w, h);
-        pos = this.last_click_position;
-        var clicked = pos && Math.isInsideRectangle(pos[0], pos[1], x, yFix, w, h);
-
-        ctx.fillStyle = hover ? hovercolor : bgcolor;
-        if (clicked)
-            ctx.fillStyle = "#AAA";
-        ctx.beginPath();
-        ctx.roundRect(x, y, w, h, [4]);
-        ctx.fill();
-
-        if (text != null) {
-            if (text.constructor == String) {
-                ctx.fillStyle = textcolor;
-                ctx.textAlign = "center";
-                ctx.font = ((h * 0.65) | 0) + "px Arial";
-                ctx.fillText(text, x + w * 0.5, y + h * 0.75);
-                ctx.textAlign = "left";
-            }
-        }
-
-        var was_clicked = clicked && !this.block_click;
-        if (clicked)
-            this.blockClick();
-        return was_clicked;
-    }
     isAreaClicked(x, y, w, h, hold_click) {
         var pos = this.mouse;
         var hover = Math.isInsideRectangle(pos[0], pos[1], x, y, w, h);
@@ -2550,18 +2444,10 @@ export default class LGraphCanvas {
          * @method drawNode
          */
     drawNode(node, ctx) {
-        var glow = false;
-
         var color = node.color || node.constructor.color || LiteGraph.NODE_DEFAULT_COLOR;
         var bgcolor = node.bgcolor || node.constructor.bgcolor || LiteGraph.NODE_DEFAULT_BGCOLOR;
 
-        //shadow and glow
-        if (node.mouseOver) {
-            glow = true;
-        }
-
         var low_quality = this.ds.scale < 0.6; //zoomed out
-
 
 
         var editor_alpha = this.editor_alpha;
@@ -2620,8 +2506,6 @@ export default class LGraphCanvas {
 
         var render_text = !low_quality;
 
-        var out_slot = this.connecting_output;
-        var in_slot = this.connecting_input;
         ctx.lineWidth = 1;
 
         var max_y = 0;
@@ -2633,19 +2517,8 @@ export default class LGraphCanvas {
         var i = 0;
         for (var [id, slot] of Object.entries(node.properties)) {
             if (slot.input == false) continue;
-            var slot_type = slot.type;
-            var slot_shape = slot.shape;
-
             ctx.globalAlpha = editor_alpha;
-            ctx.fillStyle =
-                slot.link != null
-                    ? slot.color_on ||
-                    this.default_connection_color_byType[slot_type] ||
-                    this.default_connection_color.input_on
-                    : slot.color_off ||
-                    this.default_connection_color_byTypeOff[slot_type] ||
-                    this.default_connection_color_byType[slot_type] ||
-                    this.default_connection_color.input_off;
+            ctx.fillStyle = slot.link != null ? NodiEnums.LINK_COLOR : NodiEnums.CONNECTING_LINK_COLOR;
 
             var pos = node.widget.getConnectionPos(true, i, slot_pos);
             pos[0] -= node.widget.pos[0];
@@ -2656,16 +2529,7 @@ export default class LGraphCanvas {
 
             ctx.beginPath();
 
-            var doStroke = true;
-
-            //if (low_quality)
-                ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8); //faster
-            /*else {
-                ctx.moveTo(pos[0] + 8, pos[1] + 0.5);
-                ctx.lineTo(pos[0] - 4, pos[1] + 6 + 0.5);
-                ctx.lineTo(pos[0] - 4, pos[1] - 6 + 0.5);
-                ctx.closePath();
-            }*/
+            ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8); //faster
             ctx.fill();
 
             //render name
@@ -2690,7 +2554,6 @@ export default class LGraphCanvas {
         i = 0;
         for ([id, slot] of Object.entries(node.properties)) {
             if (slot.output == false) continue;
-            slot_type = slot.type;
 
             //change opacity of incompatible slots when dragging a connection
             if (this.connecting_input) {
@@ -2704,15 +2567,7 @@ export default class LGraphCanvas {
                 max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
             }
 
-            ctx.fillStyle =
-                slot.links && slot.links.length
-                    ? slot.color_on ||
-                    this.default_connection_color_byType[slot_type] ||
-                    this.default_connection_color.output_on
-                    : slot.color_off ||
-                    this.default_connection_color_byTypeOff[slot_type] ||
-                    this.default_connection_color_byType[slot_type] ||
-                    this.default_connection_color.output_off;
+            ctx.fillStyle = slot.link != null ? NodiEnums.LINK_COLOR : NodiEnums.CONNECTING_LINK_COLOR;
             ctx.beginPath();
             ctx.rect(pos[0] - 4, pos[1] - 4, 8, 8);
             ctx.fill();
@@ -2813,7 +2668,7 @@ export default class LGraphCanvas {
      * @method drawNodeShape
      */
 
-    drawNodeShape(node, ctx, size, fgcolor, bgcolor, selected, mouse_over) {
+    drawNodeShape(node, ctx, size, fgcolor, bgcolor, selected) {
         //bg rect
         ctx.strokeStyle = fgcolor;
         ctx.fillStyle = bgcolor;
@@ -3024,15 +2879,9 @@ export default class LGraphCanvas {
         }
 
         //choose color
-        if (!color && link) {
-            color = link.color || LGraphCanvas.link_type_colors[link.type];
-        }
-        if (!color) {
-            color = this.default_link_color;
-        }
-        if (link != null && this.highlighted_links[link.id]) {
-            color = "#FFF";
-        }
+        if (!color && link) color = link.color;
+        if (!color) color = this.default_link_color;
+        if (link != null && this.highlighted_links[link.id]) color = "#FFF";
 
         start_dir = start_dir || LiteGraph.RIGHT;
         end_dir = end_dir || LiteGraph.LEFT;
@@ -3255,6 +3104,7 @@ export default class LGraphCanvas {
         }
         ctx.globalAlpha = 1;
     }
+
     /**
          * draws the widgets stored inside a node
          * @method drawNodeWidgets
@@ -3294,6 +3144,7 @@ export default class LGraphCanvas {
         ctx.restore();
         ctx.textAlign = "left";
     }
+
     /**
          * process an event on widgets
          * @method processNodeWidgets
@@ -3323,6 +3174,7 @@ export default class LGraphCanvas {
 
         return null;
     }
+
     /**
          * draws every group area in the background
          * @method drawGroups
@@ -3369,6 +3221,7 @@ export default class LGraphCanvas {
 
         ctx.restore();
     }
+
     adjustNodesSize() {
         var nodes = this.graph._nodes;
         for (var i = 0; i < nodes.length; ++i) {
@@ -3396,10 +3249,6 @@ export default class LGraphCanvas {
         this.setDirty(true, true);
     }
 
-    
-    onNodeSelectionChange(node) {
-        return; //disabled
-    }
       
 }
 

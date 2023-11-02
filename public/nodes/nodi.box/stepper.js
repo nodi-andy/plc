@@ -6,6 +6,7 @@ export default class Stepper extends LGraphNode{
     static desc = "Stepper";
     static title_mode = LiteGraph.NO_TITLE;
     static type = "nodi.box/stepper";
+    static device = "nodi.box";
     
     constructor() {
         super();

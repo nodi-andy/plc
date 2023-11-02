@@ -8,6 +8,8 @@ import NodiBoxB4 from "./nodes/nodi.box/b4.js";
 import NodiBoxGreen from "./nodes/nodi.box/green.js";
 import NodiBoxYellow from "./nodes/nodi.box/yellow.js";
 import Stepper from "./nodes/nodi.box/stepper.js";
+import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
+import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
 //var gateway = `ws://${window.location.hostname}/ws`;
 var websocket = null;// new WebSocket(gateway);
@@ -25,7 +27,7 @@ window.socket.sendToServer = (msg, obj) => {
 // Event handler for when the connection is established
 socket.on("connect", () => {
     console.log("Connected to the server!");
-    socket.sendToServer('updateMe');
+    socket.sendToServer('updateMe', window.nodeworkID);
 
     onOpen();
 });
@@ -57,14 +59,18 @@ socket.on("addLink", (msg) => {
 });
 
 socket.on("addIoT", (msg) => {
-    LiteGraph.registerNodeType("nodi.box/b1", NodiBoxB1);
-    LiteGraph.registerNodeType("nodi.box/b2", NodiBoxB2);
-    LiteGraph.registerNodeType("nodi.box/b3", NodiBoxB3);
-    LiteGraph.registerNodeType("nodi.box/b4", NodiBoxB4);
-    LiteGraph.registerNodeType("nodi.box/green_led", NodiBoxGreen);
-    LiteGraph.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
-    LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
-
+    if (msg == "nodi.box") {
+        LiteGraph.registerNodeType("nodi.box/b1", NodiBoxB1);
+        LiteGraph.registerNodeType("nodi.box/b2", NodiBoxB2);
+        LiteGraph.registerNodeType("nodi.box/b3", NodiBoxB3);
+        LiteGraph.registerNodeType("nodi.box/b4", NodiBoxB4);
+        LiteGraph.registerNodeType("nodi.box/green_led", NodiBoxGreen);
+        LiteGraph.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
+        LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
+    } else if (msg == "esp32mcu") {
+        LiteGraph.registerNodeType("esp32mcu/b1", esp32mcuB1);
+        LiteGraph.registerNodeType("esp32mcu/led", esp32mcuLED);
+    }
     window.updateNodeList();
 });
 
@@ -92,7 +98,7 @@ socket.on("moveNode", (message) => {
 
 socket.on("setSize", (message) => {
     // Handle incoming messages here
-    window.graph._nodes_by_id[message.id].widget.setSize(message.size, false);
+    window.graph._nodes_by_id[message.nodeID].widget.setSize(message.size, false);
     window.canvas.dirty_canvas = true;
 });
 

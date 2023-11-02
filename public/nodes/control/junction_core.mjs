@@ -14,6 +14,7 @@ export default class JunctionCore extends NodeCore {
     static run(prop) {
 
         prop.value.outValue = prop.value.inpValue;
+        prop.value.inpValue = null;
         return true;
     }
 

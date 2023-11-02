@@ -10,6 +10,8 @@ export default class MathIsEqual extends NodeCore {
         NodeCore.setProperty(prop, "in1", {label:" ", input: true});
         NodeCore.setProperty(prop, "in2", {label:" ", input: true});
         NodeCore.setProperty(prop, "value", {label:" ", output: true});
+        NodeCore.setProperty(prop, "yes");
+        NodeCore.setProperty(prop, "no");
         this.type = MathIsEqual.type
         MathIsEqual.reset(prop);
     }
@@ -17,7 +19,6 @@ export default class MathIsEqual extends NodeCore {
     static run(prop) {
         let inpChanged = false;
         for(let input in prop) {
-            if (prop[input].input == false) continue;
             if (prop[input].inpValue != null) {
                 inpChanged = true;
                 prop[input].value = parseInt(prop[input].inpValue);
@@ -26,7 +27,10 @@ export default class MathIsEqual extends NodeCore {
         }
         if (!inpChanged) return false;
 
-        prop.value.outValue = (prop.in1.value == prop.in2.value);
+        prop.value.value = (prop.in1.value == prop.in2.value);
+        prop.value.outValue = prop.value.value;
+        if (prop.value.value == true) prop.yes.outValue = 1;
+        if (prop.value.value == false) prop.no.outValue = 1;
         return true;
     }
 

@@ -44,7 +44,7 @@ export default class WidgetButton extends ButtonCore {
             window.nodes.update(this.id, {"state": {"inpValue" : 1}});
             return true;
         }
-        this.graph.setDirtyCanvas(true);
+        this.graph.canvas.setDirty(true);
 
         return false;
     }

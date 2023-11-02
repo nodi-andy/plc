@@ -237,7 +237,6 @@ export default class NodeCore {
 
         //store data in the output itself in case we want to debug
         output_info._data = data;
-
     }
 
     /**
@@ -251,21 +250,7 @@ export default class NodeCore {
         return NodeCore.getInputs(this.properties)[slot].value;
     }
 
-    /**
-         * Retrieves the input data from one slot using its name instead of slot number
-         * @method getInputDataByName
-         * @param {String} slot_name
-         * @param {boolean} force_update if set to true it will force the connected node of this slot to output data into this link
-         * @return {*} data or if it is not connected returns null
-         */
-    getInputDataByName(slot_name,
-        force_update) {
-        var slot = this.findInputSlot(slot_name);
-        if (slot == -1) {
-            return null;
-        }
-        return this.getInputData(slot, force_update);
-    }
+
     /**
          * tells you if there is a connection in one input slot
          * @method isInputConnected
@@ -315,19 +300,10 @@ export default class NodeCore {
     }
 
     getInputByName(name) {
-        if (this.properties) {
-            return Object.values(this.properties).filter(obj => (obj.input == true && obj.name == name))[0];
-        } else {
-            return [];
-        }
+        let slot = this.properties[name];
+        return slot.input ? slot : null;
     }
-    setInputDataByName(name, val) {
-        for (let i = 0; i < NodeCore.getInputs(this.properties).length; i++) {
-            if (NodeCore.getInputs(this.properties)[i].name === name) {
-              NodeCore.getInputs(this.properties)[i].value = val;
-            }
-          }
-    }
+
     getInputIndexByName(name) {
         return Object.values(this.properties).filter(obj => (obj.input == true)).findIndex(el => el.name === name);
     }
@@ -356,27 +332,10 @@ export default class NodeCore {
     }
 
     getOutputByName(name) {
-        for (let i = 0; i < NodeCore.getOutputs(this.properties).length; i++) {
-            if (NodeCore.getOutputs(this.properties)[i].name === name) {
-              return NodeCore.getOutputs(this.properties)[i];
-            }
-          }
+        let slot = this.properties[name];
+        return slot.output ? slot : null;
     }
 
-    getOutputDataByName(name) {
-        for (let i = 0; i < NodeCore.getOutputs(this.properties).length; i++) {
-            if (NodeCore.getOutputs(this.properties)[i].name === name) {
-              return NodeCore.getOutputs(this.properties)[i].value;
-            }
-          }
-    }
-    setOutputDataByName(name, val) {
-        for (let i = 0; i < NodeCore.getOutputs(this.properties).length; i++) {
-            if (NodeCore.getOutputs(this.properties)[i].name === name) {
-              NodeCore.getOutputs(this.properties)[i].value = val;
-            }
-          }
-    }
 
     /**
          * tells you if there is a connection in one output slot
@@ -792,9 +751,8 @@ export default class NodeCore {
         }
 
 
-        if (target_node && target_node.constructor === Number) {
-            target_node = this.graph.getNodeById(target_node);
-        }
+        target_node = this.graph.getNodeById(target_node);
+
         if (!target_node) {
             throw "target node is null";
         }
@@ -804,19 +762,8 @@ export default class NodeCore {
             target_slot = target_node.getInputByName(target_slot);
         } 
 
-        var link_info = null;
+        var link_info = new LLink(id, "number", this.id,slot.name, target_node.id, target_slot.name);
 
-        // allow target node to change slot
-        if (target_node.onBeforeConnectInput) {
-            // This way node can choose another slot (or make a new one?)
-            target_slot = target_node.onBeforeConnectInput(target_slot); //callback
-        }
-
-
-        this.graph.beforeChange();
-
-        //create link class
-        link_info = new LLink(id, "number", this.id,slot.name, target_node.id, target_slot.name);
 
         //add to graph links list
         this.graph.links[link_info.id] = link_info;
@@ -828,17 +775,7 @@ export default class NodeCore {
         if (this.graph) {
             this.graph._version++;
         }
-        if (this.onConnectionsChange) {
-            this.onConnectionsChange(window.LiteGraph.OUTPUT, slot, true, link_info, slot);
-        } //link_info has been created now, so its updated
 
-        if (this.graph && this.graph.onNodeConnectionChange) {
-            this.graph.onNodeConnectionChange(window.LiteGraph.INPUT, target_node, target_slot, this, slot);
-            this.graph.onNodeConnectionChange(window.LiteGraph.OUTPUT, this, slot, target_node, target_slot );
-        }
-
-        this.graph.afterChange();
-        this.graph.connectionChange(this, link_info);
 
         return link_info;
     }
@@ -871,8 +808,7 @@ export default class NodeCore {
 
         } //link != null
 
-        if (this.graph)
-            this.graph.connectionChange(this);
+
         return true;
     }
     /**
@@ -902,8 +838,6 @@ export default class NodeCore {
 
         } //link != null
 
-        if (this.graph)
-            this.graph.connectionChange(this);
         return true;
     }
    

@@ -14,6 +14,7 @@
 SocketIOclient socketIO;
 
 #define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
+#define DEVICE_NAME "esp32mcu"
 
 #include <FS.h>
 #define SPIFFS LITTLEFS
@@ -206,26 +207,23 @@ void initSPIFFS() {
 
 void initWiFi() {
     
-    int AP_Enabled = 0; //preferences.getInt("AP_Enabled", 1);
-    int STA_Enabled = 1; //preferences.getInt("STA_Enabled", 0);
+    int AP_Enabled = preferences.getInt("AP_Enabled", 0);
+    int STA_Enabled = preferences.getInt("STA_Enabled", 1);
     String SSID_stored = preferences.getString("SSID", "DHLAN");
     String PW_stored = preferences.getString("PW", "w123qweasd");
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
-    Serial.print("AP mode: ");
-    Serial.println(AP_Enabled);
-    Serial.print("STA mode: ");
-    Serial.println(STA_Enabled);
-    
-    if(AP_Enabled && STA_Enabled) {
-        WiFi.mode(WIFI_AP_STA);
-    } else if (AP_Enabled && !STA_Enabled) {
-        WiFi.mode(WIFI_AP);
-    } else if (!AP_Enabled && STA_Enabled) {
-        WiFi.mode(WIFI_STA);
-    } else {
-        WiFi.mode(WIFI_AP);
+    Serial.printf("AP_Enabled: %d\n", AP_Enabled);
+    Serial.printf("STA_Enabled: %d\n", STA_Enabled);
+
+    WiFi.mode(WIFI_AP);
+    if (STA_Enabled) {
+        if(AP_Enabled) {
+            WiFi.mode(WIFI_AP_STA);
+        } else {
+            WiFi.mode(WIFI_STA);
+        }
     }
-    
+
     if (digitalRead(TRIGGER_PIN) == LOW || AP_Enabled) {
         Serial.println("Access point loading...");
         WiFi.softAPsetHostname("noditron");
@@ -236,9 +234,9 @@ void initWiFi() {
 
     if (STA_Enabled) {
         // STA MODE
-        Serial.print("Station loading: ");
-        Serial.println(SSID_stored.c_str());
-        Serial.println(PW_stored.c_str());
+        Serial.printf("Station loading: %s, %s\n", SSID_stored.c_str(), PW_stored.c_str());
+
+        
         WiFi.setHostname("noditron");
         WiFi.begin(SSID_stored.c_str(), PW_stored.c_str());
         Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
@@ -247,6 +245,7 @@ void initWiFi() {
             delay(500);
         }
         Serial.printf("Connected with the IP: %s\n", WiFi.localIP().toString().c_str());
+        
     } else {
         Serial.print("Station turn off: ");
         WiFi.disconnect();
@@ -474,7 +473,19 @@ void noditronTask( void * pvParameters ) {
         } else if (eventName == "clear") {
             nodemap.clear();
         } else if (eventName == "id") {
-            socketIO.sendEVENT("[\"id\",{\"id\":\"nodi.box\"}]");
+
+            string msg;
+
+            StaticJsonDocument<512> sjsondoc;
+            JsonArray arr = sjsondoc.to<JsonArray>();
+            arr.add("id");
+
+            JsonObject data = arr.createNestedObject();
+
+            data["id"] = DEVICE_NAME;
+            
+            serializeJson(sjsondoc, msg);
+            socketIO.sendEVENT(msg.c_str());
         } else if (eventName == "updateMe") {
             
         } else if (eventName == "moveNode") {

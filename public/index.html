@@ -103,17 +103,19 @@
     await loadJS("./nodes/nodi.box/yellow.js", false);
     await loadJS("./nodes/nodi.box/green.js", false);
     await loadJS("./nodes/nodi.box/stepper.js", false);
+
+    await loadJS("./nodes/esp32mcu/b1.js", false);
+    await loadJS("./nodes/esp32mcu/led.js", false);
     await loadJS("./websocket.js", false);
 
     window.graph = new LGraph();
     window.canvas = new LGraphCanvas("#mycanvas", graph);
-
+    window.nodeworkID = window.location.search.slice(1);
     window.nodes = {}
     
     window.nodes.addNode = (name) => {
       name = name.toLowerCase();
       console.log(name)
-      //window.graph.beforeChange();
       var node = LiteGraph.createNode(name);
       if (node) {
         let view = window.canvas.ds;

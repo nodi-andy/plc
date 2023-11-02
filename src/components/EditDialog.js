@@ -20,7 +20,7 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
 
   const handlePropertyChange = (event, key) => {
     const { value } = event.target;
-    window.canvas.current_node.updateProperties(key, "value", value);
+    window.canvas.current_node.updateProperties(key, "inpValue", value);
     window.canvas.current_node.update = true;
     event.stopPropagation(); // Stop event propagation to prevent closing the drawer
   };
