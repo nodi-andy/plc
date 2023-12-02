@@ -42,12 +42,10 @@ export default class WidgetNumber extends NumberCore {
                 this.properties.value.value = parseInt(this.properties.value.inpValue);
                 this.properties.value.inpValue = null;
                 this.properties.value.outValue = this.properties.value.value;
-                this.setDirtyCanvas(true);
             }
             if (this.properties.read.inpValue != null) {
                 this.properties.read.inpValue = null;
                 this.properties.value.outValue = this.properties.value.value;
-                this.setDirtyCanvas(true);
             }
             this.valUpdated = false;
             this.updateView = false;

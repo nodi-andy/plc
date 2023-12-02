@@ -8,6 +8,7 @@ import './public/nodes/widget/led_server.mjs';
 import './public/nodes/widget/number_server.mjs';
 import './public/nodes/logic/and_core.mjs';
 import './public/nodes/logic/or_core.mjs';
+import './public/nodes/logic/xor_core.mjs';
 import './public/nodes/logic/not_core.mjs';
 import './public/nodes/math/add_core.mjs';
 import './public/nodes/math/mult_core.mjs';

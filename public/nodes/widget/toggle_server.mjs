@@ -37,7 +37,10 @@ export default class ToggleCore extends NodeCore {
             prop.state.inpValue = null;
             ret = true;
         }
-        
+        if (prop.in.input && prop.state.value == true && prop.in.inpValue != null) {
+            prop.state.outValue = prop.in.inpValue;
+            prop.in.inpValue = null;
+        }
         return ret;
     }
 

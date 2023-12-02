@@ -64,7 +64,6 @@ export default class WidgetButton extends ButtonCore {
             this.output = this.properties.press;
         }
         
-        this.graph.setDirtyCanvas(true, true);
         if (this.output != null) {
             if (this.getInputs()[0]?.link == null) {
                 this.setOutputData(0, this.output);
@@ -81,7 +80,6 @@ export default class WidgetButton extends ButtonCore {
         ButtonCore.reset(this.properties);
         window.nodes.update(this.id, {"state": {"inpValue" : 0}});
 
-        this.graph.setDirtyCanvas(true);
 
     }
 

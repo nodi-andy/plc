@@ -22,6 +22,13 @@ export default class TimeIntervalCore extends NodeCore {
 
     static run(prop) {
         var now = NodiEnums.getTime();
+        for(let input in prop) {
+            if (prop[input].inpValue != null) {
+                prop[input].value = parseInt(prop[input].inpValue);
+                prop[input].inpValue = null;
+            }
+        }
+        
         if (prop.state.value == null) prop.state.value = 0;
 
         var dON = now - prop.lastOn.value;
