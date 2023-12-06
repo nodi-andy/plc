@@ -330,7 +330,7 @@ export var LiteGraph = (global.LiteGraph = {
             node.properties = {};
         }
 
-        node.widget.setSize(node.widget.computeSize(node.properties));
+        node.widget.setSize(node.widget.computeSize(node.properties), false);
         node.widget.pos = LiteGraph.DEFAULT_POSITION.concat();
         if (node.type == null) node.type = type;
         if (options) {

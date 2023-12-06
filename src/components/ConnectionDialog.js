@@ -47,12 +47,12 @@ export default function ConnectionDialog({ openFD, setOpenFD }) {
   
     const handleToggle = (e, v) => {
       setEnabled(v);
-      window.ws.sendMsg(JSON.stringify({'Setting': {'STA_Enabled' : Number(v)}}))
+      window.socket.sendMsg(JSON.stringify({'Setting': {'STA_Enabled' : Number(v)}}))
     };
   
     const handleDirectConnectionToggle = (e, v) => {
       setDirectConnectionEnabled(v);
-      window.ws.sendMsg(JSON.stringify({'Setting': {'AP_Enabled' : Number(v)}}))
+      window.socket.sendMsg(JSON.stringify({'Setting': {'AP_Enabled' : Number(v)}}))
     };
     const handleClickShowPassword = () => setShowPassword((show) => !show);
   
@@ -71,15 +71,15 @@ export default function ConnectionDialog({ openFD, setOpenFD }) {
     };
   
     function updateWiFiList(){
-      if (window.ws.readyState == 1) {
-          window.ws.sendMsg(JSON.stringify({'listWiFi':1}))
+      if (window.socket.readyState == 1) {
+        window.socket.sendMsg(JSON.stringify({'listWiFi':1}))
       }
       setLoading(true);
     }
   
     function saveWiFiPassword(){
-      if (window.ws.readyState == 1) {
-          window.ws.sendMsg(JSON.stringify({'saveWiFi':{SSID:selectedValue, PW:selectedPassword}}))
+      if (window.socket.readyState == 1) {
+        window.socket.sendMsg(JSON.stringify({'saveWiFi':{SSID:selectedValue, PW:selectedPassword}}))
       }
       setLoadingSaveWiFiPassword(true);
     }

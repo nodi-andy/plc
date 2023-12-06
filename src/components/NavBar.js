@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+//import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
 import List from '@mui/material/List';
@@ -11,10 +11,9 @@ import GroupIcon from '@mui/icons-material/Group';
 import SaveAsOutlinedIcon from '@mui/icons-material/SaveAsOutlined';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-import { Add, Edit, Delete } from '@mui/icons-material';
 
-export default function NavBar({ openDrawer, setOpenDrawer, showSaveAsFiles, showFiles }) {
-  const navigate = useNavigate();
+export default function NavBar({ openDrawer, setOpenDrawer, showSaveAsFiles, showFiles, showConnection }) {
+  //const navigate = useNavigate();
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
@@ -36,26 +35,6 @@ export default function NavBar({ openDrawer, setOpenDrawer, showSaveAsFiles, sho
       onKeyDown={toggleDrawer(false)}
     >
       <List>
-          <ListSubheader>Node</ListSubheader>
-          <ListItem key='Dashboard1' disablePadding>
-            <ListItemButton onClick={() => navigate('/needs')}>
-              <ListItemIcon> <Add /> </ListItemIcon>
-              <ListItemText primary={'Add'} />
-            </ListItemButton>
-          </ListItem>
-          <ListItem key='Dashboard2' disablePadding>
-            <ListItemButton onClick={() => navigate('/offers')}>
-              <ListItemIcon> <Edit /> </ListItemIcon>
-              <ListItemText primary={'Edit'} />
-            </ListItemButton>
-          </ListItem>
-          <ListItem key='Dashboard3' disablePadding>
-            <ListItemButton onClick={() => navigate('/offers')}>
-              <ListItemIcon> <Delete /> </ListItemIcon>
-              <ListItemText primary={'Remove'} />
-            </ListItemButton>
-          </ListItem>
-
         <ListSubheader>Nodework</ListSubheader>
         <ListItem key='cleanNodework' disablePadding>
           <ListItemButton onClick={cleanNodework}>
@@ -84,9 +63,9 @@ export default function NavBar({ openDrawer, setOpenDrawer, showSaveAsFiles, sho
 
         <ListSubheader>IoT</ListSubheader>
         <ListItem key='myoffers' disablePadding>
-          <ListItemButton onClick={() => navigate('/myoffers')}>
+          <ListItemButton onClick={showConnection}>
             <ListItemIcon> <GroupIcon /> </ListItemIcon>
-            <ListItemText primary={'Upload'} />
+            <ListItemText primary={'Connection'} />
           </ListItemButton>
         </ListItem>
 

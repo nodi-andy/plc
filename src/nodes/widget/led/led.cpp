@@ -26,7 +26,7 @@ int LED::onExecute() {
     setProp("port", "value", getInput("port"));
     pinMode(getProp("port"), OUTPUT);
     clearInput("port");
-    Serial.printf("[LED:port_changed] : %d\n", getInput("port"));
+    Serial.printf("[LED:port_changed] : %d\n", getProp("port"));
   }
 
   if (hasInput("state")) {
@@ -34,7 +34,7 @@ int LED::onExecute() {
     setProp("state", "outValue", getInput("state"));
     clearInput("state");
 
-    if (port) digitalWrite(port, getProp("state"));
+    if (getProp("port")) digitalWrite(getProp("port"), getProp("state"));
     Serial.printf("LED state: %d\n", getProp("state"));
     return true;
   }

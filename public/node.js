@@ -5,7 +5,7 @@ export default class LGraphNode extends NodeCore {
     constructor(title) {
         super();
         this.title = title;
-        this.setSize([window.LiteGraph.NODE_WIDTH, 64]);
+        this.setSize([window.LiteGraph.NODE_WIDTH, 64], false);
         this.graph = null;
         this.update = false;
         this.type = null;

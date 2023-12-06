@@ -54,7 +54,7 @@ function App() {
       <ThemeProvider theme={theme}>
       <div style={{ position: 'relative', zIndex: 2 }}>
         <Header setOpenDrawer={setOpenDrawer} showConnection={setShowConnection}  />
-        <NavBar openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} showSaveAsFiles={setShowSaveAsFiles}  showFiles={setShowFiles}/>
+        <NavBar openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} showSaveAsFiles={setShowSaveAsFiles}  showFiles={setShowFiles} showConnection = {showConnection}/>
         <EditDialog showEditMenu={showEditMenu} setShowEditMenu = {setShowEditMenu} />
         <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
         <SelectFileDialog openFD={showFiles}  setOpenFD={setShowFiles}/>

@@ -44,23 +44,20 @@ JsonObject rootArray;
 #define USE_SERIAL Serial
 
 void loadNoditronFile() {
-    //if (SPIFFS.exists(defaultFileName.c_str())) {
-        //Serial.println("Default File found");
+    if (SPIFFS.exists(defaultFileName.c_str())) {
+        Serial.println("Default File found");
         File file = SPIFFS.open(defaultFileName, "w", true);
         if(!file){
             Serial.println("There was an error opening the file for reading");
         } else {
             file.read((uint8_t *)mapFile, file.size());  
             mapFile[file.size()] = 0;
-                Serial.println("READ DONE: ");
-                Serial.print(file.size());
-                Serial.print(",");
-                Serial.println((const char*)mapFile);
+            Serial.printf("READ DONE: %d\r\n", file.size());
             file.close();
         }	
-    /*} else {
+    } else {
         Serial.println("Default File not found");
-    }*/
+    }
 }
 
 
@@ -185,7 +182,7 @@ struct Led {
 Led    onboard_led = { BUILTIN_LED, false };
 
 AsyncWebServer server(HTTP_PORT);
-//AsyncWebSocket ws("/ws");
+AsyncWebSocket websocket("/ws");
 
 // ----------------------------------------------------------------------------
 // SPIFFS initialization
@@ -207,10 +204,10 @@ void initSPIFFS() {
 
 void initWiFi() {
     
-    int AP_Enabled = preferences.getInt("AP_Enabled", 0);
-    int STA_Enabled = preferences.getInt("STA_Enabled", 1);
-    String SSID_stored = preferences.getString("SSID", "DHLAN");
-    String PW_stored = preferences.getString("PW", "w123qweasd");
+    int AP_Enabled = preferences.getInt("AP_Enabled", 1);
+    int STA_Enabled = preferences.getInt("STA_Enabled", 0);
+    String SSID_stored = preferences.getString("SSID", "");
+    String PW_stored = preferences.getString("PW", "");
     pinMode(TRIGGER_PIN, INPUT_PULLUP);
     Serial.printf("AP_Enabled: %d\n", AP_Enabled);
     Serial.printf("STA_Enabled: %d\n", STA_Enabled);
@@ -246,10 +243,10 @@ void initWiFi() {
         }
         Serial.printf("Connected with the IP: %s\n", WiFi.localIP().toString().c_str());
         
-    } else {
+    } /*else {
         Serial.print("Station turn off: ");
         WiFi.disconnect();
-    }
+    }*/
 
 }
 
@@ -260,7 +257,7 @@ void initWiFi() {
 
 void notifyClients(const char* msg) {
     if (msg) {
-      //ws.textAll(wsInput, strlen((const char*)msg));
+      websocket.textAll(wsInput, strlen((const char*)msg));
     }
 }
 
@@ -280,7 +277,7 @@ void sendConnectionSettings() {
     msg += "\"STA_IP\": \"" + WiFi.localIP().toString() + "\"}";
 
     msg += "}";
-    //ws.textAll(msg.c_str(), msg.length());
+    websocket.textAll(msg.c_str(), msg.length());
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -302,93 +299,35 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
         memcpy(mapFile, wsInput, strlen((char *)wsInput));
         mapFile[info->len] = '\0';  // Add the null-terminator
 
-        deserializeJson(doc, wsInput);
-        root = doc.as<JsonObject>();
-        if ( root["save"].isNull() == false) {
-            notifyClients((const char*)mapFile);
-            File file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
-            Serial.print("INPUT: ");
-            Serial.print(strlen((const char*)mapFile));
-            Serial.print(",");
-            Serial.println((char*)mapFile);
-            file.write(mapFile, strlen((const char*)mapFile));
-            file.close();
-            loadNoditronFile();
-        }
-        if ( root["listWiFi"].isNull() == false) {
-            int n = WiFi.scanNetworks();
-            Serial.println("scan done");
-            std::string msg = "{\"updateWiFi\": {\"list\": [" ;
+        nodemap.orders.push(string((char*)wsInput));
 
-            if (n == 0) {
-                Serial.println("no networks found");
-            } else {
-                Serial.print(n);
-                Serial.println(" networks found");
-                for (int i = 0; i < n; ++i) {
-                    // Print SSID and RSSI for each network found
-                    Serial.print(i + 1);
-                    Serial.print(": ");
-                    Serial.print(WiFi.SSID(i));
-                    Serial.print(" (");
-                    Serial.print(WiFi.RSSI(i));
-                    Serial.print(")");
-                    Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
-                    delay(10);
-                    msg += "\"";
-                    msg += WiFi.SSID(i).c_str();
-                    msg += "\"";
-                    
-                    if (i < n-1) {
-                        msg += ",";
-                    }
-                }
-            }
 
-            msg += "]}}";
-            //ws.textAll(msg.c_str(), msg.length());
-        }
-        if ( root["saveWiFi"].isNull() == false) {
-            Serial.println("Save WiFi");
-            preferences.putString("SSID", root["saveWiFi"]["SSID"].as<String>());
-            preferences.putString("PW", root["saveWiFi"]["PW"].as<String>());
-            preferences.putInt("STA_Enabled", 1);
-            Serial.println(preferences.getInt("STA_Enabled", 0));
-            initWiFi();
-        }
-        if ( root["Setting"].isNull() == false) {
-            preferences.begin("noditron", false); 
 
-            for (JsonPair setting : root["Setting"].as<JsonObject>()) {
-                Serial.print("Setting: ");
-                Serial.println(setting.key().c_str());
-                if (setting.value().is<int>() || setting.value().is<bool>()) {
-                    preferences.putInt(setting.key().c_str(), setting.value().as<int>());
-                    Serial.println(setting.value().as<int>());
-                    Serial.println(preferences.getInt(setting.key().c_str()));
-                } else {
-                    preferences.putString(setting.key().c_str(), setting.value().as<String>());
-                    Serial.println(setting.value().as<String>());
-                    Serial.println(preferences.getString(setting.key().c_str()));
-                }
+    }
+}
 
-                if (setting.key() == "STA_Enabled") {
-                    initWiFi();
-                }
-            }
-            preferences.end();
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
+    switch (type) {
+        case WS_EVT_CONNECT:
+            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            websocket.text(client->id(), mapFile, strlen((const char*)mapFile));
             sendConnectionSettings();
-        }
-        if ( root["getConnectionSettings"].isNull() == false) {
-
-            sendConnectionSettings();
-        }
+            break;
+        case WS_EVT_DISCONNECT:
+            Serial.printf("WebSocket client #%u disconnected\n", client->id());
+            break;
+        case WS_EVT_DATA:
+            handleWebSocketMessage(arg, data, len);
+            break;
+        case WS_EVT_PONG:
+        case WS_EVT_ERROR:
+            break;
     }
 }
 
 void initWebServer() {
-    //ws.onEvent(onEvent);
-    //server.addHandler(&ws);
+    websocket.onEvent(onEvent);
+    server.addHandler(&websocket);
     Serial.println("Starting web server...");
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); ;
     server.begin();
@@ -517,7 +456,7 @@ void noditronTask( void * pvParameters ) {
             string msg;
             serializeJson(jsondoc, msg);
             socketIO.sendEVENT(msg.c_str());
-
+            websocket.textAll(msg.c_str(), msg.length());
         } else if (eventName == "movedNode") {
             
         } else if (eventName == "remNode") {
@@ -532,29 +471,101 @@ void noditronTask( void * pvParameters ) {
         } else if (eventName == "remlink") {
             int id = doc[1]["id"].as<int>();
             USE_SERIAL.printf("[remLink] id: %d\n", id);
+        } else if (eventName == "save") {
+            notifyClients((const char*)mapFile);
+            File file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
+            Serial.print("INPUT: ");
+            Serial.print(strlen((const char*)mapFile));
+            Serial.print(",");
+            Serial.println((char*)mapFile);
+            file.write(mapFile, strlen((const char*)mapFile));
+            file.close();
+            loadNoditronFile();
+        } else if (eventName == "listWiFi") {
+            int n = WiFi.scanNetworks();
+            Serial.println("scan done");
+            std::string msg = "{\"updateWiFi\": {\"list\": [" ;
+
+            if (n == 0) {
+                Serial.println("no networks found");
+            } else {
+                Serial.print(n);
+                Serial.println(" networks found");
+                for (int i = 0; i < n; ++i) {
+                    // Print SSID and RSSI for each network found
+                    Serial.print(i + 1);
+                    Serial.print(": ");
+                    Serial.print(WiFi.SSID(i));
+                    Serial.print(" (");
+                    Serial.print(WiFi.RSSI(i));
+                    Serial.print(")");
+                    Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
+                    delay(10);
+                    msg += "\"";
+                    msg += WiFi.SSID(i).c_str();
+                    msg += "\"";
+                    
+                    if (i < n-1) {
+                        msg += ",";
+                    }
+                }
+            }
+
+            msg += "]}}";
+            websocket.textAll(msg.c_str(), msg.length());
+        } else if (eventName == "settings") {
+            Serial.println("Save WiFi");
+            preferences.putString("SSID", root["saveWiFi"]["SSID"].as<String>());
+            preferences.putString("PW", root["saveWiFi"]["PW"].as<String>());
+            preferences.putInt("STA_Enabled", 1);
+            Serial.println(preferences.getInt("STA_Enabled", 0));
+            initWiFi();
+        } else if (eventName == "saveWiFi") {
+            preferences.begin("noditron", false); 
+
+            for (JsonPair setting : root["Setting"].as<JsonObject>()) {
+                Serial.print("Setting: ");
+                Serial.println(setting.key().c_str());
+                if (setting.value().is<int>() || setting.value().is<bool>()) {
+                    preferences.putInt(setting.key().c_str(), setting.value().as<int>());
+                    Serial.println(setting.value().as<int>());
+                    Serial.println(preferences.getInt(setting.key().c_str()));
+                } else {
+                    preferences.putString(setting.key().c_str(), setting.value().as<String>());
+                    Serial.println(setting.value().as<String>());
+                    Serial.println(preferences.getString(setting.key().c_str()));
+                }
+
+                if (setting.key() == "STA_Enabled") {
+                    initWiFi();
+                }
+            }
+            preferences.end();
+            sendConnectionSettings();
+        } else if (eventName == "getConnectionSettings") {
+            sendConnectionSettings();
         }
     }
 
     for (auto n : nodemap.nodes) {
-        if (n.second) {
-            if (n.second->onExecute()) {
-                string msg;
+        if (n.second == nullptr) continue;
+        if (n.second->onExecute()) {
+            string msg;
 
-                StaticJsonDocument<512> sjsondoc;
-                JsonArray arr = sjsondoc.to<JsonArray>();
-                arr.add("updateNode");
+            StaticJsonDocument<512> sjsondoc;
+            JsonArray arr = sjsondoc.to<JsonArray>();
+            arr.add("updateNode");
 
-                JsonObject data = arr.createNestedObject();
+            JsonObject data = arr.createNestedObject();
 
-                data["nodeID"] = n.second->id;
-                JsonObject newData = data.createNestedObject("newData");
-                newData["properties"] = n.second->getProps();
-                arr.add(data);
-                
-                serializeJson(sjsondoc, msg);
-                socketIO.sendEVENT(msg.c_str());
-                USE_SERIAL.printf("[Run:updateNode] id: %s\n", msg.c_str());
-            }
+            data["nodeID"] = n.second->id;
+            JsonObject newData = data.createNestedObject("newData");
+            newData["properties"] = n.second->getProps();
+            arr.add(data);
+            
+            serializeJson(sjsondoc, msg);
+            socketIO.sendEVENT(msg.c_str());
+            USE_SERIAL.printf("[Run:updateNode] id: %s\n", msg.c_str());
         }
     }
     
@@ -644,7 +655,7 @@ void setup() {
     preferences.begin("noditron", false); 
     initSPIFFS();
     initWiFi();
-    //initWebServer();
+    initWebServer();
 
     preferences.end();
 
@@ -664,11 +675,11 @@ void setup() {
     delay(100);
     
     // server address, port and URL
-    socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
+    //socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");
     //socketIO.begin("noditron.com", 80, "/socket.io/?EIO=4");
 
     // event handler
-    socketIO.onEvent(socketIOEvent);
+    //socketIO.onEvent(socketIOEvent);
 
     Serial.write("SocketIO: init");
 }
@@ -679,14 +690,14 @@ void setup() {
 unsigned long messageTimestamp = 0;
 
 void loop() {
-    //ws.cleanupClients();
+    websocket.cleanupClients();
     
     socketIO.loop();
     uint64_t now = millis();
 
-    if(now - messageTimestamp > 2000) {
+    if(now - messageTimestamp > 5000) {
         messageTimestamp = now;
-
+/*
         // creat JSON message for Socket.IO (event)
         DynamicJsonDocument doc(1024);
         JsonArray array = doc.to<JsonArray>();
@@ -704,7 +715,8 @@ void loop() {
         serializeJson(doc, output);
 
         // Send event
-        //socketIO.sendEVENT(output);
+        //socketIO.sendEVENT(output);*/
+        USE_SERIAL.println("ping\r\n");
 
         // Print JSON for debugging
         //USE_SERIAL.println(output);

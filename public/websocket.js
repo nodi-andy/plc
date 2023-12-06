@@ -11,25 +11,33 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
-//var gateway = `ws://${window.location.hostname}/ws`;
-var websocket = null;// new WebSocket(gateway);
+var gateway = `ws://${window.location.hostname}/ws`;
+const websocket = new WebSocket(gateway);
 var uri = window.location.hostname
 if (window.location.hostname.includes(".") == false) uri += ":8080";
 const socket = io(uri);
-window.socket = socket;
+window.order = {}
 
-window.socket.sendToServer = (msg, obj) => {
-    window.socket.emit(msg, obj);
+
+const sendToServer = (msg, obj) => {
+
+    if (socket.emit) {
+        socket.emit(msg, obj);
+    }
+    if (websocket.send) {
+        websocket.send(JSON.stringify([msg, obj])); 
+    }
     console.log(msg);
 
 }
 
 // Event handler for when the connection is established
 socket.on("connect", () => {
-    console.log("Connected to the server!");
-    socket.sendToServer('updateMe', window.nodeworkID);
-
-    onOpen();
+   console.log("Connected to the socketIO server!");
+   socket.sendToServer('updateMe', window.nodeworkID);
+   window.socket = socket;
+   window.socket.sendToServer = sendToServer;
+   onOpen();
 });
 
 socket.on("setNodework", (message) => {
@@ -42,7 +50,7 @@ socket.on("id", (message) => {
     socket.sendToServer("id", {id: "browser"});
 });
 
-socket.on("nodeAdded", (message) => {
+window.order.nodeAdded = (message) => {
     let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
     newNode.id = message.nodeID;
     newNode.widget.id = message.nodeID;
@@ -51,7 +59,9 @@ socket.on("nodeAdded", (message) => {
     newNode.widget.setSize(message.widget.size);
     window.graph.add(newNode);
     window.canvas.dirty_canvas = true;
-});
+}
+
+socket.on("nodeAdded", (message) => {window.order.nodeAdded(message)});
 
 socket.on("addLink", (msg) => {
     window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
@@ -154,15 +164,15 @@ function onLoad(event) {
 
 function initWebSocket() {
     console.log('Trying to open a WebSocket connection...');
-    window.ws = websocket
-    //websocket.onopen    = onOpen;
-    //websocket.onclose   = onClose;
-    //websocket.onmessage = onMessage;
+    websocket.onopen    = onOpen;
+    websocket.onclose   = onClose;
+    websocket.onmessage = onMessage;
 }
 
 function onOpen(event) {
-
-    console.log('Connection opened');
+   window.socket = websocket;
+   window.socket.sendToServer = sendToServer;
+   window.socket.sendToServer("id");
 }
 
 function onClose(event) {
@@ -174,6 +184,10 @@ function onMessage(event) {
     console.log("Received message from the server:", event);
 
     let data = JSON.parse(event.data);
+    let cmdName = data[0];
+    let args = data[1];
+    window.order[cmdName](args);
+    
     if (data.save) {
       window.graph.configure(data.save, false);
       window.graph.start();
