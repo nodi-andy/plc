@@ -324,6 +324,10 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
             break;
     }
 }
+void sendToSocket(string msg) {
+    socketIO.sendEVENT(msg.c_str());
+    websocket.textAll(msg.c_str(), msg.length());
+}
 
 void initWebServer() {
     websocket.onEvent(onEvent);
@@ -424,7 +428,7 @@ void noditronTask( void * pvParameters ) {
             data["id"] = DEVICE_NAME;
             
             serializeJson(sjsondoc, msg);
-            socketIO.sendEVENT(msg.c_str());
+            sendToSocket(msg);
         } else if (eventName == "updateMe") {
             
         } else if (eventName == "moveNode") {
@@ -455,8 +459,7 @@ void noditronTask( void * pvParameters ) {
             array.add(djsondoc[1]);
             string msg;
             serializeJson(jsondoc, msg);
-            socketIO.sendEVENT(msg.c_str());
-            websocket.textAll(msg.c_str(), msg.length());
+            sendToSocket(msg);
         } else if (eventName == "movedNode") {
             
         } else if (eventName == "remNode") {
@@ -564,7 +567,7 @@ void noditronTask( void * pvParameters ) {
             arr.add(data);
             
             serializeJson(sjsondoc, msg);
-            socketIO.sendEVENT(msg.c_str());
+            sendToSocket(msg);
             USE_SERIAL.printf("[Run:updateNode] id: %s\n", msg.c_str());
         }
     }

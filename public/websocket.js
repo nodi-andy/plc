@@ -61,15 +61,8 @@ window.order.nodeAdded = (message) => {
     window.canvas.dirty_canvas = true;
 }
 
-socket.on("nodeAdded", (message) => {window.order.nodeAdded(message)});
-
-socket.on("addLink", (msg) => {
-    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
-    window.canvas.dirty_canvas = true;
-});
-
-socket.on("addIoT", (msg) => {
-    if (msg == "nodi.box") {
+window.order.id = (message) => {
+    if (message == "nodi.box") {
         LiteGraph.registerNodeType("nodi.box/b1", NodiBoxB1);
         LiteGraph.registerNodeType("nodi.box/b2", NodiBoxB2);
         LiteGraph.registerNodeType("nodi.box/b3", NodiBoxB3);
@@ -77,12 +70,36 @@ socket.on("addIoT", (msg) => {
         LiteGraph.registerNodeType("nodi.box/green_led", NodiBoxGreen);
         LiteGraph.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
         LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
-    } else if (msg == "esp32mcu") {
+    } else if (message == "esp32mcu") {
         LiteGraph.registerNodeType("esp32mcu/b1", esp32mcuB1);
         LiteGraph.registerNodeType("esp32mcu/led", esp32mcuLED);
     }
     window.updateNodeList();
+}
+
+window.order.updateNode = (message) => {
+    // Handle incoming messages here
+    if (window.graph._nodes_by_id[message.nodeID]) {
+        window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData.properties);
+    }
+    window.canvas.dirty_canvas = true;
+    window.canvas.dirty_bgcanvas = true;
+}
+
+
+const events = ["nodeAdded", "updateNode", "id"];
+
+events.forEach(event => {
+  socket.on(event, message => {
+    window.order[event](message);
+  });
 });
+
+socket.on("addLink", (msg) => {
+    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
+    window.canvas.dirty_canvas = true;
+});
+
 
 socket.on("remLink", (msg) => {
     window.graph.removeLink(msg.nodeID);
@@ -126,14 +143,6 @@ function mergeObjects(objA, objB) {
     return objA;
 }
 
-socket.on("updateNode", (message) => {
-    // Handle incoming messages here
-    if (window.graph._nodes_by_id[message.nodeID]) {
-        window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData.properties);
-    }
-    window.canvas.dirty_canvas = true;
-    window.canvas.dirty_bgcanvas = true;
-});
 
 // Event handler for custom events from the server
 socket.on("custom-event-from-server", (data) => {
