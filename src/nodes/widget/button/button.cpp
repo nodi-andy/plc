@@ -13,24 +13,36 @@ void Button::setup() {
     if (port >= 0) {
       pinMode(port, INPUT);
       pinMode(port, INPUT_PULLUP);
+      Serial.printf("[Button] port: %d\n", port);
     }
 
     state = digitalRead(port);
 
-    Serial.print(">>> Setup Button, PORT: ");
-    Serial.println(port);
 }
 
 int Button::onExecute() {
-  if (port <= 0) return false;
+  if (hasInput("port")) {
+    setProp("port", "value", getInput("port"));
+    port = getProp("port");
+    pinMode(port, INPUT);
+    pinMode(port, INPUT_PULLUP);
+    clearInput("port");
+    Serial.printf("[Button:port_changed] : %d\n", getProp("port"));
+  }
+  port = getProp("port");
+
+  if (port < 0 || port == INT_MAX) return false;
 
   if (hasInput("state")) {
     setProp("state", "value", getInput("state"));
     clearInput("state");
   }
+
   int newState = !digitalRead(port);
+  //Serial.printf("Button port: %d, %d", port, newState);
+
   if (state == newState) return false;
-  Serial.printf("New state: %d", newState);
+  //Serial.printf("New state: %d", newState);
 
   if (newState == 1) {
     setProp("state", "value", 1);

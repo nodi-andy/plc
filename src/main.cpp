@@ -424,10 +424,10 @@ void noditronTask( void * pvParameters ) {
             arr.add("id");
 
             JsonObject data = arr.createNestedObject();
-
             data["id"] = DEVICE_NAME;
-            
+
             serializeJson(sjsondoc, msg);
+            USE_SERIAL.printf("[id.response] : %s\n", msg.c_str());
             sendToSocket(msg);
         } else if (eventName == "updateMe") {
             
@@ -719,7 +719,7 @@ void loop() {
 
         // Send event
         //socketIO.sendEVENT(output);*/
-        USE_SERIAL.println("ping\r\n");
+        USE_SERIAL.printf("ping: %d\n", nodemap.nodes.size());
 
         // Print JSON for debugging
         //USE_SERIAL.println(output);

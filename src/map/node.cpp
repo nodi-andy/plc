@@ -58,7 +58,9 @@ void Node::setProp(string key, string name, int val) {
 
 int Node::getProp(string key, string name) {
     //Serial.printf("getProp: size = %d\n", props.size() );
-    return props[key][name].as<int>();
+    int prop = INT_MAX;
+    if (props[key].containsKey(name)) prop = props[key][name].as<int>();
+    return prop;
 };
 
 void Node::setProps(JsonObject newProps) {
@@ -68,7 +70,7 @@ void Node::setProps(JsonObject newProps) {
 
     deserializeJson(jsondoc, jsonString);
     props = jsondoc.as<JsonObject>();
-    Serial.printf("setProp: size = %d, %s\n", props.size(), props["port"]["value"].as<string>().c_str() );
+    Serial.printf("setProps: size = %d, %s\n", props.size(), props["port"]["value"].as<string>().c_str() );
 }
 
 JsonObject Node::getProps() {

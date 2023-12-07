@@ -1,6 +1,4 @@
 import { LiteGraph } from "./litegraph.js";
-import LGraphNode from "./node.js"
-import LLink from "./link.mjs"
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
 import NodiBoxB3 from "./nodes/nodi.box/b3.js";
@@ -62,7 +60,7 @@ window.order.nodeAdded = (message) => {
 }
 
 window.order.id = (message) => {
-    if (message == "nodi.box") {
+    if (message.id == "nodi.box") {
         LiteGraph.registerNodeType("nodi.box/b1", NodiBoxB1);
         LiteGraph.registerNodeType("nodi.box/b2", NodiBoxB2);
         LiteGraph.registerNodeType("nodi.box/b3", NodiBoxB3);
@@ -70,7 +68,7 @@ window.order.id = (message) => {
         LiteGraph.registerNodeType("nodi.box/green_led", NodiBoxGreen);
         LiteGraph.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
         LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
-    } else if (message == "esp32mcu") {
+    } else if (message.id == "esp32mcu") {
         LiteGraph.registerNodeType("esp32mcu/b1", esp32mcuB1);
         LiteGraph.registerNodeType("esp32mcu/led", esp32mcuLED);
     }

@@ -13,7 +13,7 @@ void Map::addNode(int id, Node* newNode)
 {
     if (newNode) {
         nodes[id] = newNode;
-        Serial.printf("[Map::addNode] ID=%d type = %s \n ", id, newNode->getType().c_str());
+        Serial.printf("[Map::addNode] ID=%d type = %s \n", id, newNode->getType().c_str());
         newNode->setup();
     }
 }
@@ -26,12 +26,13 @@ void Map::addNode(JsonObject json)
     Node* newNode = RegistryManager::getInstance().createNode(type);
     if (newNode != nullptr) {
         newNode->setProps(json["properties"]);
-        newNode->id = json["nodeID"].as<int>();
+        if (json.containsKey("nodeID")) {
+            newNode->id = json["nodeID"].as<int>();
+        } else {
+            newNode->id = this->nodes.size();
+        }
         addNode(newNode->id, newNode);
-        Serial.printf("[Map:addNode:done] %d : %d\n", newNode->id, newNode->desc.c_str());
-        Serial.print(" : ");
-        Serial.print(newNode->getType().c_str());
-        Serial.println("");
+        Serial.printf("[Map:addNode:done] id: %d,  desc: %s, type: %s\n", newNode->id, newNode->desc.c_str(), newNode->getType().c_str());
     }
 }
 

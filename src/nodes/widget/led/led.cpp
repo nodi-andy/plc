@@ -7,7 +7,6 @@ void LED::setup() {
     title = "LED";
     name = "LED";
     desc = "Show value of input";
-    Serial.printf("LED setup: port = %d\n", getProp("port"));
 
     port = getProp("port");
 
@@ -16,7 +15,7 @@ void LED::setup() {
       digitalWrite(getProp("port"), getProp("state"));
       clearInput("state");
       clearInput("port");
-      Serial.printf("[LED:setup] : %d, %d\n", getInput("port"), INT_MAX);
+      Serial.printf("[LED:setup] : %d, %d\n", getProp("port"), INT_MAX);
 
     }
 }

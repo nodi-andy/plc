@@ -27,7 +27,6 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>noditron</title>
-    <script type="module" src="./math.js" async></script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -46,7 +45,6 @@
     -->
   </body>
   <script type = "module">
-    import { LGraph } from "./litegraph.js"
 
     const loadJS = (FILE_URL, async = true, type = "module") => {
       return new Promise((resolve, reject) => {
@@ -75,6 +73,8 @@
   };
     // why loading the scripts one by one? 
     // Because the IoT device can not keep more than 10 TCP connections open
+    await loadJS("./math.js", false);
+    await loadJS("./litegraph.js", false);
     await loadJS("./node.js", false);
     await loadJS("./link.mjs", false);
     await loadJS("./view.js", false);
