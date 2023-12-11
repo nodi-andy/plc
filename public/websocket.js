@@ -84,8 +84,13 @@ window.order.updateNode = (message) => {
     window.canvas.dirty_bgcanvas = true;
 }
 
+window.order.linkAdded = (msg) => {
+    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
+    window.canvas.dirty_canvas = true;
+}
 
-const events = ["nodeAdded", "updateNode", "id"];
+
+const events = ["nodeAdded", "updateNode", "id", "linkAdded"];
 
 events.forEach(event => {
   socket.on(event, message => {
@@ -97,7 +102,6 @@ socket.on("addLink", (msg) => {
     window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
     window.canvas.dirty_canvas = true;
 });
-
 
 socket.on("remLink", (msg) => {
     window.graph.removeLink(msg.nodeID);

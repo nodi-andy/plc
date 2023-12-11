@@ -45,10 +45,11 @@ void Node::setInput(string name, int val) {
 };
 
 void Node::setOutput(string name, int val) {
-    vals[name][2] = val;
+    setProp(name, "outValue", val);
+
 };
 int Node::getOutput(string name) {
-    return vals[name][2];
+    return getProp(name, "outValue");
 };
 
 void Node::setProp(string key, string name, int val) {

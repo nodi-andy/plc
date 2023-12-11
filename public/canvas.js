@@ -1324,7 +1324,7 @@ export default class LGraphCanvas {
                 }
                 if (this.onNodeMoved)
                     this.onNodeMoved(this.node_dragged);
-                window.nodes.move(this.node_dragged.id, {pos:this.node_dragged.widget.pos});
+                window.nodes.moved(this.node_dragged.id, {pos:this.node_dragged.widget.pos});
 
                 this.node_dragged = null;
             } //no node being dragged

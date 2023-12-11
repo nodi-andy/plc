@@ -79,8 +79,6 @@ export default class WidgetButton extends ButtonCore {
     onMouseUp(/*e*/) {
         ButtonCore.reset(this.properties);
         window.nodes.update(this.id, {"state": {"inpValue" : 0}});
-
-
     }
 
 }

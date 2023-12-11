@@ -18,7 +18,7 @@ void Map::addNode(int id, Node* newNode)
     }
 }
 
-void Map::addNode(JsonObject json)
+Node* Map::addNode(JsonObject json)
 {
     string type = json["type"].as<std::string>();
     Serial.printf("[Map::addNode]: %s\n", type.c_str());
@@ -31,27 +31,28 @@ void Map::addNode(JsonObject json)
         } else {
             newNode->id = this->nodes.size();
         }
+        newNode->posX = json["widget"]["pos"][0].as<int>();
+        newNode->posY = json["widget"]["pos"][1].as<int>();
+        newNode->type = json["type"].as<string>();
         addNode(newNode->id, newNode);
         Serial.printf("[Map:addNode:done] id: %d,  desc: %s, type: %s\n", newNode->id, newNode->desc.c_str(), newNode->getType().c_str());
     }
+    return newNode;
 }
 
-void Map::addLinkToList(int id, Node* newNode)
-{
-    newNode->id = id;
-    links[id] = newNode;
-    Serial.printf("addLinkToList: %d\n", id);
 
-    newNode->setup();
-    Serial.println("> Link added");
-}
-
-void Map::addLink(int linkID, int fromNode, string fromOutput, int toNode, string toOutput)
-{
-    Serial.printf("[addLink] : linkID = %d  From: %d.%s To:%d.%s\n", linkID, fromNode, fromOutput.c_str(), toNode, toOutput.c_str());
-
+Link* Map::addLink(int fromNode, string fromOutput, int toNode, string toOutput, int *linkID) {
     Link* link = new Link(nodes[fromNode], fromOutput, nodes[toNode], toOutput);
-    addLinkToList(linkID, link);
+
+    if (linkID)
+        link->id = *linkID;
+    else
+        link->id = this->links.size();;
+        
+    links[link->id] = link;
+    link->setup();
+    Serial.printf("[addLink] : linkID = %d  From: %d.%s To:%d.%s\n", linkID, fromNode, fromOutput.c_str(), toNode, toOutput.c_str());
+    return link;
 }
 
 void Map::clear()
@@ -64,21 +65,35 @@ void Map::clear()
 }
 
 string Map::toJSON() {
-    StaticJsonDocument<1000> doc;
+    StaticJsonDocument<8000> doc;
     JsonObject map = doc.to<JsonObject>();
 
     JsonArray jsNodes = map.createNestedArray("nodes");
-
-    Serial.println("nodemap to json");
+    Serial.println("[Map::toJSON]:");
     for (auto n : nodes) {
-       jsNodes[n.second->id] = jsNodes.createNestedObject();
-       jsNodes[n.second->id]["properties"] = n.second->getProps();
-    }
-    /*JsonArray jsLinks = map.createNestedArray("links");
+        Serial.printf("\tnodes: %d\n", n.second->id);
 
-    for (auto n : links) {
-       jsLinks[n.second->id] = n.second->getProps()
-    }*/
+       JsonObject nodeObject = jsNodes.createNestedObject();
+       nodeObject["id"] = n.second->id;
+       nodeObject["type"] = n.second->type;
+       nodeObject["properties"] = n.second->getProps();
+       nodeObject["posX"] = n.second->posX;
+       nodeObject["posY"] = n.second->posY;
+    }
+
+    JsonArray jsLinks = map.createNestedArray("links");
+    for (auto link : links) {
+      Serial.printf("\tlinks: %d\n", link.second->id);
+      JsonObject linkObject = jsLinks.createNestedObject();
+      linkObject["id"] = link.second->id;
+      linkObject["from"] = link.second->from->id;
+      linkObject["src"] = link.second->src;
+      linkObject["to"] = link.second->to->id;
+      linkObject["dst"] = link.second->dst;
+    }
+    string ret;
+    serializeJson(doc, ret);
+    return ret;
 }
 void Map::report() {
     Serial.println("");

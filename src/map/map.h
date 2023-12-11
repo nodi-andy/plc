@@ -12,13 +12,12 @@ class Map {
     Map();
     ~Map();
     unordered_map<int, Node*> nodes;
-    unordered_map<int, Node*> links;
+    unordered_map<int, Link*> links;
     queue<string> orders;
 
     void addNode(int id, Node* newNode);
-    void addNode(JsonObject json);
-    void addLink(int linkName, int fromNode, std::string fromOutput, int toNode, std::string toOutput);
-    void addLinkToList(int id, Node* newNode);
+    Node* addNode(JsonObject json);
+    Link* addLink(int fromNode, string fromOutput, int toNode, string toOutput, int *linkID = nullptr);
     void clear();
     void report();
     string toJSON();

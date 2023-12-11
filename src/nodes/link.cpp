@@ -5,6 +5,10 @@ Link::Link(Node* fromNode, std::string srcPort, Node* toNode, std::string dstPor
     to = toNode;
     src = srcPort;
     dst = dstPort;
+    this->setProp("from", "value", fromNode->id);
+    this->setProp("to", "value", toNode->id);
+    this->props["src"]["value"] = srcPort;
+    this->props["dst"]["value"] = dstPort;
     /* Serial.print("> Link::Link: ");
     Serial.print(id);
     Serial.print(" From:");
@@ -26,15 +30,13 @@ void Link::setup() {
 int Link::onExecute() {
     if (from == NULL) return 0;
     if (to == NULL) return 0;
-    //int* v = from->getOutput(src);
-    int v = from->getProp(src, "outValue");
-    int inpValue = to->getProp(dst, "inpValue");
+    int v = from->getOutput(src);
+    int inpValue = to->getInput(dst);
     if (v != INT_MAX && inpValue == INT_MAX) {
-        Serial.println("");
         Serial.printf("> Run linkID: %d From: %d  To: %d Port:'%d' To: %d Port: '%d' Value: %d\n", id, from->id, from->title.c_str(), src.c_str(), to->id, to->title.c_str(), dst.c_str(), v);
 
         //if (to->getInput(dst) == nullptr) to->setInput(dst, v);
-        to->setProp(dst, "inpValue", v);
+        to->setInput(dst, v);
     }
 
     return 0;

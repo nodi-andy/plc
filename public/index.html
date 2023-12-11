@@ -122,7 +122,11 @@
         let view = window.canvas.ds;
         node.widget.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
       }
-      window.socket.sendToServer("addNode", node);
+      var exportNode = {};
+      exportNode.properties = node.properties;
+      exportNode.widget = node.widget;
+      exportNode.type = node.type;
+      window.socket.sendToServer("addNode", exportNode);
       //window.graph._nodes_by_id[node.id].graph = window.graph;
 
     }
@@ -142,10 +146,14 @@
     }
 
     window.nodes.saveNodework = () => {
-      let localFiles = JSON.parse(localStorage.files)
+      /*let localFiles = JSON.parse(localStorage.files)
       localFiles[localStorage.selected] =  graph.serialize(); 
       localStorage.files = JSON.stringify(localFiles)
-      window.showSnackbar("Saved nodework: " + localStorage.selected)
+      window.showSnackbar("Saved nodework: " + localStorage.selected)*/
+      
+      window.socket.sendToServer("save", {});
+      window.showSnackbar("Nodework saved in IoT")
+
     }
 
     window.nodes.upload = () => {
@@ -165,6 +173,11 @@
     window.nodes.move = (id, changedNodeData) => {
       if (window.socket) {
         window.socket.sendToServer("moveNode", {"nodeID":id, "moveTo": changedNodeData});
+      }
+    }
+    window.nodes.moved = (id, changedNodeData) => {
+      if (window.socket) {
+        window.socket.sendToServer("movedNode", {"nodeID":id, "moveTo": changedNodeData});
       }
     }
     

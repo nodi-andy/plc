@@ -18,13 +18,12 @@ class Interval : public Node
     private:
     int defaultPressed;
     int defaultReleased;
-    int defaultTOn;
-    int defaultTOff;
     int ton;
     int toff;
     int *input;
     int *output;
     int lastTick;
+    const int rtFactor = 1000;
 };
 
 static bool intervalRegistered = []() {

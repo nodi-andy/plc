@@ -11,18 +11,19 @@ using namespace std;
 class Node
 {
     private:
-      JsonObject widgets;
-      StaticJsonDocument<2024> jsondoc;
+        JsonObject widgets;
+        StaticJsonDocument<2024> jsondoc;
 
     public:
-    string jsonString;
+        string jsonString;
 
-      JsonObject props;
+        JsonObject props;
         virtual ~Node() {}
         virtual string getType() const = 0;
         virtual Node* createInstance() const = 0;
         static int const ON = 1;
         static int const OFF = 0;
+        string type;
         string name;
         string title;
         string desc;
@@ -32,6 +33,7 @@ class Node
         int newvalue = 0;
         int state = 0;
         int newstate = 0;
+        int posX, posY;
         virtual void setup();
         virtual int onExecute();
 
@@ -58,26 +60,26 @@ class Node
 
 
 class RegistryManager {
-public:
-    static RegistryManager& getInstance() {
-        static RegistryManager instance;
-        return instance;
-    }
-
-    void registerNode(Node* node) {
-        nodes_[node->getType()] = node;
-    }
-
-    Node* createNode(const std::string& type) {
-        auto it = nodes_.find(type);
-        if (it != nodes_.end()) {
-            return it->second->createInstance();
-        } else {
-            return nullptr;
+    public:
+        static RegistryManager& getInstance() {
+            static RegistryManager instance;
+            return instance;
         }
-    }
 
-private:
-    RegistryManager() {}
-    std::map<std::string, Node*> nodes_;
+        void registerNode(Node* node) {
+            nodes_[node->getType()] = node;
+        }
+
+        Node* createNode(const std::string& type) {
+            auto it = nodes_.find(type);
+            if (it != nodes_.end()) {
+                return it->second->createInstance();
+            } else {
+                return nullptr;
+            }
+        }
+
+    private:
+        RegistryManager() {}
+        std::map<std::string, Node*> nodes_;
 };

@@ -52,8 +52,9 @@ void loadNoditronFile() {
         } else {
             file.read((uint8_t *)mapFile, file.size());  
             mapFile[file.size()] = 0;
-            Serial.printf("READ DONE: %d\r\n", file.size());
             file.close();
+            Serial.printf("READ DONE: %d\r\n", file.size());
+            nodemap.orders.push("[\"upload\", {}]");
         }	
     } else {
         Serial.println("Default File not found");
@@ -367,9 +368,15 @@ void noditronTask( void * pvParameters ) {
             //    file.close();
             //    loadNoditronFile();
 
-            memcpy(wsInput, mapFile, strlen((char *)mapFile));
+            //memcpy(wsInput, mapFile, strlen((char *)mapFile));
 
-            deserializeJson(djsondoc, wsInput);
+            char mapFileStr[sizeof(mapFile) + 1];  // +1 for the null terminator
+            memcpy(mapFileStr, mapFile, sizeof(mapFile));
+            mapFileStr[sizeof(mapFile)] = '\0';  // Null-terminate the string
+
+            USE_SERIAL.printf("[Event::upload] mapFile: %s\n", mapFileStr);
+
+            deserializeJson(djsondoc, mapFile);
             JsonObject root = djsondoc.as<JsonObject>();
 
             JsonArray nodes = root["nodes"];
@@ -386,7 +393,7 @@ void noditronTask( void * pvParameters ) {
                 std::string fromPort = linkData[2].as<std::string>();
                 int toNode = linkData[3].as<int>();
                 std::string toPort = linkData[4].as<std::string>();
-                nodemap.addLink(id, fromNode, fromPort, toNode, toPort);
+                nodemap.addLink(fromNode, fromPort, toNode, toPort, &id);
             }
 
             nodemap.report();
@@ -432,7 +439,7 @@ void noditronTask( void * pvParameters ) {
         } else if (eventName == "updateMe") {
             
         } else if (eventName == "moveNode") {
-            USE_SERIAL.printf("[nodework:move] name: %s\n", eventName.c_str());
+            //USE_SERIAL.printf("[nodework:move] name: %s\n", eventName.c_str());
             
         } else if (eventName == "updateNode") {
             USE_SERIAL.printf("[updateNode] id: %d\n", id);
@@ -452,15 +459,21 @@ void noditronTask( void * pvParameters ) {
             array.add("nodeAdded");
             
             //int newID = nodemap.getID();
-            //djsondoc[1]["nodeID"] = newID;
             USE_SERIAL.printf("[event::addNode] id: %d\n", djsondoc[1].as<int>());
-            nodemap.addNode(djsondoc[1]);
+            Node *newNode = nodemap.addNode(djsondoc[1]);
+            if (newNode) {
+              djsondoc[1]["nodeID"] = newNode->id;
+            }
 
             array.add(djsondoc[1]);
             string msg;
             serializeJson(jsondoc, msg);
             sendToSocket(msg);
         } else if (eventName == "movedNode") {
+            nodemap.nodes[id]->posX = djsondoc[1]["moveTo"]["pos"][0].as<int>();
+            nodemap.nodes[id]->posY = djsondoc[1]["moveTo"]["pos"][1].as<int>();
+
+            USE_SERIAL.printf("[nodework:moved] name: %s\n", eventName.c_str());
             
         } else if (eventName == "remNode") {
             USE_SERIAL.printf("[remNode] id: %d\n", id);
@@ -469,21 +482,29 @@ void noditronTask( void * pvParameters ) {
             int toNode          = djsondoc[1]["to"].as<int>();
             string fromPort     = djsondoc[1]["fromSlot"].as<string>();
             string toPort       = djsondoc[1]["toSlot"].as<string>();
-            nodemap.addLink(id, fromNode, fromPort, toNode, toPort);
+            Link* newLink = nodemap.addLink(fromNode, fromPort, toNode, toPort);
+            if (newLink) {
+              djsondoc[1]["nodeID"] = newLink->id;
+            }
+
+            StaticJsonDocument<2024> responseJSON;
+            JsonArray array = responseJSON.to<JsonArray>();
+            array.add("linkAdded");
+            array.add(djsondoc[1]);
+            string msg;
+            serializeJson(responseJSON, msg);
+            sendToSocket(msg);
             USE_SERIAL.printf("[addLink] id: %d\n", id);
         } else if (eventName == "remlink") {
             int id = doc[1]["id"].as<int>();
             USE_SERIAL.printf("[remLink] id: %d\n", id);
         } else if (eventName == "save") {
-            notifyClients((const char*)mapFile);
+            string mapJSON = nodemap.toJSON();
+
             File file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
-            Serial.print("INPUT: ");
-            Serial.print(strlen((const char*)mapFile));
-            Serial.print(",");
-            Serial.println((char*)mapFile);
-            file.write(mapFile, strlen((const char*)mapFile));
+            file.write((uint8_t*)mapJSON.c_str(), strlen(mapJSON.c_str()));
             file.close();
-            loadNoditronFile();
+            USE_SERIAL.printf("[Event:save] %s\n", mapJSON.c_str());
         } else if (eventName == "listWiFi") {
             int n = WiFi.scanNetworks();
             Serial.println("scan done");
@@ -698,6 +719,7 @@ void loop() {
     socketIO.loop();
     uint64_t now = millis();
 
+
     if(now - messageTimestamp > 5000) {
         messageTimestamp = now;
 /*
@@ -719,7 +741,7 @@ void loop() {
 
         // Send event
         //socketIO.sendEVENT(output);*/
-        USE_SERIAL.printf("ping: %d\n", nodemap.nodes.size());
+        USE_SERIAL.printf("Nodes: %d, Links: %d\n", nodemap.nodes.size(), nodemap.links.size());
 
         // Print JSON for debugging
         //USE_SERIAL.println(output);
