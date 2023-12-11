@@ -30,7 +30,7 @@ TaskHandle_t noditronTaskHandle;
 #define MAX_MESSAGE_SIZE 8192
 // Button debouncing
 const uint8_t DEBOUNCE_DELAY = 10; // in milliseconds
-const String defaultFileName = "/map.json";
+#define defaultFileName  "/map.json"
 
 static uint8_t wsInput[MAX_MESSAGE_SIZE];
 static uint8_t mapFile[MAX_MESSAGE_SIZE];
@@ -44,16 +44,16 @@ JsonObject rootArray;
 #define USE_SERIAL Serial
 
 void loadNoditronFile() {
-    if (SPIFFS.exists(defaultFileName.c_str())) {
+    if (SPIFFS.exists(defaultFileName)) {
         Serial.println("Default File found");
-        File file = SPIFFS.open(defaultFileName, "w", true);
+        File file = SPIFFS.open(defaultFileName);
         if(!file){
             Serial.println("There was an error opening the file for reading");
         } else {
             file.read((uint8_t *)mapFile, file.size());  
             mapFile[file.size()] = 0;
+            Serial.printf("[Load Nodework] DONE: %d\r\n", file.size());
             file.close();
-            Serial.printf("READ DONE: %d\r\n", file.size());
             nodemap.orders.push("[\"upload\", {}]");
         }	
     } else {
@@ -499,12 +499,16 @@ void noditronTask( void * pvParameters ) {
             int id = doc[1]["id"].as<int>();
             USE_SERIAL.printf("[remLink] id: %d\n", id);
         } else if (eventName == "save") {
-            string mapJSON = nodemap.toJSON();
+            String mapJSON = nodemap.toJSON().c_str();
 
-            File file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
-            file.write((uint8_t*)mapJSON.c_str(), strlen(mapJSON.c_str()));
+            File file = SPIFFS.open(defaultFileName, FILE_WRITE);
+            int size = file.print(mapJSON);
+
+            if (size != mapJSON.length()) {
+                USE_SERIAL.println("Error writing to file");
+            }
             file.close();
-            USE_SERIAL.printf("[Event:save] %s\n", mapJSON.c_str());
+            USE_SERIAL.printf("[Event:save] %d: %d,  %s\n", size, mapJSON.length(), mapJSON.c_str());
         } else if (eventName == "listWiFi") {
             int n = WiFi.scanNetworks();
             Serial.println("scan done");
