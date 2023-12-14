@@ -4,6 +4,7 @@
 Map::Map() {
     nextID = 0;
 }
+
 Map::~Map()
 {
     clear();
@@ -26,8 +27,8 @@ Node* Map::addNode(JsonObject json)
     Node* newNode = RegistryManager::getInstance().createNode(type);
     if (newNode != nullptr) {
         newNode->setProps(json["properties"]);
-        if (json.containsKey("nodeID")) {
-            newNode->id = json["nodeID"].as<int>();
+        if (json.containsKey(JSON_NODE_ID)) {
+            newNode->id = json[JSON_NODE_ID].as<int>();
         } else {
             newNode->id = this->nodes.size();
         }
@@ -51,7 +52,7 @@ Link* Map::addLink(int fromNode, string fromOutput, int toNode, string toOutput,
         
     links[link->id] = link;
     link->setup();
-    Serial.printf("[addLink] : linkID = %d  From: %d.%s To:%d.%s\n", linkID, fromNode, fromOutput.c_str(), toNode, toOutput.c_str());
+    Serial.printf("[addLink] : linkID = %d  From: %d.%s To:%d.%s\n", link->id, fromNode, fromOutput.c_str(), toNode, toOutput.c_str());
     return link;
 }
 
@@ -74,7 +75,7 @@ string Map::toJSON() {
         Serial.printf("\tnodes: %d\n", n.second->id);
 
        JsonObject nodeObject = jsNodes.createNestedObject();
-       nodeObject["id"] = n.second->id;
+       nodeObject["nodeID"] = n.second->id;
        nodeObject["type"] = n.second->type;
        nodeObject["properties"] = n.second->getProps();
        nodeObject["posX"] = n.second->posX;
@@ -85,7 +86,7 @@ string Map::toJSON() {
     for (auto link : links) {
       Serial.printf("\tlinks: %d\n", link.second->id);
       JsonObject linkObject = jsLinks.createNestedObject();
-      linkObject["id"] = link.second->id;
+      linkObject["linkID"] = link.second->id;
       linkObject["from"] = link.second->from->id;
       linkObject["src"] = link.second->src;
       linkObject["to"] = link.second->to->id;

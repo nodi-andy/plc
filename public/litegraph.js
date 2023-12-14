@@ -1207,8 +1207,8 @@ class LGraph {
                 var node = LiteGraph.createNode(n_info.type, n_info.title, n_info.properties);
                 node.id = n_info.nodeID; //id it or it will create a new id
                 node.widget.id = n_info.nodeID;
-                node.widget.pos = n_info.widget.pos;
-                node.widget.size = n_info.widget.size;
+                node.widget.pos = [n_info.posX, n_info.posY];
+                //node.widget.size = n_info.widget.size;
                 this.add(node, true); //add before configure, otherwise configure cannot create links
             }
 

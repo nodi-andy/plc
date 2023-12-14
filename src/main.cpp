@@ -387,39 +387,30 @@ void noditronTask( void * pvParameters ) {
 
             JsonArray links = root["links"];
             for (JsonVariant kv : links) {
-                JsonArray linkData = kv.as<JsonArray>();
-                int id = linkData[0].as<int>();
-                int fromNode = linkData[1].as<int>();
-                std::string fromPort = linkData[2].as<std::string>();
-                int toNode = linkData[3].as<int>();
-                std::string toPort = linkData[4].as<std::string>();
+                JsonObject linkData = kv.as<JsonObject>();
+                int id = linkData["linkID"].as<int>();
+                int fromNode = linkData["from"].as<int>();
+                std::string fromPort = linkData["src"].as<std::string>();
+                int toNode = linkData["to"].as<int>();
+                std::string toPort = linkData["dst"].as<std::string>();
                 nodemap.addLink(fromNode, fromPort, toNode, toPort, &id);
             }
 
             nodemap.report();
         } else if (eventName == "getNodework") {
-            StaticJsonDocument<2024> jsondoc;
-            JsonArray array = jsondoc.to<JsonArray>();
-            array.add("setNodework");
-
-            JsonObject map = array.createNestedObject();
-
-            map["nodes"] = array.createNestedArray();
-            for (auto n : nodemap.nodes) {
-                JsonObject newNode = map["nodes"].createNestedObject();
-                newNode["type"] = n.second->getType();
-                newNode["properties"] = n.second->getProps();
-            }
-
-            JsonArray jsonLinks = array.createNestedArray();
-            for (auto n : nodemap.links) {
-                jsonLinks.add(n.second->getProps());
-            }
-
+            String mapJSON = nodemap.toJSON().c_str();
+            USE_SERIAL.printf("[getMap] : %s\n", mapJSON.c_str());
             string msg;
-            serializeJson(jsondoc, msg);
-            socketIO.sendEVENT(msg.c_str());
-            USE_SERIAL.printf("[getMap] : %s\n", msg.c_str());
+            StaticJsonDocument<8000> sjsondoc;
+            JsonArray arr = sjsondoc.to<JsonArray>();
+            arr.add("setNodework");
+
+            JsonObject data = arr.createNestedObject();
+            data["data"] = mapJSON;
+
+            serializeJson(sjsondoc, msg);
+            sendToSocket(msg);
+
         } else if (eventName == "clear") {
             nodemap.clear();
         } else if (eventName == "id") {
@@ -593,7 +584,7 @@ void noditronTask( void * pvParameters ) {
             
             serializeJson(sjsondoc, msg);
             sendToSocket(msg);
-            USE_SERIAL.printf("[Run:updateNode] id: %s\n", msg.c_str());
+            //USE_SERIAL.printf("[Run:updateNode] id: %s\n", msg.c_str());
         }
     }
     

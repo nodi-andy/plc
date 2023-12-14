@@ -89,6 +89,10 @@ window.order.linkAdded = (msg) => {
     window.canvas.dirty_canvas = true;
 }
 
+window.order.setNodework = (msg) => {
+    window.graph.configure(JSON.parse(msg.data), false);
+    window.graph.start();
+}
 
 const events = ["nodeAdded", "updateNode", "id", "linkAdded"];
 
@@ -184,6 +188,7 @@ function onOpen(event) {
    window.socket = websocket;
    window.socket.sendToServer = sendToServer;
    window.socket.sendToServer("id");
+   window.socket.sendToServer("getNodework");
 }
 
 function onClose(event) {
@@ -199,11 +204,6 @@ function onMessage(event) {
     let args = data[1];
     window.order[cmdName](args);
     
-    if (data.save) {
-      window.graph.configure(data.save, false);
-      window.graph.start();
-    }
-
     if (data.update) {
         if (window.graph._nodes_by_id[data.update.id].hwSetState) {
             window.graph._nodes_by_id[data.update.id].hwSetState(data.update.state);

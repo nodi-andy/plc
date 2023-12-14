@@ -67,11 +67,11 @@ int Node::getProp(string key, string name) {
 void Node::setProps(JsonObject newProps) {
     jsonString.clear();
     serializeJson(newProps, jsonString);
-    Serial.printf("setProp: string = %s\n", jsonString.c_str() );
+    //Serial.printf("setProp: string = %s\n", jsonString.c_str() );
 
     deserializeJson(jsondoc, jsonString);
     props = jsondoc.as<JsonObject>();
-    Serial.printf("setProps: size = %d, %s\n", props.size(), props["port"]["value"].as<string>().c_str() );
+    //Serial.printf("setProps: size = %d, %s\n", props.size(), props["port"]["value"].as<string>().c_str() );
 }
 
 JsonObject Node::getProps() {

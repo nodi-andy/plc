@@ -4,7 +4,7 @@
 #include "node.h"
 #include "../nodes/link.h"
 #include <set>
-
+#define JSON_NODE_ID "nodeID"
 using namespace std;
 
 class Map {
