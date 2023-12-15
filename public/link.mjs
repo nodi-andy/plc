@@ -22,12 +22,12 @@ export default class LLink {
             this.target_slot = o[4];
             this.type = o[5];
         } else {
-            this.id = o.nodeID;
+            this.id = o.linkID;
             this.type = o.type;
             this.origin_id = o.from;
-            this.origin_slot = o.fromSlot;
+            this.origin_slot = o.dst;
             this.target_id = o.to;
-            this.target_slot = o.toSlot;
+            this.target_slot = o.src;
         }
     }
     serialize() {

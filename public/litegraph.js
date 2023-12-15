@@ -1161,36 +1161,17 @@ class LGraph {
          * @param {String} str configure a graph from a JSON string
          * @param {Boolean} returns if there was any error parsing
          */
-    configure(data, keep_old) {
-        if (!data) {
-            return;
-        }
+    configure(data) {
+        if (!data) return;
 
-        if (!keep_old) {
-            this.clear();
-        }
+        this.clear();
 
         var nodes = data.nodes;
+        var i, l;
 
-        //decode links info (they are very verbose)
-        if (data.links && data.links.constructor === Array) {
-            var links = [];
-            for (var i = 0; i < data.links.length; ++i) {
-                var link_data = data.links[i];
-                if (!link_data) //weird bug
-                {
-                    console.warn("serialized graph link data contains errors, skipping.");
-                    continue;
-                }
-                var link = new LLink();
-                link.configure(link_data);
-                links[link.id] = link;
-            }
-            data.links = links;
-        }
 
         //copy all stored fields
-        for (var i in data) {
+        for (i in data) {
             if (i == "nodes" || i == "groups") //links must be accepted
                 continue;
             this[i] = data[i];
@@ -1201,7 +1182,7 @@ class LGraph {
         //create nodes
         this._nodes = [];
         if (nodes) {
-            for (var i = 0, l = nodes.length; i < l; ++i) {
+            for (i = 0, l = nodes.length; i < l; ++i) {
                 var n_info = nodes[i]; //stored info
                 if (!n_info) continue;
                 var node = LiteGraph.createNode(n_info.type, n_info.title, n_info.properties);
@@ -1223,6 +1204,14 @@ class LGraph {
             }
         }
 
+        //decode links info (they are very verbose)
+        if (data.links) {
+            for (i = 0; i < data.links.length; ++i) {
+                var link = new LLink();
+                link.configure(data.links[i]);
+                this.links[link.id] = link;
+            }
+        }
 
         this.extra = data.extra || {};
 
