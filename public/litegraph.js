@@ -744,6 +744,7 @@ class LGraph {
 
         for (let linkID in this.links) {
             let link = this.links[linkID];
+            if (link.device != "browser") continue;
             let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].outValue;
             if(dataFromNode !== null) {
                 this._nodes_by_id[link.target_id].properties[link.target_slot].inpValue = dataFromNode;
@@ -758,7 +759,7 @@ class LGraph {
 
         for (var j = 0; j < nodes.length; ++j) {
             var node = nodes[j];
-            if ( node.onExecute) {
+            if ( node.onExecute && node.device == "browser") {
                 node.onExecute(node.update);
                 node.update = false;
             }
@@ -1256,9 +1257,6 @@ class LGraph {
         req.onerror = function (err) {
             console.error("Error loading graph:", err);
         };
-    }
-    onNodeTrace(node, msg, color) {
-        //TODO
     }
 }
 

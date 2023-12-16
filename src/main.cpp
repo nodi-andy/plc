@@ -37,9 +37,8 @@ static uint8_t mapFile[MAX_MESSAGE_SIZE];
 
 Map nodemap;
 Preferences preferences;
-DynamicJsonDocument doc(10240);
+
 JsonObject root;
-JsonObject rootArray;
 
 #define USE_SERIAL Serial
 
@@ -325,9 +324,17 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
             break;
     }
 }
-void sendToSocket(string msg) {
-    socketIO.sendEVENT(msg.c_str());
-    websocket.textAll(msg.c_str(), msg.length());
+void sendToSocket(string key, const JsonObject& msg) {
+    StaticJsonDocument<8000> sjsondoc;
+    JsonArray arr = sjsondoc.to<JsonArray>();
+    arr.add(key);
+    arr.add(msg);
+
+    String res;
+    serializeJson(sjsondoc, res);
+
+    socketIO.sendEVENT(res.c_str());
+    websocket.textAll(res.c_str(), res.length());
 }
 
 void initWebServer() {
@@ -398,35 +405,15 @@ void noditronTask( void * pvParameters ) {
 
             nodemap.report();
         } else if (eventName == "getNodework") {
-            String mapJSON = nodemap.toJSON().c_str();
-            USE_SERIAL.printf("[getMap] : %s\n", mapJSON.c_str());
-            string msg;
-            StaticJsonDocument<8000> sjsondoc;
-            JsonArray arr = sjsondoc.to<JsonArray>();
-            arr.add("setNodework");
-
-            JsonObject data = arr.createNestedObject();
-            data["data"] = mapJSON;
-
-            serializeJson(sjsondoc, msg);
-            sendToSocket(msg);
-
+            //USE_SERIAL.printf("[getMap] : %s\n", mapJSON.c_str());
+            sendToSocket("setNodework", nodemap.toJSON().as<JsonObject>());
         } else if (eventName == "clear") {
             nodemap.clear();
         } else if (eventName == "id") {
-
-            string msg;
-
-            StaticJsonDocument<512> sjsondoc;
-            JsonArray arr = sjsondoc.to<JsonArray>();
-            arr.add("id");
-
-            JsonObject data = arr.createNestedObject();
+            StaticJsonDocument<200> data;
             data["id"] = DEVICE_NAME;
-
-            serializeJson(sjsondoc, msg);
-            USE_SERIAL.printf("[id.response] : %s\n", msg.c_str());
-            sendToSocket(msg);
+            USE_SERIAL.printf("[id.response] : %s\n", data.as<string>());
+            sendToSocket("id", data.as<JsonObject>());
         } else if (eventName == "updateMe") {
             
         } else if (eventName == "moveNode") {
@@ -445,21 +432,12 @@ void noditronTask( void * pvParameters ) {
                 nodemap.nodes[id]->setInput(djsondoc[1]["newData"]["prop"].as<string>(), djsondoc[1]["newData"]["value"].as<int>());
             }
         } else if (eventName == "addNode") {
-            StaticJsonDocument<2024> jsondoc;
-            JsonArray array = jsondoc.to<JsonArray>();
-            array.add("nodeAdded");
-            
-            //int newID = nodemap.getID();
             USE_SERIAL.printf("[event::addNode] id: %d\n", djsondoc[1].as<int>());
             Node *newNode = nodemap.addNode(djsondoc[1]);
             if (newNode) {
               djsondoc[1]["nodeID"] = newNode->id;
             }
-
-            array.add(djsondoc[1]);
-            string msg;
-            serializeJson(jsondoc, msg);
-            sendToSocket(msg);
+            sendToSocket("nodeAdded", djsondoc[1]);
         } else if (eventName == "movedNode") {
             nodemap.nodes[id]->posX = djsondoc[1]["moveTo"]["pos"][0].as<int>();
             nodemap.nodes[id]->posY = djsondoc[1]["moveTo"]["pos"][1].as<int>();
@@ -468,6 +446,11 @@ void noditronTask( void * pvParameters ) {
             
         } else if (eventName == "remNode") {
             USE_SERIAL.printf("[remNode] id: %d\n", id);
+            nodemap.removeNode(id);
+            StaticJsonDocument<16> data;
+            data["id"] = id;
+            sendToSocket("nodeRemoved", data.as<JsonObject>());
+
         } else if (eventName == "addLink") {
             int fromNode        = djsondoc[1]["from"].as<int>();
             int toNode          = djsondoc[1]["to"].as<int>();
@@ -478,19 +461,17 @@ void noditronTask( void * pvParameters ) {
               djsondoc[1]["nodeID"] = newLink->id;
             }
 
-            StaticJsonDocument<2024> responseJSON;
-            JsonArray array = responseJSON.to<JsonArray>();
-            array.add("linkAdded");
-            array.add(djsondoc[1]);
-            string msg;
-            serializeJson(responseJSON, msg);
-            sendToSocket(msg);
+            sendToSocket("linkAdded", djsondoc[1]);
             USE_SERIAL.printf("[addLink] id: %d\n", id);
-        } else if (eventName == "remlink") {
-            int id = doc[1]["id"].as<int>();
+        } else if (eventName == "remLink") {
             USE_SERIAL.printf("[remLink] id: %d\n", id);
+            nodemap.removeLink(id);
+            StaticJsonDocument<16> data;
+            data["id"] = id;
+            sendToSocket("linkRemoved", data.as<JsonObject>());
+
         } else if (eventName == "save") {
-            String mapJSON = nodemap.toJSON().c_str();
+            String mapJSON = nodemap.toJSON().as<String>();
 
             File file = SPIFFS.open(defaultFileName, FILE_WRITE);
             int size = file.print(mapJSON);
@@ -569,21 +550,12 @@ void noditronTask( void * pvParameters ) {
     for (auto n : nodemap.nodes) {
         if (n.second == nullptr) continue;
         if (n.second->onExecute()) {
-            string msg;
-
-            StaticJsonDocument<512> sjsondoc;
-            JsonArray arr = sjsondoc.to<JsonArray>();
-            arr.add("updateNode");
-
-            JsonObject data = arr.createNestedObject();
-
+            StaticJsonDocument<512> data;
             data["nodeID"] = n.second->id;
             JsonObject newData = data.createNestedObject("newData");
             newData["properties"] = n.second->getProps();
-            arr.add(data);
-            
-            serializeJson(sjsondoc, msg);
-            sendToSocket(msg);
+           
+            sendToSocket("updateNode", data.as<JsonObject>());
             //USE_SERIAL.printf("[Run:updateNode] id: %s\n", msg.c_str());
         }
     }
@@ -607,7 +579,7 @@ void noditronTask( void * pvParameters ) {
         }
     }
 
-    vTaskDelay(50);
+    vTaskDelay(5);
   } 
 }
 

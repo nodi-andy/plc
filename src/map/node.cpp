@@ -54,7 +54,7 @@ int Node::getOutput(string name) {
 
 void Node::setProp(string key, string name, int val) {
     props[key][name] = val;
-    if (val != INT_MAX) Serial.printf("setProp: %s.%s = %d\n" , key.c_str(), name.c_str(), props[key][name].as<int>());
+    //if (val != INT_MAX) Serial.printf("setProp: %s.%s = %d\n" , key.c_str(), name.c_str(), props[key][name].as<int>());
 };
 
 int Node::getProp(string key, string name) {

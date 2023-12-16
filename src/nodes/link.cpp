@@ -33,7 +33,7 @@ int Link::onExecute() {
     int v = from->getOutput(src);
     int inpValue = to->getInput(dst);
     if (v != INT_MAX && inpValue == INT_MAX) {
-        Serial.printf("> Run linkID: %d From: %d  To: %d Port:'%d' To: %d Port: '%d' Value: %d\n", id, from->id, from->title.c_str(), src.c_str(), to->id, to->title.c_str(), dst.c_str(), v);
+        //Serial.printf("> Run linkID: %d From: %d  To: %d Port:'%d' To: %d Port: '%d' Value: %d\n", id, from->id, from->title.c_str(), src.c_str(), to->id, to->title.c_str(), dst.c_str(), v);
 
         //if (to->getInput(dst) == nullptr) to->setInput(dst, v);
         to->setInput(dst, v);

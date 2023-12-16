@@ -103,16 +103,18 @@ export default function Header({ setOpenDrawer } ) {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
-        <Toolbar variant="dense">
-          <IconButton size="large" edge="start" color="inherit" aria-label="open drawer" sx={{ mr: 2 }} onClick={handleHamburgerMenuOpen}>
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ display: { xs: 'none', sm: 'block' } }}>
-            Noditron
-          </Typography>
-        </Toolbar>
-      </AppBar>
+      <div style={{ maxWidth: 'fit-content' }}>
+        <AppBar position="static">
+          <Toolbar variant="dense">
+            <IconButton size="large" edge="start" color="inherit" aria-label="open drawer" sx={{ mr: 2 }} onClick={handleHamburgerMenuOpen}>
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div" sx={{ display: { xs: 'none', sm: 'block' } }}>
+              Noditron
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      </div>
       {renderMobileMenu}
       {renderMenu}
     </Box>

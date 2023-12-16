@@ -34,6 +34,7 @@ socket.on("connect", () => {
    console.log("Connected to the socketIO server!");
    socket.sendToServer('updateMe', window.nodeworkID);
    window.socket = socket;
+   window.socket.type = "cloud";
    window.socket.sendToServer = sendToServer;
    onOpen();
 });
@@ -56,6 +57,11 @@ window.order.nodeAdded = (message) => {
     newNode.widget.pos = message.widget.pos;
     newNode.widget.setSize(message.widget.size);
     window.graph.add(newNode);
+    window.canvas.dirty_canvas = true;
+}
+
+window.order.nodeRemoved = (msg) => {
+    window.graph.removeNodeByID(msg.id);
     window.canvas.dirty_canvas = true;
 }
 
@@ -89,12 +95,17 @@ window.order.linkAdded = (msg) => {
     window.canvas.dirty_canvas = true;
 }
 
+window.order.linkRemoved = (msg) => {
+    window.graph.removeLink(msg.id);
+    window.canvas.dirty_canvas = true;
+}
+
 window.order.setNodework = (msg) => {
-    window.graph.configure(JSON.parse(msg.data), false);
+    window.graph.configure(msg, false);
     window.graph.start();
 }
 
-const events = ["nodeAdded", "updateNode", "id", "linkAdded"];
+const events = ["nodeAdded", "updateNode", "id", "linkAdded", "linkRemoved", "nodeRemoved"];
 
 events.forEach(event => {
   socket.on(event, message => {
@@ -186,6 +197,8 @@ function initWebSocket() {
 
 function onOpen(event) {
    window.socket = websocket;
+   socket.disconnect();
+   window.socket.type = "iot";
    window.socket.sendToServer = sendToServer;
    window.socket.sendToServer("id");
    window.socket.sendToServer("getNodework");
@@ -202,15 +215,7 @@ function onMessage(event) {
     let data = JSON.parse(event.data);
     let cmdName = data[0];
     let args = data[1];
-    window.order[cmdName](args);
-    
-    if (data.update) {
-        if (window.graph._nodes_by_id[data.update.id].hwSetState) {
-            window.graph._nodes_by_id[data.update.id].hwSetState(data.update.state);
-        }
-        window.graph._nodes_by_id[data.update.id].properties.value.value = data.update.value;
-        window.graph._nodes_by_id[data.update.id].properties.state.value = data.update.state;
-    }
+    if (window.order[cmdName]) window.order[cmdName](args);
 
     if (data.updateWiFi) {
         window.wifiList = data.updateWiFi.list.filter((value, index) => {
@@ -221,7 +226,6 @@ function onMessage(event) {
     if (data.connectionSettings) {
         window.setWiFiEnabled(data.connectionSettings.STA_Enabled)
     }
-    //document.getElementById('led').className = data.status;
 }
 
 /*websocket.sendMsg = (msg) => {

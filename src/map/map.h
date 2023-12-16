@@ -17,10 +17,14 @@ class Map {
 
     void addNode(int id, Node* newNode);
     Node* addNode(JsonObject json);
+    void removeNode(int idToRemove);
+
     Link* addLink(int fromNode, string fromOutput, int toNode, string toOutput, int *linkID = nullptr);
+    void removeLink(int linkIDToRemove);
+
     void clear();
     void report();
-    string toJSON();
+    DynamicJsonDocument toJSON();
 
     int getID();
     void removeID(int idToRemove);
