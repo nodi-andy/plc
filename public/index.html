@@ -7,44 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="HandheldFriendly" content="true" />
     <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="noditron"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
+    <meta name="description" content="noditron"/>
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
     <title>noditron</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <!-- <canvas id="mycanvas" style="position: absolute;left: 0;top:0;z-Index:-1"></canvas>  -->
-
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
   <script type = "module">
+
 
     const loadJS = (FILE_URL, async = true, type = "module") => {
       return new Promise((resolve, reject) => {
@@ -73,12 +45,12 @@
   };
     // why loading the scripts one by one? 
     // Because the IoT device can not keep more than 10 TCP connections open
+    await loadJS("./socket.io.min.js", false);
     await loadJS("./math.js", false);
     await loadJS("./litegraph.js", false);
     await loadJS("./node.js", false);
     await loadJS("./link.mjs", false);
     await loadJS("./view.js", false);
-    await loadJS("./litegraph.js", false);
     await loadJS("./nodes/widget/button.js", false);
     await loadJS("./nodes/widget/toggle.js", false);
     await loadJS("./nodes/widget/led.js", false);
@@ -95,8 +67,6 @@
     await loadJS("./nodes/math/counter.js", false);
     await loadJS("./nodes/time/interval.js", false);
     await loadJS("./nodes/control/junction.js", false);
-    //await loadJS("./nodes/control/router.js", false);
-    //await loadJS("./nodes/control/selector.js", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
     await loadJS("./nodes/nodi.box/b2.js", false);
     await loadJS("./nodes/nodi.box/b3.js", false);
@@ -104,10 +74,10 @@
     await loadJS("./nodes/nodi.box/yellow.js", false);
     await loadJS("./nodes/nodi.box/green.js", false);
     await loadJS("./nodes/nodi.box/stepper.js", false);
-
     await loadJS("./nodes/esp32mcu/b1.js", false);
     await loadJS("./nodes/esp32mcu/led.js", false);
     await loadJS("./websocket.js", false);
+
 
     window.graph = new LGraph();
     window.canvas = new LGraphCanvas("#mycanvas", graph);
@@ -122,23 +92,22 @@
         let view = window.canvas.ds;
         node.widget.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
       }
+
+      // Do not send all values of node. Create a small export version
       var exportNode = {};
       exportNode.properties = node.properties;
       exportNode.widget = node.widget;
       exportNode.type = node.type;
-      window.socket.sendToServer("addNode", exportNode);
-      //window.graph._nodes_by_id[node.id].graph = window.graph;
-
+      window.sendToServer("addNode", exportNode);
     }
 
     window.nodes.remNode = () => {
-
         var graphcanvas = LGraphCanvas.active_canvas;
         for (var node in graphcanvas.selected_nodes) {
-            window.socket.sendToServer("remNode", {"nodeID" : graphcanvas.selected_nodes[node].id});
+          window.sendToServer("remNode", {"nodeID" : graphcanvas.selected_nodes[node].id});
         }
         
-        if (canvas.selectedLink != null) window.socket.sendToServer("remLink", {"nodeID": canvas.selectedLink});
+        if (canvas.selectedLink != null) window.sendToServer("remLink", {"nodeID": canvas.selectedLink});
     }
 
     window.nodes.editNode = () => {
@@ -151,7 +120,7 @@
       localStorage.files = JSON.stringify(localFiles)
       window.showSnackbar("Saved nodework: " + localStorage.selected)*/
       
-      window.socket.sendToServer("save", {});
+      window.sendToServer("save", {});
       window.showSnackbar("Nodework saved in IoT")
 
     }
@@ -165,26 +134,21 @@
         for(let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
         }
-        window.socket.sendToServer("setNodework", storeGraph);
+        window.sendToServer("setNodework", storeGraph);
         window.showSnackbar("nodework sent to nodi.box!")
       }
     }
 
     window.nodes.move = (id, changedNodeData) => {
-      if (window.socket && window.socket.type == "server") {
-        window.socket.sendToServer("moveNode", {"nodeID":id, "moveTo": changedNodeData});
-      }
+        window.sendToServer("moveNode", {"nodeID":id, "moveTo": changedNodeData});
     }
+
     window.nodes.moved = (id, changedNodeData) => {
-      if (window.socket) {
-        window.socket.sendToServer("movedNode", {"nodeID":id, "moveTo": changedNodeData});
-      }
+        window.sendToServer("movedNode", {"nodeID":id, "moveTo": changedNodeData});
     }
     
     window.nodes.update = (id, changedNodeData) => {
-      if (window.socket) {
-        window.socket.sendToServer("updateNode", {"nodeID":id, "newData": {"properties": changedNodeData}});
-      }
+        window.sendToServer("updateNode", {"nodeID":id, "newData": {"properties": changedNodeData}});
     }
 
     window.load = (filename) => {;

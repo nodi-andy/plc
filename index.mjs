@@ -27,10 +27,8 @@ const io = new socketIOServer(server, {
   },
 });
 
-
 var nodeWorkJSON = new NodeWork();
 var iot = null;
-var cmds = [];
 
 class UniqueIDGenerator {
   constructor() {
@@ -226,7 +224,7 @@ io.on('connection', socket => {
     if (iot) {
       //iot.emit("getNodework", "");
     }
-    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.newData.pos;
+    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.moveTo.pos;
   });
 
   socket.on('setSize', msg => {
@@ -238,13 +236,13 @@ io.on('connection', socket => {
       socket.broadcast.emit('setSize', msg);
     }
   });
-
   
   socket.on('event_name', msg => {
     console.log("[event] ", msg.now);
   });
 
   socket.on('id', msg => {
+    if (msg == null) return;
     console.log("[event] ", msg.id);
     socket.devType = msg.id;
     if (socket.devType == "nodi.box" || socket.devType == "esp32mcu") {

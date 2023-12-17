@@ -3,17 +3,9 @@ import LGraphCanvas from "./canvas.js"
 import LLink from "./link.mjs"
 import LGraphNode from "./node.js"
 import NodeCore from "./node_core.mjs";
-/**
- * The Global Scope. It contains all the registered node classes.
- *
- * @class LiteGraph
- * @constructor
- */
-var global = window;
-//basic nodes
 
 
-export var LiteGraph = (global.LiteGraph = {
+export var LiteGraph = (window.LiteGraph = {
     VERSION: 0.1,
 
     CANVAS_GRID_SIZE: 64,
@@ -23,8 +15,6 @@ export var LiteGraph = (global.LiteGraph = {
     NODE_SLOT_HEIGHT: 64,
     NODE_WIDGET_HEIGHT: 20,
     NODE_WIDTH: 64,
-    NODE_COLLAPSED_RADIUS: 10,
-    NODE_COLLAPSED_WIDTH: 80,
     NODE_TITLE_COLOR: "#999",
     NODE_SELECTED_TITLE_COLOR: "#FFF",
     NODE_TEXT_SIZE: 14,
@@ -33,7 +23,6 @@ export var LiteGraph = (global.LiteGraph = {
     NODE_DEFAULT_COLOR: "#333",
     NODE_DEFAULT_BGCOLOR: "#353535",
     NODE_DEFAULT_BOXCOLOR: "#666",
-    NODE_DEFAULT_SHAPE: "box",
     NODE_BOX_OUTLINE_COLOR: "#FFF",
     DEFAULT_SHADOW_COLOR: "rgba(0,0,0,0.5)",
     DEFAULT_GROUP_FONT: 24,
@@ -41,12 +30,10 @@ export var LiteGraph = (global.LiteGraph = {
     WIDGET_BGCOLOR: "#222",
     WIDGET_OUTLINE_COLOR: "#666",
     WIDGET_TEXT_COLOR: "#DDD",
-    WIDGET_SECONDARY_TEXT_COLOR: "#999",
 
     LINK_COLOR: "#6B6",
     CONNECTING_LINK_COLOR: "#AFA",
 
-    MAX_NUMBER_OF_NODES: 1000, //avoid infinite loops
     DEFAULT_POSITION: [32, 32], //default node position
 
     //shapes are used for nodes but also for slots
@@ -62,12 +49,10 @@ export var LiteGraph = (global.LiteGraph = {
     OUTPUT: 2,
 
     EVENT: -1, //for outputs
-    ACTION: -1, //for inputs
 
     ALWAYS: 0,
     ON_EVENT: 1,
     NEVER: 2,
-    ON_TRIGGER: 3,
 
     UP: 1,
     DOWN: 2,
@@ -75,20 +60,14 @@ export var LiteGraph = (global.LiteGraph = {
     RIGHT: 4,
     CENTER: 5,
 
-    LINK_RENDER_MODES: ["Straight", "Linear", "Spline"], // helper
     STRAIGHT_LINK: 0,
     LINEAR_LINK: 1,
-    SPLINE_LINK: 2,
 
     NORMAL_TITLE: 0,
     NO_TITLE: 1,
-    TRANSPARENT_TITLE: 2,
-    AUTOHIDE_TITLE: 3,
     CENTRAL_TITLE: 4,
-    VERTICAL_LAYOUT: "vertical", // arrange nodes vertically
 
     proxy: null, //used to redirect calls
-    node_images_path: "",
 
     debug: false,
     catch_exceptions: true,
@@ -111,7 +90,6 @@ export var LiteGraph = (global.LiteGraph = {
     shift_click_do_break_link_from: false, // [false!] prefer false if results too easy to break links - implement with ALT or TODO custom keys
     click_do_break_link_to: false, // [false!]prefer false, way too easy to break links
     
-    search_hide_on_mouse_leave: true, // [false on mobile] better true if not touch device, TODO add an helper/listener to close if false
     search_filter_enabled: false, // [true!] enable filtering slots type in the search widget, !requires auto_load_slot_types or manual set registered_slot_[in/out]_types and slot_types_[in/out]
     search_show_all_on_open: true, // [true!] opens the results list when opening the search widget
     
@@ -205,7 +183,7 @@ export var LiteGraph = (global.LiteGraph = {
                             this._shape = v;
                     }
                 },
-                get: function(v) {
+                get: function() {
                     return this._shape;
                 },
                 enumerable: true,
@@ -223,7 +201,7 @@ export var LiteGraph = (global.LiteGraph = {
 
             //used to know which nodes create when dragging files to the canvas
             if (base_class.supported_extensions) {
-                for (var i in base_class.supported_extensions) {
+                for (i in base_class.supported_extensions) {
                     var ext = base_class.supported_extensions[i];
                     if(ext && ext.constructor === String)
                         this.node_types_by_file_extension[ ext.toLowerCase() ] = base_class;
@@ -274,9 +252,6 @@ export var LiteGraph = (global.LiteGraph = {
         if(base_class.constructor.name)
             delete this.Nodes[base_class.constructor.name];
     },
-
-
-    
 
     /**
      * Removes all previously registered node's types
@@ -477,87 +452,6 @@ export var LiteGraph = (global.LiteGraph = {
             target[i] = r[i];
         }
         return target;
-    },
-
-
-    /**
-     * Register a string in the search box so when the user types it it will recommend this node
-     * @method registerSearchboxExtra
-     * @param {String} node_type the node recommended
-     * @param {String} description text to show next to it
-     * @param {Object} data it could contain info of how the node should be configured
-     * @return {Boolean} true if they can be connected
-     */
-    registerSearchboxExtra: function(node_type, description, data) {
-        this.searchbox_extras[description.toLowerCase()] = {
-            type: node_type,
-            desc: description,
-            data: data
-        };
-    },
-
-    /**
-     * Wrapper to load files (from url using fetch or from file using FileReader)
-     * @method fetchFile
-     * @param {String|File|Blob} url the url of the file (or the file itself)
-     * @param {String} type an string to know how to fetch it: "text","arraybuffer","json","blob"
-     * @param {Function} on_complete callback(data)
-     * @param {Function} on_error in case of an error
-     * @return {FileReader|Promise} returns the object used to 
-     */
-    fetchFile: function( url, type, on_complete, on_error ) {
-        var that = this;
-        if(!url)
-            return null;
-
-        type = type || "text";
-        if( url.constructor === String )
-        {
-            if (url.substr(0, 4) == "http" && LiteGraph.proxy) {
-                url = LiteGraph.proxy + url.substr(url.indexOf(":") + 3);
-            }
-            return fetch(url)
-            .then(function(response) {
-                if(!response.ok)
-                        throw new Error("File not found"); //it will be catch below
-                if(type == "arraybuffer")
-                    return response.arrayBuffer();
-                else if(type == "text" || type == "string")
-                    return response.text();
-                else if(type == "json")
-                    return response.json();
-                else if(type == "blob")
-                    return response.blob();
-            })
-            .then(function(data) {
-                if(on_complete)
-                    on_complete(data);
-            })
-            .catch(function(error) {
-                console.error("error fetching file:",url);
-                if(on_error)
-                    on_error(error);
-            });
-        }
-        else if( url.constructor === File || url.constructor === Blob)
-        {
-            var reader = new FileReader();
-            reader.onload = function(e)
-            {
-                var v = e.target.result;
-                if( type == "json" )
-                    v = JSON.parse(v);
-                if(on_complete)
-                    on_complete(v);
-            }
-            if(type == "arraybuffer")
-                return reader.readAsArrayBuffer(url);
-            else if(type == "text" || type == "json")
-                return reader.readAsText(url);
-            else if(type == "blob")
-                return reader.readAsBinaryString(url);
-        }
-        return null;
     }
 });
 
@@ -565,23 +459,6 @@ export var LiteGraph = (global.LiteGraph = {
 for (let i = 97; i <= 123; i++) {
     LiteGraph.alphabet.push(String.fromCharCode(i));
 }
-
-
-
-//*********************************************************************************
-// LGraph CLASS
-//*********************************************************************************
-
-/**
- * LGraph is the class that contain a full graph. We instantiate one and add nodes to it, and then we can run the execution loop.
- * supported callbacks:
-    + onNodeAdded: when a new node is added to the graph
-    + onNodeRemoved: when a node inside this graph is removed
-    *
-    * @class LGraph
-    * @constructor
-    * @param {Object} o data from previous serialization [optional]
-    */
 
 
 class LGraph {
@@ -594,10 +471,7 @@ class LGraph {
             this.configure(o);
         }
     }
-    //used to know which types of connections support this graph (some graphs do not allow certain types)
-    getSupportedTypes() {
-        return this.supported_types || LGraph.supported_types;
-    }
+
     /**
          * Removes all nodes from this graph
          * @method clear
@@ -675,38 +549,14 @@ class LGraph {
             this.onPlayEvent();
         }
 
-
         //launch
         this.starttime = NodiEnums.getTime();
         this.last_update_time = this.starttime;
         interval = interval || 0;
         var that = this;
 
-        //execute once per frame
-        if (interval == 0 && typeof window != "undefined" && window.requestAnimationFrame) {
-            function on_frame() {
-                if (that.execution_timer_id != -1) {
-                    return;
-                }
-                window.requestAnimationFrame(on_frame);
-                if (that.onBeforeStep)
-                    that.onBeforeStep();
-                that.runStep(1, !that.catch_errors);
-                if (that.onAfterStep)
-                    that.onAfterStep();
-            }
-            this.execution_timer_id = -1;
-            on_frame();
-        } else { //execute every 'interval' ms
-            this.execution_timer_id = setInterval(function () {
-                //execute
-                if (that.onBeforeStep)
-                    that.onBeforeStep();
-                that.runStep(1, !that.catch_errors);
-                if (that.onAfterStep)
-                    that.onAfterStep();
-            }, interval);
-        }
+        this.execution_timer_id = setInterval(() => {that.runStep(1, !that.catch_errors);}, interval);
+        
     }
     /**
          * Stops the execution loop of the graph
@@ -881,7 +731,7 @@ class LGraph {
             if (links) {
                     for (link of links) {
                     node.disconnectInput(link);
-                    window.socket.sendToServer("remLink", {"nodeID": link.id});
+                    window.sendToServer("remLink", {"nodeID": link.id});
                     this.removeLink(link);
                 }
             }
@@ -893,7 +743,7 @@ class LGraph {
             if (links) {
                 for (link of links) {
                     node.disconnectOutput(link);
-                    window.socket.sendToServer("remLink", {"nodeID": link.id});
+                    window.sendToServer("remLink", {"nodeID": link.id});
                     this.removeLink(link);
                 }
             }
@@ -1118,7 +968,7 @@ class LGraph {
 
         //pack link info into a non-verbose format
         var links = [];
-        for (var i in this.links) {
+        for (i in this.links) {
             //links is an OBJECT
             var link = this.links[i];
             if (!link.serialize) {
@@ -1138,7 +988,7 @@ class LGraph {
         }
 
         var groups_info = [];
-        for (var i = 0; i < this._groups.length; ++i) {
+        for (i = 0; i < this._groups.length; ++i) {
             groups_info.push(this._groups[i].serialize());
         }
 
@@ -1244,7 +1094,7 @@ class LGraph {
         var req = new XMLHttpRequest();
         req.open("GET", url, true);
         req.send(null);
-        req.onload = function (oEvent) {
+        req.onload = function () {
             if (req.status !== 200) {
                 console.error("Error loading graph:", req.status, req.response);
                 return;
@@ -1260,45 +1110,13 @@ class LGraph {
     }
 }
 
-//default supported types
-LGraph.supported_types = ["number", "string", "boolean"];
 LGraph.STATUS_STOPPED = 1;
 LGraph.STATUS_RUNNING = 2;
 
-global.LGraph = LiteGraph.LGraph = LGraph;
+window.LGraph = LiteGraph.LGraph = LGraph;
 LiteGraph.LLink = LLink;
-
-
-
-global.LGraphNode = LiteGraph.LGraphNode = LGraphNode;
-
-
-
-global.LGraphCanvas = LiteGraph.LGraphCanvas = LGraphCanvas;
-
-
-LGraphCanvas.gradients = {}; //cache of gradients
-
-
-/* Interaction */
-
-LGraphCanvas.search_limit = -1;
-
-LGraphCanvas.node_colors = {
-    red: { color: "#322", bgcolor: "#533", groupcolor: "#A88" },
-    brown: { color: "#332922", bgcolor: "#593930", groupcolor: "#b06634" },
-    green: { color: "#232", bgcolor: "#353", groupcolor: "#8A8" },
-    blue: { color: "#223", bgcolor: "#335", groupcolor: "#88A" },
-    pale_blue: {
-        color: "#2a363b",
-        bgcolor: "#3f5159",
-        groupcolor: "#3f789e"
-    },
-    cyan: { color: "#233", bgcolor: "#355", groupcolor: "#8AA" },
-    purple: { color: "#323", bgcolor: "#535", groupcolor: "#a1309b" },
-    yellow: { color: "#432", bgcolor: "#653", groupcolor: "#b58b2a" },
-    black: { color: "#222", bgcolor: "#000", groupcolor: "#444" }
-};
+window.LGraphNode = LiteGraph.LGraphNode = LGraphNode;
+window.LGraphCanvas = LiteGraph.LGraphCanvas = LGraphCanvas;
 
 
 //API *************************************************
@@ -1378,33 +1196,6 @@ if (typeof(window) != "undefined" && window.CanvasRenderingContext2D && !window.
 };
 }//if
 
-function compareObjects(a, b) {
-    for (var i in a) {
-        if (a[i] != b[i]) {
-            return false;
-        }
-    }
-    return true;
-}
-LiteGraph.compareObjects = compareObjects;
-
-
-
-function colorToString(c) {
-    return (
-        "rgba(" +
-        Math.round(c[0] * 255).toFixed() +
-        "," +
-        Math.round(c[1] * 255).toFixed() +
-        "," +
-        Math.round(c[2] * 255).toFixed() +
-        "," +
-        (c.length == 4 ? c[3].toFixed(2) : "1.0") +
-        ")"
-    );
-}
-LiteGraph.colorToString = colorToString;
-
 
 //[minx,miny,maxx,maxy]
 function growBounding(bounding, x, y) {
@@ -1436,46 +1227,6 @@ function isInsideBounding(p, bb) {
 }
 LiteGraph.isInsideBounding = isInsideBounding;
 
-
-//Convert a hex value to its decimal value - the inputted hex must be in the
-//	format of a hex triplet - the kind we use for HTML colours. The function
-//	will return an array with three values.
-function hex2num(hex) {
-    if (hex.charAt(0) == "#") {
-        hex = hex.slice(1);
-    } //Remove the '#' char - if there is one.
-    hex = hex.toUpperCase();
-    var hex_alphabets = "0123456789ABCDEF";
-    var value = new Array(3);
-    var k = 0;
-    var int1, int2;
-    for (var i = 0; i < 6; i += 2) {
-        int1 = hex_alphabets.indexOf(hex.charAt(i));
-        int2 = hex_alphabets.indexOf(hex.charAt(i + 1));
-        value[k] = int1 * 16 + int2;
-        k++;
-    }
-    return value;
-}
-
-LiteGraph.hex2num = hex2num;
-
-//Give a array with three values as the argument and the function will return
-//	the corresponding hex triplet.
-function num2hex(triplet) {
-    var hex_alphabets = "0123456789ABCDEF";
-    var hex = "#";
-    var int1, int2;
-    for (var i = 0; i < 3; i++) {
-        int1 = triplet[i] / 16;
-        int2 = triplet[i] % 16;
-
-        hex += hex_alphabets.charAt(int1) + hex_alphabets.charAt(int2);
-    }
-    return hex;
-}
-
-LiteGraph.num2hex = num2hex;
 
 LiteGraph.extendClass = function(target, origin) {
     for (var i in origin) {
@@ -1519,7 +1270,6 @@ LiteGraph.extendClass = function(target, origin) {
         }
     }
 };
-
 
 //used to create nodes from wrapping functions
 LiteGraph.getParameterNames = function(func) {
@@ -1600,6 +1350,7 @@ LiteGraph.pointerListenerAdd = function(oDOM, sEvIn, fCall, capture=false) {
             return oDOM.addEventListener(sEvent, fCall, capture);
     }
 }
+
 LiteGraph.pointerListenerRemove = function(oDOM, sEvent, fCall, capture=false) {
     if (!oDOM || !oDOM.removeEventListener || !sEvent || typeof fCall!=="function"){
         //console.log("cant pointerListenerRemove "+oDOM+", "+sEvent+", "+fCall);
@@ -1626,10 +1377,6 @@ LiteGraph.pointerListenerRemove = function(oDOM, sEvent, fCall, capture=false) {
     }
 }
 
-Math.clamp = function(v, a, b) {
-    return a > v ? a : b < v ? b : v;
-};
-
 if (typeof window != "undefined" && !window["requestAnimationFrame"]) {
     window.requestAnimationFrame =
         window.webkitRequestAnimationFrame ||
@@ -1637,11 +1384,6 @@ if (typeof window != "undefined" && !window["requestAnimationFrame"]) {
         function(callback) {
             window.setTimeout(callback, 1000 / 60);
         };
-}
-
-
-if (typeof exports != "undefined") {
-exports.LiteGraph = this.LiteGraph;
 }
 
 export { LGraph };

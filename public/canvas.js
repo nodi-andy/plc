@@ -1,13 +1,3 @@
-/**
- * This class is in charge of rendering one graph inside a canvas. And provides all the interaction required.
- * Valid callbacks are: onNodeSelected, onNodeDeselected, onShowNodePanel, onNodeDblClicked
- *
- * @class LGraphCanvas
- * @constructor
- * @param {HTMLCanvas} canvas the canvas where you want to render (it accepts a selector in string format or the canvas element itself)
- * @param {LGraph} graph [optional]
- * @param {Object} options [optional] { skip_rendering, autoresize, viewport }
- */
 import { NodiEnums } from "./enums.mjs";
 import DragAndScale from "./view.js"
 import { LiteGraph } from "./litegraph.js"
@@ -54,7 +44,7 @@ export default class LGraphCanvas {
 
         this.read_only = false; //if set to true users cannot modify the graph
         this.render_only_selected = true;
-        this.show_info = true;
+        this.show_info = false;
         this.allow_dragcanvas = true;
         this.allow_dragnodes = true;
         this.allow_interaction = true; //allow to control widgets, buttons, collapse, etc
@@ -1295,13 +1285,13 @@ export default class LGraphCanvas {
                         slot = this.isOverNodeInput(node, e.canvasX, e.canvasY);
                         if (slot != null) {
                             let input = node.getInputByIndex(slot);
-                            window.socket.sendToServer("addLink", {from: this.connecting_node.id, fromSlot: this.connecting_output.name, to: node.id, toSlot: input.name});
+                            window.sendToServer("addLink", {from: this.connecting_node.id, fromSlot: this.connecting_output.name, to: node.id, toSlot: input.name});
                         }
                     } else if (this.connecting_input) {
                         slot = this.isOverNodeOutput(node, e.canvasX, e.canvasY);
                         if (slot != null) {
                             let output = node.getOutputByIndex(slot);
-                            window.socket.sendToServer("addLink", {to: this.connecting_node.id, toSlot: this.connecting_input.name, from: node.id, fromSlot: output.name});
+                            window.sendToServer("addLink", {to: this.connecting_node.id, toSlot: this.connecting_input.name, from: node.id, fromSlot: output.name});
                         }
                     }
                 }
@@ -2098,11 +2088,6 @@ export default class LGraphCanvas {
             this.onRender(canvas, ctx);
         }
 
-        //info widget
-        if (this.show_info) {
-            this.renderInfo(ctx, area ? area[0] : 0, area ? area[1] : 0);
-        }
-
         if (this.graph) {
             //apply transformations
             ctx.save();
@@ -2283,7 +2268,6 @@ export default class LGraphCanvas {
 
     isAreaClicked(x, y, w, h, hold_click) {
         var pos = this.mouse;
-        var hover = Math.isInsideRectangle(pos[0], pos[1], x, y, w, h);
         pos = this.last_click_position;
         var clicked = pos && Math.isInsideRectangle(pos[0], pos[1], x, y, w, h);
         var was_clicked = clicked && !this.block_click;
@@ -2291,31 +2275,7 @@ export default class LGraphCanvas {
             this.blockClick();
         return was_clicked;
     }
-    /**
-         * draws some useful stats in the corner of the canvas
-         * @method renderInfo
-         */
-    renderInfo(ctx, x, y) {
-        x = x || 10;
-        y = y || this.canvas.height - 80;
-
-        ctx.save();
-        ctx.translate(x, y);
-
-        ctx.font = "10px Arial";
-        ctx.fillStyle = "#888";
-        ctx.textAlign = "left";
-        if (this.graph) {
-            ctx.fillText("T: " + this.graph.globaltime.toFixed(2) + "s", 5, 13 * 1);
-            ctx.fillText("I: " + this.graph.iteration, 5, 13 * 2);
-            ctx.fillText("N: " + this.graph._nodes.length + " [" + this.visible_nodes.length + "]", 5, 13 * 3);
-            ctx.fillText("V: " + this.graph._version, 5, 13 * 4);
-            ctx.fillText("FPS:" + this.fps.toFixed(2), 5, 13 * 5);
-        } else {
-            ctx.fillText("No graph selected", 5, 13 * 1);
-        }
-        ctx.restore();
-    }
+    
     /**
          * draws the back canvas (the one containing the background and the connections)
          * @method drawBackCanvas
@@ -2343,9 +2303,8 @@ export default class LGraphCanvas {
             ctx.clearRect(viewport[0], viewport[1], viewport[2], viewport[3]);
         }
 
-        var bg_already_painted = false;
         if (this.onRenderBackground) {
-            bg_already_painted = this.onRenderBackground(canvas, ctx);
+            this.onRenderBackground(canvas, ctx);
         }
 
         //reset in case of error
@@ -2373,7 +2332,7 @@ export default class LGraphCanvas {
             //DEBUG: show clipping area
             //ctx.fillStyle = "red";
             //ctx.fillRect( this.visible_area[0] + 10, this.visible_area[1] + 10, this.visible_area[2] - 20, this.visible_area[3] - 20);
-            ctx.fillStyle = "#abb";
+            ctx.fillStyle = "#ccc";
             ctx.fillRect(this.visible_area[0], this.visible_area[1], this.visible_area[2], this.visible_area[3]);
 
             ctx.strokeStyle = "#555";
@@ -2392,27 +2351,16 @@ export default class LGraphCanvas {
             let r = grid_area[2];
             let d = grid_area[3];
 
-            ctx.setLineDash([8, 8]);
-            ctx.strokeStyle = "rgb(0,0,0,0.2)";
 
-            ctx.beginPath();
-            for (var x = l; x <= r; x += s) {
-                ctx.moveTo(x , t - 4);
-                ctx.lineTo(x, d - 4);
-            }
-            for (var y = t; y <= d; y += s) {
-                ctx.moveTo(l - 4, y);
-                ctx.lineTo(r - 4, y); 
-            }
-            ctx.stroke();
+            ctx.fillStyle = "rgb(0,0,0,0.05)";
 
-            
-            /*
-            //bg
-            if (this.render_canvas_border) {
-                ctx.strokeStyle = "#235";
-                ctx.strokeRect(0, 0, canvas.width, canvas.height);
-            }*/
+            for (var x = l; x <= r; x += s / 2) {
+                for (var y = t; y <= d; y += s / 2) {
+                    ctx.fillRect(x + 28, y - 4, 8, 8);
+                    ctx.fillRect(x - 4, y + 28, 8, 8);
+                }
+            }
+
 
             if (this.render_connections_shadows) {
                 ctx.shadowColor = "#000";

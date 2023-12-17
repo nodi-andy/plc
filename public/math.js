@@ -28,3 +28,7 @@ Math.distance = function(a, b) {
         (b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1])
     );
 }
+
+Math.clamp = function(v, a, b) {
+    return a > v ? a : b < v ? b : v;
+};

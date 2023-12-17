@@ -37,5 +37,12 @@ int LED::onExecute() {
     Serial.printf("LED state: %d\n", getProp("state"));
     return true;
   }
+
+  if (hasInput("set")) {
+    setProp("state", "value", 1);
+    setProp("state", "outValue", 1);
+    clearInput("state");
+  }
+
   return false;
 }

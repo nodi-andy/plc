@@ -1,11 +1,4 @@
 import LLink from "./link.mjs";
-
-/**
- * Base Class for all the node type classes
- * @class LGraphNode
- * @param {String} name a name for the node
- */
-
 export default class NodeCore {
     constructor(title) {
         this.title = title;
@@ -388,14 +381,6 @@ export default class NodeCore {
         return r;
     }
 
-    addOnExecutedOutput() {
-        var trigS = this.findOutputSlot("onExecuted");
-        if (trigS == -1) { //!trigS || 
-            this.addOutput("onExecuted", window.LiteGraph.ACTION, { optional: true, nameLocked: true });
-            return this.findOutputSlot("onExecuted");
-        }
-        return trigS;
-    }
     onAfterExecuteNode(param, options) {
         var trigS = this.findOutputSlot("onExecuted");
         if (trigS != -1) {
@@ -544,14 +529,14 @@ export default class NodeCore {
 
     updateProperties(name, type, val) {
         this.properties[name][type] = val;
-        window.socket.sendToServer("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
+        window.sendToServer("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
 
     }
     addInputByName(name) {
         this.updateProperties(name, "input", true);
         let prop = this.properties[name];
         this.addInput(name, prop.defaultValue, prop.label)
-        window.socket.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
+        window.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
 
         window.updateEditDialog();
     }
@@ -589,7 +574,6 @@ export default class NodeCore {
         return input;
     }
     
-
     removeInputByName(name) {
         this.updateProperties(name, "input", false);
 
@@ -608,6 +592,7 @@ export default class NodeCore {
         }
         window.updateEditDialog();
     }
+
     /**
          * remove an existing input slot
          * @method removeInput
@@ -681,6 +666,7 @@ export default class NodeCore {
         }
         return -1;
     }
+
     /**
          * returns the output slot with a given name (used for dynamic slots), -1 if not found
          * @method findOutputSlot
@@ -779,6 +765,7 @@ export default class NodeCore {
 
         return link_info;
     }
+    
     /**
          * disconnect one output to an specific node
          * @method disconnectOutput

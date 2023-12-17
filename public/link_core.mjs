@@ -12,21 +12,12 @@ export default class LinkCore {
         this.pos = new Float32Array(2); //center
     }
     configure(o) {
-        if (o.constructor === Array) {
-            this.id = o[0];
-            this.origin_id = o[1];
-            this.origin_slot = o[2];
-            this.target_id = o[3];
-            this.target_slot = o[4];
-            this.type = o[5];
-        } else {
-            this.id = o.linkID;
-            this.type = o.type;
-            this.origin_id = o.from;
-            this.origin_slot = o.fromSlot;
-            this.target_id = o.to;
-            this.target_slot = o.toSlot;
-        }
+        this.id = o.linkID;
+        this.type = o.type;
+        this.origin_id = o.from;
+        this.origin_slot = o.fromSlot;
+        this.target_id = o.to;
+        this.target_slot = o.toSlot;
     }
     serialize() {
         return [

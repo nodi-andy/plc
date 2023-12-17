@@ -188,14 +188,7 @@ export default class LGraphNode extends NodeCore {
     setDirtyCanvas(a,b) {
         this.canvas.setDirty(a,b);
     }
-    addOnExecutedOutput() {
-        var trigS = this.findOutputSlot("onExecuted");
-        if (trigS == -1) { //!trigS || 
-            this.addOutput("onExecuted", window.LiteGraph.ACTION, { optional: true, nameLocked: true });
-            return this.findOutputSlot("onExecuted");
-        }
-        return trigS;
-    }
+
     onAfterExecuteNode(param, options) {
         var trigS = this.findOutputSlot("onExecuted");
         if (trigS != -1) {
@@ -376,7 +369,7 @@ export default class LGraphNode extends NodeCore {
                          window.LiteGraph.CANVAS_GRID_SIZE * Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE)];
         }
         if (this.onResize) this.onResize(this.size);
-        if (update) window.socket.sendToServer("setSize", {nodeID: this.id, size:this.size});
+        if (update) window.sendToServer("setSize", {nodeID: this.id, size:this.size});
     }
     /**
          * add a new property to this node
@@ -493,15 +486,14 @@ export default class LGraphNode extends NodeCore {
 
     updateProperties(name, type, val) {
         this.properties[name][type] = val;
-        window.socket.sendToServer("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
-
+        window.sendToServer("updateNode", {"nodeID":this.id, "newData": {"properties": this.properties}});
     }
+
     addInputByName(name) {
         this.updateProperties(name, "input", true);
         let prop = this.properties[name];
         this.addInput(name, prop.defaultValue, prop.label)
-        window.socket.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
-
+        window.sendToServer("addInput", {"nodeID":this.id, "newData": {"input": this.properties[name]}});
         window.updateEditDialog();
     }
 
@@ -876,7 +868,7 @@ export default class LGraphNode extends NodeCore {
     /* Force align to grid */
     alignToGrid() {
 
-        let gridSize = window.LiteGraph.CANVAS_GRID_SIZE
+        let gridSize = window.LiteGraph.CANVAS_GRID_SIZE / 2;
         if (this.type == "control/junction" ) gridSize /= 4;
         if (this.size[0] >= gridSize) {
             this.pos[0] = gridSize * Math.round(this.pos[0] / gridSize);

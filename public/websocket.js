@@ -9,44 +9,57 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
-var gateway = `ws://${window.location.hostname}/ws`;
-const websocket = new WebSocket(gateway);
-var uri = window.location.hostname
-if (window.location.hostname.includes(".") == false) uri += ":8080";
-const socket = io(uri);
+const events = ["nodeAdded", "updateNode", "id", "linkAdded", "linkRemoved", "nodeRemoved", "nodeMoved"];
+const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
+
+var uri = window.location.hostname;
+if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") uri += ":8080";
+if (io) window.socketIO = io(uri);
+
 window.order = {}
 
-
-const sendToServer = (msg, obj) => {
-
-    if (socket.emit) {
-        socket.emit(msg, obj);
+function mergeObjects(objA, objB) {
+    for (let key in objB) {
+        if (objA[key]) {
+            for (let subKey in objB[key]) {
+              objA[key][subKey] = objB[key][subKey];
+            }
+        } else {
+            // Add the new key-value pair to objB
+            objB[key] = objA[key];
+        }
     }
-    if (websocket.send) {
+    return objA;
+}
+
+window.sendToServer = (msg, obj) => {
+    // send to server
+    if (window.socket.emit && window.socket.connected == true) {
+        window.socket.emit(msg, obj);
+    } // send to IoT 
+    else if (websocket.send && websocket.readyState == 1) {
         websocket.send(JSON.stringify([msg, obj])); 
-    }
-    console.log(msg);
+    } // send back to browser
 
+    console.log(msg);
 }
 
 // Event handler for when the connection is established
-socket.on("connect", () => {
+window.socketIO.on("connect", () => {
    console.log("Connected to the socketIO server!");
-   socket.sendToServer('updateMe', window.nodeworkID);
-   window.socket = socket;
+   window.socket = window.socketIO;
    window.socket.type = "cloud";
-   window.socket.sendToServer = sendToServer;
-   onOpen();
+   window.sendToServer("id");
+   window.sendToServer("getNodework");
 });
 
-socket.on("setNodework", (message) => {
+window.socketIO.on("setNodework", (message) => {
     window.graph.configure(message, false);
-    //window.graph.start();
     window.canvas.dirty_canvas = true;
 });
 
-socket.on("id", (message) => {
-    socket.sendToServer("id", {id: "browser"});
+window.socketIO.on("id", () => {
+    window.sendToServer("id", {id: "browser"});
 });
 
 window.order.nodeAdded = (message) => {
@@ -105,145 +118,90 @@ window.order.setNodework = (msg) => {
     window.graph.start();
 }
 
-const events = ["nodeAdded", "updateNode", "id", "linkAdded", "linkRemoved", "nodeRemoved"];
+window.order.nodeMoved = (msg) => {
+    if (msg.nodeID == null) return;
+    if (window.graph._nodes_by_id[msg.nodeID] == null) return;
+    if (window.graph._nodes_by_id[msg.nodeID].widget == null) return;
+    
+    console.log("[movedNode] ", msg);
+    window.graph._nodes_by_id[msg.nodeID].widget.pos = msg.newData.pos;
+};
 
 events.forEach(event => {
-  socket.on(event, message => {
-    window.order[event](message);
-  });
+    if (window.socketIO) {
+        window.socketIO.on(event, message => {
+            window.order[event](message);
+        });
+    }
 });
 
-socket.on("addLink", (msg) => {
+window.socketIO.on("addLink", (msg) => {
     window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
     window.canvas.dirty_canvas = true;
 });
 
-socket.on("remLink", (msg) => {
+window.socketIO.on("remLink", (msg) => {
     window.graph.removeLink(msg.nodeID);
     window.canvas.dirty_canvas = true;
 });
 
-socket.on("remNode", (message) => {
+window.socketIO.on("remNode", (message) => {
     window.graph.removeNodeByID(message);
     window.canvas.dirty_canvas = true;
 
 });
 
-socket.on("clear", (message) => {
+window.socketIO.on("clear", () => {
     window.graph.clear();
     window.canvas.dirty_canvas = true;
 });
 
-socket.on("moveNode", (message) => {
+window.socketIO.on("moveNode", (message) => {
     // Handle incoming messages here
     Object.assign(window.graph._nodes_by_id[message.nodeID].widget, message.moveTo);
     window.canvas.dirty_canvas = true;
 });
 
-socket.on("setSize", (message) => {
+window.socketIO.on("setSize", (message) => {
     // Handle incoming messages here
     window.graph._nodes_by_id[message.nodeID].widget.setSize(message.size, false);
     window.canvas.dirty_canvas = true;
 });
 
-function mergeObjects(objA, objB) {
-    for (let key in objB) {
-        if (objA[key]) {
-            for (let subKey in objB[key]) {
-              objA[key][subKey] = objB[key][subKey];
-            }
-        } else {
-            // Add the new key-value pair to objB
-            objB[key] = objA[key];
-        }
-    }
-    return objA;
-}
-
-
-// Event handler for custom events from the server
-socket.on("custom-event-from-server", (data) => {
-    console.log("Received data from the server:", data);
-});
-socket.on("nodi.box", (data) => {
-    console.log("nodi.box:", data);
-});
-
-socket.on("disconnect", () => {
+window.socketIO.on("disconnect", () => {
     console.log("Disconnected from the server!");
 });
 
-// ----------------------------------------------------------------------------
-// Initialization
-// ----------------------------------------------------------------------------
+window.addEventListener('load', () => {
+    websocket.onopen = () => {
+        console.log('WebSocket opened');
+        window.socket = websocket;
+        window.socketIO.disconnect();
+        window.socket.type = "iot";
+        window.sendToServer("id");
+        window.sendToServer("getNodework");
+        window.sendToServer('updateMe', window.nodeworkID);
+     }
+    websocket.onclose = () => {
+        console.log('WebSocket closed');
+    };
 
-window.addEventListener('load', onLoad);
-
-function onLoad(event) {
-    initWebSocket();
-    initButton();
-}
-
-// ----------------------------------------------------------------------------
-// WebSocket handling
-// ----------------------------------------------------------------------------
-
-function initWebSocket() {
-    console.log('Trying to open a WebSocket connection...');
-    websocket.onopen    = onOpen;
-    websocket.onclose   = onClose;
-    websocket.onmessage = onMessage;
-}
-
-function onOpen(event) {
-   window.socket = websocket;
-   socket.disconnect();
-   window.socket.type = "iot";
-   window.socket.sendToServer = sendToServer;
-   window.socket.sendToServer("id");
-   window.socket.sendToServer("getNodework");
-}
-
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
-
-function onMessage(event) {
-    console.log("Received message from the server:", event);
-
-    let data = JSON.parse(event.data);
-    let cmdName = data[0];
-    let args = data[1];
-    if (window.order[cmdName]) window.order[cmdName](args);
-
-    if (data.updateWiFi) {
-        window.wifiList = data.updateWiFi.list.filter((value, index) => {
-            return data.updateWiFi.list.indexOf(value) === index;
-        });
-        window.wifiListArrived(window.wifiList);
-    }
-    if (data.connectionSettings) {
-        window.setWiFiEnabled(data.connectionSettings.STA_Enabled)
-    }
-}
-
-/*websocket.sendMsg = (msg) => {
-    websocket.send(msg);   
-}*/
-
-// ----------------------------------------------------------------------------
-// Button handling
-// ----------------------------------------------------------------------------
-
-function initButton() {
-    //document.getElementById('toggle').addEventListener('click', onToggle);
-}
-
-function onToggle(event) {
-   // if (websocket) websocket.sendMsg(JSON.stringify({'action':'toggle'}));
-}
-
-function saveMap(event) {
-    //if (websocket) socket.sendMsg(JSON.stringify({'save':window.graph.serialize()}));
-}
+    websocket.onmessage = (event) => {
+        console.log("Received message from the server:", event);
+    
+        let data = JSON.parse(event.data);
+        let cmdName = data[0];
+        let args = data[1];
+        if (window.order[cmdName]) window.order[cmdName](args);
+    
+        if (data.updateWiFi) {
+            window.wifiList = data.updateWiFi.list.filter((value, index) => {
+                return data.updateWiFi.list.indexOf(value) === index;
+            });
+            window.wifiListArrived(window.wifiList);
+        }
+        if (data.connectionSettings) {
+            window.setWiFiEnabled(data.connectionSettings.STA_Enabled)
+        }
+    };
+});

@@ -443,6 +443,7 @@ void noditronTask( void * pvParameters ) {
             nodemap.nodes[id]->posY = djsondoc[1]["moveTo"]["pos"][1].as<int>();
 
             USE_SERIAL.printf("[nodework:moved] name: %s\n", eventName.c_str());
+            sendToSocket("nodeMoved", djsondoc[1]);
             
         } else if (eventName == "remNode") {
             USE_SERIAL.printf("[remNode] id: %d\n", id);
