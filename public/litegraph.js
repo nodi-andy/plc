@@ -555,7 +555,7 @@ class LGraph {
         interval = interval || 0;
         var that = this;
 
-        this.execution_timer_id = setInterval(() => {that.runStep(1, !that.catch_errors);}, interval);
+        //this.execution_timer_id = setInterval(() => {that.runStep(1, !that.catch_errors);}, interval);
         
     }
     /**
@@ -581,7 +581,7 @@ class LGraph {
         }
 
     }
-
+/*
     runStep() {
         var start = NodiEnums.getTime();
         this.globaltime = 0.001 * (start - this.starttime);
@@ -594,7 +594,6 @@ class LGraph {
 
         for (let linkID in this.links) {
             let link = this.links[linkID];
-            if (link.device != "browser") continue;
             let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].outValue;
             if(dataFromNode !== null) {
                 this._nodes_by_id[link.target_id].properties[link.target_slot].inpValue = dataFromNode;
@@ -609,7 +608,7 @@ class LGraph {
 
         for (var j = 0; j < nodes.length; ++j) {
             var node = nodes[j];
-            if ( node.onExecute && node.device == "browser") {
+            if ( node.onExecute) {
                 node.onExecute(node.update);
                 node.update = false;
             }
@@ -640,7 +639,7 @@ class LGraph {
         this.nodes_executedAction = [];
     }
 
-    
+    */
     /**
          * Returns the amount of time the graph has been running in milliseconds
          * @method getTime

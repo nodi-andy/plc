@@ -8,7 +8,7 @@ export default class MathIsEqual extends NodeCore {
 
     static setup(prop) {
         NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
+        NodeCore.setProperty(prop, "in2", {label:" "});
         NodeCore.setProperty(prop, "value", {label:" ", output: true});
         NodeCore.setProperty(prop, "yes");
         NodeCore.setProperty(prop, "no");

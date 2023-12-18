@@ -34,6 +34,10 @@ int Node::getInput(string name) {
     return getProp(name, "inpValue");
 };
 
+int Node::getValue(string name) {
+    return getProp(name, "value");
+};
+
 void Node::clearInput(string name) {
     setProp(name, "inpValue", INT_MAX);
 };
@@ -42,6 +46,10 @@ void Node::setInput(string name, int val) {
     setProp(name, "inpValue", val);
     //inputVals[name][0] = val;
     //inputs[name] = val;
+};
+
+void Node::setValue(string name, int val) {
+    setProp(name, "value", val);
 };
 
 void Node::setOutput(string name, int val) {

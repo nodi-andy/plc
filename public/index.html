@@ -98,6 +98,7 @@
       exportNode.properties = node.properties;
       exportNode.widget = node.widget;
       exportNode.type = node.type;
+      exportNode.device = "server";
       window.sendToServer("addNode", exportNode);
     }
 
@@ -140,11 +141,11 @@
     }
 
     window.nodes.move = (id, changedNodeData) => {
-        window.sendToServer("moveNode", {"nodeID":id, "moveTo": changedNodeData});
+        window.sendToServer("moveNode", {"nodeID":id, "moveTo": changedNodeData.pos});
     }
 
     window.nodes.moved = (id, changedNodeData) => {
-        window.sendToServer("movedNode", {"nodeID":id, "moveTo": changedNodeData});
+        window.sendToServer("movedNode", {"nodeID":id, "moveTo": changedNodeData.pos});
     }
     
     window.nodes.update = (id, changedNodeData) => {

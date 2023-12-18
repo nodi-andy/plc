@@ -9,7 +9,7 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
-const events = ["nodeAdded", "updateNode", "id", "linkAdded", "linkRemoved", "nodeRemoved", "nodeMoved"];
+const events = ["nodeAdded", "updateNode", "id", "linkAdded", "linkRemoved", "nodeRemoved", "nodeMoved", "addLink", "remLink", "remNode", "clear", "moveNode", "setSize", "disconnect"];
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
 
 var uri = window.location.hostname;
@@ -124,8 +124,56 @@ window.order.nodeMoved = (msg) => {
     if (window.graph._nodes_by_id[msg.nodeID].widget == null) return;
     
     console.log("[movedNode] ", msg);
-    window.graph._nodes_by_id[msg.nodeID].widget.pos = msg.newData.pos;
+    window.graph._nodes_by_id[msg.nodeID].widget.pos = msg.moveTo;
 };
+
+window.order.addLink = (msg) => {
+    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
+    window.canvas.dirty_canvas = true;
+};
+
+window.order.remLink = (msg) => {
+    window.graph.removeLink(msg.nodeID);
+    window.canvas.dirty_canvas = true;
+};
+
+window.order.remNode = (message) => {
+    window.graph.removeNodeByID(message);
+    window.canvas.dirty_canvas = true;
+
+};
+
+window.order.clear = () => {
+    window.graph.clear();
+    window.canvas.dirty_canvas = true;
+};
+
+window.order.moveNode = (message) => {
+    // Handle incoming messages here
+    Object.assign(window.graph._nodes_by_id[message.nodeID].widget, message.moveTo);
+    window.canvas.dirty_canvas = true;
+};
+
+window.order.setSize = (message) => {
+    // Handle incoming messages here
+    window.graph._nodes_by_id[message.nodeID].widget.setSize(message.size, false);
+    window.canvas.dirty_canvas = true;
+};
+
+window.order.disconnect = () => {
+    console.log("Disconnected from the server!");
+};
+
+window.order.updateWiFi = (msg) => {
+    window.wifiList = msg.updateWiFi.list.filter((value, index) => {
+        return msg.updateWiFi.list.indexOf(value) === index;
+    });
+    window.wifiListArrived(window.wifiList);
+}
+
+window.order.connectionSettings = (msg) => {
+    window.setWiFiEnabled(msg.connectionSettings.STA_Enabled)
+}
 
 events.forEach(event => {
     if (window.socketIO) {
@@ -133,43 +181,6 @@ events.forEach(event => {
             window.order[event](message);
         });
     }
-});
-
-window.socketIO.on("addLink", (msg) => {
-    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
-    window.canvas.dirty_canvas = true;
-});
-
-window.socketIO.on("remLink", (msg) => {
-    window.graph.removeLink(msg.nodeID);
-    window.canvas.dirty_canvas = true;
-});
-
-window.socketIO.on("remNode", (message) => {
-    window.graph.removeNodeByID(message);
-    window.canvas.dirty_canvas = true;
-
-});
-
-window.socketIO.on("clear", () => {
-    window.graph.clear();
-    window.canvas.dirty_canvas = true;
-});
-
-window.socketIO.on("moveNode", (message) => {
-    // Handle incoming messages here
-    Object.assign(window.graph._nodes_by_id[message.nodeID].widget, message.moveTo);
-    window.canvas.dirty_canvas = true;
-});
-
-window.socketIO.on("setSize", (message) => {
-    // Handle incoming messages here
-    window.graph._nodes_by_id[message.nodeID].widget.setSize(message.size, false);
-    window.canvas.dirty_canvas = true;
-});
-
-window.socketIO.on("disconnect", () => {
-    console.log("Disconnected from the server!");
 });
 
 window.addEventListener('load', () => {
@@ -181,7 +192,8 @@ window.addEventListener('load', () => {
         window.sendToServer("id");
         window.sendToServer("getNodework");
         window.sendToServer('updateMe', window.nodeworkID);
-     }
+    }
+
     websocket.onclose = () => {
         console.log('WebSocket closed');
     };
@@ -193,15 +205,5 @@ window.addEventListener('load', () => {
         let cmdName = data[0];
         let args = data[1];
         if (window.order[cmdName]) window.order[cmdName](args);
-    
-        if (data.updateWiFi) {
-            window.wifiList = data.updateWiFi.list.filter((value, index) => {
-                return data.updateWiFi.list.indexOf(value) === index;
-            });
-            window.wifiListArrived(window.wifiList);
-        }
-        if (data.connectionSettings) {
-            window.setWiFiEnabled(data.connectionSettings.STA_Enabled)
-        }
     };
 });

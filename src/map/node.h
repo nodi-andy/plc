@@ -46,6 +46,10 @@ class Node
         int  getInput(string name);
         int  hasInput(string name);
 
+        int  getValue(string name);
+        void setValue(string name, int val);
+
+
         
         void addOutput(string name);
         int  getOutput(string name);

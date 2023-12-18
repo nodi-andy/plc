@@ -4,9 +4,7 @@ import ToggleCore from "./toggle_server.mjs";
 
 export default class WidgetToggle extends ToggleCore{
     static type = "widget/toggle";
-    static title = " ";
     static desc = "Toggles between true or false";
-    static title_mode = LiteGraph.NO_TITLE;
 
     constructor() {
         super();
@@ -47,24 +45,6 @@ export default class WidgetToggle extends ToggleCore{
         window.nodes.update(this.id, this.properties);
     }
 
-    onExecute() {
-        if (this.properties.state.inpValue == 0 && this.properties.state.value == 1) {
-            this.properties.out.outValue = this.properties.release.value;
-            this.properties.state.value = this.properties.state.inpValue;
-            this.updateProp("state", this.properties.state.value);
-            this.properties.state.outValue = this.properties.state.value;
-            this.properties.state.inpValue = null;
-        }
-        
-        if (this.properties.state.inpValue == 1 && this.properties.state.value == 0) {
-            this.properties.out.outValue = this.properties.press.value;
-            this.properties.state.value = this.properties.state.inpValue;
-            this.updateProp("state", this.properties.state.value);
-            this.properties.state.outValue = this.properties.state.value;
-            this.properties.state.inpValue = null;
-        }
-    }
-    
     onMouseDown(e, local_pos) {
         if (local_pos[0] > this.widget.size[0] * 0.25 && local_pos[1] > this.widget.size[0] * 0.25 && local_pos[0] < this.widget.size[0] * 0.75 && local_pos[1] < this.widget.size[1] * 0.75) {
             window.nodes.update(this.id, {"state": {"inpValue" : 1}});

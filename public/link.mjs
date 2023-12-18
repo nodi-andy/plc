@@ -33,19 +33,7 @@ export default class LLink {
             this.type
         ];
     }
-    /**
-         * draws a link between two points
-         * @method renderLink
-         * @param {vec2} a start pos
-         * @param {vec2} b end pos
-         * @param {Object} link the link object with all the link info
-         * @param {boolean} skip_border ignore the shadow of the link
-         * @param {boolean} flow show flow animation (for events)
-         * @param {string} color the color for the link
-         * @param {number} start_dir the direction enum
-         * @param {number} end_dir the direction enum
-         * @param {number} num_sublines number of sublines (useful to represent vec3 or rgb)
-         **/
+
     render(ctx, a, b, skip_border, flow, color, start_dir, end_dir, num_sublines) {
         var link = this
         var canvas = window.canvas;

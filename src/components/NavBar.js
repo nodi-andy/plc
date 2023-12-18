@@ -7,12 +7,12 @@ import ListItem from '@mui/material/ListItem';
 import {ListItemButton, ListSubheader } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import GroupIcon from '@mui/icons-material/Group';
+//import GroupIcon from '@mui/icons-material/Group';
 // import SaveAsOutlinedIcon from '@mui/icons-material/SaveAsOutlined';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 
-export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, showFiles,*/ showConnection }) {
+export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, showFiles, showConnection */}) {
   //const navigate = useNavigate();
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -63,7 +63,7 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
             <ListItemText primary={'Save As'} />
           </ListItemButton>
         </ListItem>
-      */}
+      
         <ListSubheader>IoT</ListSubheader>
         <ListItem key='myoffers' disablePadding>
           <ListItemButton onClick={showConnection}>
@@ -71,7 +71,7 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
             <ListItemText primary={'Connection'} />
           </ListItemButton>
         </ListItem>
-
+*/}
         
 
       </List>

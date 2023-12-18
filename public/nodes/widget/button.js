@@ -49,33 +49,6 @@ export default class WidgetButton extends ButtonCore {
         return false;
     }
 
-    onExecute() {
-        for(let input in this.getInputs()) {
-            if (this.properties[input.name].inpuValue != null) {
-                this.properties[input.name].value = this.properties[input.name].inpValue;
-                this.properties[input.name].inpValue = null;
-            }
-        }
-        this.output = null;
-        if (this.inpValue == 0 && this.state == 1) {
-            this.output = this.properties.release;
-        } 
-        if (this.inpValue == 1 && this.state == 0) {
-            this.output = this.properties.press;
-        }
-        
-        if (this.output != null) {
-            if (this.getInputs()[0]?.link == null) {
-                this.setOutputData(0, this.output);
-            } else {
-                this.setOutputData(0, this.properties.A);
-            }
-            for(let input of this.getInputs()) {
-                input.value = null;
-            }
-        }
-    }
-
     onMouseUp(/*e*/) {
         ButtonCore.reset(this.properties);
         window.nodes.update(this.id, {"state": {"inpValue" : 0}});

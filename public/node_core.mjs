@@ -6,10 +6,7 @@ export default class NodeCore {
         this.device = "server";
         this.properties = {}; //for the values
     }
-    /**
-         * configure a node from an object containing the serialized info
-         * @method configure
-         */
+
     configure(info) {
         if (this.graph) {
             this.graph._version++;
@@ -89,10 +86,7 @@ export default class NodeCore {
             this.onConfigure(info);
         }
     }
-    /**
-         * serialize the content
-         * @method serialize
-         */
+
     serialize() {
         //create serialization object
         var o = {

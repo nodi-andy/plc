@@ -259,8 +259,13 @@ io.on('connection', socket => {
 
   socket.on('remLink', msg => {
     console.log("[remLink] ", msg.nodeID);
-    io.emit('remLink', msg);
     nodeWorkJSON.links = nodeWorkJSON.links.filter(obj => obj.nodeID !== msg.nodeID);
+
+    if (msg.device != "server" && iot) {
+      iot.emit('addLink', msg);
+    } else {
+      io.emit('linkAdded', msg);
+    }
   });
 
   socket.on('updateMe', (msg) => {

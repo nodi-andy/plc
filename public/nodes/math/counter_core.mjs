@@ -8,8 +8,8 @@ export default class CounterCore extends NodeCore {
 
     static setup(prop) {
         NodeCore.setProperty(prop, "inc", {input: true});
-        NodeCore.setProperty(prop, "dec", {input: true});
-        NodeCore.setProperty(prop, "value",{label:" ", output: true});
+        NodeCore.setProperty(prop, "dec");
+        NodeCore.setProperty(prop, "value", {label:" ", output: true});
         this.type = CounterCore.type;
         prop.value.value = 0;
     }

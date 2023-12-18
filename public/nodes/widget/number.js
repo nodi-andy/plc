@@ -10,7 +10,6 @@ export default class WidgetNumber extends NumberCore {
     static markers_color = "#666";
 
     constructor() {
-
         super();
         this.properties = {}
         NumberCore.setup(this.properties);
@@ -35,27 +34,7 @@ export default class WidgetNumber extends NumberCore {
         ctx.fillStyle = "#EEE";
         ctx.fillText(this.properties.value.value, x, h * 0.65);
     }
-
-    exec(update) {
-        if (update || this.updateView) {
-            if (this.properties.value.inpValue != null) {
-                this.properties.value.value = parseInt(this.properties.value.inpValue);
-                this.properties.value.inpValue = null;
-                this.properties.value.outValue = this.properties.value.value;
-            }
-            if (this.properties.read.inpValue != null) {
-                this.properties.read.inpValue = null;
-                this.properties.value.outValue = this.properties.value.value;
-            }
-            this.valUpdated = false;
-            this.updateView = false;
-        }
-    }
-
-    onExecute(update) {
-        this.exec(update)
-    }
-    
+  
     updateProp(name, val) {
         this.properties[name].inpValue = val;
         window.nodes.update(this.id, this.properties);
