@@ -8,38 +8,58 @@ export default class ToggleCore extends NodeCore {
 
     static setup(prop) {
         NodeCore.setProperty(prop, "state", {label: " ", output: true});
-        NodeCore.setProperty(prop, "press", {value : 1});
-        NodeCore.setProperty(prop, "release");
-        NodeCore.setProperty(prop, "in", );
-        NodeCore.setProperty(prop, "label", {value: "T1"});
-        NodeCore.setProperty(prop, "port");
-        NodeCore.setProperty(prop, "color", {value: "red"});
+        NodeCore.setProperty(prop, "press",  {label: " ", value: 1, input: false, autoInput: true});
+        NodeCore.setProperty(prop, "release", {label: " ", input: false, autoInput: true});
+        NodeCore.setProperty(prop, "value", {value: null, input: false});
+        NodeCore.setProperty(prop, "toggle");
+        NodeCore.setProperty(prop, "label", {value: "B1", autoInput: true});
+        NodeCore.setProperty(prop, "port", {value: null, input: false});
+        NodeCore.setProperty(prop, "color", {value: "red", input: false, autoInput: true});
 
         this.type = ToggleCore.type
         ToggleCore.reset(prop);
     }
 
-    static run(prop) {
+    static run(props) {
         let ret = false;
 
-        if (prop.state && prop.state.inpValue == 1) {
-            if (prop.state.value) {
-                prop.state.value = 0;
-                if (prop.in.input == false) {
-                    prop.state.outValue = prop.release.value;
-                }
-            } else {
-                prop.state.value = 1;
-                if (prop.in.input == false) {
-                    prop.state.outValue = prop.press.value;
-                }
+        for(let propKey in props) {
+            let prop = props[propKey];
+            if (prop.autoInput && prop.inpValue != null) {
+                prop.value = prop.inpValue;
+                prop.inpValue = null;
+                ret = true;
             }
-            prop.state.inpValue = null;
-            ret = true;
         }
-        if (prop.in.input && prop.state.value == true && prop.in.inpValue != null) {
-            prop.state.outValue = prop.in.inpValue;
-            prop.in.inpValue = null;
+
+        if (props.toggle?.inpValue != null && props.toggle?.inpValue == true ) {
+            props.state.value = props.state.value ? 0 : 1;
+            props.toggle.inpValue = null;
+            ret = true;
+        } 
+
+        if (props.value?.input == true) {
+            if(props.state?.value == 1) {
+                props.value.outValue = props.value.inpValue;
+                ret = true;
+            }
+        } else {
+            if (props.state?.inpValue == 0 && props.state.value == 1) {
+                props.value.outValue = props.release.value;
+                ret = true;
+            } 
+            if (props.state?.inpValue == 1 && props.state.value == 0) {
+                props.value.outValue = props.press.value;
+                ret = true;
+            }
+            
+        }
+
+        if (props.state && props.state.inpValue != null) {
+            props.state.value = props.state.inpValue;
+            props.state.outValue = props.state.inpValue;
+            props.state.inpValue = null;
+            ret = true;
         }
         return ret;
     }

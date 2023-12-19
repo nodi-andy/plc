@@ -192,7 +192,7 @@ export default class NodeCore {
         
         var prop = properties[name];
         prop.name = name;
-        prop.value = 0;
+        prop.value = null;
         prop.label = name;
         prop.input = false;
         prop.output = false;

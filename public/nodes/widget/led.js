@@ -21,7 +21,7 @@ export default class WidgetLed extends LEDCore {
        
         ctx.beginPath();
         ctx.arc(size, size, size * 0.5, 0, 2 * Math.PI, false);
-        ctx.fillStyle = this.properties.state.value ? "#" + this.properties.color.value : "#222";
+        ctx.fillStyle = this.properties.state.value == true ? "#" + this.properties.color.value : "#222";
         ctx.fill();
         ctx.lineWidth = 5;
         ctx.strokeStyle = '#000';

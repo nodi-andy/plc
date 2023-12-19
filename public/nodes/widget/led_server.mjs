@@ -27,6 +27,7 @@ export default class LEDCore extends NodeCore {
                 prop.inpValue = null;
             }
         }
+        
         if (prop.state.inpValue != null) {
             prop.state.value = prop.state.inpValue;
             prop.state.inpValue = null;

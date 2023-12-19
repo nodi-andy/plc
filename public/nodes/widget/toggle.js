@@ -47,7 +47,8 @@ export default class WidgetToggle extends ToggleCore{
 
     onMouseDown(e, local_pos) {
         if (local_pos[0] > this.widget.size[0] * 0.25 && local_pos[1] > this.widget.size[0] * 0.25 && local_pos[0] < this.widget.size[0] * 0.75 && local_pos[1] < this.widget.size[1] * 0.75) {
-            window.nodes.update(this.id, {"state": {"inpValue" : 1}});
+            let nextState = this.properties.state.value ? 0 : 1;
+            window.nodes.update(this.id, {"state": {"inpValue" : nextState}});
             return true;
         }
     }

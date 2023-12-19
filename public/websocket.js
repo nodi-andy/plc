@@ -109,7 +109,7 @@ window.order.linkAdded = (msg) => {
 }
 
 window.order.linkRemoved = (msg) => {
-    window.graph.removeLink(msg.id);
+    window.graph.removeLink(msg.nodeID);
     window.canvas.dirty_canvas = true;
 }
 

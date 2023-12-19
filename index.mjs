@@ -262,9 +262,9 @@ io.on('connection', socket => {
     nodeWorkJSON.links = nodeWorkJSON.links.filter(obj => obj.nodeID !== msg.nodeID);
 
     if (msg.device != "server" && iot) {
-      iot.emit('addLink', msg);
+      iot.emit('remLink', msg);
     } else {
-      io.emit('linkAdded', msg);
+      io.emit('linkRemoved', msg);
     }
   });
 
