@@ -85,7 +85,7 @@ DynamicJsonDocument Map::toJSON() {
     for (auto link : links) {
       Serial.printf("\tlinks: %d\n", link.second->id);
       JsonObject linkObject = jsLinks.createNestedObject();
-      linkObject["linkID"] = link.second->id;
+      linkObject["nodeID"] = link.second->id;
       linkObject["from"] = link.second->from->id;
       linkObject["src"] = link.second->src;
       linkObject["to"] = link.second->to->id;

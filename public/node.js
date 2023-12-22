@@ -228,7 +228,6 @@ export default class LGraphNode extends NodeCore {
                 this.graph.nodes_executedAction[this.id] = options.action_call;
             }
         }
-        this.action_triggered = 2; // the nFrames it will be used (-- each step), means "how old" is the event
         if (this.onAfterExecuteNode)
             this.onAfterExecuteNode(param, options);
     }
@@ -868,7 +867,7 @@ export default class LGraphNode extends NodeCore {
     /* Force align to grid */
     alignToGrid() {
 
-        let gridSize = window.LiteGraph.CANVAS_GRID_SIZE / 2;
+        let gridSize = window.LiteGraph.CANVAS_GRID_SIZE;
         if (this.type == "control/junction" ) gridSize /= 4;
         if (this.size[0] >= gridSize) {
             this.pos[0] = gridSize * Math.round(this.pos[0] / gridSize);

@@ -44,7 +44,6 @@ export default class WidgetButton extends ButtonCore {
             window.nodes.update(this.id, {"state": {"inpValue" : 1}});
             return true;
         }
-        this.graph.canvas.setDirty(true);
 
         return false;
     }
@@ -52,6 +51,7 @@ export default class WidgetButton extends ButtonCore {
     onMouseUp(/*e*/) {
         ButtonCore.reset(this.properties);
         window.nodes.update(this.id, {"state": {"inpValue" : 0}});
+        return true;
     }
 
 }

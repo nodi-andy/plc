@@ -9,7 +9,7 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
-const events = ["nodeAdded", "updateNode", "id", "linkAdded", "linkRemoved", "nodeRemoved", "nodeMoved", "addLink", "remLink", "remNode", "clear", "moveNode", "setSize", "disconnect"];
+const events = ["nodeAdded", "updateNode", "id", "linkAdded", "linkRemoved", "nodeRemoved", "nodeMoved", "nodeResized", "addLink", "remLink", "remNode", "clear", "moveNode", "setSize", "disconnect"];
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
 
 var uri = window.location.hostname;
@@ -127,6 +127,15 @@ window.order.nodeMoved = (msg) => {
     window.graph._nodes_by_id[msg.nodeID].widget.pos = msg.moveTo;
 };
 
+window.order.nodeResized = (msg) => {
+    if (msg.nodeID == null) return;
+    if (window.graph._nodes_by_id[msg.nodeID] == null) return;
+    if (window.graph._nodes_by_id[msg.nodeID].widget == null) return;
+    
+    console.log("[movedNode] ", msg);
+    window.graph._nodes_by_id[msg.nodeID].setSize(msg.size);
+};
+
 window.order.addLink = (msg) => {
     window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
     window.canvas.dirty_canvas = true;
@@ -150,7 +159,7 @@ window.order.clear = () => {
 
 window.order.moveNode = (message) => {
     // Handle incoming messages here
-    Object.assign(window.graph._nodes_by_id[message.nodeID].widget, message.moveTo);
+    window.graph._nodes_by_id[message.nodeID].widget.pos = message.moveTo;
     window.canvas.dirty_canvas = true;
 };
 
@@ -191,7 +200,6 @@ window.addEventListener('load', () => {
         window.socket.type = "iot";
         window.sendToServer("id");
         window.sendToServer("getNodework");
-        window.sendToServer('updateMe', window.nodeworkID);
     }
 
     websocket.onclose = () => {

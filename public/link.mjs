@@ -15,12 +15,12 @@ export default class LLink {
     }
 
     configure(o) {
-        this.id = o.linkID;
+        this.id = o.nodeID;
         this.type = o.type;
         this.origin_id = o.from;
-        this.origin_slot = o.dst;
+        this.origin_slot = o.fromSlot;
         this.target_id = o.to;
-        this.target_slot = o.src;
+        this.target_slot = o.toSlot;
     }
     
     serialize() {

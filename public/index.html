@@ -130,7 +130,6 @@
       if (window.socket) {
         let storeGraph = JSON.parse(JSON.stringify(window.graph.serialize()))
         delete storeGraph.config;
-        delete storeGraph.extra;
         delete storeGraph.groups;
         for(let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];

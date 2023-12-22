@@ -395,7 +395,7 @@ void noditronTask( void * pvParameters ) {
             JsonArray links = root["links"];
             for (JsonVariant kv : links) {
                 JsonObject linkData = kv.as<JsonObject>();
-                int id = linkData["linkID"].as<int>();
+                int id = linkData["nodeID"].as<int>();
                 int fromNode = linkData["from"].as<int>();
                 std::string fromPort = linkData["src"].as<std::string>();
                 int toNode = linkData["to"].as<int>();
@@ -414,8 +414,6 @@ void noditronTask( void * pvParameters ) {
             data["id"] = DEVICE_NAME;
             USE_SERIAL.printf("[id.response] : %s\n", data.as<string>());
             sendToSocket("id", data.as<JsonObject>());
-        } else if (eventName == "updateMe") {
-            
         } else if (eventName == "moveNode") {
             //USE_SERIAL.printf("[nodework:move] name: %s\n", eventName.c_str());
             
@@ -444,6 +442,12 @@ void noditronTask( void * pvParameters ) {
 
             USE_SERIAL.printf("[nodework:moved] name: %s\n", eventName.c_str());
             sendToSocket("nodeMoved", djsondoc[1]);
+        } else if (eventName == "resizedNode") {
+            nodemap.nodes[id]->posX = djsondoc[1]["size"][0].as<int>();
+            nodemap.nodes[id]->posY = djsondoc[1]["size"][1].as<int>();
+
+            USE_SERIAL.printf("[nodework:resized] name: %s\n", eventName.c_str());
+            sendToSocket("nodeResized", djsondoc[1]);
         } else if (eventName == "remNode") {
             USE_SERIAL.printf("[remNode] id: %d\n", id);
             nodemap.removeNode(id);
@@ -467,7 +471,7 @@ void noditronTask( void * pvParameters ) {
             USE_SERIAL.printf("[remLink] id: %d\n", id);
             nodemap.removeLink(id);
             StaticJsonDocument<16> data;
-            data["id"] = id;
+            data["nodeID"] = id;
             sendToSocket("linkRemoved", data.as<JsonObject>());
 
         } else if (eventName == "save") {

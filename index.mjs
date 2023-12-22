@@ -66,6 +66,12 @@ setInterval(() => {
     let c = NodeWork.getType(node.type);
     if (node.cmds && node.cmds.length) {
       mergeObjects(node.properties, node.cmds[0].what)
+      let command = node.cmds.shift();
+
+      if (command.cmd == "updateNode") {
+        node.properties = command.what;
+        io.emit('updateNode', {nodeID: node.nodeID, newData:{properties: node.properties}});
+      }
 
       if (node.device == "nodi.box") {
           if (node.cmds[0].who != "nodi.box") {
@@ -74,7 +80,6 @@ setInterval(() => {
             io.emit('updateNode', {nodeID: node.nodeID, newData: {properties: node.properties}});
           }
       }
-      node.cmds.shift();
     }
     if (node.device == "server") {
       //if (node?.properties?.state?.inpValue) console.log(node?.properties?.state?.inpValue)
@@ -188,7 +193,7 @@ io.on('connection', socket => {
     if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID].cmds == undefined) nodeWorkJSON.nodes[msg.nodeID].cmds = [];
 
-    nodeWorkJSON.nodes[msg.nodeID].cmds.push({who: socket.devType, what:msg.newData.properties});
+    nodeWorkJSON.nodes[msg.nodeID].cmds.push({cmd: "updateNode", who: socket.devType, what:msg.newData.properties});
     //console.log(nodeWorkJSON);
   });
 
@@ -210,7 +215,7 @@ io.on('connection', socket => {
 
   socket.on('moveNode', msg => {
     console.log("[moveNode] ", msg);
-    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.moveTo.pos;
+    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.moveTo;
     socket.to("browser_room").emit('moveNode', msg);
   });
 
@@ -224,7 +229,7 @@ io.on('connection', socket => {
     if (iot) {
       //iot.emit("getNodework", "");
     }
-    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.moveTo.pos;
+    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.moveTo;
   });
 
   socket.on('setSize', msg => {
@@ -268,9 +273,8 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('updateMe', (msg) => {
+  socket.on('getNodework', msg => {
     //if (cmds == null) cmds = [];
-    //cmds.push({"who": socket.id, "what" : "updateMe"});
     if (iot) {
       //iot.emit("getNodework", "");
     }

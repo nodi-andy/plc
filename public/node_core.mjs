@@ -414,7 +414,6 @@ export default class NodeCore {
                 this.graph.nodes_executedAction[this.id] = options.action_call;
             }
         }
-        this.action_triggered = 2; // the nFrames it will be used (-- each step), means "how old" is the event
         if (this.onAfterExecuteNode)
             this.onAfterExecuteNode(param, options);
     }

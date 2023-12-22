@@ -32,8 +32,6 @@ export const NodiEnums = {
     //shapes are used for nodes but also for slots
     BOX_SHAPE: 1,
     ROUND_SHAPE: 2,
-    CIRCLE_SHAPE: 3,
-    CARD_SHAPE: 4,
     ARROW_SHAPE: 5,
     GRID_SHAPE: 6, // intended for slot arrays
 

@@ -9,7 +9,7 @@ export default class XOrCore extends NodeCore {
     static setup(prop) {
         NodeCore.setProperty(prop, "in1", {label:" ", input: true});
         NodeCore.setProperty(prop, "in2", {label:" ", input: true});
-        NodeCore.setProperty(prop, "value", {labe: " ", output: true});
+        NodeCore.setProperty(prop, "value", {label: " ", output: true});
         this.type = XOrCore.type
         XOrCore.reset(prop);
     }

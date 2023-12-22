@@ -16,6 +16,12 @@ class MathIsGreater extends MathIsGreaterCore{
         return MathIsGreater.run(props);
     }
 
+    onDrawForeground(ctx) {
+        ctx.fillStyle = "#AAA";
+        ctx.font = "24px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.properties.in1 + ">" + this.properties.in2, this.widget.size[0] * 0.5, this.widget.size[1] * 0.5);
+    }
 }
 
 LiteGraph.registerNodeType(MathIsGreater.type, MathIsGreater);

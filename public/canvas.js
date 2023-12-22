@@ -25,8 +25,7 @@ export default class LGraphCanvas {
         this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
 
         this.title_text_font = "" + window.LiteGraph.NODE_TEXT_SIZE + "px Arial";
-        this.inner_text_font =
-            "normal " + window.LiteGraph.NODE_SUBTEXT_SIZE + "px Arial";
+        this.inner_text_font = "normal " + window.LiteGraph.NODE_SUBTEXT_SIZE + "px Arial";
         this.node_title_color = window.LiteGraph.NODE_TITLE_COLOR;
         this.default_link_color = window.LiteGraph.LINK_COLOR;
         this.default_connection_color = {
@@ -267,58 +266,7 @@ export default class LGraphCanvas {
             return this._graph_stack[0];
         return this.graph;
     }
-    /**
-         * opens a graph contained inside a node in the current graph
-         *
-         * @method openSubgraph
-         * @param {LGraph} graph
-         */
-    openSubgraph(graph) {
-        if (!graph) {
-            throw "graph cannot be null";
-        }
-
-        if (this.graph == graph) {
-            throw "graph cannot be the same";
-        }
-
-        this.clear();
-
-        if (this.graph) {
-            if (!this._graph_stack) {
-                this._graph_stack = [];
-            }
-            this._graph_stack.push(this.graph);
-        }
-
-        graph.canvas = this;
-        this.checkPanels();
-        this.setDirty(true, true);
-    }
-    /**
-         * closes a subgraph contained inside a node
-         *
-         * @method closeSubgraph
-         * @param {LGraph} assigns a graph
-         */
-    closeSubgraph() {
-        if (!this._graph_stack || this._graph_stack.length == 0) {
-            return;
-        }
-        var subgraph_node = this.graph._subgraph_node;
-        var graph = this._graph_stack.pop();
-        this.selected_nodes = {};
-        this.highlighted_links = {};
-        graph.canvas = this;
-        this.setDirty(true, true);
-        if (subgraph_node) {
-            this.centerOnNode(subgraph_node);
-            this.selectNodes([subgraph_node]);
-        }
-        // when close sub graph back to offset [0, 0] scale 1
-        this.ds.offset = [0, 0];
-        this.ds.scale = 1;
-    }
+    
     /**
          * returns the visualy active graph (in case there are more in the stack)
          * @method getCurrentGraph
@@ -2320,11 +2268,6 @@ export default class LGraphCanvas {
             this.ds.toCanvasContext(ctx);
 
 
-            //groups
-            if (this.graph._groups.length) {
-                this.drawGroups(canvas, ctx);
-            }
-
             if (this.onDrawBackground) {
                 this.onDrawBackground(ctx, this.visible_area);
             }
@@ -2354,10 +2297,10 @@ export default class LGraphCanvas {
 
             ctx.fillStyle = "rgb(0,0,0,0.05)";
 
-            for (var x = l; x <= r; x += s / 2) {
-                for (var y = t; y <= d; y += s / 2) {
-                    ctx.fillRect(x + 28, y - 4, 8, 8);
-                    ctx.fillRect(x - 4, y + 28, 8, 8);
+            for (var x = l; x <= r; x += s) {
+                for (var y = t; y <= d; y += s) {
+                    ctx.fillRect(x - 4 + s / 2, y - 4 + s / 2, 8, 8);
+                    //ctx.fillRect(x - 4, y + 28, 8, 8);
                 }
             }
 
@@ -2411,10 +2354,10 @@ export default class LGraphCanvas {
         }
 
         //clip if required (mask)
-        var shape = node._shape || LiteGraph.CIRCLE_SHAPE;
+        var shape = node._shape;
         var size = temp_vec2;
         temp_vec2.set(node.widget.size);
-        var horizontal = node.widget.horizontal; // || node.flags.horizontal;
+        var horizontal = node.widget.horizontal;
 
         if (node.widget.clip_area) {
             //Start clipping
@@ -2424,14 +2367,6 @@ export default class LGraphCanvas {
                 ctx.rect(0, 0, size[0], size[1]);
             } else if (shape == LiteGraph.ROUND_SHAPE) {
                 ctx.roundRect(0, 0, size[0], size[1], [10]);
-            } else if (shape == LiteGraph.CIRCLE_SHAPE) {
-                ctx.arc(
-                    size[0] * 0.5,
-                    size[1] * 0.5,
-                    size[0] * 0.5,
-                    0,
-                    Math.PI * 2
-                );
             }
             ctx.clip();
         }
@@ -2635,22 +2570,13 @@ export default class LGraphCanvas {
         ctx.beginPath();
         if (shape == LiteGraph.BOX_SHAPE || low_quality) {
             ctx.fillRect(area[0], area[1], area[2], area[3]);
-        } else if (shape == LiteGraph.ROUND_SHAPE ||
-            shape == LiteGraph.CARD_SHAPE) {
+        } else if (shape == LiteGraph.ROUND_SHAPE) {
             ctx.roundRect(
                 area[0],
                 area[1],
                 area[2],
                 area[3],
-                shape == LiteGraph.CARD_SHAPE ? [this.round_radius, this.round_radius, 0, 0] : [this.round_radius]
-            );
-        } else if (shape == LiteGraph.CIRCLE_SHAPE) {
-            ctx.arc(
-                size[0] * 0.5,
-                size[1] * 0.5,
-                size[0] * 0.5,
-                0,
-                Math.PI * 2
+                [this.round_radius]
             );
         }
         ctx.fill();
@@ -2684,30 +2610,13 @@ export default class LGraphCanvas {
                     12 + area[2],
                     12 + area[3]
                 );
-            } else if (shape == LiteGraph.ROUND_SHAPE ||
-                (shape == LiteGraph.CARD_SHAPE)) {
+            } else if (shape == LiteGraph.ROUND_SHAPE) {
                 ctx.roundRect(
                     -6 + area[0],
                     -6 + area[1],
                     12 + area[2],
                     12 + area[3],
                     [this.round_radius * 2]
-                );
-            } else if (shape == LiteGraph.CARD_SHAPE) {
-                ctx.roundRect(
-                    -6 + area[0],
-                    -6 + area[1],
-                    12 + area[2],
-                    12 + area[3],
-                    [this.round_radius * 2, 2, this.round_radius * 2, 2]
-                );
-            } else if (shape == LiteGraph.CIRCLE_SHAPE) {
-                ctx.arc(
-                    size[0] * 0.5,
-                    size[1] * 0.5,
-                    size[0] * 0.5 + 6,
-                    0,
-                    Math.PI * 2
                 );
             }
             ctx.strokeStyle = LiteGraph.NODE_BOX_OUTLINE_COLOR;
@@ -2716,11 +2625,6 @@ export default class LGraphCanvas {
             ctx.globalAlpha = 1;
         }
 
-        // these counter helps in conditioning drawing based on if the node has been executed or an action occurred
-        if (node.execute_triggered > 0)
-            node.execute_triggered--;
-        if (node.action_triggered > 0)
-            node.action_triggered--;
     }
     /**
          * draws every connection visible in the canvas
@@ -3121,53 +3025,6 @@ export default class LGraphCanvas {
         } //end for
 
         return null;
-    }
-
-    /**
-         * draws every group area in the background
-         * @method drawGroups
-         */
-    drawGroups(canvas, ctx) {
-        if (!this.graph) {
-            return;
-        }
-
-        var groups = this.graph._groups;
-
-        ctx.save();
-        ctx.globalAlpha = 0.5 * this.editor_alpha;
-
-        for (var i = 0; i < groups.length; ++i) {
-            var group = groups[i];
-
-            if (!Math.overlapBounding(this.visible_area, group._bounding)) {
-                continue;
-            } //out of the visible area
-
-            ctx.fillStyle = group.color || "#335";
-            ctx.strokeStyle = group.color || "#335";
-            var pos = group.pos;
-            var size = group._size;
-            ctx.globalAlpha = 0.25 * this.editor_alpha;
-            ctx.beginPath();
-            ctx.rect(pos[0] + 0.5, pos[1] + 0.5, size[0], size[1]);
-            ctx.fill();
-            ctx.globalAlpha = this.editor_alpha;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(pos[0] + size[0], pos[1] + size[1]);
-            ctx.lineTo(pos[0] + size[0] - 10, pos[1] + size[1]);
-            ctx.lineTo(pos[0] + size[0], pos[1] + size[1] - 10);
-            ctx.fill();
-
-            var font_size = group.font_size || LiteGraph.DEFAULT_GROUP_FONT_SIZE;
-            ctx.font = font_size + "px Arial";
-            ctx.textAlign = "left";
-            ctx.fillText(group.title, pos[0] + 4, pos[1] + font_size);
-        }
-
-        ctx.restore();
     }
 
     adjustNodesSize() {

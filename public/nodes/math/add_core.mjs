@@ -14,19 +14,18 @@ export default class MathAddCore extends NodeCore {
         MathAddCore.reset(prop);
     }
 
-    static run(prop) {
+    static run(props) {
         let inpChanged = false;
-        for(let input in prop) {
-            if (prop[input].input == false) continue;
-            if (prop[input].inpValue != null) {
+        for(let input in props) {
+            if (props[input].inpValue != null) {
                 inpChanged = true;
-                prop[input].value = parseInt(prop[input].inpValue);
-                prop[input].inpValue = null;
+                props[input].value = parseInt(props[input].inpValue);
+                props[input].inpValue = null;
             }
         }
         if (!inpChanged) return false;
 
-        prop.value.outValue = prop.in1.value + prop.in2.value;
+        props.value.outValue = props.in1.value + props.in2.value;
         return true;
     }
 

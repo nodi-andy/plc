@@ -16,6 +16,12 @@ class MathIsLess extends MathIsLessCore{
         return MathIsLess.run(props);
     }
 
+    onDrawForeground(ctx) {
+        ctx.fillStyle = "#AAA";
+        ctx.font = "12px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.properties.in1.value + "<" + this.properties.in2.value, this.widget.size[0] * 0.5, this.widget.size[1] * 0.5);
+    }
 }
 
 LiteGraph.registerNodeType(MathIsLess.type, MathIsLess);

@@ -39,8 +39,6 @@ export var LiteGraph = (window.LiteGraph = {
     //shapes are used for nodes but also for slots
     BOX_SHAPE: 1,
     ROUND_SHAPE: 2,
-    CIRCLE_SHAPE: 3,
-    CARD_SHAPE: 4,
     ARROW_SHAPE: 5,
     GRID_SHAPE: 6, // intended for slot arrays
 
@@ -172,12 +170,6 @@ export var LiteGraph = (window.LiteGraph = {
                             break;
                         case "round":
                             this._shape = LiteGraph.ROUND_SHAPE;
-                            break;
-                        case "circle":
-                            this._shape = LiteGraph.CIRCLE_SHAPE;
-                            break;
-                        case "card":
-                            this._shape = LiteGraph.CARD_SHAPE;
                             break;
                         default:
                             this._shape = v;
@@ -513,7 +505,6 @@ class LGraph {
         //custom data
         this.config = {};
         this.vars = {};
-        this.extra = {}; //to store custom data
 
 
         //timing
@@ -581,65 +572,7 @@ class LGraph {
         }
 
     }
-/*
-    runStep() {
-        var start = NodiEnums.getTime();
-        this.globaltime = 0.001 * (start - this.starttime);
 
-        var nodes = this._nodes;
-
-        if (!nodes) {
-            return;
-        }
-
-        for (let linkID in this.links) {
-            let link = this.links[linkID];
-            let dataFromNode = this._nodes_by_id[link.origin_id].properties[link.origin_slot].outValue;
-            if(dataFromNode !== null) {
-                this._nodes_by_id[link.target_id].properties[link.target_slot].inpValue = dataFromNode;
-                this._nodes_by_id[link.target_id].update = true;
-            }
-        }
-        
-        for (let linkID in this.links) {
-            let link = this.links[linkID];
-            this._nodes_by_id[link.origin_id].properties[link.origin_slot].outValue = null;
-        }
-
-        for (var j = 0; j < nodes.length; ++j) {
-            var node = nodes[j];
-            if ( node.onExecute) {
-                node.onExecute(node.update);
-                node.update = false;
-            }
-        }
-
-        this.fixedtime += this.fixedtime_lapse;
-        if (this.onExecuteStep) {
-            this.onExecuteStep();
-        }
-
-
-
-        if (this.onAfterExecute) {
-            this.onAfterExecute();
-        }
-        
-        var now = NodiEnums.getTime();
-        var elapsed = now - start;
-        if (elapsed == 0) {
-            elapsed = 1;
-        }
-        this.execution_time = 0.001 * elapsed;
-        this.globaltime += 0.001 * elapsed;
-        this.iteration += 1;
-        this.elapsed_time = (now - this.last_update_time) * 0.001;
-        this.last_update_time = now;
-        this.nodes_actioning = [];
-        this.nodes_executedAction = [];
-    }
-
-    */
     /**
          * Returns the amount of time the graph has been running in milliseconds
          * @method getTime
@@ -996,7 +929,6 @@ class LGraph {
             links: links,
             groups: groups_info,
             config: this.config,
-            extra: this.extra,
             version: LiteGraph.VERSION
         };
 
@@ -1019,58 +951,45 @@ class LGraph {
         var nodes = data.nodes;
         var i, l;
 
-
-        //copy all stored fields
-        for (i in data) {
-            if (i == "nodes" || i == "groups") //links must be accepted
-                continue;
-            this[i] = data[i];
-        }
-
-        var error = false;
+        this.nodes = data.nodes;
 
         //create nodes
         this._nodes = [];
-        if (nodes) {
-            for (i = 0, l = nodes.length; i < l; ++i) {
-                var n_info = nodes[i]; //stored info
+        if (data.nodes) {
+            for (i = 0, l = data.nodes.length; i < l; ++i) {
+                var n_info = data.nodes[i]; //stored info
                 if (!n_info) continue;
                 var node = LiteGraph.createNode(n_info.type, n_info.title, n_info.properties);
                 node.id = n_info.nodeID; //id it or it will create a new id
                 node.widget.id = n_info.nodeID;
-                node.widget.pos = [n_info.posX, n_info.posY];
+                if (n_info.posX != null) {
+                    node.widget.pos = [n_info.posX, n_info.posY];
+                } else {
+                    node.widget.pos = n_info.widget.pos;
+                }
+                node.configure(n_info.properties);
                 //node.widget.size = n_info.widget.size;
                 this.add(node, true); //add before configure, otherwise configure cannot create links
-            }
-
-            //configure nodes afterwards so they can reach each other
-            for (i = 0, l = nodes.length; i < l; ++i) {
-                n_info = nodes[i];
-                if (!n_info) continue;
-                node = this.getNodeById(n_info.nodeID);
-                if (node) {
-                    node.configure(n_info.properties);
-                }
             }
         }
 
         //decode links info (they are very verbose)
         if (data.links) {
             for (i = 0; i < data.links.length; ++i) {
+                if (data.links[i] == null) continue;
                 var link = new LLink();
                 link.configure(data.links[i]);
                 this.links[link.id] = link;
             }
         }
 
-        this.extra = data.extra || {};
 
         if (this.onConfigure)
             this.onConfigure(data);
 
         this._version++;
         this.canvas.setDirty(true, true);
-        return error;
+        return false;
     }
     load(url, callback) {
         var that = this;
