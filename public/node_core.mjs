@@ -1,4 +1,5 @@
 import LLink from "./link.mjs";
+
 export default class NodeCore {
     constructor(title) {
         this.title = title;
@@ -38,7 +39,6 @@ export default class NodeCore {
             }
         }
 
-
         for (let i = 0; i < NodeCore.getInputs(this.properties).length; ++i) {
             var input = NodeCore.getInputs(this.properties)[i];
             var link_info = this.graph ? this.graph.links[input.link] : null;
@@ -47,7 +47,6 @@ export default class NodeCore {
 
             if (this.onInputAdded)
                 this.onInputAdded(input);
-
         }
 
         for (let i = 0; i < NodeCore.getOutputs(this.properties).length; ++i) {
@@ -98,7 +97,7 @@ export default class NodeCore {
         };
 
         //special case for when there were errors
-        if (this.constructor === LGraphNode && this.last_serialization) {
+        if (this.constructor === NodeCore && this.last_serialization) {
             return this.last_serialization;
         }
 
@@ -125,23 +124,15 @@ export default class NodeCore {
             o.type = this.constructor.type;
         }
 
-        if (this.color) {
-            o.color = this.color;
-        }
-        if (this.bgcolor) {
-            o.bgcolor = this.bgcolor;
-        }
-        if (this.boxcolor) {
-            o.boxcolor = this.boxcolor;
-        }
+        if (this.color) o.color = this.color;
+
+        if (this.bgcolor) o.bgcolor = this.bgcolor;
+
+        if (this.boxcolor) o.boxcolor = this.boxcolor;
 
 
-        if (this.onSerialize) {
-            if (this.onSerialize(o)) {
-                console.warn(
-                    "node onSerialize shouldnt return anything, data should be stored in the object pass in the first parameter"
-                );
-            }
+        if (this.onSerialize && this.onSerialize(o)) {
+            console.warn("node onSerialize shouldnt return anything, data should be stored in the object pass in the first parameter");
         }
 
         return o;
@@ -233,7 +224,7 @@ export default class NodeCore {
          * @param {boolean} force_update if set to true it will force the connected node of this slot to output data into this link
          * @return {*} data or if it is not connected returns undefined
          */
-    getInputData(slot, force_update) {
+    getInputData(slot) {
         return NodeCore.getInputs(this.properties)[slot].value;
     }
 
@@ -294,9 +285,7 @@ export default class NodeCore {
     getInputIndexByName(name) {
         return Object.values(this.properties).filter(obj => (obj.input == true)).findIndex(el => el.name === name);
     }
-    getInputNameByIndex(index) {
-        return getInputByIndex(index).name;
-    }
+
     getInputByIndex(index) {
         return Object.values(this.properties).filter(obj => (obj.input == true))[index];
     }
@@ -374,49 +363,7 @@ export default class NodeCore {
         }
         return r;
     }
-
-    onAfterExecuteNode(param, options) {
-        var trigS = this.findOutputSlot("onExecuted");
-        if (trigS != -1) {
-
-            //console.debug(this.id+":"+this.order+" triggering slot onAfterExecute");
-            //console.debug(param);
-            //console.debug(options);
-            this.triggerSlot(trigS, param, null, options);
-
-        }
-    }
    
-    /**
-         * Triggers an action, wrapped by logics to control execution flow
-         * @method actionDo
-         * @param {String} action name
-         * @param {*} param
-         */
-    actionDo(action, param, options) {
-        options = options || {};
-        if (this.onAction) {
-
-            // enable this to give the event an ID
-            if (!options.action_call)
-                options.action_call = this.id + "_" + (action ? action : "action") + "_" + Math.floor(Math.random() * 9999);
-
-            this.graph.nodes_actioning[this.id] = (action ? action : "actioning"); //.push(this.id);
-
-            this.onAction(action, param, options);
-
-            this.graph.nodes_actioning[this.id] = false; //.pop();
-
-
-            // save execution/action ref
-            if (options && options.action_call) {
-                this.action_call = options.action_call; // if (param)
-                this.graph.nodes_executedAction[this.id] = options.action_call;
-            }
-        }
-        if (this.onAfterExecuteNode)
-            this.onAfterExecuteNode(param, options);
-    }
     
     /**
          * add a new property to this node
@@ -713,48 +660,11 @@ export default class NodeCore {
             return null;
         }
 
-        //seek for the output slot
-        if (slot.constructor === String) {
-            slot = this.getOutputByName(slot);
-            if (slot == -1) {
-                if (window.LiteGraph.debug) {
-                    console.log("Connect: Error, no slot:" + slot);
-                }
-                return null;
-            }
-        } else if (!NodeCore.getOutputs(this.properties) || slot >= NodeCore.getOutputs(this.properties).length) {
-            if (window.LiteGraph.debug) {
-                console.log("Connect: Error, slot number not found");
-            }
-            return null;
-        }
-
-
-        target_node = this.graph.getNodeById(target_node);
-
-        if (!target_node) {
-            throw "target node is null";
-        }
-
-        //seek for the output slot
-        if (target_slot.constructor === String) {
-            target_slot = target_node.getInputByName(target_slot);
-        } 
-
-        var link_info = new LLink(id, "number", this.id,slot.name, target_node.id, target_slot.name);
+        var link_info = new LLink(id, "number", this.id, slot, target_node, target_slot);
 
 
         //add to graph links list
         this.graph.links[link_info.id] = link_info;
-
-        if (slot.links == null) slot.links = [];
-        if (target_slot.links == null) target_slot.links = [];
-        slot.links.push(link_info.id);
-        target_slot.links.push(link_info.id);
-        if (this.graph) {
-            this.graph._version++;
-        }
-
 
         return link_info;
     }

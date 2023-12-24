@@ -104,7 +104,7 @@
 
     window.nodes.remNode = () => {
         var graphcanvas = LGraphCanvas.active_canvas;
-        for (var node in graphcanvas.selected_nodes) {
+        for (let node of graphcanvas.selected_nodes) {
           window.sendToServer("remNode", {"nodeID" : graphcanvas.selected_nodes[node].id});
         }
         
@@ -130,7 +130,6 @@
       if (window.socket) {
         let storeGraph = JSON.parse(JSON.stringify(window.graph.serialize()))
         delete storeGraph.config;
-        delete storeGraph.groups;
         for(let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
         }
@@ -153,7 +152,6 @@
 
     window.load = (filename) => {;
 			graph.configure(JSON.parse(localStorage.files)[filename])
-			graph.start()
       window.showSnackbar("Loaded nodework: " + filename)
 
 		};
@@ -179,7 +177,6 @@
 
     if (localStorage.selected == null) localStorage.selected = "nodework_0"
     graph.configure(JSON.parse(localStorage.files)[localStorage.selected])
-   // graph.start()
 
     window.addEventListener('resize', function () { canvas.resize() })
 

@@ -1,4 +1,3 @@
-import { NodiEnums } from "./enums.mjs";
 import NodeCore from "./node_core.mjs";
 
 export default class LGraphNode extends NodeCore {
@@ -153,6 +152,7 @@ export default class LGraphNode extends NodeCore {
 
         return o;
     }
+
     /* Creates a clone of this node */
     clone() {
         var node = window.LiteGraph.createNode(this.type);
@@ -189,173 +189,6 @@ export default class LGraphNode extends NodeCore {
         this.canvas.setDirty(a,b);
     }
 
-    onAfterExecuteNode(param, options) {
-        var trigS = this.findOutputSlot("onExecuted");
-        if (trigS != -1) {
-
-            //console.debug(this.id+":"+this.order+" triggering slot onAfterExecute");
-            //console.debug(param);
-            //console.debug(options);
-            this.triggerSlot(trigS, param, null, options);
-
-        }
-    }
-    
-    /**
-         * Triggers an action, wrapped by logics to control execution flow
-         * @method actionDo
-         * @param {String} action name
-         * @param {*} param
-         */
-    actionDo(action, param, options) {
-        options = options || {};
-        if (this.onAction) {
-
-            // enable this to give the event an ID
-            if (!options.action_call)
-                options.action_call = this.id + "_" + (action ? action : "action") + "_" + Math.floor(Math.random() * 9999);
-
-            this.graph.nodes_actioning[this.id] = (action ? action : "actioning"); //.push(this.id);
-
-            this.onAction(action, param, options);
-
-            this.graph.nodes_actioning[this.id] = false; //.pop();
-
-
-            // save execution/action ref
-            if (options && options.action_call) {
-                this.action_call = options.action_call; // if (param)
-                this.graph.nodes_executedAction[this.id] = options.action_call;
-            }
-        }
-        if (this.onAfterExecuteNode)
-            this.onAfterExecuteNode(param, options);
-    }
-    /**
-         * Triggers an event in this node, this will trigger any output with the same name
-         * @method trigger
-         * @param {String} event name ( "on_play", ... ) if action is equivalent to false then the event is send to all
-         * @param {*} param
-         */
-    trigger(action, param, options) {
-        if (!NodeCore.getOutputs(this.properties) || !NodeCore.getOutputs(this.properties).length) {
-            return;
-        }
-
-        if (this.graph)
-            this.graph._last_trigger_time = NodiEnums.getTime();
-
-        for (var i = 0; i < NodeCore.getOutputs(this.properties).length; ++i) {
-            var output = NodeCore.getOutputs(this.properties)[i];
-            if (!output || output.type !== NodiEnums.EVENT || (action && output.name != action))
-                continue;
-            this.triggerSlot(i, param, null, options);
-        }
-    }
-    /**
-         * Triggers a slot event in this node: cycle output slots and launch execute/action on connected nodes
-         * @method triggerSlot
-         * @param {Number} slot the index of the output slot
-         * @param {*} param
-         * @param {Number} link_id [optional] in case you want to trigger and specific output link in a slot
-         */
-    triggerSlot(slot, param, link_id, options) {
-        options = options || {};
-        if (!NodeCore.getOutputs(this.properties)) {
-            return;
-        }
-
-        if (slot == null) {
-            console.error("slot must be a number");
-            return;
-        }
-
-        if (slot.constructor !== Number)
-            console.warn("slot must be a number, use node.trigger('name') if you want to use a string");
-
-        var output = NodeCore.getOutputs(this.properties)[slot];
-        if (!output) {
-            return;
-        }
-
-        var links = output.links;
-        if (!links || !links.length) {
-            return;
-        }
-
-        if (this.graph) {
-            this.graph._last_trigger_time = NodiEnums.getTime();
-        }
-
-        //for every link attached here
-        for (var k = 0; k < links.length; ++k) {
-            var id = links[k];
-            if (link_id != null && link_id != id) {
-                //to skip links
-                continue;
-            }
-            var link_info = this.graph.links[links[k]];
-            if (!link_info) {
-                //not connected
-                continue;
-            }
-            link_info._last_time = NodiEnums.getTime();
-            var node = this.graph.getNodeById(link_info.target_id);
-            if (!node) {
-                //node not found?
-                continue;
-            }
-
-            //used to mark events in graph
-            var target_connection = node.getInputs()[link_info.target_slot];
-
-             if (node.onAction) {
-                // generate unique action ID if not present
-                if (!options.action_call)
-                    options.action_call = this.id + "_act_" + Math.floor(Math.random() * 9999);
-                //pass the action name
-                target_connection = node.getInputs()[link_info.target_slot];
-                // wrap node.onAction(target_connection.name, param);
-                node.actionDo(target_connection.name, param, options);
-            }
-        }
-    }
-    /**
-         * clears the trigger slot animation
-         * @method clearTriggeredSlot
-         * @param {Number} slot the index of the output slot
-         * @param {Number} link_id [optional] in case you want to trigger and specific output link in a slot
-         */
-    clearTriggeredSlot(slot, link_id) {
-        if (!NodeCore.getOutputs(this.properties)) {
-            return;
-        }
-
-        var output = NodeCore.getOutputs(this.properties)[slot];
-        if (!output) {
-            return;
-        }
-
-        var links = output.links;
-        if (!links || !links.length) {
-            return;
-        }
-
-        //for every link attached here
-        for (var k = 0; k < links.length; ++k) {
-            var id = links[k];
-            if (link_id != null && link_id != id) {
-                //to skip links
-                continue;
-            }
-            var link_info = this.graph.links[links[k]];
-            if (!link_info) {
-                //not connected
-                continue;
-            }
-            link_info._last_time = 0;
-        }
-    }
     /**
          * changes node size and triggers callback
          * @method setSize

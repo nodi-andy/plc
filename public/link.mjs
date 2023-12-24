@@ -11,7 +11,7 @@ export default class LLink {
         this.target_slot = target_slot;
 
         this._data = null;
-        this.pos = new Float32Array(2); //center
+        this.pos = [];
     }
 
     configure(o) {
@@ -34,7 +34,7 @@ export default class LLink {
         ];
     }
 
-    render(ctx, a, b, skip_border, flow, color, start_dir, end_dir, num_sublines) {
+    render(ctx, a, b, skip_border, flow, color, start_dir, end_dir) {
         var link = this
         var canvas = window.canvas;
         if (link) {
@@ -60,52 +60,33 @@ export default class LLink {
             ctx.lineWidth = canvas.connections_width + 4;
         }
         ctx.lineJoin = "round";
-        num_sublines = num_sublines || 1;
-        if (num_sublines > 1) {
-            ctx.lineWidth = 0.5;
-        }
 
         //begin line shape
         ctx.beginPath();
-        for (var i = 0; i < num_sublines; i += 1) {
            
-            ctx.moveTo(a[0], a[1]);
-            var start_x = a[0];
-            var start_y = a[1];
-            var end_x = b[0];
-            var end_y = b[1];
-            let originType = "";
-            let targetType = "";
-            if (link) {
-                originType = canvas.graph._nodes_by_id[link.target_id].constructor.type;
-                targetType = canvas.graph._nodes_by_id[link.origin_id].constructor.type;
-            }
-            if (targetType != "control/junction") {
-                if (start_dir == NodiEnums.RIGHT) {
-                    start_x += 32;
-                } else {
-                    start_y += 32;
-                }
-            }
-            if (originType != "control/junction") {
-                if (end_dir == NodiEnums.LEFT) {
-                    end_x -= 32;
-                } else {
-                    end_y -= 32;
-                }
-            }
-            ctx.lineTo(start_x, start_y);
-            if (targetType == "control/junction" || originType == "control/junction") {
-                ctx.lineTo(end_x, start_y);
-                ctx.lineTo(end_x, end_y);
-            } else {
-                ctx.lineTo((start_x + end_x) * 0.5, start_y);
-                ctx.lineTo((start_x + end_x) * 0.5, end_y);
-            }
-            ctx.lineTo(end_x, end_y);
-            ctx.lineTo(b[0], b[1]);
-
+        ctx.moveTo(a[0], a[1]);
+        var start_x = a[0];
+        var start_y = a[1];
+        var end_x = b[0];
+        var end_y = b[1];
+        let originType = "";
+        let targetType = "";
+        if (link) {
+            originType = canvas.graph.nodes[link.target_id].constructor.type;
+            targetType = canvas.graph.nodes[link.origin_id].constructor.type;
         }
+        
+        ctx.lineTo(start_x, start_y);
+        if (targetType == "control/junction" || originType == "control/junction") {
+            ctx.lineTo(end_x, start_y);
+            ctx.lineTo(end_x, end_y);
+        } else {
+            ctx.lineTo((start_x + end_x) * 0.5, start_y);
+            ctx.lineTo((start_x + end_x) * 0.5, end_y);
+        }
+        ctx.lineTo(end_x, end_y);
+        ctx.lineTo(b[0], b[1]);
+
 
         //rendering the outline of the connection can be a little bit slow
         if (canvas.render_connections_border &&

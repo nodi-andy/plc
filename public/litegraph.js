@@ -1,15 +1,11 @@
-import { NodiEnums } from "../../enums.mjs";
 import LGraphCanvas from "./canvas.js"
 import LLink from "./link.mjs"
 import LGraphNode from "./node.js"
 import NodeCore from "./node_core.mjs";
 
 
-export var LiteGraph = (window.LiteGraph = {
-    VERSION: 0.1,
-
+export var LiteGraph = {
     CANVAS_GRID_SIZE: 64,
-
     NODE_TITLE_HEIGHT: 0,
     NODE_TITLE_TEXT_Y: 10,
     NODE_SLOT_HEIGHT: 64,
@@ -25,7 +21,6 @@ export var LiteGraph = (window.LiteGraph = {
     NODE_DEFAULT_BOXCOLOR: "#666",
     NODE_BOX_OUTLINE_COLOR: "#FFF",
     DEFAULT_SHADOW_COLOR: "rgba(0,0,0,0.5)",
-    DEFAULT_GROUP_FONT: 24,
 
     WIDGET_TEXT_COLOR: "#DDD",
 
@@ -47,9 +42,6 @@ export var LiteGraph = (window.LiteGraph = {
     CENTER: 5,
     NORMAL_TITLE: 0,
     NO_TITLE: 1,
-    CENTRAL_TITLE: 4,
-
-    proxy: null, //used to redirect calls
 
     debug: false,
     catch_exceptions: true,
@@ -183,23 +175,6 @@ export var LiteGraph = (window.LiteGraph = {
     },
 
     /**
-     * Adds this method to all nodetypes, existing and to be created
-     * (You can add it to LGraphNode.prototype but then existing node types wont have it)
-     * @method addNodeMethod
-     * @param {Function} func
-     */
-    addNodeMethod: function(name, func) {
-        LGraphNode.prototype[name] = func;
-        for (var i in this.registered_node_types) {
-            var type = this.registered_node_types[i];
-            if (type.prototype[name]) {
-                type.prototype["_" + name] = type.prototype[name];
-            } //keep old in case of replacing
-            type.prototype[name] = func;
-        }
-    },
-
-    /**
      * Create a node of a given type with a name. The node is not attached to any graph yet.
      * @method createNode
      * @param {String} type full name of the node class. p.e. "math/sin"
@@ -257,51 +232,6 @@ export var LiteGraph = (window.LiteGraph = {
         return this.registered_node_types[type];
     },
 
-    //debug purposes: reloads all the js scripts that matches a wildcard
-    reloadNodes: function(folder_wildcard) {
-        var tmp = document.getElementsByTagName("script");
-        //weird, this array changes by its own, so we use a copy
-        var script_files = [];
-        for (var i=0; i < tmp.length; i++) {
-            script_files.push(tmp[i]);
-        }
-
-        var docHeadObj = document.getElementsByTagName("head")[0];
-        folder_wildcard = document.location.href + folder_wildcard;
-
-        for (var i=0; i < script_files.length; i++) {
-            var src = script_files[i].src;
-            if (
-                !src ||
-                src.substr(0, folder_wildcard.length) != folder_wildcard
-            ) {
-                continue;
-            }
-
-            try {
-                if (LiteGraph.debug) {
-                    console.log("Reloading: " + src);
-                }
-                var dynamicScript = document.createElement("script");
-                dynamicScript.type = "text/javascript";
-                dynamicScript.src = src;
-                docHeadObj.appendChild(dynamicScript);
-                docHeadObj.removeChild(script_files[i]);
-            } catch (err) {
-                if (LiteGraph.throw_errors) {
-                    throw err;
-                }
-                if (LiteGraph.debug) {
-                    console.log("Error while reloading " + src);
-                }
-            }
-        }
-
-        if (LiteGraph.debug) {
-            console.log("Nodes reloaded");
-        }
-    },
-
     //separated just to improve if it doesn't work
     cloneObject: function(obj, target) {
         if (obj == null) {
@@ -317,13 +247,12 @@ export var LiteGraph = (window.LiteGraph = {
         }
         return target;
     }
-});
-
+};
+window.LiteGraph = LiteGraph;
 
 for (let i = 97; i <= 123; i++) {
     LiteGraph.alphabet.push(String.fromCharCode(i));
 }
-
 
 class LGraph {
     constructor(o) {
@@ -341,7 +270,6 @@ class LGraph {
          * @method clear
          */
     clear() {
-        this.stop();
         this.status = LGraph.STATUS_STOPPED;
 
         this._version = -1; //used to detect changes
@@ -359,25 +287,13 @@ class LGraph {
 
         //nodes
         this.nodes = [];
-        this._nodes_by_id = {};
-        this._nodes_in_order = []; //nodes sorted in execution order
-        this._nodes_executable = null; //nodes that contain onExecute sorted in execution order
-
-
-        //other scene stuff
-        this._groups = [];
 
         //links
-        this.links = {}; //container with all the links
-
-
-        //iterations
-        this.iteration = 0;
+        this.links = []; //container with all the links
 
         //custom data
         this.config = {};
         this.vars = {};
-
 
         //timing
         this.globaltime = 0;
@@ -395,54 +311,6 @@ class LGraph {
 
         //notify canvas to redraw
         this.change();
-    }
-
-    /**
-     * Starts running this graph every interval milliseconds.
-     * @method start
-     * @param {number} interval amount of milliseconds between executions, if 0 then it renders to the monitor refresh rate
-     */
-    start(interval) {
-        if (this.status == LGraph.STATUS_RUNNING) {
-            return;
-        }
-        this.status = LGraph.STATUS_RUNNING;
-
-        if (this.onPlayEvent) {
-            this.onPlayEvent();
-        }
-
-        //launch
-        this.starttime = NodiEnums.getTime();
-        this.last_update_time = this.starttime;
-        interval = interval || 0;
-        var that = this;
-
-        //this.execution_timer_id = setInterval(() => {that.runStep(1, !that.catch_errors);}, interval);
-        
-    }
-    /**
-         * Stops the execution loop of the graph
-         * @method stop execution
-         */
-    stop() {
-        if (this.status == LGraph.STATUS_STOPPED) {
-            return;
-        }
-
-        this.status = LGraph.STATUS_STOPPED;
-
-        if (this.onStopEvent) {
-            this.onStopEvent();
-        }
-
-        if (this.execution_timer_id != null) {
-            if (this.execution_timer_id != -1) {
-                clearInterval(this.execution_timer_id);
-            }
-            this.execution_timer_id = null;
-        }
-
     }
 
     /**
@@ -473,7 +341,7 @@ class LGraph {
 
     getNextID() {
         for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
-            if (this._nodes_by_id[i] == null && this.links[i] == null) {
+            if (this.nodes[i] == null && this.links[i] == null) {
                 return i;
             }
         }
@@ -487,7 +355,7 @@ class LGraph {
         if (!node) return;
 
         //nodes
-        if (node.id == null || (node.id != -1 && this._nodes_by_id[node.id] != null)) {
+        if (node.id == null || (node.id != -1 && this.nodes[node.id] != null)) {
             console.warn(
                 "LiteGraph: there is already a node with this ID, changing it"
             );
@@ -495,8 +363,7 @@ class LGraph {
         }
 
         node.graph = this;
-        this.nodes.push(node);
-        this._nodes_by_id[node.id] = node;
+        this.nodes[node.id] = node;
 
         if (this.config.align_to_grid) {
             node.alignToGrid();
@@ -510,20 +377,10 @@ class LGraph {
     }
 
     removeNodeByID(nodeID) {
-        this.remove(this._nodes_by_id[nodeID]);
-    }
-
-    /**
-         * Removes a node from the graph
-         * @method remove
-         * @param {LGraphNode} node the instance of the node
-         */
-    remove(node) {
-
-        if (this._nodes_by_id[node.id] == null) {
+        let node = this.nodes[nodeID];
+        if (node == null) {
             return;
         } //not found
-
         if (node.ignore_remove) {
             return;
         } //cannot be removed
@@ -577,8 +434,6 @@ class LGraph {
         //remove from containers
         this.nodes = this.nodes.filter(obj => obj.id !== node.id);
 
-        delete this._nodes_by_id[node.id];
-
         if (this.onNodeRemoved) {
             this.onNodeRemoved(node);
         }
@@ -594,7 +449,7 @@ class LGraph {
          */
     getNodeById(id) {
         if (id == null) return null;
-        return this._nodes_by_id[id];
+        return this.nodes[id];
     }
     /**
          * Returns a list of nodes that matches a class
@@ -668,31 +523,9 @@ class LGraph {
             this.nodes[i] = newnode;
             newnode.configure(node.serialize());
             newnode.graph = this;
-            this._nodes_by_id[newnode.id] = newnode;
         }
     }
-    // ********** GLOBALS *****************
-    onAction(action, param, options) {
-        this._input_nodes = this.findNodesByClass(
-            LiteGraph.GraphInput,
-            this._input_nodes
-        );
-        for (var i = 0; i < this._input_nodes.length; ++i) {
-            var node = this._input_nodes[i];
-            if (node.properties.name != action) {
-                continue;
-            }
-            //wrap node.onAction(action, param);
-            node.actionDo(action, param, options);
-            break;
-        }
-    }
-    trigger(action, param) {
-        if (this.onTrigger) {
-            this.onTrigger(action, param);
-        }
-    }
-    
+   
 
     /* Called when something visually changed (not the graph!) */
     change() {
@@ -761,15 +594,10 @@ class LGraph {
             links.push(link.serialize());
         }
 
-        var groups_info = [];
-        for (i = 0; i < this._groups.length; ++i) {
-            groups_info.push(this._groups[i].serialize());
-        }
 
         var data = {
             nodes: nodes_info,
             links: links,
-            groups: groups_info,
             config: this.config,
             version: LiteGraph.VERSION
         };
@@ -832,8 +660,6 @@ class LGraph {
     }
 }
 
-LGraph.STATUS_STOPPED = 1;
-LGraph.STATUS_RUNNING = 2;
 
 window.LGraph = LiteGraph.LGraph = LGraph;
 LiteGraph.LLink = LLink;
@@ -916,95 +742,8 @@ if (typeof(window) != "undefined" && window.CanvasRenderingContext2D && !window.
     this.lineTo(x, y + bottom_left_radius);
     this.quadraticCurveTo(x, y, x + top_left_radius, y);
 };
-}//if
-
-
-//[minx,miny,maxx,maxy]
-function growBounding(bounding, x, y) {
-    if (x < bounding[0]) {
-        bounding[0] = x;
-    } else if (x > bounding[2]) {
-        bounding[2] = x;
-    }
-
-    if (y < bounding[1]) {
-        bounding[1] = y;
-    } else if (y > bounding[3]) {
-        bounding[3] = y;
-    }
 }
-LiteGraph.growBounding = growBounding;
 
-//point inside bounding box
-function isInsideBounding(p, bb) {
-    if (
-        p[0] < bb[0][0] ||
-        p[1] < bb[0][1] ||
-        p[0] > bb[1][0] ||
-        p[1] > bb[1][1]
-    ) {
-        return false;
-    }
-    return true;
-}
-LiteGraph.isInsideBounding = isInsideBounding;
-
-
-LiteGraph.extendClass = function(target, origin) {
-    for (var i in origin) {
-        //copy class properties
-        if (target.hasOwnProperty(i)) {
-            continue;
-        }
-        target[i] = origin[i];
-    }
-
-    if (origin.prototype) {
-        //copy prototype properties
-        for (var i in origin.prototype) {
-            //only enumerable
-            if (!origin.prototype.hasOwnProperty(i)) {
-                continue;
-            }
-
-            if (target.prototype.hasOwnProperty(i)) {
-                //avoid overwriting existing ones
-                continue;
-            }
-
-            //copy getters
-            if (origin.prototype.__lookupGetter__(i)) {
-                target.prototype.__defineGetter__(
-                    i,
-                    origin.prototype.__lookupGetter__(i)
-                );
-            } else {
-                target.prototype[i] = origin.prototype[i];
-            }
-
-            //and setters
-            if (origin.prototype.__lookupSetter__(i)) {
-                target.prototype.__defineSetter__(
-                    i,
-                    origin.prototype.__lookupSetter__(i)
-                );
-            }
-        }
-    }
-};
-
-//used to create nodes from wrapping functions
-LiteGraph.getParameterNames = function(func) {
-    return (func + "")
-        .replace(/[/][/].*$/gm, "") // strip single-line comments
-        .replace(/\s+/g, "") // strip white space
-        .replace(/[/][*][^/*]*[*][/]/g, "") // strip multi-line comments  /**/
-        .split("){", 1)[0]
-        .replace(/^[^(]*[(]/, "") // extract the parameters
-        .replace(/=[^,]+/g, "") // strip any ES6 defaults
-        .split(",")
-        .filter(Boolean); // split & filter [""]
-};
 
 /* helper for interaction: pointer, touch, mouse Listeners
 used by LGraphCanvas DragAndScale ContextMenu*/
@@ -1057,16 +796,14 @@ LiteGraph.pointerListenerAdd = function(oDOM, sEvIn, fCall, capture=false) {
     switch(sEvent){
         //both pointer and move events
         case "down": case "up": case "move": case "over": case "out": case "enter":
-        {
             oDOM.addEventListener(sMethod+sEvent, fCall, capture);
-        }
+        break;
         // only pointerevents
         case "leave": case "cancel": case "gotpointercapture": case "lostpointercapture":
-        {
             if (sMethod!="mouse"){
                 return oDOM.addEventListener(sMethod+sEvent, fCall, capture);
             }
-        }
+        break;
         // not "pointer" || "mouse"
         default:
             return oDOM.addEventListener(sEvent, fCall, capture);
@@ -1086,6 +823,7 @@ LiteGraph.pointerListenerRemove = function(oDOM, sEvent, fCall, capture=false) {
                 oDOM.removeEventListener(LiteGraph.pointerevents_method+sEvent, fCall, capture);
             }
         }
+        break;
         // only pointerevents
         case "leave": case "cancel": case "gotpointercapture": case "lostpointercapture":
         {
@@ -1093,6 +831,7 @@ LiteGraph.pointerListenerRemove = function(oDOM, sEvent, fCall, capture=false) {
                 return oDOM.removeEventListener(LiteGraph.pointerevents_method+sEvent, fCall, capture);
             }
         }
+        break;
         // not "pointer" || "mouse"
         default:
             return oDOM.removeEventListener(sEvent, fCall, capture);

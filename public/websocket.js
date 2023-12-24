@@ -96,15 +96,15 @@ window.order.id = (message) => {
 
 window.order.updateNode = (message) => {
     // Handle incoming messages here
-    if (window.graph._nodes_by_id[message.nodeID]) {
-        window.graph._nodes_by_id[message.nodeID].properties = mergeObjects(window.graph._nodes_by_id[message.nodeID].properties, message.newData.properties);
+    if (window.graph.nodes[message.nodeID]) {
+        window.graph.nodes[message.nodeID].properties = mergeObjects(window.graph.nodes[message.nodeID].properties, message.newData.properties);
     }
     window.canvas.dirty_canvas = true;
     window.canvas.dirty_bgcanvas = true;
 }
 
 window.order.linkAdded = (msg) => {
-    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
+    window.graph.nodes[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
     window.canvas.dirty_canvas = true;
 }
 
@@ -120,24 +120,24 @@ window.order.setNodework = (msg) => {
 
 window.order.nodeMoved = (msg) => {
     if (msg.nodeID == null) return;
-    if (window.graph._nodes_by_id[msg.nodeID] == null) return;
-    if (window.graph._nodes_by_id[msg.nodeID].widget == null) return;
+    if (window.graph.nodes[msg.nodeID] == null) return;
+    if (window.graph.nodes[msg.nodeID].widget == null) return;
     
     console.log("[movedNode] ", msg);
-    window.graph._nodes_by_id[msg.nodeID].widget.pos = msg.moveTo;
+    window.graph.nodes[msg.nodeID].widget.pos = msg.moveTo;
 };
 
 window.order.nodeResized = (msg) => {
     if (msg.nodeID == null) return;
-    if (window.graph._nodes_by_id[msg.nodeID] == null) return;
-    if (window.graph._nodes_by_id[msg.nodeID].widget == null) return;
+    if (window.graph.nodes[msg.nodeID] == null) return;
+    if (window.graph.nodes[msg.nodeID].widget == null) return;
     
     console.log("[movedNode] ", msg);
-    window.graph._nodes_by_id[msg.nodeID].setSize(msg.size);
+    window.graph.nodes[msg.nodeID].setSize(msg.size);
 };
 
 window.order.addLink = (msg) => {
-    window.graph._nodes_by_id[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
+    window.graph.nodes[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
     window.canvas.dirty_canvas = true;
 };
 
@@ -159,13 +159,13 @@ window.order.clear = () => {
 
 window.order.moveNode = (message) => {
     // Handle incoming messages here
-    window.graph._nodes_by_id[message.nodeID].widget.pos = message.moveTo;
+    window.graph.nodes[message.nodeID].widget.pos = message.moveTo;
     window.canvas.dirty_canvas = true;
 };
 
 window.order.setSize = (message) => {
     // Handle incoming messages here
-    window.graph._nodes_by_id[message.nodeID].widget.setSize(message.size, false);
+    window.graph.nodes[message.nodeID].widget.setSize(message.size, false);
     window.canvas.dirty_canvas = true;
 };
 

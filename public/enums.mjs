@@ -1,6 +1,4 @@
 export const NodiEnums = {
-    VERSION: 0.1,
-
     CANVAS_GRID_SIZE: 64,
 
     NODE_TITLE_HEIGHT: 24,
@@ -18,9 +16,7 @@ export const NodiEnums = {
     NODE_DEFAULT_BOXCOLOR: "#666",
     NODE_BOX_OUTLINE_COLOR: "#FFF",
     DEFAULT_SHADOW_COLOR: "rgba(0,0,0,0.5)",
-    DEFAULT_GROUP_FONT: 24,
 
-    WIDGET_BGCOLOR: "#222",
     WIDGET_OUTLINE_COLOR: "#666",
     WIDGET_TEXT_COLOR: "#DDD",
 
@@ -29,35 +25,18 @@ export const NodiEnums = {
 
     DEFAULT_POSITION: [32, 32], //default node position
 
-    //shapes are used for nodes but also for slots
-    BOX_SHAPE: 1,
-    ROUND_SHAPE: 2,
-    ARROW_SHAPE: 5,
-    GRID_SHAPE: 6, // intended for slot arrays
-
     //enums
     INPUT: 1,
     OUTPUT: 2,
-
     EVENT: -1, //for outputs
-
-    ALWAYS: 0,
-    ON_EVENT: 1,
-    NEVER: 2,
 
     UP: 1,
     DOWN: 2,
     LEFT: 3,
     RIGHT: 4,
     CENTER: 5,
-
-    STRAIGHT_LINK: 0,
-    LINEAR_LINK: 1,
-
     NORMAL_TITLE: 0,
     NO_TITLE: 1,
-    CENTRAL_TITLE: 4,
-
 }
 
 
