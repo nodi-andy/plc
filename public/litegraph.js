@@ -27,8 +27,6 @@ export var LiteGraph = (window.LiteGraph = {
     DEFAULT_SHADOW_COLOR: "rgba(0,0,0,0.5)",
     DEFAULT_GROUP_FONT: 24,
 
-    WIDGET_BGCOLOR: "#222",
-    WIDGET_OUTLINE_COLOR: "#666",
     WIDGET_TEXT_COLOR: "#DDD",
 
     LINK_COLOR: "#6B6",
@@ -36,31 +34,17 @@ export var LiteGraph = (window.LiteGraph = {
 
     DEFAULT_POSITION: [32, 32], //default node position
 
-    //shapes are used for nodes but also for slots
-    BOX_SHAPE: 1,
-    ROUND_SHAPE: 2,
-    ARROW_SHAPE: 5,
-    GRID_SHAPE: 6, // intended for slot arrays
-
     //enums
     INPUT: 1,
     OUTPUT: 2,
 
     EVENT: -1, //for outputs
 
-    ALWAYS: 0,
-    ON_EVENT: 1,
-    NEVER: 2,
-
     UP: 1,
     DOWN: 2,
     LEFT: 3,
     RIGHT: 4,
     CENTER: 5,
-
-    STRAIGHT_LINK: 0,
-    LINEAR_LINK: 1,
-
     NORMAL_TITLE: 0,
     NO_TITLE: 1,
     CENTRAL_TITLE: 4,
@@ -76,45 +60,13 @@ export var LiteGraph = (window.LiteGraph = {
     Nodes: {}, //node types by classname
     Globals: {}, //used to store vars between graphs
 
-    searchbox_extras: {}, //used to add extra features to the search box
-    auto_sort_node_types: false, // [true!] If set to true, will automatically sort node types / categories in the context menus
-    
-    node_box_coloured_when_on: false, // [true!] this make the nodes box (top left circle) coloured when triggered (execute/action), visual feedback
-    node_box_coloured_by_mode: false, // [true!] nodebox based on node mode, visual feedback
-    
-    dialog_close_on_mouse_leave: true, // [false on mobile] better true if not touch device, TODO add an helper/listener to close if false
-    dialog_close_on_mouse_leave_delay: 500,
-    
-    shift_click_do_break_link_from: false, // [false!] prefer false if results too easy to break links - implement with ALT or TODO custom keys
-    click_do_break_link_to: false, // [false!]prefer false, way too easy to break links
-    
-    search_filter_enabled: false, // [true!] enable filtering slots type in the search widget, !requires auto_load_slot_types or manual set registered_slot_[in/out]_types and slot_types_[in/out]
-    search_show_all_on_open: true, // [true!] opens the results list when opening the search widget
-    
     auto_load_slot_types: false, // [if want false, use true, run, get vars values to be statically set, than disable] nodes types and nodeclass association with node types need to be calculated, if dont want this, calculate once and set registered_slot_[in/out]_types and slot_types_[in/out]
     
-    // set these values if not using auto_load_slot_types
-    registered_slot_in_types: {}, // slot types for nodeclass
-    registered_slot_out_types: {}, // slot types for nodeclass
-    slot_types_in: [], // slot types IN
-    slot_types_out: [], // slot types OUT
-    slot_types_default_in: [], // specify for each IN slot type a(/many) deafult node(s), use single string, array, or object (with node, title, parameters, ..) like for search
-    slot_types_default_out: [], // specify for each OUT slot type a(/many) deafult node(s), use single string, array, or object (with node, title, parameters, ..) like for search
-    
-    alt_drag_do_clone_nodes: false, // [true!] very handy, ALT click to clone and drag the new node
-
-    
-    allow_multi_output_for_events: true, // [false!] being events, it is strongly reccomended to use them sequentually, one by one
-
-    middle_click_slot_add_default_node: false, //[true!] allows to create and connect a ndoe clicking with the third button (wheel)
-    
-    release_link_on_empty_shows_menu: false, //[true!] dragging a link to empty space will open a menu, add from list, search or defaults
+    alt_drag_do_clone_nodes: true, // [true!] very handy, ALT click to clone and drag the new node
     
     pointerevents_method: "mouse", // "mouse"|"pointer" use mouse for retrocompatibility issues? (none found @ now)
 
     alphabet : [],
-
-    // TODO implement pointercancel, gotpointercapture, lostpointercapture, (pointerover, pointerout if necessary)
 
     /**
      * Register a node class so it can be listed when the user wants to create a new one
@@ -158,30 +110,6 @@ export var LiteGraph = (window.LiteGraph = {
             console.log("replacing node type: " + type);
         else
         {
-            if( !Object.hasOwnProperty( base_class.prototype, "shape") )
-            Object.defineProperty(base_class.prototype, "shape", {
-                set: function(v) {
-                    switch (v) {
-                        case "default":
-                            delete this._shape;
-                            break;
-                        case "box":
-                            this._shape = LiteGraph.BOX_SHAPE;
-                            break;
-                        case "round":
-                            this._shape = LiteGraph.ROUND_SHAPE;
-                            break;
-                        default:
-                            this._shape = v;
-                    }
-                },
-                get: function() {
-                    return this._shape;
-                },
-                enumerable: true,
-                configurable: true
-            });
-
             //warnings
             if (base_class.prototype.onPropertyChange) {
                 console.warn(
@@ -252,7 +180,6 @@ export var LiteGraph = (window.LiteGraph = {
         this.registered_node_types = {};
         this.node_types_by_file_extension = {};
         this.Nodes = {};
-        this.searchbox_extras = {};
     },
 
     /**
@@ -328,61 +255,6 @@ export var LiteGraph = (window.LiteGraph = {
      */
     getNodeType: function(type) {
         return this.registered_node_types[type];
-    },
-
-    /**
-     * Returns a list of node types matching one category
-     * @method getNodeType
-     * @param {String} category category name
-     * @return {Array} array with all the node classes
-     */
-
-    getNodeTypesInCategory: function(category, filter) {
-        var r = [];
-        for (var i in this.registered_node_types) {
-            var type = this.registered_node_types[i];
-            if (type.filter != filter) {
-                continue;
-            }
-
-            if (category == "") {
-                if (type.category == null) {
-                    r.push(type);
-                }
-            } else if (type.category == category) {
-                r.push(type);
-            }
-        }
-
-        if (this.auto_sort_node_types) {
-            r.sort(function(a,b){return a.title.localeCompare(b.title)});
-        }
-
-        return r;
-    },
-
-    /**
-     * Returns a list with all the node type categories
-     * @method getNodeTypesCategories
-     * @param {String} filter only nodes with ctor.filter equal can be shown
-     * @return {Array} array with all the names of the categories
-     */
-    getNodeTypesCategories: function( filter ) {
-        var categories = { "": 1 };
-        for (var i in this.registered_node_types) {
-            var type = this.registered_node_types[i];
-            if ( type.category && !type.skip_list )
-            {
-                if(type.filter != filter)
-                    continue;
-                categories[type.category] = 1;
-            }
-        }
-        var result = [];
-        for (var i in categories) {
-            result.push(i);
-        }
-        return this.auto_sort_node_types ? result.sort() : result;
     },
 
     //debug purposes: reloads all the js scripts that matches a wildcard
@@ -476,9 +348,9 @@ class LGraph {
 
 
         //safe clear
-        if (this._nodes) {
-            for (var i = 0; i < this._nodes.length; ++i) {
-                var node = this._nodes[i];
+        if (this.nodes) {
+            for (var i = 0; i < this.nodes.length; ++i) {
+                var node = this.nodes[i];
                 if (node.onRemoved) {
                     node.onRemoved();
                 }
@@ -486,7 +358,7 @@ class LGraph {
         }
 
         //nodes
-        this._nodes = [];
+        this.nodes = [];
         this._nodes_by_id = {};
         this._nodes_in_order = []; //nodes sorted in execution order
         this._nodes_executable = null; //nodes that contain onExecute sorted in execution order
@@ -623,7 +495,7 @@ class LGraph {
         }
 
         node.graph = this;
-        this._nodes.push(node);
+        this.nodes.push(node);
         this._nodes_by_id[node.id] = node;
 
         if (this.config.align_to_grid) {
@@ -703,7 +575,7 @@ class LGraph {
         }
 
         //remove from containers
-        this._nodes = this._nodes.filter(obj => obj.id !== node.id);
+        this.nodes = this.nodes.filter(obj => obj.id !== node.id);
 
         delete this._nodes_by_id[node.id];
 
@@ -733,9 +605,9 @@ class LGraph {
     findNodesByClass(classObject, result) {
         result = result || [];
         result.length = 0;
-        for (var i = 0, l = this._nodes.length; i < l; ++i) {
-            if (this._nodes[i].constructor === classObject) {
-                result.push(this._nodes[i]);
+        for (var i = 0, l = this.nodes.length; i < l; ++i) {
+            if (this.nodes[i].constructor === classObject) {
+                result.push(this.nodes[i]);
             }
         }
         return result;
@@ -750,9 +622,9 @@ class LGraph {
          */
     findNodesByTitle(title) {
         var result = [];
-        for (var i = 0, l = this._nodes.length; i < l; ++i) {
-            if (this._nodes[i].title == title) {
-                result.push(this._nodes[i]);
+        for (var i = 0, l = this.nodes.length; i < l; ++i) {
+            if (this.nodes[i].title == title) {
+                result.push(this.nodes[i]);
             }
         }
         return result;
@@ -766,7 +638,7 @@ class LGraph {
          * @return {LGraphNode} the node at this position or null
          */
     getNodeOnPos(x, y, nodes_list, margin) {
-        nodes_list = nodes_list || this._nodes;
+        nodes_list = nodes_list || this.nodes;
         var nRet = null;
         for (var i = nodes_list.length - 1; i >= 0; i--) {
             var n = nodes_list[i];
@@ -785,15 +657,15 @@ class LGraph {
          * @method checkNodeTypes
          */
     checkNodeTypes() {
-        for (var i = 0; i < this._nodes.length; i++) {
-            var node = this._nodes[i];
+        for (var i = 0; i < this.nodes.length; i++) {
+            var node = this.nodes[i];
             var ctor = LiteGraph.registered_node_types[node.type];
             if (node.constructor == ctor) {
                 continue;
             }
             console.log("node being replaced by newer version: " + node.type);
             var newnode = LiteGraph.createNode(node.type);
-            this._nodes[i] = newnode;
+            this.nodes[i] = newnode;
             newnode.configure(node.serialize());
             newnode.graph = this;
             this._nodes_by_id[newnode.id] = newnode;
@@ -822,36 +694,6 @@ class LGraph {
     }
     
 
-    triggerInput(name, value) {
-        var nodes = this.findNodesByTitle(name);
-        for (var i = 0; i < nodes.length; ++i) {
-            nodes[i].onTrigger(value);
-        }
-    }
-    setCallback(name, func) {
-        var nodes = this.findNodesByTitle(name);
-        for (var i = 0; i < nodes.length; ++i) {
-            nodes[i].setTrigger(func);
-        }
-    }
-
-
-
-    /**
-         * clears the triggered slot animation in all links (stop visual animation)
-         * @method clearTriggeredSlots
-         */
-    clearTriggeredSlots() {
-        for (var i in this.links) {
-            var link_info = this.links[i];
-            if (!link_info) {
-                continue;
-            }
-            if (link_info._last_time) {
-                link_info._last_time = 0;
-            }
-        }
-    }
     /* Called when something visually changed (not the graph!) */
     change() {
         if (LiteGraph.debug) {
@@ -894,8 +736,8 @@ class LGraph {
          */
     serialize() {
         var nodes_info = [];
-        for (var i = 0, l = this._nodes.length; i < l; ++i) {
-            nodes_info.push(this._nodes[i].serialize());
+        for (var i = 0, l = this.nodes.length; i < l; ++i) {
+            nodes_info.push(this.nodes[i].serialize());
         }
 
         //pack link info into a non-verbose format
@@ -947,14 +789,11 @@ class LGraph {
         if (!data) return;
 
         this.clear();
-
-        var nodes = data.nodes;
         var i, l;
-
         this.nodes = data.nodes;
 
         //create nodes
-        this._nodes = [];
+        this.nodes = [];
         if (data.nodes) {
             for (i = 0, l = data.nodes.length; i < l; ++i) {
                 var n_info = data.nodes[i]; //stored info
@@ -990,41 +829,6 @@ class LGraph {
         this._version++;
         this.canvas.setDirty(true, true);
         return false;
-    }
-    load(url, callback) {
-        var that = this;
-
-        //from file
-        if (url.constructor === File || url.constructor === Blob) {
-            var reader = new FileReader();
-            reader.addEventListener('load', function (event) {
-                var data = JSON.parse(event.target.result);
-                that.configure(data);
-                if (callback)
-                    callback();
-            });
-
-            reader.readAsText(url);
-            return;
-        }
-
-        //is a string, then an URL
-        var req = new XMLHttpRequest();
-        req.open("GET", url, true);
-        req.send(null);
-        req.onload = function () {
-            if (req.status !== 200) {
-                console.error("Error loading graph:", req.status, req.response);
-                return;
-            }
-            var data = JSON.parse(req.response);
-            that.configure(data);
-            if (callback)
-                callback();
-        };
-        req.onerror = function (err) {
-            console.error("Error loading graph:", err);
-        };
     }
 }
 
