@@ -4,10 +4,13 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="litegraph.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
     <meta name="HandheldFriendly" content="true" />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="noditron"/>
+    <meta name="description" content="noditron" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>noditron</title>
   </head>
@@ -15,35 +18,33 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>
-  <script type = "module">
-
-
+  <script type="module">
     const loadJS = (FILE_URL, async = true, type = "module") => {
       return new Promise((resolve, reject) => {
-          try {
-              const scriptEle = document.createElement("script");
-              scriptEle.type = type;
-              scriptEle.async = async;
-              scriptEle.src =FILE_URL;
+        try {
+          const scriptEle = document.createElement("script");
+          scriptEle.type = type;
+          scriptEle.async = async;
+          scriptEle.src = FILE_URL;
 
-              scriptEle.addEventListener("load", (ev) => {
-                  resolve({ status: true });
-              });
+          scriptEle.addEventListener("load", (ev) => {
+            resolve({ status: true });
+          });
 
-              scriptEle.addEventListener("error", (ev) => {
-                  reject({
-                      status: false,
-                      message: `Failed to load the script ＄{FILE_URL}`
-                  });
-              });
+          scriptEle.addEventListener("error", (ev) => {
+            reject({
+              status: false,
+              message: `Failed to load the script ＄{FILE_URL}`,
+            });
+          });
 
-              document.body.appendChild(scriptEle);
-          } catch (error) {
-              reject(error);
-          }
+          document.body.appendChild(scriptEle);
+        } catch (error) {
+          reject(error);
+        }
       });
-  };
-    // why loading the scripts one by one? 
+    };
+    // why loading the scripts one by one?
     // Because the IoT device can not keep more than 10 TCP connections open
     await loadJS("./socket.io.min.js", false);
     await loadJS("./math.js", false);
@@ -78,19 +79,21 @@
     await loadJS("./nodes/esp32mcu/led.js", false);
     await loadJS("./websocket.js", false);
 
-
     window.graph = new LGraph();
     window.canvas = new LGraphCanvas("#mycanvas", graph);
     window.nodeworkID = window.location.search.slice(1);
-    window.nodes = {}
-    
+    window.nodes = {};
+
     window.nodes.addNode = (name) => {
       name = name.toLowerCase();
-      console.log(name)
+      console.log(name);
       var node = LiteGraph.createNode(name);
       if (node) {
         let view = window.canvas.ds;
-        node.widget.setPos(-view.offset[0] + (view.visible_area[2] * 0.5), - view.offset[1] +  (view.visible_area[3] * 0.5));
+        node.widget.setPos(
+          -view.offset[0] + view.visible_area[2] * 0.5,
+          -view.offset[1] + view.visible_area[3] * 0.5
+        );
       }
 
       // Do not send all values of node. Create a small export version
@@ -100,95 +103,105 @@
       exportNode.type = node.type;
       exportNode.device = "server";
       window.sendToServer("addNode", exportNode);
-    }
+    };
 
     window.nodes.remNode = () => {
-        var graphcanvas = LGraphCanvas.active_canvas;
-        for (let node of graphcanvas.selected_nodes) {
-          window.sendToServer("remNode", {"nodeID" : graphcanvas.selected_nodes[node].id});
-        }
-        
-        if (canvas.selectedLink != null) window.sendToServer("remLink", {"nodeID": canvas.selectedLink});
-    }
+      var graphcanvas = LGraphCanvas.active_canvas;
+      for (let node of graphcanvas.selected_nodes) {
+        window.sendToServer("remNode", {
+          nodeID: graphcanvas.selected_nodes[node].id,
+        });
+      }
+
+      if (canvas.selectedLink != null)
+        window.sendToServer("remLink", { nodeID: canvas.selectedLink });
+    };
 
     window.nodes.editNode = () => {
       window.canvas.processContextMenu();
-    }
+    };
 
     window.nodes.saveNodework = () => {
       /*let localFiles = JSON.parse(localStorage.files)
       localFiles[localStorage.selected] =  graph.serialize(); 
       localStorage.files = JSON.stringify(localFiles)
       window.showSnackbar("Saved nodework: " + localStorage.selected)*/
-      
-      window.sendToServer("save", {});
-      window.showSnackbar("Nodework saved in IoT")
 
-    }
+      window.sendToServer("save", {});
+      window.showSnackbar("Nodework saved in IoT");
+    };
 
     window.nodes.upload = () => {
       if (window.socket) {
-        let storeGraph = JSON.parse(JSON.stringify(window.graph.serialize()))
+        let storeGraph = JSON.parse(JSON.stringify(window.graph.serialize()));
         delete storeGraph.config;
-        for(let n in storeGraph.nodes) {
+        for (let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
         }
         window.sendToServer("setNodework", storeGraph);
-        window.showSnackbar("nodework sent to nodi.box!")
+        window.showSnackbar("nodework sent to nodi.box!");
       }
-    }
+    };
 
     window.nodes.move = (id, changedNodeData) => {
-        window.sendToServer("moveNode", {"nodeID":id, "moveTo": changedNodeData.pos});
-    }
+      window.sendToServer("moveNode", {
+        nodeID: id,
+        moveTo: changedNodeData.pos,
+      });
+    };
 
     window.nodes.moved = (id, changedNodeData) => {
-        window.sendToServer("movedNode", {"nodeID":id, "moveTo": changedNodeData.pos});
-    }
-    
+      window.sendToServer("movedNode", {
+        nodeID: id,
+        moveTo: changedNodeData.pos,
+      });
+    };
+
     window.nodes.update = (id, changedNodeData) => {
-        window.sendToServer("updateNode", {"nodeID":id, "newData": {"properties": changedNodeData}});
-    }
+      window.sendToServer("updateNode", {
+        nodeID: id,
+        newData: { properties: changedNodeData },
+      });
+    };
 
-    window.load = (filename) => {;
-			graph.configure(JSON.parse(localStorage.files)[filename])
-      window.showSnackbar("Loaded nodework: " + filename)
+    window.load = (filename) => {
+      graph.configure(JSON.parse(localStorage.files)[filename]);
+      window.showSnackbar("Loaded nodework: " + filename);
+    };
 
-		};
+    localStorage.version = "0.1";
+    if (localStorage.files == null) localStorage.files = JSON.stringify({});
 
-    localStorage.version = "0.1"
-    if (localStorage.files == null) localStorage.files = JSON.stringify({})
+    window.canvas.onSelectionChange = (nodes) => {
+      if (Object.keys(nodes).length) {
+        window.showRemove(true);
+        window.showEdit(true);
+        window.removeClickable = true;
+        console.log("disable");
+      } else {
+        window.showRemove(false);
+        window.showEdit(false);
+        window.removeClickable = false;
+        console.log("enable");
+      }
+    };
 
+    if (localStorage.selected == null) localStorage.selected = "nodework_0";
+    graph.configure(JSON.parse(localStorage.files)[localStorage.selected]);
 
-    window.canvas.onSelectionChange = (nodes) => { 
-        if (Object.keys(nodes).length) {
-          window.showRemove(true);
-          window.showEdit(true);
-          window.removeClickable = true
-          console.log("disable")
-        }
-        else {
-          window.showRemove(false);
-          window.showEdit(false);
-          window.removeClickable = false
-          console.log("enable")
-        }
-    }
-
-    if (localStorage.selected == null) localStorage.selected = "nodework_0"
-    graph.configure(JSON.parse(localStorage.files)[localStorage.selected])
-
-    window.addEventListener('resize', function () { canvas.resize() })
+    window.addEventListener("resize", function () {
+      canvas.resize();
+    });
 
     window.updateNodeList = () => {
-      window.nodes.list = {}
-      for(let nodeClassName in LiteGraph.registered_node_types) {
-        let nodeClass = LiteGraph.registered_node_types[nodeClassName]
-        if (window.nodes.list[nodeClass.category] == null) window.nodes.list[nodeClass.category] = []
-        window.nodes.list[nodeClass.category].push(nodeClass.elementName)
+      window.nodes.list = {};
+      for (let nodeClassName in LiteGraph.registered_node_types) {
+        let nodeClass = LiteGraph.registered_node_types[nodeClassName];
+        if (window.nodes.list[nodeClass.category] == null)
+          window.nodes.list[nodeClass.category] = [];
+        window.nodes.list[nodeClass.category].push(nodeClass.elementName);
       }
-    }
-    updateNodeList()
-
-</script>
+    };
+    updateNodeList();
+  </script>
 </html>
