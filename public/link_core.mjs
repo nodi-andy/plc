@@ -20,13 +20,6 @@ export default class LinkCore {
     this.target_slot = o.toSlot;
   }
   serialize() {
-    return [
-      this.id,
-      this.origin_id,
-      this.origin_slot,
-      this.target_id,
-      this.target_slot,
-      this.type,
-    ];
+    return [this.id, this.origin_id, this.origin_slot, this.target_id, this.target_slot, this.type];
   }
 }

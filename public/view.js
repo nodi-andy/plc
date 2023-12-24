@@ -32,11 +32,7 @@ export default class DragAndScale {
   }
   computeVisibleArea(viewport) {
     if (!this.element) {
-      this.visible_area[0] =
-        this.visible_area[1] =
-        this.visible_area[2] =
-        this.visible_area[3] =
-          0;
+      this.visible_area[0] = this.visible_area[1] = this.visible_area[2] = this.visible_area[3] = 0;
       return;
     }
     var width = this.element.width;
@@ -85,16 +81,8 @@ export default class DragAndScale {
 
     if (e.type == LiteGraph.pointerevents_method + "down" && is_inside) {
       this.dragging = true;
-      LiteGraph.pointerListenerRemove(
-        canvas,
-        "move",
-        this._binded_mouse_callback
-      );
-      LiteGraph.pointerListenerAdd(
-        document,
-        "move",
-        this._binded_mouse_callback
-      );
+      LiteGraph.pointerListenerRemove(canvas, "move", this._binded_mouse_callback);
+      LiteGraph.pointerListenerAdd(document, "move", this._binded_mouse_callback);
       LiteGraph.pointerListenerAdd(document, "up", this._binded_mouse_callback);
     } else if (e.type == LiteGraph.pointerevents_method + "move") {
       if (!ignore) {
@@ -106,23 +94,10 @@ export default class DragAndScale {
       }
     } else if (e.type == LiteGraph.pointerevents_method + "up") {
       this.dragging = false;
-      LiteGraph.pointerListenerRemove(
-        document,
-        "move",
-        this._binded_mouse_callback
-      );
-      LiteGraph.pointerListenerRemove(
-        document,
-        "up",
-        this._binded_mouse_callback
-      );
+      LiteGraph.pointerListenerRemove(document, "move", this._binded_mouse_callback);
+      LiteGraph.pointerListenerRemove(document, "up", this._binded_mouse_callback);
       LiteGraph.pointerListenerAdd(canvas, "move", this._binded_mouse_callback);
-    } else if (
-      is_inside &&
-      (e.type == "mousewheel" ||
-        e.type == "wheel" ||
-        e.type == "DOMMouseScroll")
-    ) {
+    } else if (is_inside && (e.type == "mousewheel" || e.type == "wheel" || e.type == "DOMMouseScroll")) {
       e.eventType = "mousewheel";
       if (e.type == "wheel") {
         e.wheel = -e.deltaY;
@@ -150,10 +125,7 @@ export default class DragAndScale {
   }
   convertOffsetToCanvas(pos) {
     //return [pos[0] / this.scale - this.offset[0], pos[1] / this.scale - this.offset[1]];
-    return [
-      (pos[0] + this.offset[0]) * this.scale,
-      (pos[1] + this.offset[1]) * this.scale,
-    ];
+    return [(pos[0] + this.offset[0]) * this.scale, (pos[1] + this.offset[1]) * this.scale];
   }
   convertCanvasToOffset(pos, out) {
     out = out || [0, 0];

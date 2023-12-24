@@ -1,3 +1,4 @@
+import { NodiEnums } from "./enums.mjs";
 import NodeCore from "./node_core.mjs";
 
 export default class LGraphNode extends NodeCore {
@@ -207,10 +208,10 @@ export default class LGraphNode extends NodeCore {
     if (size == null) return;
     if (!this.fixsize) {
       this.size = [
-        window.LiteGraph.CANVAS_GRID_SIZE *
-          Math.round(size[0] / window.LiteGraph.CANVAS_GRID_SIZE),
-        window.LiteGraph.CANVAS_GRID_SIZE *
-          Math.round(size[1] / window.LiteGraph.CANVAS_GRID_SIZE),
+        NodiEnums.CANVAS_GRID_SIZE *
+          Math.round(size[0] / NodiEnums.CANVAS_GRID_SIZE),
+          NodiEnums.CANVAS_GRID_SIZE *
+          Math.round(size[1] / NodiEnums.CANVAS_GRID_SIZE),
       ];
     }
     if (this.onResize) this.onResize(this.size);
@@ -598,9 +599,9 @@ export default class LGraphNode extends NodeCore {
   getBounding(out) {
     out = out || new Float32Array(4);
     out[0] = this.pos[0] - 4;
-    out[1] = this.pos[1] - window.LiteGraph.NODE_TITLE_HEIGHT;
+    out[1] = this.pos[1] - NodiEnums.NODE_TITLE_HEIGHT;
     out[2] = this.size[0] + 4;
-    out[3] = this.size[1] + window.LiteGraph.NODE_TITLE_HEIGHT;
+    out[3] = this.size[1] + NodiEnums.NODE_TITLE_HEIGHT;
 
     if (this.onBounding) {
       this.onBounding(out);
@@ -746,7 +747,7 @@ export default class LGraphNode extends NodeCore {
   }
   /* Force align to grid */
   alignToGrid() {
-    let gridSize = window.LiteGraph.CANVAS_GRID_SIZE;
+    let gridSize = NodiEnums.CANVAS_GRID_SIZE;
     if (this.type == "control/junction") gridSize /= 4;
     if (this.size[0] >= gridSize) {
       this.pos[0] = gridSize * Math.round(this.pos[0] / gridSize);

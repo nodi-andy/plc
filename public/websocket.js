@@ -29,11 +29,7 @@ const events = [
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
 
 var uri = window.location.hostname;
-if (
-  window.location.hostname.includes(".") == false ||
-  window.location.hostname == "127.0.0.1"
-)
-  uri += ":8080";
+if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") uri += ":8080";
 if (io) window.socketIO = io(uri);
 
 window.order = {};
@@ -83,11 +79,7 @@ window.socketIO.on("id", () => {
 });
 
 window.order.nodeAdded = (message) => {
-  let newNode = LiteGraph.createNode(
-    message.type,
-    message.title,
-    message.properties
-  );
+  let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
   newNode.id = message.nodeID;
   newNode.widget.id = message.nodeID;
   newNode.type = message.type;
@@ -131,12 +123,7 @@ window.order.updateNode = (message) => {
 };
 
 window.order.linkAdded = (msg) => {
-  window.graph.nodes[msg.from].connect(
-    msg.fromSlot,
-    msg.to,
-    msg.toSlot,
-    msg.nodeID
-  );
+  window.graph.nodes[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
   window.canvas.dirty_canvas = true;
 };
 
@@ -169,12 +156,7 @@ window.order.nodeResized = (msg) => {
 };
 
 window.order.addLink = (msg) => {
-  window.graph.nodes[msg.from].connect(
-    msg.fromSlot,
-    msg.to,
-    msg.toSlot,
-    msg.nodeID
-  );
+  window.graph.nodes[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
   window.canvas.dirty_canvas = true;
 };
 

@@ -4,8 +4,6 @@ import LGraphNode from "./node.js";
 import NodeCore from "./node_core.mjs";
 
 export var LiteGraph = {
-  CANVAS_GRID_SIZE: 64,
-  NODE_TITLE_HEIGHT: 0,
   NODE_TITLE_TEXT_Y: 10,
   NODE_SLOT_HEIGHT: 64,
   NODE_WIDGET_HEIGHT: 20,
@@ -112,8 +110,7 @@ export var LiteGraph = {
       if (base_class.supported_extensions) {
         for (i in base_class.supported_extensions) {
           var ext = base_class.supported_extensions[i];
-          if (ext && ext.constructor === String)
-            this.node_types_by_file_extension[ext.toLowerCase()] = base_class;
+          if (ext && ext.constructor === String) this.node_types_by_file_extension[ext.toLowerCase()] = base_class;
         }
       }
     }
@@ -142,8 +139,7 @@ export var LiteGraph = {
     if (base_class.supported_extensions) {
       for (i = 0; i < base_class.supported_extensions.length; i++) {
         ext = base_class.supported_extensions[i];
-        if (ext && ext.constructor === String)
-          this.node_types_by_file_extension[ext.toLowerCase()] = base_class;
+        if (ext && ext.constructor === String) this.node_types_by_file_extension[ext.toLowerCase()] = base_class;
       }
     }
   },
@@ -154,12 +150,10 @@ export var LiteGraph = {
    * @param {String|Object} type name of the node or the node constructor itself
    */
   unregisterNodeType: function (type) {
-    var base_class =
-      type.constructor === String ? this.registered_node_types[type] : type;
+    var base_class = type.constructor === String ? this.registered_node_types[type] : type;
     if (!base_class) throw "node type not found: " + type;
     delete this.registered_node_types[base_class.type];
-    if (base_class.constructor.name)
-      delete this.Nodes[base_class.constructor.name];
+    if (base_class.constructor.name) delete this.Nodes[base_class.constructor.name];
   },
 
   /**
@@ -249,7 +243,7 @@ for (let i = 97; i <= 123; i++) {
   LiteGraph.alphabet.push(String.fromCharCode(i));
 }
 
-class LGraph {
+export class LGraph {
   constructor(o) {
     if (LiteGraph.debug) {
       console.log("Graph created");
@@ -350,9 +344,7 @@ class LGraph {
 
     //nodes
     if (node.id == null || (node.id != -1 && this.nodes[node.id] != null)) {
-      console.warn(
-        "LiteGraph: there is already a node with this ID, changing it"
-      );
+      console.warn("LiteGraph: there is already a node with this ID, changing it");
       node.id = this.getNextID();
     }
 
@@ -443,38 +435,7 @@ class LGraph {
     if (id == null) return null;
     return this.nodes[id];
   }
-  /**
-   * Returns a list of nodes that matches a class
-   * @method findNodesByClass
-   * @param {Class} classObject the class itself (not an string)
-   * @return {Array} a list with all the nodes of this type
-   */
-  findNodesByClass(classObject, result) {
-    result = result || [];
-    result.length = 0;
-    for (var i = 0, l = this.nodes.length; i < l; ++i) {
-      if (this.nodes[i].constructor === classObject) {
-        result.push(this.nodes[i]);
-      }
-    }
-    return result;
-  }
 
-  /**
-   * Returns a list of nodes that matches a name
-   * @method findNodesByTitle
-   * @param {String} name the name of the node to search
-   * @return {Array} a list with all the nodes with this name
-   */
-  findNodesByTitle(title) {
-    var result = [];
-    for (var i = 0, l = this.nodes.length; i < l; ++i) {
-      if (this.nodes[i].title == title) {
-        result.push(this.nodes[i]);
-      }
-    }
-    return result;
-  }
   /**
    * Returns the top-most node in this position of the canvas
    * @method getNodeOnPos
@@ -532,9 +493,7 @@ class LGraph {
    */
   removeLink(link_id) {
     var link = this.links[link_id];
-    if (!link) {
-      return;
-    }
+    if (!link) return;
 
     var node = this.getNodeById(link.target_id);
     if (node) {
@@ -545,9 +504,8 @@ class LGraph {
     if (node) {
       node.disconnectOutput(link);
     }
-    if (this.links[link_id]) {
-      delete this.links[link_id];
-    }
+
+    delete this.links[link_id];
   }
   //save and recover app state ***************************************
   /**
@@ -568,9 +526,7 @@ class LGraph {
       var link = this.links[i];
       if (!link.serialize) {
         //weird bug I havent solved yet
-        console.warn(
-          "weird LLink bug, link info is not a LLink but a regular object"
-        );
+        console.warn("weird LLink bug, link info is not a LLink but a regular object");
         var link2 = new LLink();
         for (var j in link) {
           link2[j] = link[j];
@@ -612,11 +568,7 @@ class LGraph {
       for (i = 0, l = data.nodes.length; i < l; ++i) {
         var n_info = data.nodes[i]; //stored info
         if (!n_info) continue;
-        var node = LiteGraph.createNode(
-          n_info.type,
-          n_info.title,
-          n_info.properties
-        );
+        var node = LiteGraph.createNode(n_info.type, n_info.title, n_info.properties);
         node.id = n_info.nodeID; //id it or it will create a new id
         node.widget.id = n_info.nodeID;
         if (n_info.posX != null) {
@@ -660,14 +612,7 @@ if (
   window.CanvasRenderingContext2D &&
   !window.CanvasRenderingContext2D.prototype.roundRect
 ) {
-  window.CanvasRenderingContext2D.prototype.roundRect = function (
-    x,
-    y,
-    w,
-    h,
-    radius,
-    radius_low
-  ) {
+  window.CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, radius, radius_low) {
     var top_left_radius = 0;
     var top_right_radius = 0;
     var bottom_left_radius = 0;
@@ -682,12 +627,7 @@ if (
 
     //make it compatible with official one
     if (radius != null && radius.constructor === Array) {
-      if (radius.length == 1)
-        top_left_radius =
-          top_right_radius =
-          bottom_left_radius =
-          bottom_right_radius =
-            radius[0];
+      if (radius.length == 1) top_left_radius = top_right_radius = bottom_left_radius = bottom_right_radius = radius[0];
       else if (radius.length == 2) {
         top_left_radius = bottom_right_radius = radius[0];
         top_right_radius = bottom_left_radius = radius[1];
@@ -727,12 +667,7 @@ if (
 /* helper for interaction: pointer, touch, mouse Listeners
 used by LGraphCanvas DragAndScale ContextMenu*/
 LiteGraph.pointerListenerAdd = function (oDOM, sEvIn, fCall, capture = false) {
-  if (
-    !oDOM ||
-    !oDOM.addEventListener ||
-    !sEvIn ||
-    typeof fCall !== "function"
-  ) {
+  if (!oDOM || !oDOM.addEventListener || !sEvIn || typeof fCall !== "function") {
     //console.log("cant pointerListenerAdd "+oDOM+", "+sEvent+", "+fCall);
     return; // -- break --
   }
@@ -745,9 +680,7 @@ LiteGraph.pointerListenerAdd = function (oDOM, sEvIn, fCall, capture = false) {
   if (sMethod == "pointer" && !window.PointerEvent) {
     console.warn("sMethod=='pointer' && !window.PointerEvent");
     console.log(
-      "Converting pointer[" +
-        sEvent +
-        "] : down move up cancel enter TO touchstart touchmove touchend, etc .."
+      "Converting pointer[" + sEvent + "] : down move up cancel enter TO touchstart touchmove touchend, etc .."
     );
     switch (sEvent) {
       case "down": {
@@ -776,11 +709,7 @@ LiteGraph.pointerListenerAdd = function (oDOM, sEvIn, fCall, capture = false) {
       }
       // case "over": case "out": not used at now
       default: {
-        console.warn(
-          "PointerEvent not available in this browser ? The event " +
-            sEvent +
-            " would not be called"
-        );
+        console.warn("PointerEvent not available in this browser ? The event " + sEvent + " would not be called");
       }
     }
   }
@@ -810,18 +739,8 @@ LiteGraph.pointerListenerAdd = function (oDOM, sEvIn, fCall, capture = false) {
   }
 };
 
-LiteGraph.pointerListenerRemove = function (
-  oDOM,
-  sEvent,
-  fCall,
-  capture = false
-) {
-  if (
-    !oDOM ||
-    !oDOM.removeEventListener ||
-    !sEvent ||
-    typeof fCall !== "function"
-  ) {
+LiteGraph.pointerListenerRemove = function (oDOM, sEvent, fCall, capture = false) {
+  if (!oDOM || !oDOM.removeEventListener || !sEvent || typeof fCall !== "function") {
     //console.log("cant pointerListenerRemove "+oDOM+", "+sEvent+", "+fCall);
     return; // -- break --
   }
@@ -834,15 +753,8 @@ LiteGraph.pointerListenerRemove = function (
     case "out":
     case "enter":
       {
-        if (
-          LiteGraph.pointerevents_method == "pointer" ||
-          LiteGraph.pointerevents_method == "mouse"
-        ) {
-          oDOM.removeEventListener(
-            LiteGraph.pointerevents_method + sEvent,
-            fCall,
-            capture
-          );
+        if (LiteGraph.pointerevents_method == "pointer" || LiteGraph.pointerevents_method == "mouse") {
+          oDOM.removeEventListener(LiteGraph.pointerevents_method + sEvent, fCall, capture);
         }
       }
       break;
@@ -853,11 +765,7 @@ LiteGraph.pointerListenerRemove = function (
     case "lostpointercapture":
       {
         if (LiteGraph.pointerevents_method == "pointer") {
-          return oDOM.removeEventListener(
-            LiteGraph.pointerevents_method + sEvent,
-            fCall,
-            capture
-          );
+          return oDOM.removeEventListener(LiteGraph.pointerevents_method + sEvent, fCall, capture);
         }
       }
       break;
@@ -875,5 +783,3 @@ if (typeof window != "undefined" && !window["requestAnimationFrame"]) {
       window.setTimeout(callback, 1000 / 60);
     };
 }
-
-export { LGraph };

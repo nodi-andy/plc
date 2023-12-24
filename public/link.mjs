@@ -24,14 +24,7 @@ export default class LLink {
   }
 
   serialize() {
-    return [
-      this.id,
-      this.origin_id,
-      this.origin_slot,
-      this.target_id,
-      this.target_slot,
-      this.type,
-    ];
+    return [this.id, this.origin_id, this.origin_slot, this.target_id, this.target_slot, this.type];
   }
 
   render(ctx, a, b, skip_border, flow, color, start_dir, end_dir) {
@@ -88,11 +81,7 @@ export default class LLink {
     ctx.lineTo(b[0], b[1]);
 
     //rendering the outline of the connection can be a little bit slow
-    if (
-      canvas.render_connections_border &&
-      canvas.ds.scale > 0.6 &&
-      !skip_border
-    ) {
+    if (canvas.render_connections_border && canvas.ds.scale > 0.6 && !skip_border) {
       ctx.strokeStyle = "rgba(0,0,0,0.5)";
       ctx.stroke();
     }
@@ -101,56 +90,21 @@ export default class LLink {
     ctx.fillStyle = ctx.strokeStyle = color;
     ctx.stroke();
     //end line shape
-    var pos = canvas.computeConnectionPoint(
-      [start_x, start_y],
-      [end_x, end_y],
-      0.5,
-      start_dir,
-      end_dir,
-      link
-    );
+    var pos = canvas.computeConnectionPoint([start_x, start_y], [end_x, end_y], 0.5, start_dir, end_dir, link);
     if (link && link.pos) {
       link.pos[0] = pos[0];
       link.pos[1] = pos[1];
     }
 
     //render arrow in the middle
-    if (
-      canvas.ds.scale >= 0.6 &&
-      canvas.highquality_render &&
-      end_dir != NodiEnums.CENTER
-    ) {
+    if (canvas.ds.scale >= 0.6 && canvas.highquality_render && end_dir != NodiEnums.CENTER) {
       //render arrow
       if (canvas.render_connection_arrows) {
         //compute two points in the connection
-        var posA = canvas.computeConnectionPoint(
-          a,
-          b,
-          0.25,
-          start_dir,
-          end_dir
-        );
-        var posB = canvas.computeConnectionPoint(
-          a,
-          b,
-          0.26,
-          start_dir,
-          end_dir
-        );
-        var posC = canvas.computeConnectionPoint(
-          a,
-          b,
-          0.75,
-          start_dir,
-          end_dir
-        );
-        var posD = canvas.computeConnectionPoint(
-          a,
-          b,
-          0.76,
-          start_dir,
-          end_dir
-        );
+        var posA = canvas.computeConnectionPoint(a, b, 0.25, start_dir, end_dir);
+        var posB = canvas.computeConnectionPoint(a, b, 0.26, start_dir, end_dir);
+        var posC = canvas.computeConnectionPoint(a, b, 0.75, start_dir, end_dir);
+        var posD = canvas.computeConnectionPoint(a, b, 0.76, start_dir, end_dir);
 
         //compute the angle between them so the arrow points in the right direction
         var angleA = 0;

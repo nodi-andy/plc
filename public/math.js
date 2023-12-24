@@ -19,9 +19,7 @@ Math.isInsideRectangle = function (x, y, left, top, width, height) {
 };
 
 Math.distance = function (a, b) {
-  return Math.sqrt(
-    (b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1])
-  );
+  return Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
 };
 
 Math.clamp = function (v, a, b) {
