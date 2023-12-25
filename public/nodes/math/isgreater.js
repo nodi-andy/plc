@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import MathIsGreaterCore from "./isgreater_core.mjs"
 
 class MathIsGreater extends MathIsGreaterCore{
@@ -24,4 +24,4 @@ class MathIsGreater extends MathIsGreaterCore{
     }
 }
 
-LiteGraph.registerNodeType(MathIsGreater.type, MathIsGreater);
+NodeWork.registerNodeType(MathIsGreater.type, MathIsGreater);

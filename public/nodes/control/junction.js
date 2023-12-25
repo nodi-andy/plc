@@ -1,10 +1,8 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import JunctionCore from "./junction_core.mjs"
 
 class Junction extends JunctionCore{
-    static title_mode = LiteGraph.NO_TITLE;
-
     constructor() {
         super();
         this.properties = {};
@@ -22,4 +20,4 @@ class Junction extends JunctionCore{
 
 }
 
-LiteGraph.registerNodeType(Junction.type, Junction);
+NodeWork.registerNodeType(Junction.type, Junction);

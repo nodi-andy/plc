@@ -1,10 +1,10 @@
-import LGraphNode from "../../node.js";
-import { LiteGraph } from "../../litegraph.js";
+import { LGraphNode } from "../../node.mjs";
+import NodeWork from "../../nodework.mjs";
 
 export default class Stepper extends LGraphNode{
     static title = "Stepper";
     static desc = "Stepper";
-    static title_mode = LiteGraph.NO_TITLE;
+    static title_mode = NodeWork.NO_TITLE;
     static type = "nodi.box/stepper";
     static device = "nodi.box";
     
@@ -46,4 +46,4 @@ export default class Stepper extends LGraphNode{
     }
 }
 
-//LiteGraph.registerNodeType(Stepper.type, Stepper);
+//NodeWork.registerNodeType(Stepper.type, Stepper);

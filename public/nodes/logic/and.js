@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import AndCore from "./and_core.mjs"
 
 class logicAnd extends AndCore{
@@ -20,4 +20,4 @@ class logicAnd extends AndCore{
 
 }
 
-LiteGraph.registerNodeType(logicAnd.type, logicAnd);
+NodeWork.registerNodeType(logicAnd.type, logicAnd);

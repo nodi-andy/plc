@@ -1,6 +1,6 @@
 import { NodiEnums } from "../../enums.mjs"
 import NodeWork from "../../nodework.mjs";
-import NodeCore from "../../node_core.mjs";
+import { NodeCore } from "../../node.mjs";
 
 export default class TimeIntervalCore extends NodeCore {
     static type = "time/interval";

@@ -1,5 +1,7 @@
+import NodeWork from "./nodework.mjs";
+
 //Scale and Offset
-export default class DragAndScale {
+export default class View {
   constructor(element, skip_events) {
     this.offset = new Float32Array([0, 0]);
     this.scale = 3;
@@ -23,9 +25,9 @@ export default class DragAndScale {
 
     this._binded_mouse_callback = this.onMouse.bind(this);
 
-    LiteGraph.pointerListenerAdd(element, "down", this._binded_mouse_callback);
-    LiteGraph.pointerListenerAdd(element, "move", this._binded_mouse_callback);
-    LiteGraph.pointerListenerAdd(element, "up", this._binded_mouse_callback);
+    NodeWork.pointerListenerAdd(element, "down", this._binded_mouse_callback);
+    NodeWork.pointerListenerAdd(element, "move", this._binded_mouse_callback);
+    NodeWork.pointerListenerAdd(element, "up", this._binded_mouse_callback);
 
     element.addEventListener("mousewheel", this._binded_mouse_callback, false);
     element.addEventListener("wheel", this._binded_mouse_callback, false);
@@ -73,18 +75,18 @@ export default class DragAndScale {
         y >= this.viewport[1] &&
         y < this.viewport[1] + this.viewport[3]);
 
-    //console.log("pointerevents: DragAndScale onMouse "+e.type+" "+is_inside);
+    //console.log("pointerevents: View onMouse "+e.type+" "+is_inside);
     var ignore = false;
     if (this.onmouse) {
       ignore = this.onmouse(e);
     }
 
-    if (e.type == LiteGraph.pointerevents_method + "down" && is_inside) {
+    if (e.type == NodeWork.pointerevents_method + "down" && is_inside) {
       this.dragging = true;
-      LiteGraph.pointerListenerRemove(canvas, "move", this._binded_mouse_callback);
-      LiteGraph.pointerListenerAdd(document, "move", this._binded_mouse_callback);
-      LiteGraph.pointerListenerAdd(document, "up", this._binded_mouse_callback);
-    } else if (e.type == LiteGraph.pointerevents_method + "move") {
+      NodeWork.pointerListenerRemove(canvas, "move", this._binded_mouse_callback);
+      NodeWork.pointerListenerAdd(document, "move", this._binded_mouse_callback);
+      NodeWork.pointerListenerAdd(document, "up", this._binded_mouse_callback);
+    } else if (e.type == NodeWork.pointerevents_method + "move") {
       if (!ignore) {
         var deltax = x - this.last_mouse[0];
         var deltay = y - this.last_mouse[1];
@@ -92,11 +94,11 @@ export default class DragAndScale {
           this.mouseDrag(deltax, deltay);
         }
       }
-    } else if (e.type == LiteGraph.pointerevents_method + "up") {
+    } else if (e.type == NodeWork.pointerevents_method + "up") {
       this.dragging = false;
-      LiteGraph.pointerListenerRemove(document, "move", this._binded_mouse_callback);
-      LiteGraph.pointerListenerRemove(document, "up", this._binded_mouse_callback);
-      LiteGraph.pointerListenerAdd(canvas, "move", this._binded_mouse_callback);
+      NodeWork.pointerListenerRemove(document, "move", this._binded_mouse_callback);
+      NodeWork.pointerListenerRemove(document, "up", this._binded_mouse_callback);
+      NodeWork.pointerListenerAdd(canvas, "move", this._binded_mouse_callback);
     } else if (is_inside && (e.type == "mousewheel" || e.type == "wheel" || e.type == "DOMMouseScroll")) {
       e.eventType = "mousewheel";
       if (e.type == "wheel") {

@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import ButtonCore from "./button_server.mjs"
 
 export default class WidgetButton extends ButtonCore {
@@ -56,4 +56,4 @@ export default class WidgetButton extends ButtonCore {
 
 }
 
-LiteGraph.registerNodeType(WidgetButton.type, WidgetButton);
+NodeWork.registerNodeType(WidgetButton.type, WidgetButton);

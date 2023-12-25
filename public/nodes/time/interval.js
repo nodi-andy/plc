@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import TimeIntervalCore from "./interval_core.mjs"
 
 class TimeInterval extends TimeIntervalCore{
@@ -27,4 +27,4 @@ class TimeInterval extends TimeIntervalCore{
 
 }
 
-LiteGraph.registerNodeType(TimeInterval.type, TimeInterval);
+NodeWork.registerNodeType(TimeInterval.type, TimeInterval);

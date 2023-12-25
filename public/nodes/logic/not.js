@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import NotCore from "./not_core.mjs"
 
 class logicNot extends NotCore{
@@ -37,4 +37,4 @@ class logicNot extends NotCore{
 
 }
 
-LiteGraph.registerNodeType(logicNot.type, logicNot);
+NodeWork.registerNodeType(logicNot.type, logicNot);

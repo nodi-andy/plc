@@ -1,4 +1,4 @@
-import { LiteGraph } from "./litegraph.js";
+import NodeWork from "./nodework.mjs";
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
 import NodiBoxB3 from "./nodes/nodi.box/b3.js";
@@ -79,7 +79,7 @@ window.socketIO.on("id", () => {
 });
 
 window.order.nodeAdded = (message) => {
-  let newNode = LiteGraph.createNode(message.type, message.title, message.properties);
+  let newNode = NodeWork.createNode(message.type, message.title, message.properties);
   newNode.id = message.nodeID;
   newNode.widget.id = message.nodeID;
   newNode.type = message.type;
@@ -96,16 +96,16 @@ window.order.nodeRemoved = (msg) => {
 
 window.order.id = (message) => {
   if (message.id == "nodi.box") {
-    LiteGraph.registerNodeType("nodi.box/b1", NodiBoxB1);
-    LiteGraph.registerNodeType("nodi.box/b2", NodiBoxB2);
-    LiteGraph.registerNodeType("nodi.box/b3", NodiBoxB3);
-    LiteGraph.registerNodeType("nodi.box/b4", NodiBoxB4);
-    LiteGraph.registerNodeType("nodi.box/green_led", NodiBoxGreen);
-    LiteGraph.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
-    LiteGraph.registerNodeType("nodi.box/stepper", Stepper);
+    NodeWork.registerNodeType("nodi.box/b1", NodiBoxB1);
+    NodeWork.registerNodeType("nodi.box/b2", NodiBoxB2);
+    NodeWork.registerNodeType("nodi.box/b3", NodiBoxB3);
+    NodeWork.registerNodeType("nodi.box/b4", NodiBoxB4);
+    NodeWork.registerNodeType("nodi.box/green_led", NodiBoxGreen);
+    NodeWork.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
+    NodeWork.registerNodeType("nodi.box/stepper", Stepper);
   } else if (message.id == "esp32mcu") {
-    LiteGraph.registerNodeType("esp32mcu/b1", esp32mcuB1);
-    LiteGraph.registerNodeType("esp32mcu/led", esp32mcuLED);
+    NodeWork.registerNodeType("esp32mcu/b1", esp32mcuB1);
+    NodeWork.registerNodeType("esp32mcu/led", esp32mcuLED);
   }
   window.updateNodeList();
 };

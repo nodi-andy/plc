@@ -1,5 +1,5 @@
-import LGraphNode from "../../node.js";
-import { LiteGraph } from "../../litegraph.js";
+import { LGraphNode } from "../../node.mjs";
+import NodeWork from "../../nodework.mjs";
 import ToggleCore from "./toggle_server.mjs";
 
 export default class WidgetToggle extends ToggleCore{
@@ -54,4 +54,4 @@ export default class WidgetToggle extends ToggleCore{
     }
 }
 
-LiteGraph.registerNodeType(WidgetToggle.type, WidgetToggle); 
+NodeWork.registerNodeType(WidgetToggle.type, WidgetToggle); 

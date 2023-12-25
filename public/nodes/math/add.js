@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import MathAddCore from "./add_core.mjs"
 
 class MathAdd extends MathAddCore{
@@ -25,4 +25,4 @@ class MathAdd extends MathAddCore{
 
 }
 
-LiteGraph.registerNodeType(MathAdd.type, MathAdd);
+NodeWork.registerNodeType(MathAdd.type, MathAdd);

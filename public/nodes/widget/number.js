@@ -1,11 +1,11 @@
-import LGraphNode from "../../node.js";
-import { LiteGraph } from "../../litegraph.js";
+import { LGraphNode } from "../../node.mjs";
+import NodeWork from "../../nodework.mjs";
 import NumberCore from "./number_server.mjs";
 
 export default class WidgetNumber extends NumberCore {
     static title = "Number";
     static desc = "Widget to select number value";
-    static title_mode = LiteGraph.NO_TITLE;
+    static title_mode = NodeWork.NO_TITLE;
     static pixels_threshold = 10;
     static markers_color = "#666";
 
@@ -46,4 +46,4 @@ export default class WidgetNumber extends NumberCore {
     }
 }
 
-LiteGraph.registerNodeType(WidgetNumber.type, WidgetNumber);
+NodeWork.registerNodeType(WidgetNumber.type, WidgetNumber);

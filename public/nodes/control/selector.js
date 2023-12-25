@@ -1,5 +1,5 @@
-import LGraphNode from "../../node.js";
-import { LiteGraph } from "../../litegraph.js";
+import { LGraphNode } from "../../node.mjs";
+import NodeWork from "../../nodework.mjs";
 
 class Selector extends LGraphNode{
     static type = "control/selector";
@@ -23,10 +23,6 @@ class Selector extends LGraphNode{
         }
     }
 
-    onNodeInputAdd() {
-        return LiteGraph.alphabet.filter(char => !Object.keys(this.properties).includes(char)).sort()[0];
-    }
-
 }
 
-LiteGraph.registerNodeType(Selector.type, Selector);
+NodeWork.registerNodeType(Selector.type, Selector);

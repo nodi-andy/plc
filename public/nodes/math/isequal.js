@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import MathIsEqualCore from "./isequal_core.mjs"
 
 class MathIsEqual extends MathIsEqualCore{
@@ -20,4 +20,4 @@ class MathIsEqual extends MathIsEqualCore{
     }
 }
 
-LiteGraph.registerNodeType(MathIsEqual.type, MathIsEqual);
+NodeWork.registerNodeType(MathIsEqual.type, MathIsEqual);

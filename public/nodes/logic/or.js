@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import OrCore from "./or_core.mjs"
 
 class logicOr extends OrCore{
@@ -37,4 +37,4 @@ class logicOr extends OrCore{
 
 }
 
-LiteGraph.registerNodeType(logicOr.type, logicOr);
+NodeWork.registerNodeType(logicOr.type, logicOr);

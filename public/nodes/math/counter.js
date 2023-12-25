@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import MathCounterCore from "./counter_core.mjs"
 
 class MathCounter extends MathCounterCore{
@@ -25,4 +25,4 @@ class MathCounter extends MathCounterCore{
 
 }
 
-LiteGraph.registerNodeType(MathCounter.type, MathCounter);
+NodeWork.registerNodeType(MathCounter.type, MathCounter);

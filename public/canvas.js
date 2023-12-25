@@ -1,8 +1,7 @@
 import { NodiEnums } from "./enums.mjs";
-import DragAndScale from "./view.js";
-import { LiteGraph } from "./litegraph.js";
+import View from "./view.js";
 import NodeWork from "./nodework.mjs";
-import NodeCore from "./node_core.mjs";
+import { NodeCore } from "./node.mjs";
 
 var margin_area = new Float32Array(4);
 var temp_vec2 = new Float32Array(2);
@@ -17,13 +16,13 @@ export default class LGraphCanvas {
       canvas = document.querySelector(canvas);
     }
     this.nodework = new NodeWork();
-    this.ds = new DragAndScale();
+    this.ds = new View();
     this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
 
-    this.title_text_font = "" + window.LiteGraph.NODE_TEXT_SIZE + "px Arial";
-    this.inner_text_font = "normal " + window.LiteGraph.NODE_SUBTEXT_SIZE + "px Arial";
-    this.node_title_color = window.LiteGraph.NODE_TITLE_COLOR;
-    this.default_link_color = window.LiteGraph.LINK_COLOR;
+    this.title_text_font = "" + NodiEnums.NODE_TEXT_SIZE + "px Arial";
+    this.inner_text_font = "normal " + NodiEnums.NODE_SUBTEXT_SIZE + "px Arial";
+    this.node_title_color = NodiEnums.NODE_TITLE_COLOR;
+    this.default_link_color = NodiEnums.LINK_COLOR;
     this.default_connection_color = {
       input_off: "#778",
       input_on: "#7F7",
@@ -273,7 +272,7 @@ export default class LGraphCanvas {
       if (canvas.constructor === String) {
         canvas = document.getElementById(canvas);
         if (!canvas) {
-          throw "Error creating LiteGraph canvas: Canvas not found";
+          throw "Error creating canvas: Canvas not found";
         }
       }
     }
@@ -365,11 +364,11 @@ export default class LGraphCanvas {
 
     //touch events -- TODO IMPLEMENT
     //this._touch_callback = this.touchHandler.bind(this);
-    LiteGraph.pointerListenerAdd(canvas, "down", this._mousedown_callback, true); //down do not need to store the binded
+    NodeWork.pointerListenerAdd(canvas, "down", this._mousedown_callback, true); //down do not need to store the binded
     canvas.addEventListener("mousewheel", this._mousewheel_callback, false);
 
-    LiteGraph.pointerListenerAdd(canvas, "up", this._mouseup_callback, true); // CHECK: ??? binded or not
-    LiteGraph.pointerListenerAdd(canvas, "move", this._mousemove_callback);
+    NodeWork.pointerListenerAdd(canvas, "up", this._mouseup_callback, true); // CHECK: ??? binded or not
+    NodeWork.pointerListenerAdd(canvas, "move", this._mousemove_callback);
 
     canvas.addEventListener("contextmenu", this._doNothing);
     canvas.addEventListener("DOMMouseScroll", this._mousewheel_callback, false);
@@ -421,9 +420,9 @@ export default class LGraphCanvas {
     var ref_window = this.getCanvasWindow();
     var document = ref_window.document;
 
-    LiteGraph.pointerListenerRemove(this.canvas, "move", this._mousedown_callback);
-    LiteGraph.pointerListenerRemove(this.canvas, "up", this._mousedown_callback);
-    LiteGraph.pointerListenerRemove(this.canvas, "down", this._mousedown_callback);
+    NodeWork.pointerListenerRemove(this.canvas, "move", this._mousedown_callback);
+    NodeWork.pointerListenerRemove(this.canvas, "up", this._mousedown_callback);
+    NodeWork.pointerListenerRemove(this.canvas, "down", this._mousedown_callback);
     this.canvas.removeEventListener("mousewheel", this._mousewheel_callback);
     this.canvas.removeEventListener("DOMMouseScroll", this._mousewheel_callback);
     this.canvas.removeEventListener("keydown", this._key_callback);
@@ -534,9 +533,9 @@ export default class LGraphCanvas {
 
     //move mouse move event to the window in case it drags outside of the canvas
     if (!this.options.skip_events) {
-      LiteGraph.pointerListenerRemove(this.canvas, "move", this._mousemove_callback);
-      LiteGraph.pointerListenerAdd(ref_window.document, "move", this._mousemove_callback, true); //catch for the entire window
-      LiteGraph.pointerListenerAdd(ref_window.document, "up", this._mouseup_callback, true);
+      NodeWork.pointerListenerRemove(this.canvas, "move", this._mousemove_callback);
+      NodeWork.pointerListenerAdd(ref_window.document, "move", this._mousemove_callback, true); //catch for the entire window
+      NodeWork.pointerListenerAdd(ref_window.document, "up", this._mouseup_callback, true);
     }
 
     if (!is_inside) {
@@ -577,7 +576,7 @@ export default class LGraphCanvas {
 
       // clone node ALT dragging
       if (
-        LiteGraph.alt_drag_do_clone_nodes &&
+        NodeWork.alt_drag_do_clone_nodes &&
         e.altKey &&
         node &&
         this.allow_interaction &&
@@ -1027,9 +1026,9 @@ export default class LGraphCanvas {
     //restore the mousemove event back to the canvas
     if (!this.options.skip_events) {
       //console.log("pointerevents: processMouseUp adjustEventListener");
-      LiteGraph.pointerListenerRemove(document, "move", this._mousemove_callback, true);
-      LiteGraph.pointerListenerAdd(this.canvas, "move", this._mousemove_callback, true);
-      LiteGraph.pointerListenerRemove(document, "up", this._mouseup_callback, true);
+      NodeWork.pointerListenerRemove(document, "move", this._mousemove_callback, true);
+      NodeWork.pointerListenerAdd(this.canvas, "move", this._mousemove_callback, true);
+      NodeWork.pointerListenerRemove(document, "up", this._mouseup_callback, true);
     }
 
     this.adjustMouseEvent(e);
@@ -1136,7 +1135,7 @@ export default class LGraphCanvas {
         this.dirty_bgcanvas = true;
         this.node_dragged.widget.pos[0] = Math.round(this.node_dragged.widget.pos[0]);
         this.node_dragged.widget.pos[1] = Math.round(this.node_dragged.widget.pos[1]);
-        if (this.graph.config.align_to_grid || this.align_to_grid) {
+        if (this.align_to_grid) {
           this.node_dragged.widget.alignToGrid(this.node_dragged);
         }
         if (this.onNodeMoved) this.onNodeMoved(this.node_dragged);
@@ -1450,7 +1449,7 @@ export default class LGraphCanvas {
     }
     var nodes = [];
     for (let node_data of clipboard_info.nodes) {
-      var node = LiteGraph.createNode(node_data.type);
+      var node = NodeWork.createNode(node_data.type);
       if (node) {
         node.configure(node_data);
 
@@ -1563,9 +1562,9 @@ export default class LGraphCanvas {
     if (e.dataTransfer.files.length) {
       var file = e.dataTransfer.files[0];
       var ext = LGraphCanvas.getFileExtension(file.name).toLowerCase();
-      var nodetype = LiteGraph.node_types_by_file_extension[ext];
+      var nodetype = NodeWork.node_types_by_file_extension[ext];
       if (nodetype) {
-        var node = LiteGraph.createNode(nodetype.type);
+        var node = NodeWork.createNode(nodetype.type);
         node.widget.pos = [e.canvasX, e.canvasY];
         this.graph.add(node);
         if (node.onDropFile) {
@@ -1904,8 +1903,8 @@ export default class LGraphCanvas {
 
         var connDir = connInOrOut.dir;
         if (connDir == null) {
-          if (this.connecting_output) connDir = LiteGraph.RIGHT;
-          else connDir = LiteGraph.LEFT;
+          if (this.connecting_output) connDir = NodiEnums.RIGHT;
+          else connDir = NodiEnums.LEFT;
         }
 
         //the connection being dragged by the mouse
@@ -1916,9 +1915,9 @@ export default class LGraphCanvas {
           null,
           false,
           null,
-          LiteGraph.CONNECTING_LINK_COLOR,
+          NodiEnums.CONNECTING_LINK_COLOR,
           connDir,
-          LiteGraph.CENTER
+          NodiEnums.CENTER
         );
 
         ctx.beginPath();
@@ -2073,8 +2072,8 @@ export default class LGraphCanvas {
    * @method drawNode
    */
   drawNode(node, ctx) {
-    var color = node.color || node.constructor.color || LiteGraph.NODE_DEFAULT_COLOR;
-    var bgcolor = node.bgcolor || node.constructor.bgcolor || LiteGraph.NODE_DEFAULT_BGCOLOR;
+    var color = node.color || node.constructor.color || NodiEnums.NODE_DEFAULT_COLOR;
+    var bgcolor = node.bgcolor || node.constructor.bgcolor || NodiEnums.NODE_DEFAULT_BGCOLOR;
 
     var low_quality = this.ds.scale < 0.6; //zoomed out
 
@@ -2082,7 +2081,7 @@ export default class LGraphCanvas {
     ctx.globalAlpha = editor_alpha;
 
     if (this.render_shadows && !low_quality) {
-      ctx.shadowColor = LiteGraph.DEFAULT_SHADOW_COLOR;
+      ctx.shadowColor = NodiEnums.DEFAULT_SHADOW_COLOR;
       ctx.shadowOffsetX = 2 * this.ds.scale;
       ctx.shadowOffsetY = 2 * this.ds.scale;
       ctx.shadowBlur = 3 * this.ds.scale;
@@ -2137,8 +2136,8 @@ export default class LGraphCanvas {
       var pos = node.widget.getConnectionPos(true, i, slot_pos);
       pos[0] -= node.widget.pos[0];
       pos[1] -= node.widget.pos[1];
-      if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
-        max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
+      if (max_y < pos[1] + NodiEnums.NODE_SLOT_HEIGHT * 0.5) {
+        max_y = pos[1] + NodiEnums.NODE_SLOT_HEIGHT * 0.5;
       }
 
       ctx.beginPath();
@@ -2150,8 +2149,8 @@ export default class LGraphCanvas {
       if (render_text) {
         var text = slot.label;
         if (text) {
-          ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
-          if (horizontal || slot.dir == LiteGraph.UP) {
+          ctx.fillStyle = NodiEnums.NODE_TEXT_COLOR;
+          if (horizontal || slot.dir == NodiEnums.UP) {
             ctx.fillText(text, pos[0], pos[1] - 10);
           } else {
             ctx.fillText(text, pos[0] + 10, pos[1] + 5);
@@ -2177,8 +2176,8 @@ export default class LGraphCanvas {
       pos = node.widget.getConnectionPos(false, i, slot_pos);
       pos[0] -= node.widget.pos[0];
       pos[1] -= node.widget.pos[1];
-      if (max_y < pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5) {
-        max_y = pos[1] + LiteGraph.NODE_SLOT_HEIGHT * 0.5;
+      if (max_y < pos[1] + NodiEnums.NODE_SLOT_HEIGHT * 0.5) {
+        max_y = pos[1] + NodiEnums.NODE_SLOT_HEIGHT * 0.5;
       }
 
       ctx.fillStyle = slot.link != null ? NodiEnums.LINK_COLOR : NodiEnums.CONNECTING_LINK_COLOR;
@@ -2190,8 +2189,8 @@ export default class LGraphCanvas {
       if (render_text) {
         text = slot.label;
         if (text) {
-          ctx.fillStyle = LiteGraph.NODE_TEXT_COLOR;
-          if (horizontal || slot.dir == LiteGraph.DOWN) {
+          ctx.fillStyle = NodiEnums.NODE_TEXT_COLOR;
+          if (horizontal || slot.dir == NodiEnums.DOWN) {
             ctx.fillText(text, pos[0], pos[1] - 8);
           } else {
             ctx.fillText(text, pos[0] - 10, pos[1] + 5);
@@ -2315,7 +2314,7 @@ export default class LGraphCanvas {
       ctx.globalAlpha = 0.8;
       ctx.beginPath();
       ctx.roundRect(-6 + area[0], -6 + area[1], 12 + area[2], 12 + area[3], [this.round_radius * 2]);
-      ctx.strokeStyle = LiteGraph.NODE_BOX_OUTLINE_COLOR;
+      ctx.strokeStyle = NodiEnums.NODE_BOX_OUTLINE_COLOR;
       ctx.stroke();
       ctx.strokeStyle = fgcolor;
       ctx.globalAlpha = 1;
@@ -2385,8 +2384,8 @@ export default class LGraphCanvas {
         continue;
       }
 
-      var start_dir = LiteGraph.RIGHT;
-      var end_dir = LiteGraph.LEFT;
+      var start_dir = NodiEnums.RIGHT;
+      var end_dir = NodiEnums.LEFT;
 
       link.render(ctx, start_node_slotpos, end_node_slotpos, false, 0, null, start_dir, end_dir);
 
@@ -2423,8 +2422,8 @@ export default class LGraphCanvas {
     if (!color) color = this.default_link_color;
     if (link != null && this.highlighted_links[link.id]) color = "#FFF";
 
-    start_dir = start_dir || LiteGraph.RIGHT;
-    end_dir = end_dir || LiteGraph.LEFT;
+    start_dir = start_dir || NodiEnums.RIGHT;
+    end_dir = end_dir || NodiEnums.LEFT;
 
     ctx.setLineDash([]);
     if (this.render_connections_border && this.ds.scale > 0.6) {
@@ -2475,8 +2474,8 @@ export default class LGraphCanvas {
   }
   //returns the link center point based on curvature
   computeConnectionPoint(a, b, t, start_dir, end_dir, link) {
-    start_dir = start_dir || LiteGraph.RIGHT;
-    end_dir = end_dir || LiteGraph.LEFT;
+    start_dir = start_dir || NodiEnums.RIGHT;
+    end_dir = end_dir || NodiEnums.LEFT;
     var dist = Math.distance(a, b);
     var p0 = a;
     var p1 = [a[0], a[1]];
@@ -2484,30 +2483,30 @@ export default class LGraphCanvas {
     var p3 = b;
 
     switch (start_dir) {
-      case LiteGraph.LEFT:
+      case NodiEnums.LEFT:
         p1[0] += dist * -0.25;
         break;
-      case LiteGraph.RIGHT:
+      case NodiEnums.RIGHT:
         p1[0] += dist * 0.25;
         break;
-      case LiteGraph.UP:
+      case NodiEnums.UP:
         p1[1] += dist * -0.25;
         break;
-      case LiteGraph.DOWN:
+      case NodiEnums.DOWN:
         p1[1] += dist * 0.25;
         break;
     }
     switch (end_dir) {
-      case LiteGraph.LEFT:
+      case NodiEnums.LEFT:
         p2[0] += dist * -0.25;
         break;
-      case LiteGraph.RIGHT:
+      case NodiEnums.RIGHT:
         p2[0] += dist * 0.25;
         break;
-      case LiteGraph.UP:
+      case NodiEnums.UP:
         p2[1] += dist * -0.25;
         break;
-      case LiteGraph.DOWN:
+      case NodiEnums.DOWN:
         p2[1] += dist * 0.25;
         break;
     }
@@ -2576,7 +2575,7 @@ export default class LGraphCanvas {
     var width = node.widget.size[0];
     var widgets = node.widgets;
     posY += 2;
-    var H = LiteGraph.NODE_WIDGET_HEIGHT;
+    var H = NodiEnums.NODE_WIDGET_HEIGHT;
 
     ctx.save();
     ctx.globalAlpha = this.editor_alpha;
@@ -2615,7 +2614,7 @@ export default class LGraphCanvas {
     for (var i = 0; i < node.widgets.length; ++i) {
       var w = node.widgets[i];
       if (!w || w.disabled) continue;
-      var widget_height = w.computeSize ? w.computeSize(width)[1] : LiteGraph.NODE_WIDGET_HEIGHT;
+      var widget_height = w.computeSize ? w.computeSize(width)[1] : NodiEnums.NODE_WIDGET_HEIGHT;
       var widget_width = w.width || width;
       //outside
       if (

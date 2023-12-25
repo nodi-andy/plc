@@ -1,5 +1,5 @@
-import { LiteGraph } from "../../litegraph.js";
-import LGraphNode from "../../node.js";
+import NodeWork from "../../nodework.mjs";
+import { LGraphNode } from "../../node.mjs";
 import XOrCore from "./xor_core.mjs"
 
 class logicXOr extends XOrCore{
@@ -44,4 +44,4 @@ class logicXOr extends XOrCore{
 
 }
 
-LiteGraph.registerNodeType(logicXOr.type, logicXOr);
+NodeWork.registerNodeType(logicXOr.type, logicXOr);

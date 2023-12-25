@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <link rel="stylesheet" type="text/css" href="litegraph.css" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
@@ -13,6 +12,34 @@
     <meta name="description" content="noditron" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>noditron</title>
+    <style>
+      html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          height: 100%;
+          width: 100%;
+      }
+
+      .lgraphcanvas {
+          /*cursor: crosshair;*/
+          user-select: none;
+          -moz-user-select: none;
+          -webkit-user-select: none;
+        outline: none;
+          font-family: Tahoma, sans-serif;
+      }
+
+      .lgraphcanvas * {
+          box-sizing: border-box;
+      }
+
+        /* Styles for high-DPI screens */
+      @media only screen and (-webkit-min-device-pixel-ratio: 2),
+          only screen and (min--moz-device-pixel-ratio: 2),
+          only screen and (min-resolution: 192dpi),
+          only screen and (min-resolution: 2dppx) {
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -48,8 +75,8 @@
     // Because the IoT device can not keep more than 10 TCP connections open
     await loadJS("./socket.io.min.js", false);
     await loadJS("./math.js", false);
-    await loadJS("./litegraph.js", false);
-    await loadJS("./node.js", false);
+    await loadJS("./nodework.mjs", false);
+    await loadJS("./node.mjs", false);
     await loadJS("./link.mjs", false);
     await loadJS("./view.js", false);
     await loadJS("./nodes/widget/button.js", false);
@@ -79,7 +106,10 @@
     await loadJS("./nodes/esp32mcu/led.js", false);
     await loadJS("./websocket.js", false);
 
-    window.graph = new LGraph();
+    import NodeWork from "./nodework.mjs";
+    import LGraphCanvas from "./canvas.js";
+
+    window.graph = new NodeWork();
     window.canvas = new LGraphCanvas("#mycanvas", graph);
     window.nodeworkID = window.location.search.slice(1);
     window.nodes = {};
@@ -87,7 +117,7 @@
     window.nodes.addNode = (name) => {
       name = name.toLowerCase();
       console.log(name);
-      var node = LiteGraph.createNode(name);
+      var node = NodeWork.createNode(name);
       if (node) {
         let view = window.canvas.ds;
         node.widget.setPos(
@@ -195,8 +225,8 @@
 
     window.updateNodeList = () => {
       window.nodes.list = {};
-      for (let nodeClassName in LiteGraph.registered_node_types) {
-        let nodeClass = LiteGraph.registered_node_types[nodeClassName];
+      for (let nodeClassName in NodeWork.registered_node_types) {
+        let nodeClass = NodeWork.registered_node_types[nodeClassName];
         if (window.nodes.list[nodeClass.category] == null)
           window.nodes.list[nodeClass.category] = [];
         window.nodes.list[nodeClass.category].push(nodeClass.elementName);

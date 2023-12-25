@@ -1,6 +1,6 @@
-import { LiteGraph } from "../../litegraph.js";
+import NodeWork from "../../nodework.mjs";
 import LEDCore from "./led_server.mjs";
-import LGraphNode from "../../node.js";
+import { LGraphNode } from "../../node.mjs";
 
 export default class WidgetLed extends LEDCore {
     static type = "widget/led";
@@ -53,4 +53,4 @@ export default class WidgetLed extends LEDCore {
     }
 }
 
-LiteGraph.registerNodeType(WidgetLed.type, WidgetLed);
+NodeWork.registerNodeType(WidgetLed.type, WidgetLed);

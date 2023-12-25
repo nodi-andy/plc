@@ -1,4 +1,4 @@
-import NodeCore from "../../node_core.mjs";
+import { NodeCore } from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 export default class LEDCore extends NodeCore {

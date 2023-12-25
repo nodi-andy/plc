@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import NodeCore from "../../node_core.mjs";
+import { NodeCore } from "../../node.mjs";
 
 export default class CounterCore extends NodeCore {
     static type = "math/counter";
