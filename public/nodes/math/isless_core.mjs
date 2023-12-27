@@ -1,15 +1,15 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class MathIsLessCore extends NodeCore {
+export default class MathIsLessCore extends Node {
     static type = "math/isless";
     static title = "?<";
     static desc = "IsLess";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
-        NodeCore.setProperty(prop, "value", {label:" ", output: true});
+        Node.setProperty(prop, "in1", {label:" ", input: true});
+        Node.setProperty(prop, "in2", {label:" ", input: true});
+        Node.setProperty(prop, "value", {label:" ", output: true});
         this.type = MathIsLessCore.type
         MathIsLessCore.reset(prop);
     }
@@ -36,4 +36,4 @@ export default class MathIsLessCore extends NodeCore {
 
 }
 
-NodeWork.registerType(MathIsLessCore)
+NodeWork.registerNodeType(MathIsLessCore)

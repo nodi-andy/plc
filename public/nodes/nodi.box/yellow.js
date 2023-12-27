@@ -1,6 +1,7 @@
-import WidgetLed from "../widget/led.js";
+import WidgetLed from "../widget/led.mjs";
 
 export default class NodiBoxYellow extends WidgetLed {
+    static type = "nodi.box/yellow_led";
     constructor() {
         super();
         this.properties.port.value = 22;

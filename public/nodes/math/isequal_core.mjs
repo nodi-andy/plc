@@ -1,17 +1,17 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class MathIsEqual extends NodeCore {
+export default class MathIsEqual extends Node {
     static type = "math/isequal";
     static title = "?=";
     static desc = "Add";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" "});
-        NodeCore.setProperty(prop, "value", {label:" ", output: true});
-        NodeCore.setProperty(prop, "yes");
-        NodeCore.setProperty(prop, "no");
+        Node.setProperty(prop, "in1", {label:" ", input: true});
+        Node.setProperty(prop, "in2", {label:" "});
+        Node.setProperty(prop, "value", {label:" ", output: true});
+        Node.setProperty(prop, "yes");
+        Node.setProperty(prop, "no");
         this.type = MathIsEqual.type
         MathIsEqual.reset(prop);
     }
@@ -40,4 +40,4 @@ export default class MathIsEqual extends NodeCore {
 
 }
 
-NodeWork.registerType(MathIsEqual)
+NodeWork.registerNodeType(MathIsEqual)

@@ -1,21 +1,21 @@
 import { NodiEnums } from "../../enums.mjs"
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class TimeIntervalCore extends NodeCore {
+export default class TimeIntervalCore extends Node {
     static type = "time/interval";
     static title = "T";
     static desc = "Interval";
 
     static setup(prop) {
-        NodeCore.setProperty(prop,"state", {output: true});
-        NodeCore.setProperty(prop,"press", {value: 1});
-        NodeCore.setProperty(prop,"release");
-        NodeCore.setProperty(prop,"ton", {value: 500});
-        NodeCore.setProperty(prop,"toff", {value: 500});
-        NodeCore.setProperty(prop,"value");
-        NodeCore.setProperty(prop,"lastOn");
-        NodeCore.setProperty(prop,"lastOff");
+        Node.setProperty(prop,"state", {output: true});
+        Node.setProperty(prop,"press", {value: 1});
+        Node.setProperty(prop,"release");
+        Node.setProperty(prop,"ton", {value: 500});
+        Node.setProperty(prop,"toff", {value: 500});
+        Node.setProperty(prop,"value");
+        Node.setProperty(prop,"lastOn");
+        Node.setProperty(prop,"lastOff");
         this.type = TimeIntervalCore.type
         TimeIntervalCore.reset(prop);
     }
@@ -60,4 +60,4 @@ export default class TimeIntervalCore extends NodeCore {
 
 }
 
-NodeWork.registerType(TimeIntervalCore)
+NodeWork.registerNodeType(TimeIntervalCore)

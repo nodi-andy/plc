@@ -1,15 +1,15 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class MathMultCore extends NodeCore {
+export default class MathMultCore extends Node {
     static type = "math/mult";
     static title = "*";
     static desc = "Mult";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
-        NodeCore.setProperty(prop, "value", {label:" ", output: true});
+        Node.setProperty(prop, "in1", {label:" ", input: true});
+        Node.setProperty(prop, "in2", {label:" ", input: true});
+        Node.setProperty(prop, "value", {label:" ", output: true});
         this.type = MathMultCore.type
         MathMultCore.reset(prop);
     }
@@ -36,4 +36,4 @@ export default class MathMultCore extends NodeCore {
 
 }
 
-NodeWork.registerType(MathMultCore)
+NodeWork.registerNodeType(MathMultCore)

@@ -1,4 +1,4 @@
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 import NumberCore from "./number_server.mjs";
 
@@ -15,18 +15,16 @@ export default class WidgetNumber extends NumberCore {
         NumberCore.setup(this.properties);
         this.type = NumberCore.type;
 
-        this.widget = new LGraphNode();
-        this.widgets = [this.widget];
-        this.widgets.old_y = -1;
-        this.widget._remainder = 0;
-        this.widget._precision = 0;
-        this.widget.mouse_captured = false;
+        this.old_y = -1;
+        this._remainder = 0;
+        this._precision = 0;
+        this.mouse_captured = false;
         this.title = " ";
     }
 
     onDrawForeground(ctx) {
-        var x = this.widget.size[0] * 0.5;
-        var h = this.widget.size[1];
+        var x = this.size[0] * 0.5;
+        var h = this.size[1];
 
 
         ctx.textAlign = "center";
@@ -46,4 +44,4 @@ export default class WidgetNumber extends NumberCore {
     }
 }
 
-NodeWork.registerNodeType(WidgetNumber.type, WidgetNumber);
+NodeWork.registerNodeType(WidgetNumber);

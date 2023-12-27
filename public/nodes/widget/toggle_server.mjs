@@ -1,20 +1,20 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class ToggleCore extends NodeCore {
+export default class ToggleCore extends Node {
     static type = "widget/toggle";
     static title = "Button";
     static desc = "Triggers an event";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "state", {label: " ", output: true});
-        NodeCore.setProperty(prop, "press",  {label: " ", value: 1, input: false, autoInput: true});
-        NodeCore.setProperty(prop, "release", {label: " ", input: false, autoInput: true});
-        NodeCore.setProperty(prop, "value", {value: null, input: false});
-        NodeCore.setProperty(prop, "toggle");
-        NodeCore.setProperty(prop, "label", {value: "B1", autoInput: true});
-        NodeCore.setProperty(prop, "port", {value: null, input: false});
-        NodeCore.setProperty(prop, "color", {value: "red", input: false, autoInput: true});
+        Node.setProperty(prop, "state", {label: " ", output: true});
+        Node.setProperty(prop, "press",  {label: " ", value: 1, input: false, autoInput: true});
+        Node.setProperty(prop, "release", {label: " ", input: false, autoInput: true});
+        Node.setProperty(prop, "value", {value: null, input: false});
+        Node.setProperty(prop, "toggle");
+        Node.setProperty(prop, "label", {value: "B1", autoInput: true});
+        Node.setProperty(prop, "port", {value: null, input: false});
+        Node.setProperty(prop, "color", {value: "red", input: false, autoInput: true});
 
         this.type = ToggleCore.type
         ToggleCore.reset(prop);
@@ -72,4 +72,4 @@ export default class ToggleCore extends NodeCore {
 
 }
 
-NodeWork.registerType(ToggleCore)
+NodeWork.registerNodeType(ToggleCore)

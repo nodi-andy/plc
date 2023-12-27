@@ -81,11 +81,10 @@ window.socketIO.on("id", () => {
 window.order.nodeAdded = (message) => {
   let newNode = NodeWork.createNode(message.type, message.title, message.properties);
   newNode.id = message.nodeID;
-  newNode.widget.id = message.nodeID;
   newNode.type = message.type;
-  newNode.widget.pos = message.widget.pos;
-  newNode.widget.setSize(message.widget.size);
-  window.graph.add(newNode);
+  if (message.pos) newNode.pos = message.pos;
+  if (message.size) newNode.setSize(message.size);
+  window.graph.addNode(newNode);
   window.canvas.dirty_canvas = true;
 };
 
@@ -96,16 +95,16 @@ window.order.nodeRemoved = (msg) => {
 
 window.order.id = (message) => {
   if (message.id == "nodi.box") {
-    NodeWork.registerNodeType("nodi.box/b1", NodiBoxB1);
-    NodeWork.registerNodeType("nodi.box/b2", NodiBoxB2);
-    NodeWork.registerNodeType("nodi.box/b3", NodiBoxB3);
-    NodeWork.registerNodeType("nodi.box/b4", NodiBoxB4);
-    NodeWork.registerNodeType("nodi.box/green_led", NodiBoxGreen);
-    NodeWork.registerNodeType("nodi.box/yellow_led", NodiBoxYellow);
-    NodeWork.registerNodeType("nodi.box/stepper", Stepper);
+    NodeWork.registerNodeType(NodiBoxB1);
+    NodeWork.registerNodeType(NodiBoxB2);
+    NodeWork.registerNodeType(NodiBoxB3);
+    NodeWork.registerNodeType(NodiBoxB4);
+    NodeWork.registerNodeType(NodiBoxGreen);
+    NodeWork.registerNodeType(NodiBoxYellow);
+    NodeWork.registerNodeType(Stepper);
   } else if (message.id == "esp32mcu") {
-    NodeWork.registerNodeType("esp32mcu/b1", esp32mcuB1);
-    NodeWork.registerNodeType("esp32mcu/led", esp32mcuLED);
+    NodeWork.registerNodeType(esp32mcuB1);
+    NodeWork.registerNodeType(esp32mcuLED);
   }
   window.updateNodeList();
 };
@@ -143,7 +142,7 @@ window.order.nodeMoved = (msg) => {
   if (window.graph.nodes[msg.nodeID].widget == null) return;
 
   console.log("[movedNode] ", msg);
-  window.graph.nodes[msg.nodeID].widget.pos = msg.moveTo;
+  window.graph.nodes[msg.nodeID].pos = msg.moveTo;
 };
 
 window.order.nodeResized = (msg) => {
@@ -177,13 +176,13 @@ window.order.clear = () => {
 
 window.order.moveNode = (message) => {
   // Handle incoming messages here
-  window.graph.nodes[message.nodeID].widget.pos = message.moveTo;
+  window.graph.nodes[message.nodeID].pos = message.moveTo;
   window.canvas.dirty_canvas = true;
 };
 
 window.order.setSize = (message) => {
   // Handle incoming messages here
-  window.graph.nodes[message.nodeID].widget.setSize(message.size, false);
+  window.graph.nodes[message.nodeID].setSize(message.size, false);
   window.canvas.dirty_canvas = true;
 };
 

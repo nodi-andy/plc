@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import OrCore from "./or_core.mjs"
 
 class logicOr extends OrCore{
@@ -7,9 +7,8 @@ class logicOr extends OrCore{
         super();
         this.properties = {};
         OrCore.setup(this.properties);
-        this.widget = new LGraphNode();
+        this.widget = new Node();
         this.widget.setSize([64, 128]);
-        this.widgets = [this.widget];
         this.type = OrCore.type
         this.title = OrCore.title;
     }
@@ -37,4 +36,4 @@ class logicOr extends OrCore{
 
 }
 
-NodeWork.registerNodeType(logicOr.type, logicOr);
+NodeWork.registerNodeType(logicOr);

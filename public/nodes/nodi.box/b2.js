@@ -1,6 +1,7 @@
-import WidgetButton from "../widget/button.js";
+import WidgetButton from "../widget/button.mjs";
 
-export default class NodiBoxB2 extends WidgetButton{
+export default class NodiBoxB2 extends WidgetButton {
+    static type = "nodi.box/b2";
     constructor() {
         super();
         this.properties.port.value = 5;

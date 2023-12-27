@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import MathIsGreaterCore from "./isgreater_core.mjs"
 
 class MathIsGreater extends MathIsGreaterCore{
@@ -7,9 +7,6 @@ class MathIsGreater extends MathIsGreaterCore{
         super();
         this.properties = {};
         MathIsGreaterCore.setup(this.properties);
-        this.widget = new LGraphNode();
-        this.widget.setSize([64, 128]);
-        this.widgets = [this.widget];
     }
 
     onExecute(props) {
@@ -20,8 +17,8 @@ class MathIsGreater extends MathIsGreaterCore{
         ctx.fillStyle = "#AAA";
         ctx.font = "24px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(this.properties.in1 + ">" + this.properties.in2, this.widget.size[0] * 0.5, this.widget.size[1] * 0.5);
+        ctx.fillText(this.properties.in1 + ">" + this.properties.in2, this.size[0] * 0.5, this.size[1] * 0.5);
     }
 }
 
-NodeWork.registerNodeType(MathIsGreater.type, MathIsGreater);
+NodeWork.registerNodeType(MathIsGreater);

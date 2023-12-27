@@ -2,9 +2,9 @@ import express from "express";
 import http from "http";
 import { Server as socketIOServer } from "socket.io";
 import NodeWork from "./public/nodework.mjs";
-import "./public/nodes/widget/button_server.mjs";
+import "./public/nodes/widget/button.mjs";
 import "./public/nodes/widget/toggle_server.mjs";
-import "./public/nodes/widget/led_server.mjs";
+import "./public/nodes/widget/led.mjs";
 import "./public/nodes/widget/number_server.mjs";
 import "./public/nodes/logic/and_core.mjs";
 import "./public/nodes/logic/or_core.mjs";
@@ -63,7 +63,7 @@ const idGenerator = new UniqueIDGenerator();
 setInterval(() => {
   try {
     nodeWorkJSON.nodes.forEach((node) => {
-      let c = NodeWork.getType(node.type);
+      let c = NodeWork.getNodeType(node.type);
       if (node.cmds && node.cmds.length) {
         mergeObjects(node.properties, node.cmds[0].what);
         let command = node.cmds.shift();
@@ -123,6 +123,7 @@ function mergeObjects(objA, objB) {
 
   for (const keyA in objB) {
     for (const keyB in objB[keyA]) {
+      if (mergedObject[keyA] == null) mergedObject[keyA] = {}
       mergedObject[keyA][keyB] = objB[keyA][keyB];
     }
   }
@@ -212,21 +213,20 @@ io.on("connection", (socket) => {
 
   socket.on("moveNode", (msg) => {
     console.log("[moveNode] ", msg);
-    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.moveTo;
+    nodeWorkJSON.nodes[msg.nodeID].pos = msg.moveTo;
     socket.to("browser_room").emit("moveNode", msg);
   });
 
   socket.on("movedNode", (msg) => {
     if (msg.nodeID == null) return;
     if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
-    if (nodeWorkJSON.nodes[msg.nodeID].widget == null) return;
 
     console.log("[movedNode] ", msg);
     socket.to("browser_room").emit("moveNode", msg);
     if (iot) {
       //iot.emit("getNodework", "");
     }
-    nodeWorkJSON.nodes[msg.nodeID].widget.pos = msg.moveTo;
+    nodeWorkJSON.nodes[msg.nodeID].pos = msg.moveTo;
   });
 
   socket.on("setSize", (msg) => {
@@ -234,7 +234,7 @@ io.on("connection", (socket) => {
     if (msg.nodeID != null && nodeWorkJSON.nodes[msg.nodeID]) {
       console.log("[setSize]: ");
       console.log(msg.nodeID);
-      nodeWorkJSON.nodes[msg.nodeID].widget.size = msg.size;
+      nodeWorkJSON.nodes[msg.nodeID].size = msg.size;
       socket.broadcast.emit("setSize", msg);
     }
   });

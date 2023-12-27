@@ -1,15 +1,15 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class OrCore extends NodeCore {
+export default class OrCore extends Node {
     static type = "logic/or";
     static title = "OR";
     static desc = "Or gate";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
-        NodeCore.setProperty(prop, "value", {label: " ", output: true});
+        Node.setProperty(prop, "in1", {label:" ", input: true});
+        Node.setProperty(prop, "in2", {label:" ", input: true});
+        Node.setProperty(prop, "value", {label: " ", output: true});
         this.type = OrCore.type
         OrCore.reset(prop);
     }
@@ -36,4 +36,4 @@ export default class OrCore extends NodeCore {
 
 }
 
-NodeWork.registerType(OrCore)
+NodeWork.registerNodeType(OrCore)

@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import JunctionCore from "./junction_core.mjs"
 
 class Junction extends JunctionCore{
@@ -7,11 +7,8 @@ class Junction extends JunctionCore{
         super();
         this.properties = {};
         JunctionCore.setup(this.properties);
-        this.widget = new LGraphNode();
-        this.widget.fixsize = [32, 32];
-        this.widget.type = Junction.type;
-        this.widget.properties = this.properties;
-        this.widgets = [this.widget];
+        this.fixsize = [32, 32];
+        this.type = Junction.type;
     }
 
     onExecute(props) {
@@ -20,4 +17,4 @@ class Junction extends JunctionCore{
 
 }
 
-NodeWork.registerNodeType(Junction.type, Junction);
+NodeWork.registerNodeType(Junction);

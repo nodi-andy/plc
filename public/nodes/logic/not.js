@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import NotCore from "./not_core.mjs"
 
 class logicNot extends NotCore{
@@ -7,9 +7,8 @@ class logicNot extends NotCore{
         super();
         this.properties = {};
         logicNot.setup(this.properties);
-        this.widget = new LGraphNode();
+        this.widget = new Node();
         this.widget.setSize([64, 128]);
-        this.widgets = [this.widget];
         this.type = logicNot.type
         this.title = logicNot.title;
     }
@@ -37,4 +36,4 @@ class logicNot extends NotCore{
 
 }
 
-NodeWork.registerNodeType(logicNot.type, logicNot);
+NodeWork.registerNodeType(logicNot);

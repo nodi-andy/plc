@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import TimeIntervalCore from "./interval_core.mjs"
 
 class TimeInterval extends TimeIntervalCore{
@@ -10,9 +10,8 @@ class TimeInterval extends TimeIntervalCore{
         super();
         this.properties = {};
         TimeIntervalCore.setup(this.properties);
-        this.widget = new LGraphNode();
+        this.widget = new Node();
         this.widget.setSize([64, 64]);
-        this.widgets = [this.widget];
 
     }
 
@@ -27,4 +26,4 @@ class TimeInterval extends TimeIntervalCore{
 
 }
 
-NodeWork.registerNodeType(TimeInterval.type, TimeInterval);
+NodeWork.registerNodeType(TimeInterval);

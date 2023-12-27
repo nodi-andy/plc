@@ -1,7 +1,7 @@
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
-class Selector extends LGraphNode{
+class Selector extends Node{
     static type = "control/selector";
     static title = "SEL";
     static desc = "selects an output";
@@ -25,4 +25,4 @@ class Selector extends LGraphNode{
 
 }
 
-NodeWork.registerNodeType(Selector.type, Selector);
+NodeWork.registerNodeType(Selector);

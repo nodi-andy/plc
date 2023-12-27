@@ -1,5 +1,4 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
 import AndCore from "./and_core.mjs"
 
 class logicAnd extends AndCore{
@@ -7,9 +6,7 @@ class logicAnd extends AndCore{
         super();
         this.properties = {};
         AndCore.setup(this.properties);
-        this.widget = new LGraphNode();
-        this.widget.setSize([64, 128]);
-        this.widgets = [this.widget];
+        this.setSize([64, 128]);
         this.type = AndCore.type
         this.title = AndCore.title;
     }
@@ -20,4 +17,4 @@ class logicAnd extends AndCore{
 
 }
 
-NodeWork.registerNodeType(logicAnd.type, logicAnd);
+NodeWork.registerNodeType(logicAnd);

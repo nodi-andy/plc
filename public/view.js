@@ -2,6 +2,9 @@ import NodeWork from "./nodework.mjs";
 
 //Scale and Offset
 export default class View {
+  static pointerevents_method = "mouse"; // "mouse"|"pointer" use mouse for retrocompatibility issues? (none found @ now)
+
+
   constructor(element, skip_events) {
     this.offset = new Float32Array([0, 0]);
     this.scale = 3;
@@ -20,18 +23,131 @@ export default class View {
       }
     }
   }
+
+  /* helper for interaction: pointer, touch, mouse Listeners
+  used by LGraphCanvas View ContextMenu*/
+  static pointerListenerAdd(oDOM, sEvIn, fCall, capture = false) {
+    if (!oDOM || !oDOM.addEventListener || !sEvIn || typeof fCall !== "function") {
+      //console.log("cant pointerListenerAdd "+oDOM+", "+sEvent+", "+fCall);
+      return; // -- break --
+    }
+
+    var sMethod = View.pointerevents_method;
+    var sEvent = sEvIn;
+
+    // UNDER CONSTRUCTION
+    // convert pointerevents to touch event when not available
+    if (sMethod == "pointer" && !window.PointerEvent) {
+      console.warn("sMethod=='pointer' && !window.PointerEvent");
+      console.log(
+        "Converting pointer[" + sEvent + "] : down move up cancel enter TO touchstart touchmove touchend, etc .."
+      );
+      switch (sEvent) {
+        case "down": {
+          sMethod = "touch";
+          sEvent = "start";
+          break;
+        }
+        case "move": {
+          sMethod = "touch";
+          //sEvent = "move";
+          break;
+        }
+        case "up": {
+          sMethod = "touch";
+          sEvent = "end";
+          break;
+        }
+        case "cancel": {
+          sMethod = "touch";
+          //sEvent = "cancel";
+          break;
+        }
+        case "enter": {
+          console.log("debug: Should I send a move event?"); // ???
+          break;
+        }
+        // case "over": case "out": not used at now
+        default: {
+          console.warn("PointerEvent not available in this browser ? The event " + sEvent + " would not be called");
+        }
+      }
+    }
+
+    switch (sEvent) {
+      //both pointer and move events
+      case "down":
+      case "up":
+      case "move":
+      case "over":
+      case "out":
+      case "enter":
+        oDOM.addEventListener(sMethod + sEvent, fCall, capture);
+        break;
+      // only pointerevents
+      case "leave":
+      case "cancel":
+      case "gotpointercapture":
+      case "lostpointercapture":
+        if (sMethod != "mouse") {
+          return oDOM.addEventListener(sMethod + sEvent, fCall, capture);
+        }
+        break;
+      // not "pointer" || "mouse"
+      default:
+        return oDOM.addEventListener(sEvent, fCall, capture);
+    }
+  }
+
+  static pointerListenerRemove(oDOM, sEvent, fCall, capture = false) {
+    if (!oDOM || !oDOM.removeEventListener || !sEvent || typeof fCall !== "function") {
+      //console.log("cant pointerListenerRemove "+oDOM+", "+sEvent+", "+fCall);
+      return; // -- break --
+    }
+    switch (sEvent) {
+      //both pointer and move events
+      case "down":
+      case "up":
+      case "move":
+      case "over":
+      case "out":
+      case "enter":
+        {
+          if (View.pointerevents_method == "pointer" || View.pointerevents_method == "mouse") {
+            oDOM.removeEventListener(View.pointerevents_method + sEvent, fCall, capture);
+          }
+        }
+        break;
+      // only pointerevents
+      case "leave":
+      case "cancel":
+      case "gotpointercapture":
+      case "lostpointercapture":
+        {
+          if (View.pointerevents_method == "pointer") {
+            return oDOM.removeEventListener(View.pointerevents_method + sEvent, fCall, capture);
+          }
+        }
+        break;
+      // not "pointer" || "mouse"
+      default:
+        return oDOM.removeEventListener(sEvent, fCall, capture);
+    }
+  }
+
   bindEvents(element) {
     this.last_mouse = new Float32Array(2);
 
     this._binded_mouse_callback = this.onMouse.bind(this);
 
-    NodeWork.pointerListenerAdd(element, "down", this._binded_mouse_callback);
-    NodeWork.pointerListenerAdd(element, "move", this._binded_mouse_callback);
-    NodeWork.pointerListenerAdd(element, "up", this._binded_mouse_callback);
+    View.pointerListenerAdd(element, "down", this._binded_mouse_callback);
+    View.pointerListenerAdd(element, "move", this._binded_mouse_callback);
+    View.pointerListenerAdd(element, "up", this._binded_mouse_callback);
 
     element.addEventListener("mousewheel", this._binded_mouse_callback, false);
     element.addEventListener("wheel", this._binded_mouse_callback, false);
   }
+
   computeVisibleArea(viewport) {
     if (!this.element) {
       this.visible_area[0] = this.visible_area[1] = this.visible_area[2] = this.visible_area[3] = 0;
@@ -54,6 +170,7 @@ export default class View {
     this.visible_area[2] = endx - startx;
     this.visible_area[3] = endy - starty;
   }
+
   onMouse(e) {
     if (!this.enabled) {
       return;
@@ -81,12 +198,12 @@ export default class View {
       ignore = this.onmouse(e);
     }
 
-    if (e.type == NodeWork.pointerevents_method + "down" && is_inside) {
+    if (e.type == View.pointerevents_method + "down" && is_inside) {
       this.dragging = true;
-      NodeWork.pointerListenerRemove(canvas, "move", this._binded_mouse_callback);
-      NodeWork.pointerListenerAdd(document, "move", this._binded_mouse_callback);
-      NodeWork.pointerListenerAdd(document, "up", this._binded_mouse_callback);
-    } else if (e.type == NodeWork.pointerevents_method + "move") {
+      View.pointerListenerRemove(canvas, "move", this._binded_mouse_callback);
+      View.pointerListenerAdd(document, "move", this._binded_mouse_callback);
+      View.pointerListenerAdd(document, "up", this._binded_mouse_callback);
+    } else if (e.type == View.pointerevents_method + "move") {
       if (!ignore) {
         var deltax = x - this.last_mouse[0];
         var deltay = y - this.last_mouse[1];
@@ -94,11 +211,11 @@ export default class View {
           this.mouseDrag(deltax, deltay);
         }
       }
-    } else if (e.type == NodeWork.pointerevents_method + "up") {
+    } else if (e.type == View.pointerevents_method + "up") {
       this.dragging = false;
-      NodeWork.pointerListenerRemove(document, "move", this._binded_mouse_callback);
-      NodeWork.pointerListenerRemove(document, "up", this._binded_mouse_callback);
-      NodeWork.pointerListenerAdd(canvas, "move", this._binded_mouse_callback);
+      View.pointerListenerRemove(document, "move", this._binded_mouse_callback);
+      View.pointerListenerRemove(document, "up", this._binded_mouse_callback);
+      View.pointerListenerAdd(canvas, "move", this._binded_mouse_callback);
     } else if (is_inside && (e.type == "mousewheel" || e.type == "wheel" || e.type == "DOMMouseScroll")) {
       e.eventType = "mousewheel";
       if (e.type == "wheel") {
@@ -121,14 +238,17 @@ export default class View {
       return false;
     }
   }
+
   toCanvasContext(ctx) {
     ctx.scale(this.scale, this.scale);
     ctx.translate(this.offset[0], this.offset[1]);
   }
+
   convertOffsetToCanvas(pos) {
     //return [pos[0] / this.scale - this.offset[0], pos[1] / this.scale - this.offset[1]];
     return [(pos[0] + this.offset[0]) * this.scale, (pos[1] + this.offset[1]) * this.scale];
   }
+
   convertCanvasToOffset(pos, out) {
     out = out || [0, 0];
     out[0] = pos[0] / this.scale - this.offset[0];

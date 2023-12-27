@@ -79,9 +79,9 @@
     await loadJS("./node.mjs", false);
     await loadJS("./link.mjs", false);
     await loadJS("./view.js", false);
-    await loadJS("./nodes/widget/button.js", false);
+    await loadJS("./nodes/widget/button.mjs", false);
     await loadJS("./nodes/widget/toggle.js", false);
-    await loadJS("./nodes/widget/led.js", false);
+    await loadJS("./nodes/widget/led.mjs", false);
     await loadJS("./nodes/widget/number.js", false);
     await loadJS("./nodes/logic/and.js", false);
     await loadJS("./nodes/logic/or.js", false);
@@ -120,16 +120,15 @@
       var node = NodeWork.createNode(name);
       if (node) {
         let view = window.canvas.ds;
-        node.widget.setPos(
+        node.setPos(
           -view.offset[0] + view.visible_area[2] * 0.5,
           -view.offset[1] + view.visible_area[3] * 0.5
         );
       }
 
       // Do not send all values of node. Create a small export version
-      var exportNode = {};
-      exportNode.properties = node.properties;
-      exportNode.widget = node.widget;
+      var exportNode = node.clone();;
+      delete exportNode.widget;
       exportNode.type = node.type;
       exportNode.device = "server";
       window.sendToServer("addNode", exportNode);

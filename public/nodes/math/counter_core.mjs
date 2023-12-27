@@ -1,15 +1,15 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class CounterCore extends NodeCore {
+export default class CounterCore extends Node {
     static type = "math/counter";
     static title = " ";
     static desc = "Counter";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "inc", {input: true});
-        NodeCore.setProperty(prop, "dec");
-        NodeCore.setProperty(prop, "value", {label:" ", output: true});
+        Node.setProperty(prop, "inc", {input: true});
+        Node.setProperty(prop, "dec");
+        Node.setProperty(prop, "value", {label:" ", output: true});
         this.type = CounterCore.type;
         prop.value.value = 0;
     }
@@ -40,4 +40,4 @@ export default class CounterCore extends NodeCore {
     }
 }
 
-NodeWork.registerType(CounterCore)
+NodeWork.registerNodeType(CounterCore)

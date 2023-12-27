@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import MathAddCore from "./add_core.mjs"
 
 class MathAdd extends MathAddCore{
@@ -7,9 +7,8 @@ class MathAdd extends MathAddCore{
         super();
         this.properties = {};
         MathAddCore.setup(this.properties);
-        this.widget = new LGraphNode();
+        this.widget = new Node();
         this.widget.setSize([64, 128]);
-        this.widgets = [this.widget];
     }
 
     onExecute(props) {
@@ -20,9 +19,9 @@ class MathAdd extends MathAddCore{
         ctx.fillStyle = "#AAA";
         ctx.font = "24px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(this.properties.in1.value + "+" + this.properties.in2.value, this.widget.size[0] * 0.5, this.widget.size[1] * 0.5);
+        ctx.fillText(this.properties.in1.value + "+" + this.properties.in2.value, this.size[0] * 0.5, this.size[1] * 0.5);
     }
 
 }
 
-NodeWork.registerNodeType(MathAdd.type, MathAdd);
+NodeWork.registerNodeType(MathAdd);

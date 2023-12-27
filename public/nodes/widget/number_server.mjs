@@ -1,14 +1,14 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class NumberCore extends NodeCore {
+export default class NumberCore extends Node {
     static type = "widget/number";
     static title = "Number";
     static desc = "Number";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "value", {label: " "});
-        NodeCore.setProperty(prop, "read");
+        Node.setProperty(prop, "value", {label: " "});
+        Node.setProperty(prop, "read");
         this.type = NumberCore.type
         NumberCore.reset(prop);
     }
@@ -36,4 +36,4 @@ export default class NumberCore extends NodeCore {
 
 }
 
-NodeWork.registerType(NumberCore)
+NodeWork.registerNodeType(NumberCore)

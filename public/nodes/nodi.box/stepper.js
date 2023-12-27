@@ -1,7 +1,7 @@
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
-export default class Stepper extends LGraphNode{
+export default class Stepper extends Node{
     static title = "Stepper";
     static desc = "Stepper";
     static title_mode = NodeWork.NO_TITLE;
@@ -46,4 +46,4 @@ export default class Stepper extends LGraphNode{
     }
 }
 
-//NodeWork.registerNodeType(Stepper.type, Stepper);
+//NodeWork.registerNodeType(Stepper);

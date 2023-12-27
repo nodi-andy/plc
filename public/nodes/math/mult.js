@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import MathMultCore from "./mult_core.mjs"
 
 class MathMult extends MathMultCore{
@@ -7,9 +7,6 @@ class MathMult extends MathMultCore{
         super();
         this.properties = {};
         MathMultCore.setup(this.properties);
-        this.widget = new LGraphNode();
-        this.widget.setSize([64, 128]);
-        this.widgets = [this.widget];
     }
 
     onExecute(props) {
@@ -25,8 +22,8 @@ class MathMult extends MathMultCore{
         text += "+";
         if (this.properties.in2.value) text = this.properties.in2.value;
 
-        ctx.fillText(text, this.widget.size[0] * 0.5, this.widget.size[1] * 0.5);
+        ctx.fillText(text, this.size[0] * 0.5, this.size[1] * 0.5);
     }
 }
 
-NodeWork.registerNodeType(MathMult.type, MathMult);
+NodeWork.registerNodeType(MathMult);

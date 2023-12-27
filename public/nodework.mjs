@@ -1,131 +1,19 @@
 import { NodiEnums } from "./enums.mjs";
-import { NodeCore, LGraphNode } from "./node.mjs";
+import { Node } from "./node.mjs";
 import LLink from "./link.mjs";
 
 export default class NodeWork {
   static debug = false;
-  static catch_exceptions = true;
-  static throw_errors = true;
-  static allow_scripts = false; //if set to true some nodes like Formula would be allowed to evaluate code that comes from unsafe sources (like node configuration), which could lead to exploits
   static registered_node_types = {}; //nodetypes by string
-  static node_types_by_file_extension = {}; //used for dropping files in the canvas
   static Nodes = {}; //node types by classname
-  static Globals = {}; //used to store vars between graphs
 
-  static auto_load_slot_types = false; // [if want false, use true, run, get vars values to be statically set, than disable] nodes types and nodeclass association with node types need to be calculated, if dont want this, calculate once and set registered_slot_[in/out]_types and slot_types_[in/out]
-
-  static alt_drag_do_clone_nodes = true; // [true!] very handy, ALT click to clone and drag the new node
-
-  static pointerevents_method = "mouse"; // "mouse"|"pointer" use mouse for retrocompatibility issues? (none found @ now)
-
-  /* helper for interaction: pointer, touch, mouse Listeners
-used by LGraphCanvas View ContextMenu*/
-  static pointerListenerAdd(oDOM, sEvIn, fCall, capture = false) {
-    if (!oDOM || !oDOM.addEventListener || !sEvIn || typeof fCall !== "function") {
-      //console.log("cant pointerListenerAdd "+oDOM+", "+sEvent+", "+fCall);
-      return; // -- break --
+  constructor(o) {
+    if (NodeWork.debug) {
+      console.log("Graph created");
     }
-
-    var sMethod = NodeWork.pointerevents_method;
-    var sEvent = sEvIn;
-
-    // UNDER CONSTRUCTION
-    // convert pointerevents to touch event when not available
-    if (sMethod == "pointer" && !window.PointerEvent) {
-      console.warn("sMethod=='pointer' && !window.PointerEvent");
-      console.log(
-        "Converting pointer[" + sEvent + "] : down move up cancel enter TO touchstart touchmove touchend, etc .."
-      );
-      switch (sEvent) {
-        case "down": {
-          sMethod = "touch";
-          sEvent = "start";
-          break;
-        }
-        case "move": {
-          sMethod = "touch";
-          //sEvent = "move";
-          break;
-        }
-        case "up": {
-          sMethod = "touch";
-          sEvent = "end";
-          break;
-        }
-        case "cancel": {
-          sMethod = "touch";
-          //sEvent = "cancel";
-          break;
-        }
-        case "enter": {
-          console.log("debug: Should I send a move event?"); // ???
-          break;
-        }
-        // case "over": case "out": not used at now
-        default: {
-          console.warn("PointerEvent not available in this browser ? The event " + sEvent + " would not be called");
-        }
-      }
-    }
-
-    switch (sEvent) {
-      //both pointer and move events
-      case "down":
-      case "up":
-      case "move":
-      case "over":
-      case "out":
-      case "enter":
-        oDOM.addEventListener(sMethod + sEvent, fCall, capture);
-        break;
-      // only pointerevents
-      case "leave":
-      case "cancel":
-      case "gotpointercapture":
-      case "lostpointercapture":
-        if (sMethod != "mouse") {
-          return oDOM.addEventListener(sMethod + sEvent, fCall, capture);
-        }
-        break;
-      // not "pointer" || "mouse"
-      default:
-        return oDOM.addEventListener(sEvent, fCall, capture);
-    }
-  }
-
-  static pointerListenerRemove(oDOM, sEvent, fCall, capture = false) {
-    if (!oDOM || !oDOM.removeEventListener || !sEvent || typeof fCall !== "function") {
-      //console.log("cant pointerListenerRemove "+oDOM+", "+sEvent+", "+fCall);
-      return; // -- break --
-    }
-    switch (sEvent) {
-      //both pointer and move events
-      case "down":
-      case "up":
-      case "move":
-      case "over":
-      case "out":
-      case "enter":
-        {
-          if (NodeWork.pointerevents_method == "pointer" || NodeWork.pointerevents_method == "mouse") {
-            oDOM.removeEventListener(NodeWork.pointerevents_method + sEvent, fCall, capture);
-          }
-        }
-        break;
-      // only pointerevents
-      case "leave":
-      case "cancel":
-      case "gotpointercapture":
-      case "lostpointercapture":
-        {
-          if (NodeWork.pointerevents_method == "pointer") {
-            return oDOM.removeEventListener(NodeWork.pointerevents_method + sEvent, fCall, capture);
-          }
-        }
-        break;
-      // not "pointer" || "mouse"
-      default:
-        return oDOM.removeEventListener(sEvent, fCall, capture);
+    this.clear();
+    if (o) {
+      this.configure(o);
     }
   }
   /**
@@ -135,16 +23,16 @@ used by LGraphCanvas View ContextMenu*/
    * @param {Class} base_class class containing the structure of a node
    */
 
-  static registerNodeType(type, base_class) {
+  static registerNodeType(base_class) {
     if (!base_class.prototype) {
       throw "Cannot register a simple object, it must be a class with a prototype";
     }
 
     if (NodeWork.debug) {
-      console.log("Node registered: " + type);
+      console.log("Node registered: " + base_class.type);
     }
 
-    var categories = type.split("/");
+    var categories = base_class.type.split("/");
     var classname = base_class.name;
 
     base_class.category = categories[0];
@@ -158,35 +46,27 @@ used by LGraphCanvas View ContextMenu*/
     //extend class
     if (base_class.prototype) {
       //is a class
-      for (var i in LGraphNode.prototype) {
+      for (var i in Node.prototype) {
         if (!base_class.prototype[i]) {
-          base_class.prototype[i] = LGraphNode.prototype[i];
+          base_class.prototype[i] = Node.prototype[i];
         }
       }
     }
 
-    var prev = this.registered_node_types[type];
-    if (prev) console.log("replacing node type: " + type);
+    var prev = this.registered_node_types[base_class.type];
+    if (prev) console.log("replacing node type: " + base_class.type);
     else {
       //warnings
       if (base_class.prototype.onPropertyChange) {
         console.warn(
           "LiteGraph node class " +
-            type +
+            base_class.type +
             " has onPropertyChange method, it must be called onPropertyChanged with d at the end"
         );
       }
-
-      //used to know which nodes create when dragging files to the canvas
-      if (base_class.supported_extensions) {
-        for (i in base_class.supported_extensions) {
-          var ext = base_class.supported_extensions[i];
-          if (ext && ext.constructor === String) this.node_types_by_file_extension[ext.toLowerCase()] = base_class;
-        }
-      }
     }
 
-    this.registered_node_types[type] = base_class;
+    this.registered_node_types[base_class.type] = base_class;
     if (base_class.constructor.name) {
       this.Nodes[classname] = base_class;
     }
@@ -201,17 +81,9 @@ used by LGraphCanvas View ContextMenu*/
     if (base_class.prototype.onPropertyChange) {
       console.warn(
         "LiteGraph node class " +
-          type +
+          base_class.type +
           " has onPropertyChange method, it must be called onPropertyChanged with d at the end"
       );
-    }
-
-    //used to know which nodes create when dragging files to the canvas
-    if (base_class.supported_extensions) {
-      for (i = 0; i < base_class.supported_extensions.length; i++) {
-        ext = base_class.supported_extensions[i];
-        if (ext && ext.constructor === String) this.node_types_by_file_extension[ext.toLowerCase()] = base_class;
-      }
     }
   }
 
@@ -232,7 +104,6 @@ used by LGraphCanvas View ContextMenu*/
    */
   static clearRegisteredTypes() {
     this.registered_node_types = {};
-    this.node_types_by_file_extension = {};
     this.Nodes = {};
   }
 
@@ -259,21 +130,16 @@ used by LGraphCanvas View ContextMenu*/
       node.properties = {};
     }
 
-    node.widget.setSize(node.widget.computeSize(node.properties), false);
-    node.widget.pos = NodiEnums.DEFAULT_POSITION.concat();
+    node.setSize(node.computeSize(node.properties), false);
+    node.pos = NodiEnums.DEFAULT_POSITION.concat();
     if (node.type == null) node.type = type;
     if (options) {
       node.id = options.id;
-      node.widget.id = options.id;
     }
     for (var i in options) {
       node.properties[i] = options[i];
     }
 
-    if (options?.widget) {
-      node.widget.pos = options.widget.pos;
-      node.pos = options.widget.pos;
-    }
     // callback
     if (node.onNodeCreated) {
       node.onNodeCreated();
@@ -307,49 +173,14 @@ used by LGraphCanvas View ContextMenu*/
     }
     return target;
   }
-  static typeList = [];
 
-  constructor(o) {
-    if (NodeWork.debug) {
-      console.log("Graph created");
-    }
-    this.clear();
-    if (o) {
-      this.configure(o);
-    }
-  }
-
-  static registerType(className) {
-    NodeWork.typeList[className.type] = className;
-  }
-
-  static getType(type) {
-    return NodeWork.typeList[type];
-  }
   /**
    * Removes all nodes from this graph
    * @method clear
    */
   clear() {
-    this.status = NodiEnums.STATUS_STOPPED;
-
-    this._version = -1; //used to detect changes
-
-    //safe clear
-    if (this.nodes) {
-      for (var i = 0; i < this.nodes.length; ++i) {
-        var node = this.nodes[i];
-        if (node.onRemoved) {
-          node.onRemoved();
-        }
-      }
-    }
-
-    //nodes
     this.nodes = [];
-
-    //links
-    this.links = []; //container with all the links
+    this.links = [];
 
     //timing
     this.globaltime = 0;
@@ -391,9 +222,9 @@ used by LGraphCanvas View ContextMenu*/
   /**
    * Adds a new node instance to this graph
    * @method add
-   * @param {LGraphNode} node the instance of the node
+   * @param {Node} node the instance of the node
    */
-  add(node) {
+  addNode(node) {
     if (!node) return;
 
     //nodes
@@ -423,8 +254,8 @@ used by LGraphCanvas View ContextMenu*/
 
     var i, links, link;
     //disconnect inputs
-    for (i = 0; i < NodeCore.getInputs(this.properties).length; i++) {
-      links = NodeCore.getInputs(this.properties)[i].links;
+    for (i = 0; i < Node.getInputs(this.properties).length; i++) {
+      links = Node.getInputs(this.properties)[i].links;
       if (links) {
         for (link of links) {
           node.disconnectInput(link);
@@ -435,8 +266,8 @@ used by LGraphCanvas View ContextMenu*/
     }
 
     //disconnect outputs
-    for (i = 0; i < NodeCore.getOutputs(this.properties).length; i++) {
-      links = NodeCore.getOutputs(this.properties)[i].links;
+    for (i = 0; i < Node.getOutputs(this.properties).length; i++) {
+      links = Node.getOutputs(this.properties)[i].links;
       if (links) {
         for (link of links) {
           node.disconnectOutput(link);
@@ -493,14 +324,14 @@ used by LGraphCanvas View ContextMenu*/
    * @param {number} x the x coordinate in canvas space
    * @param {number} y the y coordinate in canvas space
    * @param {Array} nodes_list a list with all the nodes to search from, by default is all the nodes in the graph
-   * @return {LGraphNode} the node at this position or null
+   * @return {Node} the node at this position or null
    */
   getNodeOnPos(x, y, nodes_list, margin) {
     nodes_list = nodes_list || this.nodes;
     var nRet = null;
     for (var i = nodes_list.length - 1; i >= 0; i--) {
       var n = nodes_list[i];
-      if (n.widget.isPointInside(x, y, margin)) {
+      if (n.isPointInside(x, y, margin)) {
         return n;
       }
     }
@@ -621,15 +452,15 @@ used by LGraphCanvas View ContextMenu*/
         if (!n_info) continue;
         var node = NodeWork.createNode(n_info.type, n_info.title, n_info.properties);
         node.id = n_info.nodeID; //id it or it will create a new id
-        node.widget.id = n_info.nodeID;
+        node.id = n_info.nodeID;
         if (n_info.posX != null) {
-          node.widget.pos = [n_info.posX, n_info.posY];
+          node.pos = [n_info.posX, n_info.posY];
         } else {
-          node.widget.pos = n_info.widget.pos;
+          node.pos = n_info.pos;
         }
         node.configure(n_info.properties);
-        //node.widget.size = n_info.widget.size;
-        this.add(node, true); //add before configure, otherwise configure cannot create links
+        //node.size = n_info.size;
+        this.addNode(node, true); //add before configure, otherwise configure cannot create links
       }
     }
 

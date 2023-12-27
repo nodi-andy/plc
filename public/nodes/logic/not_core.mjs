@@ -1,14 +1,14 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class NotCore extends NodeCore {
+export default class NotCore extends Node {
     static type = "logic/not";
     static title = "NOT";
     static desc = "Not gate";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1",  {label:" ", input: true});
-        NodeCore.setProperty(prop, "value",  {label:" ", output: true});
+        Node.setProperty(prop, "in1",  {label:" ", input: true});
+        Node.setProperty(prop, "value",  {label:" ", output: true});
         this.type = NotCore.type
         NotCore.reset(prop);
     }
@@ -35,4 +35,4 @@ export default class NotCore extends NodeCore {
 
 }
 
-NodeWork.registerType(NotCore)
+NodeWork.registerNodeType(NotCore)

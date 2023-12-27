@@ -1,6 +1,7 @@
-import WidgetLed from "../widget/led.js";
+import WidgetLed from "../widget/led.mjs";
 
 export default class esp32mcuLED extends WidgetLed {
+    static type = "esp32mcu/led";
     constructor() {
         super();
         this.properties.port.value = 2;

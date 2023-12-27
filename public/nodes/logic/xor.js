@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import XOrCore from "./xor_core.mjs"
 
 class logicXOr extends XOrCore{
@@ -7,9 +7,8 @@ class logicXOr extends XOrCore{
         super();
         this.properties = {};
         XOrCore.setup(this.properties);
-        this.widget = new LGraphNode();
+        this.widget = new Node();
         this.widget.setSize([64, 128]);
-        this.widgets = [this.widget];
         this.type = XOrCore.type
         this.title = XOrCore.title;
     }
@@ -44,4 +43,4 @@ class logicXOr extends XOrCore{
 
 }
 
-NodeWork.registerNodeType(logicXOr.type, logicXOr);
+NodeWork.registerNodeType(logicXOr);

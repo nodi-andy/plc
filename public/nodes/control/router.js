@@ -1,7 +1,7 @@
-import { LGraphNode } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
-class Filter extends LGraphNode{
+class Filter extends Node{
     static type = "control/filter";
     static title = "Router";
     static desc = "Route input to specific output";
@@ -32,4 +32,4 @@ class Filter extends LGraphNode{
     }
 }
 
-NodeWork.registerNodeType(Filter.type, Filter);
+NodeWork.registerNodeType(Filter);

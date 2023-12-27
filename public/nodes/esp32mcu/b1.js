@@ -1,6 +1,7 @@
-import WidgetButton from "../widget/button.js";
+import WidgetButton from "../widget/button.mjs";
 
 export default class esp32mcuB1 extends WidgetButton {
+    static type = "esp32mcu/b1";
     constructor() {
         super();
         this.properties.port.value = 0;

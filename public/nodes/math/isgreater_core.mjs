@@ -1,17 +1,17 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class MathIsGreater extends NodeCore {
+export default class MathIsGreater extends Node {
     static type = "math/isgreater";
     static title = "?>";
     static desc = "Is greater";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
-        NodeCore.setProperty(prop, "value", {label:" ", output: true});
-        NodeCore.setProperty(prop, "yes");
-        NodeCore.setProperty(prop, "no");
+        Node.setProperty(prop, "in1", {label:" ", input: true});
+        Node.setProperty(prop, "in2", {label:" ", input: true});
+        Node.setProperty(prop, "value", {label:" ", output: true});
+        Node.setProperty(prop, "yes");
+        Node.setProperty(prop, "no");
         this.type = MathIsGreater.type
         MathIsGreater.reset(prop);
     }
@@ -40,4 +40,4 @@ export default class MathIsGreater extends NodeCore {
 
 }
 
-NodeWork.registerType(MathIsGreater)
+NodeWork.registerNodeType(MathIsGreater)

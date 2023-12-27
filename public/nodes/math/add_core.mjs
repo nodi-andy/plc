@@ -1,15 +1,15 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class MathAddCore extends NodeCore {
+export default class MathAddCore extends Node {
     static type = "math/add";
     static title = "+";
     static desc = "Add";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
-        NodeCore.setProperty(prop, "value", {label:" ", output: true});
+        Node.setProperty(prop, "in1", {label:" ", input: true});
+        Node.setProperty(prop, "in2", {label:" ", input: true});
+        Node.setProperty(prop, "value", {label:" ", output: true});
         this.type = MathAddCore.type
         MathAddCore.reset(prop);
     }
@@ -35,4 +35,4 @@ export default class MathAddCore extends NodeCore {
 
 }
 
-NodeWork.registerType(MathAddCore)
+NodeWork.registerNodeType(MathAddCore)

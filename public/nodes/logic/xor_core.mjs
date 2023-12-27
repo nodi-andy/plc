@@ -1,15 +1,15 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class XOrCore extends NodeCore {
+export default class XOrCore extends Node {
     static type = "logic/xor";
     static title = "XOR";
     static desc = "XOr gate";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "in1", {label:" ", input: true});
-        NodeCore.setProperty(prop, "in2", {label:" ", input: true});
-        NodeCore.setProperty(prop, "value", {label: " ", output: true});
+        Node.setProperty(prop, "in1", {label:" ", input: true});
+        Node.setProperty(prop, "in2", {label:" ", input: true});
+        Node.setProperty(prop, "value", {label: " ", output: true});
         this.type = XOrCore.type
         XOrCore.reset(prop);
     }
@@ -36,4 +36,4 @@ export default class XOrCore extends NodeCore {
 
 }
 
-NodeWork.registerType(XOrCore)
+NodeWork.registerNodeType(XOrCore)

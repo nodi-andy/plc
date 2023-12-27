@@ -1,13 +1,13 @@
 import NodeWork from "../../nodework.mjs";
-import { NodeCore } from "../../node.mjs";
+import { Node } from "../../node.mjs";
 
-export default class JunctionCore extends NodeCore {
+export default class JunctionCore extends Node {
     static type = "control/junction";
     static title = " ";
     static desc = "Junction";
 
     static setup(prop) {
-        NodeCore.setProperty(prop, "value", {label: " ", input: true, output: true});
+        Node.setProperty(prop, "value", {label: " ", input: true, output: true});
         JunctionCore.reset(prop);
     }
 
@@ -24,4 +24,4 @@ export default class JunctionCore extends NodeCore {
 
 }
 
-NodeWork.registerType(JunctionCore)
+NodeWork.registerNodeType(JunctionCore)
