@@ -7,50 +7,43 @@ export default class Button extends Node {
     static desc = "Triggers an event";
     static margin = 12;
 
-    constructor() {
-        super();
-        this.properties = {}
-        Button.setup(this.properties);
-        this.widget = new Node();
-        this.title = " ";
-    }
-
-    onDrawForeground(ctx) {
-        if (this.properties.state.value == 1) {
-            this.margin = 16;
+    static onDrawForeground(node, ctx) {
+        let props = node.properties;
+        if (props.state.value == 1) {
+            Button.margin = 16;
         } else {
-            this.margin = 14;
+            Button.margin = 14;
             ctx.fillStyle = "black";
-            ctx.fillRect(this.margin + 2, this.margin + 2, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
+            ctx.fillRect(Button.margin + 2, Button.margin + 2, node.size[0] - Button.margin * 2, node.size[1] - Button.margin * 2);
         }
 
-        ctx.fillStyle = this.properties.color.value;
-        ctx.fillRect(this.margin, this.margin, this.size[0] - this.margin * 2, this.size[1] - this.margin * 2);
+        ctx.fillStyle = props.color.value;
+        ctx.fillRect(Button.margin, Button.margin, node.size[0] - Button.margin * 2, node.size[1] - Button.margin * 2);
 
-        if (this.properties.label || this.properties.label.value === 0) {
-            var font_size = this.properties.font_size || 30;
+        if (props.label || props.label.value === 0) {
+            var font_size = props.font_size || 30;
             ctx.textAlign = "center";
-            ctx.fillStyle = this.properties.state.value ? "black" : "white";
+            ctx.fillStyle = props.state.value ? "black" : "white";
             ctx.font = font_size + "px Arial";
-            ctx.fillText(this.properties.label.value, this.size[0] * 0.5, this.size[1] * 0.5 + font_size * 0.3);
+            ctx.fillText(props.label.value, node.size[0] * 0.5, node.size[1] * 0.5 + font_size * 0.3);
             ctx.textAlign = "left";
         }
     }
 
-    onMouseDown(e, local_pos) {
-        if (local_pos[0] > Button.margin && local_pos[1] > Button.margin && local_pos[0] < this.size[0] - Button.margin && local_pos[1] < this.size[1] - Button.margin) {
+    static onMouseDown(node, e, local_pos) {
+        if (local_pos[0] > Button.margin && local_pos[1] > Button.margin && local_pos[0] < node.size[0] - Button.margin && local_pos[1] < node.size[1] - Button.margin) {
             //this.properties.state.value = this.properties.press.value;
             //this.properties.state.outValue = this.properties.state.value;
-            window.nodes.update(this.id, {"state": {"inpValue" : 1}});
+            window.nodes.update(node.nodeID, {"state": {"inpValue" : 1}});
             return true;
         }
 
         return false;
     }
 
-    onMouseUp(/*e*/) {
-        Button.reset(this.properties);
-        window.nodes.update(this.id, {"state": {"inpValue" : 0}});
+    static onMouseUp(node, e) {
+        Button.reset(node.properties);
+        window.nodes.update(node.nodeID, {"state": {"inpValue" : 0}});
         return true;
     }
 
@@ -105,9 +98,9 @@ export default class Button extends Node {
         return ret;
     }
 
-    static reset(prop) {
-        prop.state.value = prop.release.value;
-        prop.state.outValue = prop.state.value;
+    static reset(props) {
+        props.state.value = props.release.value;
+        props.state.outValue = props.state.value;
     }
 
 }

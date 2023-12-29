@@ -1,25 +1,53 @@
 import { Node } from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
-import NumberCore from "./number_server.mjs";
 
-export default class WidgetNumber extends NumberCore {
+export default class WidgetNumber extends Node {
     static title = "Number";
     static desc = "Widget to select number value";
     static title_mode = NodeWork.NO_TITLE;
     static pixels_threshold = 10;
     static markers_color = "#666";
+    static type = "widget/number";
 
     constructor() {
         super();
         this.properties = {}
-        NumberCore.setup(this.properties);
-        this.type = NumberCore.type;
+        WidgetNumber.setup(this.properties);
+        this.type = Node.type;
 
         this.old_y = -1;
         this._remainder = 0;
         this._precision = 0;
         this.mouse_captured = false;
         this.title = " ";
+    }
+
+    static setup(prop) {
+        Node.setProperty(prop, "value", {label: " "});
+        Node.setProperty(prop, "read");
+        this.type = Node.type
+        Node.reset(prop);
+    }
+
+    static run(prop) {
+        let ret = false;
+
+        if (prop.value.inpValue != null) {
+            prop.value.value = parseInt(prop.value.inpValue);
+            prop.value.inpValue = null;
+            prop.value.outValue = prop.value.value;
+            ret = true;
+        }
+        if (prop.read.inpValue != null) {
+            prop.read.inpValue = null;
+            prop.read.outValue = prop.value.value;
+            ret = true;
+        }
+        return ret;
+    }
+
+    static reset(prop) {
+        prop.value.value = 0;
     }
 
     onDrawForeground(ctx) {

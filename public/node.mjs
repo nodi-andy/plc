@@ -72,45 +72,6 @@ export class Node {
     }
   }
 
-  serialize() {
-    //create serialization object
-    var o = {
-      id: this.id,
-      type: this.type,
-      pos: this.pos,
-      size: this.size,
-      order: this.order,
-    };
-
-    //special case for when there were errors
-    if (this.constructor === Node && this.last_serialization) {
-      return this.last_serialization;
-    }
-
-    if (this.title && this.title != this.constructor.title) {
-      o.title = this.title;
-    }
-
-
-    if (!o.type) {
-      o.type = this.constructor.type;
-    }
-
-    if (this.color) o.color = this.color;
-
-    if (this.bgcolor) o.bgcolor = this.bgcolor;
-
-    if (this.boxcolor) o.boxcolor = this.boxcolor;
-
-    if (this.onSerialize && this.onSerialize(o)) {
-      console.warn(
-        "node onSerialize shouldnt return anything, data should be stored in the object pass in the first parameter"
-      );
-    }
-
-    return o;
-  }
-
   /* Creates a clone of this node */
   clone() {
     let node = new Node();
@@ -126,7 +87,7 @@ export class Node {
    * @method toString
    */
   toString() {
-    return JSON.stringify(this.serialize());
+    return JSON.stringify(this);
   }
   /**
    * get the title string
@@ -216,14 +177,18 @@ export class Node {
     return slot.input ? slot : null;
   }
 
-  getInputIndexByName(name) {
-    return Object.values(this.properties)
+  static getInputIndexByName(node, name) {
+    return Object.values(node.properties)
       .filter((obj) => obj.input == true)
       .findIndex((el) => el.name === name);
   }
 
-  getInputByIndex(index) {
-    return Object.values(this.properties).filter((obj) => obj.input == true)[index];
+  static getInputByIndex(node, index) {
+    return Object.values(node.properties).filter((obj) => obj.input == true)[index];
+  }
+
+  static getOutputByIndex(node, index) {
+    return Object.values(node.properties).filter((obj) => obj.output == true)[index];
   }
   /**
    * tells you the last output data that went in that slot
@@ -273,7 +238,7 @@ export class Node {
       var link_id = output.links[i];
       var link = this.graph.links[link_id];
       if (link) {
-        var target_node = this.graph.getNodeById(link.target_id);
+        var target_node = this.graph.getNodeById(link.to);
         if (target_node) {
           r.push(target_node);
         }
@@ -328,7 +293,7 @@ export class Node {
         if (!link) {
           continue;
         }
-        link.origin_slot -= 1;
+        link.toSlot -= 1;
       }
     }
 
@@ -342,7 +307,7 @@ export class Node {
     let prop = this.properties[name];
     this.addInput(name, prop.defaultValue, prop.label);
     window.sendToServer("addInput", {
-      nodeID: this.id,
+      nodeID: this.nodeID,
       newData: { input: this.properties[name] },
     });
 
@@ -417,7 +382,7 @@ export class Node {
       if (!link) {
         continue;
       }
-      link.target_slot -= 1;
+      link.fromSlot -= 1;
     }
     if (this.onInputRemoved) {
       this.onInputRemoved(slot, slot_info[0]);
@@ -445,10 +410,10 @@ export class Node {
    * @method connect
    * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
    * @param {Node} node the target node
-   * @param {number_or_string} target_slot the input slot of the target node (could be the number of the slot or the string with the name of the slot, or -1 to connect a trigger)
+   * @param {number_or_string} fromSlot the input slot of the target node (could be the number of the slot or the string with the name of the slot, or -1 to connect a trigger)
    * @return {Object} the link_info is created, otherwise null
    */
-  connect(slot, target_node, target_slot, id) {
+  connect(slot, target_node, fromSlot, id) {
     if (!this.graph) {
       //could be connected before adding it to a graph
       console.log(
@@ -457,7 +422,7 @@ export class Node {
       return null;
     }
 
-    var link_info = new LLink(id, "number", this.id, slot, target_node, target_slot);
+    var link_info = new LLink(id, "number", this.id, slot, target_node, fromSlot);
 
     //add to graph links list
     this.graph.links[link_info.id] = link_info;
@@ -473,12 +438,12 @@ export class Node {
    * @return {boolean} if it was disconnected successfully
    */
   disconnectOutput(link) {
-    var output = this.getOutputByName(link.origin_slot);
+    var output = this.getOutputByName(link.toSlot);
     if (!output) {
       return false;
     }
 
-    var link_id = link.id;
+    var link_id = link.linkID;
     if (link_id != null && output && output.links) {
       // Find the index of the value you want to remove
       let indexToRemove = output.links.indexOf(link_id);
@@ -502,11 +467,11 @@ export class Node {
    * @return {boolean} if it was disconnected successfully
    */
   disconnectInput(link) {
-    var input = this.getInputByName(link.target_slot);
+    var input = this.getInputByName(link.fromSlot);
     if (!input) return false;
     if (!input.links) return false;
 
-    var link_id = link.id;
+    var link_id = link.linkID;
     if (link_id != null) {
       // Find the index of the value you want to remove
       let indexToRemove = input.links.indexOf(link_id);
@@ -598,7 +563,7 @@ export class Node {
     size[0] = Math.max(input_width + output_width + 10, 32);
     size[0] = Math.max(size[0], NodiEnums.NODE_WIDTH);
 
-    size[1] = (this.constructor.slot_start_y || 0) + rows * NodiEnums.NODE_SLOT_HEIGHT;
+    size[1] = rows * NodiEnums.NODE_SLOT_HEIGHT;
 
     function compute_text_size(text) {
       if (!text) {
@@ -616,45 +581,8 @@ export class Node {
     return size;
   }
   
-  /**
-   * returns the bounding of the object, used for rendering purposes
-   * bounding is: [topleft_cornerx, topleft_cornery, width, height]
-   * @method getBounding
-   * @return {Float32Array[4]} the total size
-   */
-  getBounding(out) {
-    out = out || new Float32Array(4);
-    out[0] = this.pos[0] - 4;
-    out[1] = this.pos[1] - NodiEnums.NODE_TITLE_HEIGHT;
-    out[2] = this.size[0] + 4;
-    out[3] = this.size[1] + NodiEnums.NODE_TITLE_HEIGHT;
 
-    if (this.onBounding) {
-      this.onBounding(out);
-    }
-    return out;
-  }
-  /**
-   * checks if a point is inside the shape of a node
-   * @method isPointInside
-   * @param {number} x
-   * @param {number} y
-   * @return {boolean}
-   */
-  isPointInside(x, y, margin) {
-    margin = margin || 0;
 
-    var margin_top = 0;
-    if (
-      this.pos[0] - 4 - margin < x &&
-      this.pos[0] + this.size[0] + 4 + margin > x &&
-      this.pos[1] - margin_top - margin < y &&
-      this.pos[1] + this.size[1] + margin > y
-    ) {
-      return true;
-    }
-    return false;
-  }
   /**
    * checks if a point is inside a node slot, and returns info about which slot
    * @method getSlotInPosition
@@ -668,7 +596,7 @@ export class Node {
     if (Node.getInputs(this.properties)) {
       for (var i = 0, l = Node.getInputs(this.properties).length; i < l; ++i) {
         var input = Node.getInputs(this.properties)[i];
-        this.getConnectionPos(true, i, link_pos);
+        Node.getConnectionPos(true, i, link_pos);
         if (Math.isInsideRectangle(x, y, link_pos[0] - 10, link_pos[1] - 5, 20, 10)) {
           return { input: input, slot: i, link_pos: link_pos };
         }
@@ -678,7 +606,7 @@ export class Node {
     if (Node.getOutputs(this.properties)) {
       for (let i = 0, l = Node.getOutputs(this.properties).length; i < l; ++i) {
         var output = Node.getOutputs(this.properties)[i];
-        this.getConnectionPos(false, i, link_pos);
+        Node.getConnectionPos(node, false, i, link_pos);
         if (Math.isInsideRectangle(x, y, link_pos[0] - 10, link_pos[1] - 5, 20, 10)) {
           return { output: output, slot: i, link_pos: link_pos };
         }
@@ -688,7 +616,6 @@ export class Node {
     return null;
   }
 
-  //
   // returns the center of a connection point in canvas coords
   // @method getConnectionPos
   // @param {boolean} is_input true if if a input slot, false if it is an output
@@ -696,64 +623,56 @@ export class Node {
   // @param {vec2} out [optional] a place to store the output, to free garbage
   // @return {[x,y]} the position
 
-  getConnectionPos(is_input, slot_number, out) {
+  static getConnectionPos(node, is_input, slot_number, out) {
     out = out || new Float32Array(2);
-    if (this.type == "control/junction") {
-      out = [this.pos[0] + 8, this.pos[1] + 8];
+    if (node.type == "control/junction") {
+      out = [node.pos[0] + 8, node.pos[1] + 8];
       return out;
     }
     var num_slots = 0;
-    if (is_input && Node.getInputs(this.properties)) {
-      num_slots = Node.getInputs(this.properties).length;
+    if (is_input && Node.getInputs(node.properties)) {
+      num_slots = Node.getInputs(node.properties).length;
     }
-    if (!is_input && Node.getOutputs(this.properties)) {
-      num_slots = Node.getOutputs(this.properties).length;
-    }
-
-    if (!is_input && num_slots > slot_number && Node.getOutputs(this.properties)[slot_number].pos) {
-      out[0] = this.pos[0] + Node.getOutputs(this.properties)[slot_number].pos[0];
-      out[1] = this.pos[1] + Node.getOutputs(this.properties)[slot_number].pos[1];
-      return out;
+    if (!is_input && Node.getOutputs(node.properties)) {
+      num_slots = Node.getOutputs(node.properties).length;
     }
 
-    //horizontal distributed slots
-    if (this.horizontal) {
-      out[0] = this.pos[0] + (slot_number + 0.5) * (this.size[0] / num_slots);
-      if (is_input) {
-        out[1] = this.pos[1] - NodiEnums.NODE_TITLE_HEIGHT;
-      } else {
-        out[1] = this.pos[1] + this.size[1];
-      }
+    if (!is_input && num_slots > slot_number && Node.getOutputs(node.properties)[slot_number].pos) {
+      out[0] = node.pos[0] + Node.getOutputs(node.properties)[slot_number].pos[0];
+      out[1] = node.pos[1] + Node.getOutputs(node.properties)[slot_number].pos[1];
       return out;
     }
 
     //default vertical slots
     if (is_input) {
-      out[0] = this.pos[0];
+      out[0] = node.pos[0];
     } else {
-      out[0] = this.pos[0] + this.size[0];
+      out[0] = node.pos[0] + node.size[0];
     }
-    out[1] = this.pos[1] + (slot_number + 0.5) * NodiEnums.NODE_SLOT_HEIGHT + (this.constructor.slot_start_y || 0);
+    out[1] = node.pos[1] + (slot_number + 0.5) * NodiEnums.NODE_SLOT_HEIGHT;
     return out;
   }
+
+
   /* Force align to grid */
-  alignToGrid() {
+  static alignToGrid(node) {
     let gridSize = NodiEnums.CANVAS_GRID_SIZE;
-    if (this.type == "control/junction") gridSize /= 4;
-    if (this.size[0] >= gridSize) {
-      this.pos[0] = gridSize * Math.round(this.pos[0] / gridSize);
+    if (node.type == "control/junction") gridSize /= 4;
+    if (node.size[0] >= gridSize) {
+      node.pos[0] = gridSize * Math.round(node.pos[0] / gridSize);
     } else {
-      this.pos[0] = gridSize * (Math.round(this.pos[0] / gridSize) + 0.5) - this.size[0] / 2;
+      node.pos[0] = gridSize * (Math.round(node.pos[0] / gridSize) + 0.5) - node.size[0] / 2;
     }
-    if (this.size[1] >= gridSize) {
-      this.pos[1] = gridSize * Math.round(this.pos[1] / gridSize);
+    if (node.size[1] >= gridSize) {
+      node.pos[1] = gridSize * Math.round(node.pos[1] / gridSize);
     } else {
-      this.pos[1] = gridSize * (Math.round(this.pos[1] / gridSize) + 0.5) - this.size[1] / 2;
+      node.pos[1] = gridSize * (Math.round(node.pos[1] / gridSize) + 0.5) - node.size[1] / 2;
     }
   }
+
   setPos(x, y) {
     this.pos[0] = x;
     this.pos[1] = y;
-    this.alignToGrid();
+    Node.alignToGrid(this);
   }
 }

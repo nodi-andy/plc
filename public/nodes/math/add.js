@@ -7,8 +7,6 @@ class MathAdd extends MathAddCore{
         super();
         this.properties = {};
         MathAddCore.setup(this.properties);
-        this.widget = new Node();
-        this.widget.setSize([64, 128]);
     }
 
     onExecute(props) {

@@ -1,5 +1,4 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
 import NotCore from "./not_core.mjs"
 
 class logicNot extends NotCore{
@@ -7,8 +6,6 @@ class logicNot extends NotCore{
         super();
         this.properties = {};
         logicNot.setup(this.properties);
-        this.widget = new Node();
-        this.widget.setSize([64, 128]);
         this.type = logicNot.type
         this.title = logicNot.title;
     }

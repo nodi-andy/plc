@@ -7,8 +7,6 @@ class logicXOr extends XOrCore{
         super();
         this.properties = {};
         XOrCore.setup(this.properties);
-        this.widget = new Node();
-        this.widget.setSize([64, 128]);
         this.type = XOrCore.type
         this.title = XOrCore.title;
     }

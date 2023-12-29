@@ -7,8 +7,6 @@ class MathIsLess extends MathIsLessCore{
         super();
         this.properties = {};
         MathIsLess.setup(this.properties);
-        this.widget = new Node();
-        this.widget.setSize([64, 128]);
     }
 
     onExecute(props) {

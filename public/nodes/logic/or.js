@@ -7,8 +7,6 @@ class logicOr extends OrCore{
         super();
         this.properties = {};
         OrCore.setup(this.properties);
-        this.widget = new Node();
-        this.widget.setSize([64, 128]);
         this.type = OrCore.type
         this.title = OrCore.title;
     }

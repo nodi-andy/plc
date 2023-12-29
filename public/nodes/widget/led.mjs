@@ -1,7 +1,7 @@
 import NodeWork from "../../nodework.mjs";
 import { Node } from "../../node.mjs";
 
-export default class WidgetLed extends Node{
+export default class WidgetLed extends Node {
     static type = "widget/led";
     static title = " ";
     static desc = "LED";
@@ -64,36 +64,36 @@ export default class WidgetLed extends Node{
         return false;
     }
 
-    onDrawForeground(ctx) {
-        var size = Math.min(this.size[0] * 0.5, this.size[1] * 0.5);
+    static onDrawForeground(node, ctx) {
+        var size = Math.min(node.size[0] * 0.5, node.size[1] * 0.5);
         ctx.beginPath();
         ctx.arc(size, size, size * 0.5, 0, 2 * Math.PI, false);
-        ctx.fillStyle = this.properties.state.value == true ? "#" + this.properties.color.value : "#222";
+        ctx.fillStyle = node.properties.state.value == true ? "#" + node.properties.color.value : "#222";
         ctx.fill();
         ctx.lineWidth = 5;
         ctx.strokeStyle = '#000';
         ctx.stroke();
 
-        if (this.properties.label.value) {
+        if (node.properties.label.value) {
             ctx.font = "12px Arial";
             ctx.textAlign = "center";
             ctx.fillStyle = "#AAA";
-            ctx.fillText(this.properties.label.value, this.size[0] * 0.5, 10);
+            ctx.fillText(node.properties.label.value, node.size[0] * 0.5, 10);
         }
     }
 
-    updateProp(key, name, val) {
-        this.properties[key][name] = val;
-        window.nodes.update(this.id, this.properties);
+    static updateProp(node, key, name, val) {
+        node.properties[key][name] = val;
+        window.nodes.update(node.id, node.properties);
     }
 
-    onMouseDown(e, local_pos) {
-        if (local_pos[0] > this.size[0] * 0.25 &&
-            local_pos[1] >  this.size[0] * 0.25 &&
-            local_pos[0] < this.size[0] * 0.75 &&
-            local_pos[1] < this.size[1] * 0.75) {
-            this.updateProp("state", "inpValue", this.properties.state.value ? 0 : 1)
-            this.update = true;
+    static onMouseDown(node, e, local_pos) {
+        if (local_pos[0] > node.size[0] * 0.25 &&
+            local_pos[1] >  node.size[0] * 0.25 &&
+            local_pos[0] < node.size[0] * 0.75 &&
+            local_pos[1] < node.size[1] * 0.75) {
+            WidgetLed.updateProp(node, "state", "inpValue", node.properties.state.value ? 0 : 1)
+            node.update = true;
 
             return true;
         }

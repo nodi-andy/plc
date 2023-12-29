@@ -80,9 +80,9 @@
     await loadJS("./link.mjs", false);
     await loadJS("./view.js", false);
     await loadJS("./nodes/widget/button.mjs", false);
-    await loadJS("./nodes/widget/toggle.js", false);
+    await loadJS("./nodes/widget/toggle.mjs", false);
     await loadJS("./nodes/widget/led.mjs", false);
-    await loadJS("./nodes/widget/number.js", false);
+    await loadJS("./nodes/widget/number.mjs", false);
     await loadJS("./nodes/logic/and.js", false);
     await loadJS("./nodes/logic/or.js", false);
     await loadJS("./nodes/logic/xor.js", false);
@@ -93,7 +93,7 @@
     await loadJS("./nodes/math/isless.js", false);
     await loadJS("./nodes/math/isgreater.js", false);
     await loadJS("./nodes/math/counter.js", false);
-    await loadJS("./nodes/time/interval.js", false);
+    await loadJS("./nodes/time/interval.mjs", false);
     await loadJS("./nodes/control/junction.js", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
     await loadJS("./nodes/nodi.box/b2.js", false);
@@ -138,7 +138,7 @@
       var graphcanvas = LGraphCanvas.active_canvas;
       for (let node of graphcanvas.selected_nodes) {
         window.sendToServer("remNode", {
-          nodeID: graphcanvas.selected_nodes[node].id,
+          nodeID: graphcanvas.selected_nodes[node].nodeID,
         });
       }
 

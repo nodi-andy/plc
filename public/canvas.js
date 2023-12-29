@@ -36,7 +36,6 @@ export default class LGraphCanvas {
     this.pause_rendering = false;
     this.clear_background = true;
 
-    this.read_only = false; //if set to true users cannot modify the graph
     this.render_only_selected = true;
     this.show_info = false;
     this.allow_dragcanvas = true;
@@ -54,7 +53,6 @@ export default class LGraphCanvas {
     this.set_canvas_dirty_on_mouse_event = true; //forces to redraw the canvas if the mouse does anything
     this.render_shadows = true;
     this.render_canvas_border = true;
-    this.render_connections_shadows = false; //too much cpu
     this.render_connections_border = true;
     this.render_curved_connections = false;
     this.render_connection_arrows = false;
@@ -90,7 +88,6 @@ export default class LGraphCanvas {
     this.over_link_center = null;
     this.last_mouse_position = [0, 0];
     this.visible_area = this.ds.visible_area;
-    this.visible_links = [];
 
     this.viewport = options.viewport || null; //to constraint render area to a portion of the canvas
 
@@ -237,6 +234,7 @@ export default class LGraphCanvas {
       this.onClear();
     }
   }
+
   /**
    * assigns a graph, you can reassign graphs to the same canvas
    *
@@ -261,6 +259,7 @@ export default class LGraphCanvas {
 
     this.setDirty(true, true);
   }
+
   /**
    * assigns a canvas
    *
@@ -575,7 +574,7 @@ export default class LGraphCanvas {
       }
 
       // clone node ALT dragging
-      if (e.altKey && node && this.allow_interaction && !skip_action && !this.read_only) {
+      if (e.altKey && node && this.allow_interaction && !skip_action) {
         let cloned = node.clone();
         if (cloned) {
           cloned.pos[0] += 5;
@@ -587,7 +586,7 @@ export default class LGraphCanvas {
             if (this.allow_dragnodes) {
               this.node_dragged = node;
             }
-            if (!this.selected_nodes[node.id]) {
+            if (!this.selected_nodes[node.nodeID]) {
               this.processNodeSelected(node, e);
             }
           }
@@ -598,7 +597,7 @@ export default class LGraphCanvas {
 
       //when clicked on top of a node
       //and it is not interactive
-      if (node && this.allow_interaction && !skip_action && !this.read_only) {
+      if (node && this.allow_interaction && !skip_action) {
         //not dragging mouse to connect two slots
         if (!this.connecting_node) {
           if (
@@ -620,12 +619,12 @@ export default class LGraphCanvas {
             //search for outputs
             for (var i = 0, l = Node.getOutputs(node.properties).length; i < l; ++i) {
               var output = Node.getOutputs(node.properties)[i];
-              var link_pos = node.getConnectionPos(false, i);
+              var link_pos = Node.getConnectionPos(node, false, i);
               if (Math.isInsideRectangle(e.canvasX, e.canvasY, link_pos[0] - 15, link_pos[1] - 10, 30, 20)) {
                 this.connecting_node = node;
                 this.connecting_output = output;
                 this.connecting_output.slot_index = i;
-                this.connecting_pos = node.getConnectionPos(false, i);
+                this.connecting_pos = Node.getConnectionPos(node, false, i);
 
                 if (is_double_click) {
                   if (node.onOutputDblClick) {
@@ -645,7 +644,7 @@ export default class LGraphCanvas {
             //search for inputs
             for (i = 0, l = Node.getInputs(node.properties).length; i < l; ++i) {
               var input = Node.getInputs(node.properties)[i];
-              link_pos = node.getConnectionPos(true, i);
+              link_pos = Node.getConnectionPos(node, true, i);
               if (Math.isInsideRectangle(e.canvasX, e.canvasY, link_pos[0] - 15, link_pos[1] - 10, 30, 20)) {
                 if (is_double_click) {
                   if (node.onInputDblClick) {
@@ -662,7 +661,7 @@ export default class LGraphCanvas {
                   this.connecting_node = node;
                   this.connecting_input = input;
                   this.connecting_input.slot_index = i;
-                  this.connecting_pos = node.getConnectionPos(true, i);
+                  this.connecting_pos = Node.getConnectionPos(node, true, i);
 
                   this.dirty_bgcanvas = true;
                   skip_action = true;
@@ -678,7 +677,7 @@ export default class LGraphCanvas {
           var pos = [e.canvasX - node.pos[0], e.canvasY - node.pos[1]];
 
           //if do not capture mouse
-          if (node.onMouseDown && node.onMouseDown(e, pos, this)) {
+          if (NodeWork.getNodeType(node.type).onMouseDown(node, e, pos, this)) {
             block_drag_node = true;
           }
 
@@ -686,7 +685,7 @@ export default class LGraphCanvas {
             if (this.allow_dragnodes) {
               this.node_dragged = node;
             }
-            if (!this.selected_nodes[node.id]) {
+            if (!this.selected_nodes[node.nodeID]) {
               this.processNodeSelected(node, e);
             }
           }
@@ -697,28 +696,27 @@ export default class LGraphCanvas {
       else {
         if (!skip_action) {
           //search for link connector
-          if (!this.read_only) {
-            for (let link of this.visible_links) {
-              var center = link.pos;
-              if (
-                !center ||
-                e.canvasX < center[0] - 4 ||
-                e.canvasX > center[0] + 4 ||
-                e.canvasY < center[1] - 4 ||
-                e.canvasY > center[1] + 4
-              ) {
-                continue;
-              }
-              //link clicked
-              //this.showLinkMenu(link, e);
-              this.selectedLink = link.id;
-              link.selected = true;
-              this.deselectAllNodes();
-              this.highlighted_links[link.id] = true;
-              this.onSelectionChange([link.id]);
-              this.over_link_center = null; //clear tooltip
-              break;
+          for (let link of this.graph.links) {
+            if (!link) continue;
+            var center = link.pos;
+            if (
+              !center ||
+              e.canvasX < center[0] - 4 ||
+              e.canvasX > center[0] + 4 ||
+              e.canvasY < center[1] - 4 ||
+              e.canvasY > center[1] + 4
+            ) {
+              continue;
             }
+            //link clicked
+            //this.showLinkMenu(link, e);
+            this.selectedLink = link.linkID;
+            link.selected = true;
+            this.highlighted_links = {};
+            this.highlighted_links[link.linkID] = true;
+            this.onSelectionChange([link.linkID]);
+            this.over_link_center = null; //clear tooltip
+            break;
           }
 
           clicking_canvas_bg = true;
@@ -731,12 +729,15 @@ export default class LGraphCanvas {
       }
     } else if (e.which == 3) {
       //right button
-      if (this.allow_interaction && !skip_action && !this.read_only) {
+      if (this.allow_interaction && !skip_action) {
         // is it hover a node ?
         if (node) {
-          if (this.selected_nodes.length && (this.selected_nodes[node.id] || e.shiftKey || e.ctrlKey || e.metaKey)) {
+          if (
+            this.selected_nodes.length &&
+            (this.selected_nodes[node.nodeID] || e.shiftKey || e.ctrlKey || e.metaKey)
+          ) {
             // is multiselected or using shift to include the now node
-            if (!this.selected_nodes[node.id]) this.selectNodes([node], true); // add this if not present
+            if (!this.selected_nodes[node.nodeID]) this.selectNodes([node], true); // add this if not present
           } else {
             // update selection
             this.selectNodes([node]);
@@ -816,7 +817,7 @@ export default class LGraphCanvas {
       this.ds.offset[1] += delta[1] / this.ds.scale;
       this.dirty_canvas = true;
       this.dirty_bgcanvas = true;
-    } else if (this.allow_interaction && !this.read_only) {
+    } else if (this.allow_interaction) {
       if (this.connecting_node) {
         this.dirty_canvas = true;
       }
@@ -917,7 +918,8 @@ export default class LGraphCanvas {
         //not over a node
         //search for link connector
         var over_link = null;
-        for (let link of this.visible_links) {
+        for (let link of this.graph.links) {
+          if (!link) continue;
           var center = link.pos;
           if (
             !center ||
@@ -963,7 +965,7 @@ export default class LGraphCanvas {
         this.dirty_canvas = true;
         this.dirty_bgcanvas = true;
         if (delta[0] != 0 && delta[1] != 0) {
-          window.nodes.move(this.node_dragged.id, {
+          window.nodes.move(this.node_dragged.nodeID, {
             pos: this.node_dragged.pos,
           });
         }
@@ -1032,9 +1034,7 @@ export default class LGraphCanvas {
 
     //console.log("pointerevents: processMouseUp which: "+e.which);
     if (e.which == 1) {
-      if (this.node_widget) {
-        this.processNodeWidgets(this.node_widget[0], this.graph_mouse, e);
-      }
+      if (this.node_widget) this.processNodeWidgets(this.node_widget[0], this.graph_mouse, e);
 
       //left button
       this.node_widget = null;
@@ -1044,7 +1044,6 @@ export default class LGraphCanvas {
       if (this.dragging_rectangle) {
         if (this.graph) {
           var nodes = this.graph.nodes;
-          var node_bounding = new Float32Array(4);
 
           //compute bounding and flip if left to right
           var w = Math.abs(this.dragging_rectangle[2]);
@@ -1062,7 +1061,7 @@ export default class LGraphCanvas {
             var to_select = [];
             for (var i = 0; i < nodes.length; ++i) {
               var nodeX = nodes[i];
-              nodeX.getBounding(node_bounding);
+              let node_bounding = Math.getBounding(nodeX);
               if (!Math.overlapBounding(this.dragging_rectangle, node_bounding)) {
                 continue;
               } //out of the visible area
@@ -1087,23 +1086,23 @@ export default class LGraphCanvas {
           //slot below mouse? connect
           if (this.connecting_output) {
             slot = this.isOverNodeInput(node, e.canvasX, e.canvasY);
-            if (slot != null) {
-              let input = node.getInputByIndex(slot);
+            if (slot != null && slot >= 0) {
+              let input = Node.getInputByIndex(node, slot);
               window.sendToServer("addLink", {
-                from: this.connecting_node.id,
+                from: this.connecting_node.nodeID,
                 fromSlot: this.connecting_output.name,
-                to: node.id,
+                to: node.nodeID,
                 toSlot: input.name,
               });
             }
           } else if (this.connecting_input) {
             slot = this.isOverNodeOutput(node, e.canvasX, e.canvasY);
-            if (slot != null) {
-              let output = node.getOutputByIndex(slot);
+            if (slot != null && slot >= 0) {
+              let output = Node.getOutputByIndex(node, slot);
               window.sendToServer("addLink", {
-                to: this.connecting_node.id,
+                to: this.connecting_node.nodeID,
                 toSlot: this.connecting_input.name,
-                from: node.id,
+                from: node.nodeID,
                 fromSlot: output.name,
               });
             }
@@ -1124,33 +1123,33 @@ export default class LGraphCanvas {
         this.node_dragged.pos[0] = Math.round(this.node_dragged.pos[0]);
         this.node_dragged.pos[1] = Math.round(this.node_dragged.pos[1]);
         if (this.align_to_grid) {
-          this.node_dragged.alignToGrid(this.node_dragged);
+          Node.alignToGrid(this.node_dragged);
         }
         if (this.onNodeMoved) this.onNodeMoved(this.node_dragged);
-        window.nodes.moved(this.node_dragged.id, {
+        window.nodes.moved(this.node_dragged.nodeID, {
           pos: this.node_dragged.pos,
         });
 
         this.node_dragged = null;
       } //no node being dragged
       else {
-        //get node over
-        let node = this.graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes);
 
-        if (!node && this.selectedLink == null && e.click_time < 300) {
+        if (!node && this.selectedLink == null) {
           this.deselectAllNodes();
         }
 
         this.dirty_canvas = true;
         this.dragging_canvas = false;
 
-        if (this.node_over && this.node_over.onMouseUp) {
-          this.node_over.onMouseUp(
+        if (node && NodeWork.getNodeType(node.type).onMouseUp) {
+          NodeWork.getNodeType(node.type).onMouseUp(
+            this.node_over,
             e,
             [e.canvasX - this.node_over.pos[0], e.canvasY - this.node_over.pos[1]],
             this
           );
         }
+
         if (this.node_capturing_input && this.node_capturing_input.onMouseUp) {
           this.node_capturing_input.onMouseUp(e, [
             e.canvasX - this.node_capturing_input.pos[0],
@@ -1206,7 +1205,7 @@ export default class LGraphCanvas {
     }
 
     //this.setZoom( scale, [ e.clientX, e.clientY ] );
-    this.ds.changeScale(scale, [e.clientX, e.clientY]);
+    this.ds.changeScale(Math.clamp(scale, 0.2, 4), [e.clientX, e.clientY]);
 
     this.graph.change();
 
@@ -1242,7 +1241,7 @@ export default class LGraphCanvas {
    */
   isOverNodeInput(node, canvasx, canvasy, slot_pos) {
     for (var i = 0, l = Node.getInputs(node.properties).length; i < l; ++i) {
-      var link_pos = node.getConnectionPos(true, i);
+      var link_pos = Node.getConnectionPos(node, true, i);
       var is_inside = Math.isInsideRectangle(canvasx, canvasy, link_pos[0] - 10, link_pos[1] - 5, 40, 10);
       if (is_inside) {
         if (slot_pos) {
@@ -1261,7 +1260,7 @@ export default class LGraphCanvas {
    */
   isOverNodeOutput(node, canvasx, canvasy, slot_pos) {
     for (var i = 0, l = Node.getOutputs(node.properties).length; i < l; ++i) {
-      var link_pos = node.getConnectionPos(false, i);
+      var link_pos = Node.getConnectionPos(node, false, i);
       var is_inside = false;
       is_inside = Math.isInsideRectangle(canvasx, canvasy, link_pos[0] - 10, link_pos[1] - 5, 40, 10);
       if (is_inside) {
@@ -1394,15 +1393,15 @@ export default class LGraphCanvas {
           continue;
         }
         var target_node = this.graph.getNodeById(link_info.origin_id);
-        if (!target_node || !this.selected_nodes[target_node.id]) {
+        if (!target_node || !this.selected_nodes[target_node.nodeID]) {
           //improve this by allowing connections to non-selected nodes
           continue;
         } //not selected
         clipboard_info.links.push([
           target_node._relative_id,
-          link_info.getInputByName(link_info.origin_slot).id,
+          link_info.getInputByName(link_info.toSlot).nodeID,
           node._relative_id,
-          link_info.target_slot,
+          link_info.fromSlot,
         ]);
       }
     }
@@ -1592,7 +1591,7 @@ export default class LGraphCanvas {
         node.onSelected();
       }
       node.is_selected = true;
-      this.selected_nodes[node.id] = node;
+      this.selected_nodes[node.nodeID] = node;
     }
 
     if (this.onSelectionChange) this.onSelectionChange(this.selected_nodes);
@@ -1639,7 +1638,7 @@ export default class LGraphCanvas {
       node.is_selected = false;
     });
     this.graph.links.forEach((linkit) => {
-      linkit.selected = false;
+      if (linkit) linkit.selected = false;
     });
     this.selected_nodes = [];
     this.current_node = null;
@@ -1752,11 +1751,11 @@ export default class LGraphCanvas {
     var visible_nodes = [];
     for (let n of nodes) {
       if (n) {
-        if (!Math.overlapBounding(this.visible_area, n.getBounding())) {
+        if (!Math.overlapBounding(this.visible_area, Math.getBounding(n))) {
           continue;
         } //out of the visible area
 
-        visible_nodes.push(n);
+        visible_nodes.push(n.nodeID);
       }
     }
     return visible_nodes;
@@ -1845,7 +1844,7 @@ export default class LGraphCanvas {
       this.visible_nodes = this.computeVisibleNodes(this.graph.nodes);
 
       for (var i = 0; i < this.visible_nodes.length; ++i) {
-        var node = this.visible_nodes[i];
+        var node = this.graph.nodes[this.visible_nodes[i]];
 
         //transform coords system
         ctx.save();
@@ -1879,17 +1878,7 @@ export default class LGraphCanvas {
         }
 
         //the connection being dragged by the mouse
-        this.renderLink(
-          ctx,
-          this.connecting_pos,
-          [this.graph_mouse[0], this.graph_mouse[1]],
-          null,
-          false,
-          null,
-          NodiEnums.CONNECTING_LINK_COLOR,
-          connDir,
-          NodiEnums.CENTER
-        );
+        this.renderLink(ctx, null, this.connecting_pos, [this.graph_mouse[0], this.graph_mouse[1]], null);
 
         ctx.beginPath();
         ctx.rect(this.connecting_pos[0] - 6 + 0.5, this.connecting_pos[1] - 5 + 0.5, 10, 10);
@@ -1910,17 +1899,6 @@ export default class LGraphCanvas {
           ctx.arc(this._highlight_output[0], this._highlight_output[1], 6, 0, Math.PI * 2);
           ctx.fill();
         }
-      }
-
-      //on top of link center
-      if (this.over_link_center && this.render_link_tooltip) this.drawLinkTooltip(ctx, this.over_link_center);
-      else if (this.onDrawLinkTooltip)
-        //to remove
-        this.onDrawLinkTooltip(ctx, null);
-
-      //custom info
-      if (this.onDrawForeground) {
-        this.onDrawForeground(ctx, this.visible_rect);
       }
 
       ctx.restore();
@@ -1970,7 +1948,6 @@ export default class LGraphCanvas {
       ctx.restore();
       ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
-    this.visible_links.length = 0;
 
     if (this.graph) {
       //apply transformations
@@ -2011,15 +1988,6 @@ export default class LGraphCanvas {
         for (var y = t; y <= d; y += s) {
           ctx.fillRect(x - 4 + s / 2, y - 4 + s / 2, 8, 8);
         }
-      }
-
-      if (this.render_connections_shadows) {
-        ctx.shadowColor = "#000";
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.shadowBlur = 6;
-      } else {
-        ctx.shadowColor = "rgba(0,0,0,0)";
       }
 
       //draw connections
@@ -2080,13 +2048,11 @@ export default class LGraphCanvas {
     this.drawNodeShape(node, ctx, size, color, bgcolor, node.is_selected, node.mouseOver);
     ctx.shadowColor = "transparent";
 
-    //draw foreground
-    if (node.onDrawForeground) {
-      node.onDrawForeground(ctx, this, this.canvas);
-    }
+    let nodeDrawFunction = NodeWork.getNodeType(node.type).onDrawForeground;
+    if (nodeDrawFunction) nodeDrawFunction(node, ctx, this.visible_rect);
 
     //connection slots
-    ctx.textAlign = horizontal ? "center" : "left";
+    ctx.textAlign = "center";
     ctx.font = this.inner_text_font;
 
     var render_text = !low_quality;
@@ -2104,7 +2070,7 @@ export default class LGraphCanvas {
       ctx.globalAlpha = editor_alpha;
       ctx.fillStyle = slot.link != null ? NodiEnums.LINK_COLOR : NodiEnums.CONNECTING_LINK_COLOR;
 
-      var pos = node.getConnectionPos(true, i, slot_pos);
+      var pos = Node.getConnectionPos(node, true, i, slot_pos);
       pos[0] -= node.pos[0];
       pos[1] -= node.pos[1];
       if (max_y < pos[1] + NodiEnums.NODE_SLOT_HEIGHT * 0.5) {
@@ -2132,7 +2098,7 @@ export default class LGraphCanvas {
     }
 
     //output connection slots
-    ctx.textAlign = horizontal ? "center" : "right";
+    ctx.textAlign = "center";
     ctx.strokeStyle = "black";
 
     i = 0;
@@ -2144,7 +2110,7 @@ export default class LGraphCanvas {
         ctx.globalAlpha = 0.4 * editor_alpha;
       }
 
-      pos = node.getConnectionPos(false, i, slot_pos);
+      pos = Node.getConnectionPos(node, false, i, slot_pos);
       pos[0] -= node.pos[0];
       pos[1] -= node.pos[1];
       if (max_y < pos[1] + NodiEnums.NODE_SLOT_HEIGHT * 0.5) {
@@ -2283,7 +2249,6 @@ export default class LGraphCanvas {
    * @method drawConnections
    */
   drawConnections(ctx) {
-    var now = NodiEnums.getTime();
     var visible_area = this.visible_area;
     margin_area[0] = visible_area[0] - 20;
     margin_area[1] = visible_area[1] - 20;
@@ -2305,22 +2270,22 @@ export default class LGraphCanvas {
       }
 
       //find link info
-      var start_node = this.graph.getNodeById(link.origin_id);
-      var end_node = this.graph.getNodeById(link.target_id);
+      var start_node = this.graph.getNodeById(link.from);
+      var end_node = this.graph.getNodeById(link.to);
       if (start_node == null || end_node == null) {
         continue;
       }
       var start_node_slot = Node.getOutputs(start_node.properties)
         .map((obj) => obj.name)
-        .indexOf(link.origin_slot);
-      var end_node_slot = end_node.getInputIndexByName(link.target_slot);
+        .indexOf(link.toSlot);
+      var end_node_slot = Node.getInputIndexByName(end_node, link.fromSlot);
       var start_node_slotpos = null;
       if (start_node_slot == -1) {
         start_node_slotpos = [start_node.pos[0] + 10, start_node.pos[1] + 10];
       } else {
-        start_node_slotpos = start_node.getConnectionPos(false, start_node_slot);
+        start_node_slotpos = Node.getConnectionPos(start_node, false, start_node_slot);
       }
-      var end_node_slotpos = end_node.getConnectionPos(true, end_node_slot);
+      var end_node_slotpos = Node.getConnectionPos(end_node, true, end_node_slot);
 
       //compute link bounding
       link_bounding[0] = start_node_slotpos[0];
@@ -2344,52 +2309,36 @@ export default class LGraphCanvas {
       var start_dir = NodiEnums.RIGHT;
       var end_dir = NodiEnums.LEFT;
 
-      link.render(ctx, start_node_slotpos, end_node_slotpos, false, 0, null, start_dir, end_dir);
-
-      //event triggered rendered on top
-      if (link && link._last_time && now - link._last_time < 1000) {
-        var f = 2.0 - (now - link._last_time) * 0.002;
-        var tmp = ctx.globalAlpha;
-        ctx.globalAlpha = tmp * f;
-        link.render(ctx, start_node_slotpos, end_node_slotpos, true, f, "white", start_dir, end_dir);
-        ctx.globalAlpha = tmp;
-      }
+      this.renderLink(ctx, link, start_node_slotpos, end_node_slotpos, false, start_dir, end_dir);
     }
     ctx.globalAlpha = 1;
   }
-  /**
-   * draws a link between two points
-   * @method renderLink
-   * @param {vec2} a start pos
-   * @param {vec2} b end pos
-   * @param {Object} link the link object with all the link info
-   * @param {boolean} skip_border ignore the shadow of the link
-   * @param {boolean} flow show flow animation (for events)
-   * @param {string} color the color for the link
-   * @param {number} start_dir the direction enum
-   * @param {number} end_dir the direction enum
-   */
-  renderLink(ctx, a, b, link, skip_border, flow, color, start_dir, end_dir) {
+
+  renderLink(ctx, link, a, b, skip_border) {
+    var canvas = window.canvas;
+
+    let color = canvas.default_link_color;
+    //choose color
     if (link) {
-      this.visible_links.push(link);
+      color = link.color || NodiEnums.LINK_COLOR;
     }
 
-    //choose color
-    if (!color && link) color = link.color;
-    if (!color) color = this.default_link_color;
-    if (link != null && this.highlighted_links[link.id]) color = "#FFF";
+    if (link != null && canvas.highlighted_links[link.linkID]) {
+      color = "#FFF";
+    }
 
-    start_dir = start_dir || NodiEnums.RIGHT;
-    end_dir = end_dir || NodiEnums.LEFT;
+    let start_dir = NodiEnums.RIGHT;
+    let end_dir = NodiEnums.LEFT;
 
     ctx.setLineDash([]);
-    if (this.render_connections_border && this.ds.scale > 0.6) {
-      ctx.lineWidth = this.connections_width + 4;
+    if (canvas.render_connections_border && canvas.ds.scale > 0.6) {
+      ctx.lineWidth = canvas.connections_width + 4;
     }
     ctx.lineJoin = "round";
 
     //begin line shape
     ctx.beginPath();
+
     ctx.moveTo(a[0], a[1]);
     var start_x = a[0];
     var start_y = a[1];
@@ -2398,8 +2347,8 @@ export default class LGraphCanvas {
     let originType = "";
     let targetType = "";
     if (link) {
-      originType = window.canvas.graph.nodes[link.target_id]?.constructor.type;
-      targetType = window.canvas.graph.nodes[link.origin_id]?.constructor.type;
+      originType = canvas.graph.nodes[link.to].type;
+      targetType = canvas.graph.nodes[link.from].type;
     }
 
     ctx.lineTo(start_x, start_y);
@@ -2414,21 +2363,28 @@ export default class LGraphCanvas {
     ctx.lineTo(b[0], b[1]);
 
     //rendering the outline of the connection can be a little bit slow
-    if (this.render_connections_border && this.ds.scale > 0.6 && !skip_border) {
+    if (canvas.render_connections_border && canvas.ds.scale > 0.6 && !skip_border) {
       ctx.strokeStyle = "rgba(0,0,0,0.5)";
       ctx.stroke();
     }
 
-    ctx.lineWidth = this.connections_width;
+    ctx.lineWidth = canvas.connections_width;
     ctx.fillStyle = ctx.strokeStyle = color;
     ctx.stroke();
     //end line shape
-    var pos = this.computeConnectionPoint([start_x, start_y], [end_x, end_y], 0.5, start_dir, end_dir, link);
-    if (link && link.pos) {
-      link.pos[0] = pos[0];
-      link.pos[1] = pos[1];
+    var pos = canvas.computeConnectionPoint([start_x, start_y], [end_x, end_y], 0.5, start_dir, end_dir, link);
+    if (link) {
+      link.pos = [pos[0], pos[1]];
+    }
+
+    //circle
+    if (link?.pos) {
+      ctx.beginPath();
+      ctx.arc(link.pos[0], link.pos[1], 5, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
+
   //returns the link center point based on curvature
   computeConnectionPoint(a, b, t, start_dir, end_dir, link) {
     start_dir = start_dir || NodiEnums.RIGHT;
@@ -2469,8 +2425,8 @@ export default class LGraphCanvas {
     }
     let originType, targetType;
     if (link) {
-      originType = window.canvas.graph.nodes[link.target_id]?.constructor.type;
-      targetType = window.canvas.graph.nodes[link.origin_id]?.constructor.type;
+      originType = window.canvas.graph.nodes[link.to]?.constructor.type;
+      targetType = window.canvas.graph.nodes[link.from]?.constructor.type;
     }
     if (originType == "control/junction" || targetType == "control/junction") {
       if (Math.abs(a[0] - b[0]) > Math.abs(a[1] - b[1])) {
@@ -2537,21 +2493,21 @@ export default class LGraphCanvas {
     ctx.globalAlpha = this.editor_alpha;
     var outline_color = NodiEnums.WIDGET_OUTLINE_COLOR;
 
-      var w = this;
-      var y = posY;
-      if (w.y) {
-        y = w.y;
-      }
-      w.last_y = y;
-      ctx.strokeStyle = outline_color;
-      ctx.fillStyle = "#222";
-      ctx.textAlign = "left";
-      //ctx.lineWidth = 2;
-      if (w.disabled) ctx.globalAlpha *= 0.5;
-      var widget_width = w.width || width;
+    var w = this;
+    var y = posY;
+    if (w.y) {
+      y = w.y;
+    }
+    w.last_y = y;
+    ctx.strokeStyle = outline_color;
+    ctx.fillStyle = "#222";
+    ctx.textAlign = "left";
+    //ctx.lineWidth = 2;
+    if (w.disabled) ctx.globalAlpha *= 0.5;
+    var widget_width = w.width || width;
 
-      posY += (w.computeSize ? w.computeSize(widget_width)[1] : H) + 4;
-      ctx.globalAlpha = this.editor_alpha;
+    posY += (w.computeSize ? w.computeSize(widget_width)[1] : H) + 4;
+    ctx.globalAlpha = this.editor_alpha;
     ctx.restore();
     ctx.textAlign = "left";
   }

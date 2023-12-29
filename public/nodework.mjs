@@ -129,12 +129,13 @@ export default class NodeWork {
     if (!node.properties) {
       node.properties = {};
     }
+    base_class.setup(node.properties);
 
     node.setSize(node.computeSize(node.properties), false);
     node.pos = NodiEnums.DEFAULT_POSITION.concat();
     if (node.type == null) node.type = type;
     if (options) {
-      node.id = options.id;
+      node.nodeID = options.nodeID;
     }
     for (var i in options) {
       node.properties[i] = options[i];
@@ -228,14 +229,13 @@ export default class NodeWork {
     if (!node) return;
 
     //nodes
-    if (node.id == null || (node.id != -1 && this.nodes[node.id] != null)) {
+    if (node.nodeID == null || (node.nodeID != -1 && this.nodes[node.nodeID] != null)) {
       console.warn("LiteGraph: there is already a node with this ID, changing it");
-      node.id = this.getNextID();
+      node.nodeID = this.getNextID();
     }
 
-    node.graph = this;
-    this.nodes[node.id] = node;
-    if (node.alignToGrid) node.alignToGrid();
+    this.nodes[node.nodeID] = node;
+    Node.alignToGrid(node);
 
     this.canvas.setDirty(true);
     this.change();
@@ -259,7 +259,7 @@ export default class NodeWork {
       if (links) {
         for (link of links) {
           node.disconnectInput(link);
-          window.sendToServer("remLink", { nodeID: link.id });
+          window.sendToServer("remLink", { nodeID: link.linkID });
           this.removeLink(link);
         }
       }
@@ -271,7 +271,7 @@ export default class NodeWork {
       if (links) {
         for (link of links) {
           node.disconnectOutput(link);
-          window.sendToServer("remLink", { nodeID: link.id });
+          window.sendToServer("remLink", { nodeID: link.linkID });
           this.removeLink(link);
         }
       }
@@ -282,15 +282,14 @@ export default class NodeWork {
       node.onRemoved();
     }
 
-    node.graph = null;
     this._version++;
 
     //remove from canvas render
     if (this.list_of_graphcanvas) {
       for (i = 0; i < this.list_of_graphcanvas.length; ++i) {
         var canvas = this.list_of_graphcanvas[i];
-        if (canvas.selected_nodes[node.id]) {
-          delete canvas.selected_nodes[node.id];
+        if (canvas.selected_nodes[node.nodeID]) {
+          delete canvas.selected_nodes[node.nodeID];
         }
         if (canvas.node_dragged == node) {
           canvas.node_dragged = null;
@@ -299,7 +298,7 @@ export default class NodeWork {
     }
 
     //remove from containers
-    this.nodes = this.nodes.filter((obj) => obj.id !== node.id);
+    this.nodes = this.nodes.filter((obj) => obj.nodeID !== node.nodeID);
 
     if (this.onNodeRemoved) {
       this.onNodeRemoved(node);
@@ -327,11 +326,10 @@ export default class NodeWork {
    * @return {Node} the node at this position or null
    */
   getNodeOnPos(x, y, nodes_list, margin) {
-    nodes_list = nodes_list || this.nodes;
     var nRet = null;
     for (var i = nodes_list.length - 1; i >= 0; i--) {
-      var n = nodes_list[i];
-      if (n.isPointInside(x, y, margin)) {
+      var n = this.nodes[nodes_list[i]];
+      if (Math.isPointInside(n, x, y, margin)) {
         return n;
       }
     }
@@ -354,7 +352,6 @@ export default class NodeWork {
       var newnode = NodeWork.createNode(node.type);
       this.nodes[i] = newnode;
       newnode.configure(node.serialize());
-      newnode.graph = this;
     }
   }
 
@@ -377,12 +374,12 @@ export default class NodeWork {
     var link = this.links[link_id];
     if (!link) return;
 
-    var node = this.getNodeById(link.target_id);
+    var node = this.getNodeById(link.to);
     if (node) {
       node.disconnectInput(link);
     }
 
-    node = this.getNodeById(link.origin_id);
+    node = this.getNodeById(link.from);
     if (node) {
       node.disconnectOutput(link);
     }
@@ -431,6 +428,7 @@ export default class NodeWork {
 
     return data;
   }
+
   /**
    * Configure a graph from a JSON string
    * @method configure
@@ -441,41 +439,8 @@ export default class NodeWork {
     if (!data) return;
 
     this.clear();
-    var i, l;
     this.nodes = data.nodes;
-
-    //create nodes
-    this.nodes = [];
-    if (data.nodes) {
-      for (i = 0, l = data.nodes.length; i < l; ++i) {
-        var n_info = data.nodes[i]; //stored info
-        if (!n_info) continue;
-        var node = NodeWork.createNode(n_info.type, n_info.title, n_info.properties);
-        node.id = n_info.nodeID; //id it or it will create a new id
-        node.id = n_info.nodeID;
-        if (n_info.posX != null) {
-          node.pos = [n_info.posX, n_info.posY];
-        } else {
-          node.pos = n_info.pos;
-        }
-        node.configure(n_info.properties);
-        //node.size = n_info.size;
-        this.addNode(node, true); //add before configure, otherwise configure cannot create links
-      }
-    }
-
-    //decode links info (they are very verbose)
-    if (data.links) {
-      for (i = 0; i < data.links.length; ++i) {
-        if (data.links[i] == null) continue;
-        var link = new LLink();
-        link.configure(data.links[i]);
-        this.links[link.id] = link;
-      }
-    }
-
-    if (this.onConfigure) this.onConfigure(data);
-
+    this.links = data.links;
     this._version++;
     this.canvas.setDirty(true, true);
     return false;

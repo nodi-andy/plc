@@ -80,11 +80,11 @@ window.socketIO.on("id", () => {
 
 window.order.nodeAdded = (message) => {
   let newNode = NodeWork.createNode(message.type, message.title, message.properties);
-  newNode.id = message.nodeID;
+  newNode.nodeID = message.nodeID;
   newNode.type = message.type;
   if (message.pos) newNode.pos = message.pos;
   if (message.size) newNode.setSize(message.size);
-  window.graph.addNode(newNode);
+  window.graph.addNode(message);
   window.canvas.dirty_canvas = true;
 };
 
@@ -122,7 +122,7 @@ window.order.updateNode = (message) => {
 };
 
 window.order.linkAdded = (msg) => {
-  window.graph.nodes[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
+  window.graph.links[msg.linkID] = msg;
   window.canvas.dirty_canvas = true;
 };
 
@@ -155,7 +155,7 @@ window.order.nodeResized = (msg) => {
 };
 
 window.order.addLink = (msg) => {
-  window.graph.nodes[msg.from].connect(msg.fromSlot, msg.to, msg.toSlot, msg.nodeID);
+  window.graph.links[msg.linkID] = msg;
   window.canvas.dirty_canvas = true;
 };
 

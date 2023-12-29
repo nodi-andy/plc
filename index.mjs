@@ -3,9 +3,9 @@ import http from "http";
 import { Server as socketIOServer } from "socket.io";
 import NodeWork from "./public/nodework.mjs";
 import "./public/nodes/widget/button.mjs";
-import "./public/nodes/widget/toggle_server.mjs";
+import "./public/nodes/widget/toggle.mjs";
 import "./public/nodes/widget/led.mjs";
-import "./public/nodes/widget/number_server.mjs";
+import "./public/nodes/widget/number.mjs";
 import "./public/nodes/logic/and_core.mjs";
 import "./public/nodes/logic/or_core.mjs";
 import "./public/nodes/logic/xor_core.mjs";
@@ -16,7 +16,7 @@ import "./public/nodes/math/counter_core.mjs";
 import "./public/nodes/math/isequal_core.mjs";
 import "./public/nodes/math/isless_core.mjs";
 import "./public/nodes/math/isgreater_core.mjs";
-import "./public/nodes/time/interval_core.mjs";
+import "./public/nodes/time/interval.mjs";
 import "./public/nodes/control/junction_core.mjs";
 
 const app = express();
@@ -65,11 +65,10 @@ setInterval(() => {
     nodeWorkJSON.nodes.forEach((node) => {
       let c = NodeWork.getNodeType(node.type);
       if (node.cmds && node.cmds.length) {
-        mergeObjects(node.properties, node.cmds[0].what);
         let command = node.cmds.shift();
-
+        
         if (command.cmd == "updateNode") {
-          node.properties = command.what;
+          mergeObjects(node.properties, command.what);
           io.emit("updateNode", { nodeID: node.nodeID, newData: { properties: node.properties } });
         }
 
@@ -148,7 +147,7 @@ io.on("connection", (socket) => {
     if (socket.devType == "nodi.box") {
       // tbd nodi.box
     } else {
-      nodeWorkJSON = msg;
+      nodeWorkJSON = msg.data;
       socket.broadcast.emit("setNodework", msg);
     }
   });
@@ -199,15 +198,8 @@ io.on("connection", (socket) => {
     if (!msg) return;
 
     console.log("[addLink] ", msg);
-
-    if (socket.devType == "browser") {
-      msg.nodeID = idGenerator.getID();
-      nodeWorkJSON.links[msg.nodeID] = msg;
-    } else {
-      if (msg.nodeID != null) {
-        nodeWorkJSON.links[msg.nodeID] = msg;
-      }
-    }
+    msg.linkID = idGenerator.getID();
+    nodeWorkJSON.links[msg.linkID] = msg;
     io.emit("addLink", msg);
   });
 
