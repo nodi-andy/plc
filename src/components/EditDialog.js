@@ -20,7 +20,7 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
 
   const handlePropertyChange = (event, key) => {
     const { value } = event.target;
-    window.canvas.current_node.updateProperties(key, "inpValue", value);
+    window.canvas.Node.updateProperties(window.canvas.current_node, key, "inpValue", value);
     window.canvas.current_node.update = true;
     event.stopPropagation(); // Stop event propagation to prevent closing the drawer
   };
@@ -28,19 +28,19 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
   const handleCheckboxChange = (event) => {
     event.stopPropagation(); // Stop event propagation to prevent closing the drawer
     if (event.target.checked) {
-      window.canvas.current_node.addInputByName(event.target.id);
+      window.canvas.Node.addInput(window.canvas.current_node, event.target.id);
 
     } else {
-      window.canvas.current_node.removeInputByName(event.target.id);
+      window.canvas.Node.removeInput(window.canvas.current_node, event.target.id);
     }
   };
 
   const handleOutputCheckboxChange = (event) => {
     event.stopPropagation(); // Stop event propagation to prevent closing the drawer
     if (event.target.checked) {
-      window.canvas.current_node.addOutputByName(event.target.id);
+      window.canvas.Node.addOutput(window.canvas.current_node, event.target.id);
     } else {
-      window.canvas.current_node.removeOutputByName(event.target.id);
+      window.canvas.Node.removeOutput(window.canvas.current_node, event.target.id);
     }
   };
 

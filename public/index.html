@@ -3,41 +3,39 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="HandheldFriendly" content="true" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="noditron" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>noditron</title>
     <style>
-      html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          height: 100%;
-          width: 100%;
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100%;
+        width: 100%;
       }
 
       .lgraphcanvas {
-          /*cursor: crosshair;*/
-          user-select: none;
-          -moz-user-select: none;
-          -webkit-user-select: none;
+        /*cursor: crosshair;*/
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
         outline: none;
-          font-family: Tahoma, sans-serif;
+        font-family: Tahoma, sans-serif;
       }
 
       .lgraphcanvas * {
-          box-sizing: border-box;
+        box-sizing: border-box;
       }
 
-        /* Styles for high-DPI screens */
+      /* Styles for high-DPI screens */
       @media only screen and (-webkit-min-device-pixel-ratio: 2),
-          only screen and (min--moz-device-pixel-ratio: 2),
-          only screen and (min-resolution: 192dpi),
-          only screen and (min-resolution: 2dppx) {
+        only screen and (min--moz-device-pixel-ratio: 2),
+        only screen and (min-resolution: 192dpi),
+        only screen and (min-resolution: 2dppx) {
       }
     </style>
   </head>
@@ -92,9 +90,9 @@
     await loadJS("./nodes/math/isequal.js", false);
     await loadJS("./nodes/math/isless.js", false);
     await loadJS("./nodes/math/isgreater.js", false);
-    await loadJS("./nodes/math/counter.js", false);
+    await loadJS("./nodes/math/counter.mjs", false);
     await loadJS("./nodes/time/interval.mjs", false);
-    await loadJS("./nodes/control/junction.js", false);
+    await loadJS("./nodes/control/junction.mjs", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
     await loadJS("./nodes/nodi.box/b2.js", false);
     await loadJS("./nodes/nodi.box/b3.js", false);
@@ -106,6 +104,7 @@
     await loadJS("./nodes/esp32mcu/led.js", false);
     await loadJS("./websocket.js", false);
 
+    import Node from "./node.mjs";
     import NodeWork from "./nodework.mjs";
     import LGraphCanvas from "./canvas.js";
 
@@ -120,14 +119,11 @@
       var node = NodeWork.createNode(name);
       if (node) {
         let view = window.canvas.ds;
-        node.setPos(
-          -view.offset[0] + view.visible_area[2] * 0.5,
-          -view.offset[1] + view.visible_area[3] * 0.5
-        );
+        Node.setPos(node, -view.offset[0] + view.visible_area[2] * 0.5, -view.offset[1] + view.visible_area[3] * 0.5);
       }
 
       // Do not send all values of node. Create a small export version
-      var exportNode = node.clone();;
+      var exportNode = Node.clone(node);
       delete exportNode.widget;
       exportNode.type = node.type;
       exportNode.device = "server";
@@ -135,15 +131,11 @@
     };
 
     window.nodes.remNode = () => {
-      var graphcanvas = LGraphCanvas.active_canvas;
-      for (let node of graphcanvas.selected_nodes) {
-        window.sendToServer("remNode", {
-          nodeID: graphcanvas.selected_nodes[node].nodeID,
-        });
-      }
+      window.canvas.selected_nodes.forEach((n) => {
+        window.sendToServer("remNode", { nodeID: n.nodeID });
+      });
 
-      if (canvas.selectedLink != null)
-        window.sendToServer("remLink", { nodeID: canvas.selectedLink });
+      if (canvas.selectedLink != null) window.sendToServer("remLink", { nodeID: canvas.selectedLink });
     };
 
     window.nodes.editNode = () => {
@@ -226,8 +218,7 @@
       window.nodes.list = {};
       for (let nodeClassName in NodeWork.registered_node_types) {
         let nodeClass = NodeWork.registered_node_types[nodeClassName];
-        if (window.nodes.list[nodeClass.category] == null)
-          window.nodes.list[nodeClass.category] = [];
+        if (window.nodes.list[nodeClass.category] == null) window.nodes.list[nodeClass.category] = [];
         window.nodes.list[nodeClass.category].push(nodeClass.elementName);
       }
     };

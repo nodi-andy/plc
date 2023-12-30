@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import MathIsGreaterCore from "./isgreater_core.mjs"
 
 class MathIsGreater extends MathIsGreaterCore{
@@ -7,10 +7,6 @@ class MathIsGreater extends MathIsGreaterCore{
         super();
         this.properties = {};
         MathIsGreaterCore.setup(this.properties);
-    }
-
-    onExecute(props) {
-        return MathIsGreater.run(props);
     }
 
     onDrawForeground(ctx) {

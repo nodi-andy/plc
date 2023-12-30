@@ -1,9 +1,9 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 
 export default class WidgetLed extends Node {
     static type = "widget/led";
-    static title = " ";
+    static title = "";
     static desc = "LED";
     
     constructor() {
@@ -84,7 +84,7 @@ export default class WidgetLed extends Node {
 
     static updateProp(node, key, name, val) {
         node.properties[key][name] = val;
-        window.nodes.update(node.id, node.properties);
+        window.nodes.update(node.nodeID, node.properties);
     }
 
     static onMouseDown(node, e, local_pos) {

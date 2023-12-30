@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import MathMultCore from "./mult_core.mjs"
 
 class MathMult extends MathMultCore{
@@ -7,10 +7,6 @@ class MathMult extends MathMultCore{
         super();
         this.properties = {};
         MathMultCore.setup(this.properties);
-    }
-
-    onExecute(props) {
-        return MathMult.run(props);
     }
 
     onDrawForeground(ctx) {

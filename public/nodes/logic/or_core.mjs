@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 
 export default class OrCore extends Node {
     static type = "logic/or";

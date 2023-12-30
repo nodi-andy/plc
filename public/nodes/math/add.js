@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import MathAddCore from "./add_core.mjs"
 
 class MathAdd extends MathAddCore{
@@ -7,10 +7,6 @@ class MathAdd extends MathAddCore{
         super();
         this.properties = {};
         MathAddCore.setup(this.properties);
-    }
-
-    onExecute(props) {
-        return MathAddCore.run(props);
     }
 
     onDrawForeground(ctx) {

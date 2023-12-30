@@ -1,9 +1,9 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 
 export default class Button extends Node {
     static type = "widget/button";
-    static title = "Button";
+    static title = " ";
     static desc = "Triggers an event";
     static margin = 12;
 

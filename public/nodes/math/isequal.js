@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import MathIsEqualCore from "./isequal_core.mjs"
 
 class MathIsEqual extends MathIsEqualCore{

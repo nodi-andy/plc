@@ -6,8 +6,6 @@ class logicNot extends NotCore{
         super();
         this.properties = {};
         logicNot.setup(this.properties);
-        this.type = logicNot.type
-        this.title = logicNot.title;
     }
 
     onExecute(update) {

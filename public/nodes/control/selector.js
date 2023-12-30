@@ -1,4 +1,4 @@
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 class Selector extends Node{
@@ -11,7 +11,6 @@ class Selector extends Node{
         this.setProperty("SelIn", "sel", {input: true});
         this.setProperty("a", "a", {input: true});
         this.setProperty("out", "out", {output: true});
-        this.type = Selector.type;
     }
 
     onExecute(update) {

@@ -1,5 +1,5 @@
 import { NodiEnums } from "./enums.mjs";
-import { Node } from "./node.mjs";
+import Node from "./node.mjs";
 import LLink from "./link.mjs";
 
 export default class NodeWork {
@@ -38,9 +38,6 @@ export default class NodeWork {
     base_class.category = categories[0];
     base_class.elementName = categories[1];
 
-    if (!base_class.title) {
-      base_class.title = classname;
-    }
     //info.name = name.substr(pos+1,name.length - pos);
 
     //extend class
@@ -118,34 +115,23 @@ export default class NodeWork {
   static createNode(type, title, options) {
     var base_class = this.registered_node_types[type];
     if (!base_class) {
-      if (NodeWork.debug) {
-        console.log('GraphNode type "' + type + '" not registered.');
-      }
+      if (NodeWork.debug) console.log('GraphNode type "' + type + '" not registered.');
       return null;
     }
 
-    var node = new base_class(title);
+    var node = { type: base_class.type };
 
     if (!node.properties) {
       node.properties = {};
     }
     base_class.setup(node.properties);
 
-    node.setSize(node.computeSize(node.properties), false);
+    node.size = Node.computeSize(node.properties);
     node.pos = NodiEnums.DEFAULT_POSITION.concat();
-    if (node.type == null) node.type = type;
-    if (options) {
-      node.nodeID = options.nodeID;
-    }
+
     for (var i in options) {
       node.properties[i] = options[i];
     }
-
-    // callback
-    if (node.onNodeCreated) {
-      node.onNodeCreated();
-    }
-
     return node;
   }
 
@@ -228,84 +214,22 @@ export default class NodeWork {
   addNode(node) {
     if (!node) return;
 
-    //nodes
-    if (node.nodeID == null || (node.nodeID != -1 && this.nodes[node.nodeID] != null)) {
-      console.warn("LiteGraph: there is already a node with this ID, changing it");
-      node.nodeID = this.getNextID();
-    }
-
     this.nodes[node.nodeID] = node;
     Node.alignToGrid(node);
-
-    this.canvas.setDirty(true);
-    this.change();
-
-    return node; //to chain actions
   }
 
-  removeNodeByID(nodeID) {
-    let node = this.nodes[nodeID];
-    if (node == null) {
-      return;
-    } //not found
-    if (node.ignore_remove) {
-      return;
-    } //cannot be removed
+  addLink(link) {
+    this.links[link.linkID] = link;
+    this.nodes[link.to].properties[link.toSlot].links.push(link.linkID);
+    this.nodes[link.from].properties[link.fromSlot].links.push(link.linkID);
+  }
 
-    var i, links, link;
-    //disconnect inputs
-    for (i = 0; i < Node.getInputs(this.properties).length; i++) {
-      links = Node.getInputs(this.properties)[i].links;
-      if (links) {
-        for (link of links) {
-          node.disconnectInput(link);
-          window.sendToServer("remLink", { nodeID: link.linkID });
-          this.removeLink(link);
-        }
-      }
-    }
+  nodeRemoved(nodeID) {
+    this.nodes[nodeID] = null;
+  }
 
-    //disconnect outputs
-    for (i = 0; i < Node.getOutputs(this.properties).length; i++) {
-      links = Node.getOutputs(this.properties)[i].links;
-      if (links) {
-        for (link of links) {
-          node.disconnectOutput(link);
-          window.sendToServer("remLink", { nodeID: link.linkID });
-          this.removeLink(link);
-        }
-      }
-    }
-
-    //callback
-    if (node.onRemoved) {
-      node.onRemoved();
-    }
-
-    this._version++;
-
-    //remove from canvas render
-    if (this.list_of_graphcanvas) {
-      for (i = 0; i < this.list_of_graphcanvas.length; ++i) {
-        var canvas = this.list_of_graphcanvas[i];
-        if (canvas.selected_nodes[node.nodeID]) {
-          delete canvas.selected_nodes[node.nodeID];
-        }
-        if (canvas.node_dragged == node) {
-          canvas.node_dragged = null;
-        }
-      }
-    }
-
-    //remove from containers
-    this.nodes = this.nodes.filter((obj) => obj.nodeID !== node.nodeID);
-
-    if (this.onNodeRemoved) {
-      this.onNodeRemoved(node);
-    }
-
-    this.canvas.set(true, true);
-    this.change();
+  updateProp(nodeID, prop) {
+    Node.updateProp(this.nodes[nodeID], prop);
   }
   /**
    * Returns a node by its id.
@@ -376,12 +300,16 @@ export default class NodeWork {
 
     var node = this.getNodeById(link.to);
     if (node) {
-      node.disconnectInput(link);
+      node.properties[link.toSlot].links.filter((v) => {
+        v == link.to;
+      });
     }
 
     node = this.getNodeById(link.from);
     if (node) {
-      node.disconnectOutput(link);
+      node.properties[link.fromSlot].links.filter((v) => {
+        v == link.from;
+      });
     }
 
     delete this.links[link_id];
@@ -441,7 +369,6 @@ export default class NodeWork {
     this.clear();
     this.nodes = data.nodes;
     this.links = data.links;
-    this._version++;
     this.canvas.setDirty(true, true);
     return false;
   }

@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import MathIsLessCore from "./isless_core.mjs"
 
 class MathIsLess extends MathIsLessCore{
@@ -7,10 +7,6 @@ class MathIsLess extends MathIsLessCore{
         super();
         this.properties = {};
         MathIsLess.setup(this.properties);
-    }
-
-    onExecute(props) {
-        return MathIsLess.run(props);
     }
 
     onDrawForeground(ctx) {

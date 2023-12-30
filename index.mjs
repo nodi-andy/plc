@@ -12,12 +12,12 @@ import "./public/nodes/logic/xor_core.mjs";
 import "./public/nodes/logic/not_core.mjs";
 import "./public/nodes/math/add_core.mjs";
 import "./public/nodes/math/mult_core.mjs";
-import "./public/nodes/math/counter_core.mjs";
+import "./public/nodes/math/counter.mjs";
 import "./public/nodes/math/isequal_core.mjs";
 import "./public/nodes/math/isless_core.mjs";
 import "./public/nodes/math/isgreater_core.mjs";
 import "./public/nodes/time/interval.mjs";
-import "./public/nodes/control/junction_core.mjs";
+import "./public/nodes/control/junction.mjs";
 
 const app = express();
 const server = http.createServer(app);
@@ -30,39 +30,19 @@ const io = new socketIOServer(server, {
 var nodeWorkJSON = new NodeWork();
 var iot = null;
 
-class UniqueIDGenerator {
-  constructor() {
-    this.usedIDs = new Set();
-  }
-
-  getID() {
-    let id = 0;
-    for (let i = 0; i < 1000; i++) {
-      if (this.usedIDs.has(i)) {
-        continue;
-      }
-      id = i;
-      break;
-    }
-    this.usedIDs.add(id);
-    return id;
-  }
-
-  removeID(idToRemove) {
-    if (this.usedIDs.has(idToRemove)) {
-      this.usedIDs.delete(idToRemove);
+function getFirstNullIndex(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] == null) {
+      return i;
     }
   }
-
-  clear() {
-    this.usedIDs.clear();
-  }
+  return arr.length; // If no null item is found
 }
-const idGenerator = new UniqueIDGenerator();
 
 setInterval(() => {
   try {
     nodeWorkJSON.nodes.forEach((node) => {
+      if (!node) return;
       let c = NodeWork.getNodeType(node.type);
       if (node.cmds && node.cmds.length) {
         let command = node.cmds.shift();
@@ -93,6 +73,7 @@ setInterval(() => {
     if (nodeWorkJSON.links == null) return;
 
     nodeWorkJSON.links.forEach((link) => {
+      if (!link) return;
       let dataFromNode = null;
       if (nodeWorkJSON.nodes[link.from]) {
         dataFromNode = nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue;
@@ -110,6 +91,7 @@ setInterval(() => {
     });
 
     nodeWorkJSON.links.forEach((link) => {
+      if (!link) return;
       nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue = null;
     });
   } catch (e) {
@@ -136,7 +118,6 @@ io.on("connection", (socket) => {
 
     nodeWorkJSON = { nodes: [], links: [] };
     io.emit("clear", msg);
-    idGenerator.clear();
   });
 
   socket.on("connected", (msg) => {
@@ -164,7 +145,7 @@ io.on("connection", (socket) => {
     console.log("[addNode]");
     //console.log(msg);
     if (!msg) return;
-    msg.nodeID = idGenerator.getID();
+    msg.nodeID = getFirstNullIndex(nodeWorkJSON.nodes);
     nodeWorkJSON.nodes[msg.nodeID] = msg;
     if (msg.device == "nodi.box" && iot) {
       iot.emit("addNode", msg);
@@ -173,12 +154,29 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("remNode", (msg) => {
-    //console.log("[remNode]");
+  socket.on("updateProp", (msg) => {
+    console.log("[updateProp]");
     //console.log(msg);
-    io.emit("remNode", msg.id);
-    idGenerator.removeID(msg.id);
-    nodeWorkJSON.nodes = nodeWorkJSON.nodes.splice(msg.id, 1);
+    if (!msg) return;
+
+    if (msg.device == "nodi.box" && iot) {
+      iot.emit("updateProp", msg);
+    } else {
+      nodeWorkJSON.updateProp(msg.nodeID, msg.prop);
+      io.emit("propUpdated", msg);
+    }
+  });
+
+  socket.on("remNode", (msg) => {
+    console.log("[remNode]");
+    io.emit("nodeRemoved", msg);
+    for (const [, nodeProp] of Object.entries(nodeWorkJSON.nodes[msg.nodeID].properties)) {
+      nodeProp.links.forEach((linkID) => {
+        io.emit("linkRemoved", {linkID: linkID});
+        nodeWorkJSON.links[linkID] = null;
+      })
+    }
+    nodeWorkJSON.nodes[msg.nodeID] = null;
   });
 
   socket.on("updateNode", (msg) => {
@@ -198,8 +196,14 @@ io.on("connection", (socket) => {
     if (!msg) return;
 
     console.log("[addLink] ", msg);
-    msg.linkID = idGenerator.getID();
-    nodeWorkJSON.links[msg.linkID] = msg;
+    msg.linkID = getFirstNullIndex(nodeWorkJSON.links);
+    nodeWorkJSON.addLink(msg);
+    if (nodeWorkJSON.nodes[msg.from].links) {
+      nodeWorkJSON.nodes[msg.from].links.push(msg.linkID);
+    } else {
+      nodeWorkJSON.nodes[msg.from].links = [msg.linkID];
+
+    }
     io.emit("addLink", msg);
   });
 
@@ -253,12 +257,12 @@ io.on("connection", (socket) => {
 
   socket.on("remLink", (msg) => {
     console.log("[remLink] ", msg.nodeID);
-    nodeWorkJSON.links = nodeWorkJSON.links.filter((obj) => obj.nodeID !== msg.nodeID);
+    nodeWorkJSON.links[msg.nodeID] = null;
 
     if (msg.device != "server" && iot) {
       iot.emit("remLink", msg);
     } else {
-      io.emit("linkRemoved", msg);
+      io.emit("linkRemoved", {linkID: msg.nodeID});
     }
   });
 

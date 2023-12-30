@@ -1,4 +1,4 @@
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 export default class Stepper extends Node{
@@ -17,7 +17,7 @@ export default class Stepper extends Node{
         this.setProperty("dir port", "number", 14, "Direction Port");
         this.setProperty("enable port", "number", 32, "Enable Port" );
         this.num = 0;
-        this.setSize([64, 64]);
+        Node.setSize(this, [64, 64]);
     }
 
     onDrawForeground(ctx) {

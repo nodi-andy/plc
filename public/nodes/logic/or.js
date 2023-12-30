@@ -1,5 +1,5 @@
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import OrCore from "./or_core.mjs"
 
 class logicOr extends OrCore{
@@ -7,8 +7,6 @@ class logicOr extends OrCore{
         super();
         this.properties = {};
         OrCore.setup(this.properties);
-        this.type = OrCore.type
-        this.title = OrCore.title;
     }
 
     onExecute(update) {

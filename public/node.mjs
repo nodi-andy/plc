@@ -1,22 +1,17 @@
 import { NodiEnums } from "./enums.mjs";
 import LLink from "./link.mjs";
 
-export class Node {
+export default class Node {
   constructor(title) {
-    this.title = title;
     this.update = false;
     this.device = "server";
     this.properties = {}; //for the values
-    this.setSize([NodiEnums.NODE_WIDTH, 64], false);
     this.graph = null;
     this.update = false;
     this.type = null;
   }
 
   configure(info) {
-    if (this.graph) {
-      this.graph._version++;
-    }
     for (var j in info) {
       if (j == "properties") {
         //i don't want to clone properties, I want to reuse the old container
@@ -73,10 +68,9 @@ export class Node {
   }
 
   /* Creates a clone of this node */
-  clone() {
-    let node = new Node();
-    let data = {...this};
-    for(let key in data) {
+  static clone(node) {
+    let data = { ...node };
+    for (let key in data) {
       node[key] = data[key];
     }
 
@@ -89,13 +83,7 @@ export class Node {
   toString() {
     return JSON.stringify(this);
   }
-  /**
-   * get the title string
-   * @method getTitle
-   */
-  getTitle() {
-    return this.title || this.constructor.title;
-  }
+
 
   /**
    * sets the value of a property
@@ -117,6 +105,7 @@ export class Node {
     for (let i in info) {
       prop[i] = info[i];
     }
+    prop.links = [];
   }
 
   // Execution *************************
@@ -213,7 +202,7 @@ export class Node {
     return slot.output ? slot : null;
   }
 
-    /**
+  /**
    * retrieves all the nodes connected to this output slot
    * @method getOutputNodes
    * @param {number} slot
@@ -274,7 +263,7 @@ export class Node {
 
     return output;
   }
-  
+
   /**
    * remove an existing output slot
    * @method removeOutput
@@ -302,91 +291,40 @@ export class Node {
     }
   }
 
-  addInputByName(name) {
-    this.updateProperties(name, "input", true);
-    let prop = this.properties[name];
-    this.addInput(name, prop.defaultValue, prop.label);
-    window.sendToServer("addInput", {
-      nodeID: this.nodeID,
-      newData: { input: this.properties[name] },
+  static updateProp(node, prop) {
+    node.properties[prop.name] = prop;
+  }
+
+  static addInput(node, name) {
+    node.properties[name].input = true;
+    window.sendToServer("updateProp", {
+      nodeID: node.nodeID,
+      prop: node.properties[name]
     });
-
-    window.updateEditDialog();
   }
 
-  addOutputByName(name) {
-    this.updateProperties(name, "output", true);
-
-    let prop = this.properties[name];
-    this.addOutput(name, prop.type, null, prop.label);
-    window.updateEditDialog();
-  }
-  /**
-   * add a new input slot to use in this node
-   * @method addInput
-   * @param {string} name
-   * @param {string} type string defining the input type ("vec3","number",...), it its a generic one use 0
-   * @param {Object} extra_info this can be used to have special properties of an input (label, color, position, etc)
-   */
-  addInput(name, defaultValue, label, extra_info) {
-    defaultValue = defaultValue || 0;
-    label = label || name;
-    var input = { name: name, link: [], label: label };
-    if (extra_info) {
-      for (var i in extra_info) {
-        input[i] = extra_info[i];
-      }
-    }
-
-    Node.getInputs(this.properties).push(input);
-
-    if (this.onInputAdded) {
-      this.onInputAdded(input);
-    }
-
-    return input;
+  static addOutput(node, name) {
+    node.properties[name].output = true;
+    window.sendToServer("updateProp", {
+      nodeID: node.nodeID,
+      prop: node.properties[name]
+    });
   }
 
-  removeInputByName(name) {
-    this.updateProperties(name, "input", false);
-
-    let slot = Node.getInputs(this.properties).findIndex((item) => item.name === name);
-    if (slot >= 0) {
-      this.removeInput(slot);
-    }
-    window.updateEditDialog();
+  static removeInput(node, name) {
+    node.properties[name].input = false;
+    window.sendToServer("updateProp", {
+      nodeID: node.nodeID,
+      prop: node.properties[name]
+    });
   }
 
-  removeOutputByName(name) {
-    this.updateProperties(name, "output", false);
-    let slot = Node.getOutputs(this.properties).findIndex((item) => item.name === name);
-    if (slot >= 0) {
-      this.removeOutput(slot);
-    }
-    window.updateEditDialog();
-  }
-
-  /**
-   * remove an existing input slot
-   * @method removeInput
-   * @param {number} slot
-   */
-  removeInput(slot) {
-    this.disconnectInput(slot);
-    var slot_info = Node.getInputs(this.properties).splice(slot, 1);
-    for (var i = slot; i < Node.getInputs(this.properties).length; ++i) {
-      if (!Node.getInputs(this.properties)[i]) {
-        continue;
-      }
-      var link = this.graph.links[Node.getInputs(this.properties)[i].link];
-      if (!link) {
-        continue;
-      }
-      link.fromSlot -= 1;
-    }
-    if (this.onInputRemoved) {
-      this.onInputRemoved(slot, slot_info[0]);
-    }
+  static removeOutput(node, name) {
+    node.properties[name].output = false;
+    window.sendToServer("updateProp", {
+      nodeID: node.nodeID,
+      prop: node.properties[name]
+    });
   }
 
   static getInputs(prop) {
@@ -414,14 +352,6 @@ export class Node {
    * @return {Object} the link_info is created, otherwise null
    */
   connect(slot, target_node, fromSlot, id) {
-    if (!this.graph) {
-      //could be connected before adding it to a graph
-      console.log(
-        "Connect: Error, node doesn't belong to any graph. Nodes must be added first to a graph before connecting them."
-      ); //due to link ids being associated with graphs
-      return null;
-    }
-
     var link_info = new LLink(id, "number", this.id, slot, target_node, fromSlot);
 
     //add to graph links list
@@ -460,34 +390,6 @@ export class Node {
 
     return true;
   }
-  /**
-   * disconnect one input
-   * @method disconnectInput
-   * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
-   * @return {boolean} if it was disconnected successfully
-   */
-  disconnectInput(link) {
-    var input = this.getInputByName(link.fromSlot);
-    if (!input) return false;
-    if (!input.links) return false;
-
-    var link_id = link.linkID;
-    if (link_id != null) {
-      // Find the index of the value you want to remove
-      let indexToRemove = input.links.indexOf(link_id);
-
-      // Check if the value exists in the array
-      if (indexToRemove !== -1) {
-        // Use splice to remove the value
-        input.links.splice(indexToRemove, 1);
-        console.log(`Removed ${link_id} from the array.`);
-      } else {
-        console.log(`${link_id} not found in the array.`);
-      }
-    } //link != null
-
-    return true;
-  }
 
   setDirtyCanvas(a, b) {
     this.canvas.setDirty(a, b);
@@ -498,23 +400,22 @@ export class Node {
    * @method setSize
    * @param {vec2} size
    */
-  setSize(size, update = true) {
+  static setSize(node, size, update = true) {
     if (size == null) return;
-    if (!this.fixsize) {
-      this.size = [
+    if (!node.fixsize) {
+      node.size = [
         NodiEnums.CANVAS_GRID_SIZE * Math.round(size[0] / NodiEnums.CANVAS_GRID_SIZE),
         NodiEnums.CANVAS_GRID_SIZE * Math.round(size[1] / NodiEnums.CANVAS_GRID_SIZE),
       ];
     }
-    if (this.onResize) this.onResize(this.size);
-    if (update) window.sendToServer("setSize", { nodeID: this.id, size: this.size });
+    if (update) window.sendToServer("setSize", { nodeID: node.nodeID, size: node.size });
   }
 
-  updateProperties(name, type, val) {
-    this.properties[name][type] = val;
+  static updateProperties(node, name, type, val) {
+    node.properties[name][type] = val;
     window.sendToServer("updateNode", {
-      nodeID: this.id,
-      newData: { properties: this.properties },
+      nodeID: node.nodeID,
+      newData: { properties: node.properties },
     });
   }
 
@@ -524,64 +425,28 @@ export class Node {
    * @param {number} minHeight
    * @return {number} the total size
    */
-  computeSize(props) {
-    if (this.fixsize) {
-      this.size = this.fixsize;
-      return this.fixsize;
-    }
-    if (this.constructor.size) {
-      return this.constructor.size.concat();
+  static computeSize(node) {
+    if (node.fixsize) {
+      return node.fixsize;
     }
 
-    var rows = Math.max(Node.getInputs(props).length, Node.getInputs(props).length);
+    var rows = Math.max(Node.getInputs(node.properties).length, Node.getOutputs(node.properties).length);
     if (rows < 1) rows = 1;
     var size = [0, 0];
     rows = Math.max(rows, 1);
-    var font_size = NodiEnums.NODE_TEXT_SIZE; //although it should be graphcanvas.inner_text_font size
 
-    var input_width = 0;
-    var output_width = 0;
 
-    for (var i = 0, l = Node.getInputs(props).length; i < l; ++i) {
-      var input = Node.getInputs(props)[i];
-      var text = input.label || input.name || "";
-      var text_width = compute_text_size(text);
-      if (input_width < text_width) {
-        input_width = text_width;
-      }
-    }
-
-    for (let i = 0, l = Node.getOutputs(props).length; i < l; ++i) {
-      var output = Node.getOutputs(props)[i];
-      let text = output.label || output.name || "";
-      let text_width = compute_text_size(text);
-      if (output_width < text_width) {
-        output_width = text_width;
-      }
-    }
-
-    size[0] = Math.max(input_width + output_width + 10, 32);
     size[0] = Math.max(size[0], NodiEnums.NODE_WIDTH);
 
-    size[1] = rows * NodiEnums.NODE_SLOT_HEIGHT;
+    size[1] = rows * NodiEnums.NODE_WIDTH;
 
-    function compute_text_size(text) {
-      if (!text) {
-        return 0;
-      }
-      return font_size * text.length * 0.6;
+
+    if (node.min_height && size[1] < node.min_height) {
+      size[1] = node.min_height;
     }
-
-    if (this.constructor.min_height && size[1] < this.constructor.min_height) {
-      size[1] = this.constructor.min_height;
-    }
-
-    size[1] += 6; //margin
 
     return size;
   }
-  
-
 
   /**
    * checks if a point is inside a node slot, and returns info about which slot
@@ -653,7 +518,6 @@ export class Node {
     return out;
   }
 
-
   /* Force align to grid */
   static alignToGrid(node) {
     let gridSize = NodiEnums.CANVAS_GRID_SIZE;
@@ -670,9 +534,9 @@ export class Node {
     }
   }
 
-  setPos(x, y) {
-    this.pos[0] = x;
-    this.pos[1] = y;
-    Node.alignToGrid(this);
+  static setPos(node, x, y) {
+    node.pos[0] = x;
+    node.pos[1] = y;
+    Node.alignToGrid(node);
   }
 }

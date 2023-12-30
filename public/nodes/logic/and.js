@@ -6,15 +6,8 @@ class logicAnd extends AndCore{
         super();
         this.properties = {};
         AndCore.setup(this.properties);
-        this.setSize([64, 128]);
-        this.type = AndCore.type
-        this.title = AndCore.title;
+        Node.setSize(this, [64, 128]);
     }
-
-    onExecute(props) {
-        return AndCore.run(props);
-    }
-
 }
 
 NodeWork.registerNodeType(logicAnd);

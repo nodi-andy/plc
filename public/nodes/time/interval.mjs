@@ -1,6 +1,6 @@
 import { NodiEnums } from "../../enums.mjs";
 import NodeWork from "../../nodework.mjs";
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 
 class TimeInterval extends Node {
   static type = "time/interval";
@@ -17,6 +17,7 @@ class TimeInterval extends Node {
 
   static setup(prop) {
     Node.setProperty(prop, "state", { output: true });
+    Node.setProperty(prop, "enable", {value: 1, autoInput: true});
     Node.setProperty(prop, "press", { value: 1 });
     Node.setProperty(prop, "release");
     Node.setProperty(prop, "ton", { value: 500 });
@@ -28,46 +29,45 @@ class TimeInterval extends Node {
     TimeInterval.reset(prop);
   }
 
-  static run(prop) {
+  static run(props) {
     var now = NodiEnums.getTime();
-    for (let input in prop) {
-      if (prop[input].inpValue != null) {
-        prop[input].value = parseInt(prop[input].inpValue);
-        prop[input].inpValue = null;
+    let ret = false;
+    for(let propKey in props) {
+      let prop = props[propKey];
+      if (prop.autoInput && prop.inpValue != null) {
+          prop.value = prop.inpValue;
+          prop.inpValue = null;
+          ret = true;
       }
     }
 
-    if (prop.state.value == null) prop.state.value = 0;
+    if (props.state.value == null) props.state.value = 0;
 
-    var dON = now - prop.lastOn.value;
-    var dOFF = now - prop.lastOff.value;
-    if (prop.state.value == 0 && dOFF > prop.toff.value) {
-      prop.lastOn.value = now;
-      prop.state.value = 1;
-      prop.state.outValue = 1;
-      prop.value.value = prop.release.value;
-      prop.value.outValue = prop.release.value;
+    var dON = now - props.lastOn.value;
+    var dOFF = now - props.lastOff.value;
+    if (props.state.value == 0 && dOFF > props.toff.value && props.enable.value) {
+      props.lastOn.value = now;
+      props.state.value = 1;
+      props.state.outValue = 1;
+      props.value.value = props.release.value;
+      props.value.outValue = props.release.value;
       console.log("ton");
-      return true;
-    } else if (prop.state.value == 1 && dON > prop.ton.value) {
-      prop.lastOff.value = now;
-      prop.state.value = 0;
-      prop.state.outValue = 0;
-      prop.value.value = prop.press.value;
-      prop.value.outValue = prop.press.value;
+      ret = true;
+    } else if (props.state.value == 1 && dON > props.ton.value && props.enable.value) {
+      props.lastOff.value = now;
+      props.state.value = 0;
+      props.state.outValue = 0;
+      props.value.value = props.press.value;
+      props.value.outValue = props.press.value;
       console.log("toff");
-      return true;
+      ret = true;
     }
 
-    return false;
+    return ret;
   }
 
-  static reset(prop) {
-    prop.state.value = 0;
-  }
-
-  onExecute(props) {
-    return Node.run(props);
+  static reset(props) {
+    props.state.value = 0;
   }
 
   onDrawBackground() {

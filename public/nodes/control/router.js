@@ -1,4 +1,4 @@
-import { Node } from "../../node.mjs";
+import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 class Filter extends Node{

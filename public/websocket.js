@@ -20,6 +20,7 @@ const events = [
   "nodeResized",
   "addLink",
   "remLink",
+  "propUpdated",
   "remNode",
   "clear",
   "moveNode",
@@ -71,7 +72,6 @@ window.socketIO.on("connect", () => {
 
 window.socketIO.on("setNodework", (message) => {
   window.graph.configure(message, false);
-  window.canvas.dirty_canvas = true;
 });
 
 window.socketIO.on("id", () => {
@@ -79,18 +79,16 @@ window.socketIO.on("id", () => {
 });
 
 window.order.nodeAdded = (message) => {
-  let newNode = NodeWork.createNode(message.type, message.title, message.properties);
+  let newNode = NodeWork.createNode(message.type, message.properties);
   newNode.nodeID = message.nodeID;
   newNode.type = message.type;
-  if (message.pos) newNode.pos = message.pos;
-  if (message.size) newNode.setSize(message.size);
+  newNode.pos = message.pos;
+  if (message.size) window.canvas.Node.setSize(newNode, message.size);
   window.graph.addNode(message);
-  window.canvas.dirty_canvas = true;
 };
 
 window.order.nodeRemoved = (msg) => {
-  window.graph.removeNodeByID(msg.id);
-  window.canvas.dirty_canvas = true;
+  window.graph.nodeRemoved(msg.nodeID);
 };
 
 window.order.id = (message) => {
@@ -117,18 +115,14 @@ window.order.updateNode = (message) => {
       message.newData.properties
     );
   }
-  window.canvas.dirty_canvas = true;
-  window.canvas.dirty_bgcanvas = true;
 };
 
 window.order.linkAdded = (msg) => {
   window.graph.links[msg.linkID] = msg;
-  window.canvas.dirty_canvas = true;
 };
 
 window.order.linkRemoved = (msg) => {
-  window.graph.removeLink(msg.nodeID);
-  window.canvas.dirty_canvas = true;
+  window.graph.links[msg.linkID] = null;
 };
 
 window.order.setNodework = (msg) => {
@@ -156,34 +150,31 @@ window.order.nodeResized = (msg) => {
 
 window.order.addLink = (msg) => {
   window.graph.links[msg.linkID] = msg;
-  window.canvas.dirty_canvas = true;
 };
 
 window.order.remLink = (msg) => {
   window.graph.removeLink(msg.nodeID);
-  window.canvas.dirty_canvas = true;
 };
 
 window.order.remNode = (message) => {
-  window.graph.removeNodeByID(message);
-  window.canvas.dirty_canvas = true;
+  window.graph.removeNode(message);
 };
 
 window.order.clear = () => {
   window.graph.clear();
-  window.canvas.dirty_canvas = true;
 };
 
 window.order.moveNode = (message) => {
-  // Handle incoming messages here
   window.graph.nodes[message.nodeID].pos = message.moveTo;
-  window.canvas.dirty_canvas = true;
+};
+
+window.order.propUpdated = (message) => {
+  window.graph.nodes[message.nodeID].properties[message.prop.name] = message.prop;
+  window.updateEditDialog();
 };
 
 window.order.setSize = (message) => {
-  // Handle incoming messages here
-  window.graph.nodes[message.nodeID].setSize(message.size, false);
-  window.canvas.dirty_canvas = true;
+  window.graph.nodes[message.nodeID].size = message.size;
 };
 
 window.order.disconnect = () => {

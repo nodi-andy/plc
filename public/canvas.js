@@ -1,7 +1,7 @@
 import { NodiEnums } from "./enums.mjs";
 import View from "./view.js";
 import NodeWork from "./nodework.mjs";
-import { Node } from "./node.mjs";
+import Node from "./node.mjs";
 
 var margin_area = new Float32Array(4);
 var temp_vec2 = new Float32Array(2);
@@ -19,7 +19,6 @@ export default class LGraphCanvas {
     this.ds = new View();
     this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
 
-    this.title_text_font = "" + NodiEnums.NODE_TEXT_SIZE + "px Arial";
     this.inner_text_font = "normal " + NodiEnums.NODE_SUBTEXT_SIZE + "px Arial";
     this.node_title_color = NodiEnums.NODE_TITLE_COLOR;
     this.default_link_color = NodiEnums.LINK_COLOR;
@@ -39,7 +38,6 @@ export default class LGraphCanvas {
     this.render_only_selected = true;
     this.show_info = false;
     this.allow_dragcanvas = true;
-    this.allow_dragnodes = true;
     this.allow_interaction = true; //allow to control widgets, buttons, collapse, etc
     this.allow_searchbox = true;
     this.allow_reconnect_links = true; //allows to change a connection with having to redo it again
@@ -83,6 +81,7 @@ export default class LGraphCanvas {
     this.round_radius = 8;
 
     this.current_node = null;
+    this.Node = Node;
     this.current_node_cbs = [];
     this.node_widget = null; //used for widgets
     this.over_link_center = null;
@@ -575,7 +574,7 @@ export default class LGraphCanvas {
 
       // clone node ALT dragging
       if (e.altKey && node && this.allow_interaction && !skip_action) {
-        let cloned = node.clone();
+        let cloned = Node.clone(node);
         if (cloned) {
           cloned.pos[0] += 5;
           cloned.pos[1] += 5;
@@ -583,9 +582,7 @@ export default class LGraphCanvas {
           node = cloned;
           skip_action = true;
           if (!block_drag_node) {
-            if (this.allow_dragnodes) {
               this.node_dragged = node;
-            }
             if (!this.selected_nodes[node.nodeID]) {
               this.processNodeSelected(node, e);
             }
@@ -677,14 +674,12 @@ export default class LGraphCanvas {
           var pos = [e.canvasX - node.pos[0], e.canvasY - node.pos[1]];
 
           //if do not capture mouse
-          if (NodeWork.getNodeType(node.type).onMouseDown(node, e, pos, this)) {
+          if (NodeWork.getNodeType(node.type).onMouseDown && NodeWork.getNodeType(node.type).onMouseDown(node, e, pos, this)) {
             block_drag_node = true;
           }
 
           if (!block_drag_node) {
-            if (this.allow_dragnodes) {
               this.node_dragged = node;
-            }
             if (!this.selected_nodes[node.nodeID]) {
               this.processNodeSelected(node, e);
             }
@@ -826,8 +821,8 @@ export default class LGraphCanvas {
       var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY, this.visible_nodes);
 
       //remove mouseover flag
-      for (const nodeID in this.graph.nodes) {
-        let node = this.graph.nodes[nodeID];
+      this.graph.nodes.forEach((node) => {
+        if (!node) return;
         if (node.mouseOver) {
           //mouse leave
           node.mouseOver = false;
@@ -837,7 +832,7 @@ export default class LGraphCanvas {
           this.node_over = null;
           this.dirty_canvas = true;
         }
-      }
+      })
 
       //mouse over a node
       if (node) {
@@ -974,10 +969,10 @@ export default class LGraphCanvas {
       if (this.resizing_node) {
         //convert mouse to node space
         var desired_size = [e.canvasX - this.resizing_node.pos[0], e.canvasY - this.resizing_node.pos[1]];
-        var min_size = this.resizing_node.computeSize();
+        var min_size = Node.computeSize(this.resizing_node);
         desired_size[0] = Math.max(min_size[0], desired_size[0]);
         desired_size[1] = Math.max(min_size[1], desired_size[1]);
-        this.resizing_node.setSize(desired_size);
+        Node.setSize(this.resizing_node, desired_size);
 
         this.canvas.style.cursor = "se-resize";
         this.dirty_canvas = true;
@@ -1376,7 +1371,7 @@ export default class LGraphCanvas {
     }
 
     for (let node of selected_nodes_array) {
-      var cloned = node.clone();
+      var cloned = Node.clone(node);
       if (!cloned) {
         console.warn("node type not found: " + node.type);
         continue;
@@ -1635,9 +1630,11 @@ export default class LGraphCanvas {
       }
     }
     this.graph.nodes.forEach((node) => {
+      if (!node) return;
       node.is_selected = false;
     });
     this.graph.links.forEach((linkit) => {
+      if (!linkit) return;
       if (linkit) linkit.selected = false;
     });
     this.selected_nodes = [];
@@ -1730,19 +1727,6 @@ export default class LGraphCanvas {
     return this.convertCanvasToOffset([e.clientX - rect.left, e.clientY - rect.top]);
   }
 
-  /**
-   * sends a node to the back (below all other nodes)
-   * @method sendToBack
-   */
-  sendToBack(node) {
-    var i = this.graph.nodes.indexOf(node);
-    if (i == -1) {
-      return;
-    }
-
-    this.graph.nodes.splice(i, 1);
-    this.graph.nodes.unshift(node);
-  }
   /**
    * checks which nodes are visible (inside the camera area)
    * @method computeVisibleNodes
@@ -1966,29 +1950,6 @@ export default class LGraphCanvas {
 
       ctx.strokeStyle = "#555";
       this.ds.computeVisibleArea(this.viewport);
-      let s = NodiEnums.CANVAS_GRID_SIZE;
-
-      let marginx = Math.max(this.visible_area[2] * 0.1, 2 * NodiEnums.CANVAS_GRID_SIZE);
-      let marginy = Math.max(this.visible_area[3] * 0.1, 2 * NodiEnums.CANVAS_GRID_SIZE);
-      let grid_area = [
-        this.visible_area[0] - marginx,
-        this.visible_area[1] - marginy,
-        this.visible_area[0] + this.visible_area[2] + marginx,
-        this.visible_area[1] + this.visible_area[3] + marginy,
-      ];
-
-      let l = Math.floor(grid_area[0] / s) * s;
-      let t = Math.floor(grid_area[1] / s) * s;
-      let r = grid_area[2];
-      let d = grid_area[3];
-
-      ctx.fillStyle = "rgb(0,0,0,0.05)";
-
-      for (var x = l; x <= r; x += s) {
-        for (var y = t; y <= d; y += s) {
-          ctx.fillRect(x - 4 + s / 2, y - 4 + s / 2, 8, 8);
-        }
-      }
 
       //draw connections
       this.drawConnections(ctx);
@@ -2003,8 +1964,6 @@ export default class LGraphCanvas {
       ctx.finish();
     }
 
-    this.dirty_bgcanvas = false;
-    this.dirty_canvas = true; //to force to repaint the front canvas with the bgcanvas
   }
   /**
    * draws the given node inside the canvas
@@ -2201,7 +2160,6 @@ export default class LGraphCanvas {
     ctx.strokeStyle = fgcolor;
     ctx.fillStyle = bgcolor;
 
-    var title = node.title;
     //render node area depending on shape
     var area = tmp_area;
     area[0] = 0; //x
@@ -2220,12 +2178,12 @@ export default class LGraphCanvas {
       node.onDrawBackground(ctx, this, this.canvas, this.graph_mouse);
     }
 
-    if (title) {
+    if (node.properties?.label?.value) {
       let fontSize = 30;
       ctx.font = fontSize + "px Arial";
       ctx.textAlign = "center";
       ctx.fillStyle = "white";
-      ctx.fillText(title, node.size[0] / 2, (node.size[1] + fontSize) / 2);
+      ctx.fillText(node.properties.label.value, node.size[0] / 2, (node.size[1] + fontSize) / 2);
     }
     //render selection marker
     if (selected) {
@@ -2275,10 +2233,14 @@ export default class LGraphCanvas {
       if (start_node == null || end_node == null) {
         continue;
       }
+
       var start_node_slot = Node.getOutputs(start_node.properties)
         .map((obj) => obj.name)
+        .indexOf(link.fromSlot);
+      var end_node_slot = Node.getInputs(end_node.properties)
+        .map((obj) => obj.name)
         .indexOf(link.toSlot);
-      var end_node_slot = Node.getInputIndexByName(end_node, link.fromSlot);
+
       var start_node_slotpos = null;
       if (start_node_slot == -1) {
         start_node_slotpos = [start_node.pos[0] + 10, start_node.pos[1] + 10];
@@ -2478,38 +2440,6 @@ export default class LGraphCanvas {
       ctx.fillText(node.order, node.pos[0] + NodiEnums.NODE_TITLE_HEIGHT * -0.5, node.pos[1] - 6);
     }
     ctx.globalAlpha = 1;
-  }
-
-  /**
-   * draws the widgets stored inside a node
-   * @method drawNodeWidgets
-   */
-  drawNodeWidgets(node, posY, ctx) {
-    var width = node.size[0];
-    posY += 2;
-    var H = NodiEnums.NODE_WIDGET_HEIGHT;
-
-    ctx.save();
-    ctx.globalAlpha = this.editor_alpha;
-    var outline_color = NodiEnums.WIDGET_OUTLINE_COLOR;
-
-    var w = this;
-    var y = posY;
-    if (w.y) {
-      y = w.y;
-    }
-    w.last_y = y;
-    ctx.strokeStyle = outline_color;
-    ctx.fillStyle = "#222";
-    ctx.textAlign = "left";
-    //ctx.lineWidth = 2;
-    if (w.disabled) ctx.globalAlpha *= 0.5;
-    var widget_width = w.width || width;
-
-    posY += (w.computeSize ? w.computeSize(widget_width)[1] : H) + 4;
-    ctx.globalAlpha = this.editor_alpha;
-    ctx.restore();
-    ctx.textAlign = "left";
   }
 
   adjustNodesSize() {
