@@ -1,14 +1,14 @@
 import WidgetLed from "../widget/led.mjs";
 
 export default class esp32mcuLED extends WidgetLed {
-    static type = "esp32mcu/led";
-    constructor() {
-        super();
-        this.properties.port.value = 2;
-        this.properties.label.value = " ";
-        this.properties.color.value = "1111ff";
-        this.type = WidgetLed.type;
-        this.device = "esp32mcu";
-    }
-}
+    static type2 = "esp32mcu/led";
 
+    static setup(node) {
+        WidgetLed.setup(node);
+        let props = node.properties;
+        props.port.value = 2;
+        props.label.value = " ";
+        props.color.value = "#1111ff";
+        props.device = "esp32mcu";
+    }    
+}

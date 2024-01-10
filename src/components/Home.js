@@ -197,7 +197,8 @@ export default function Home({setShowEditMenu}) {
 
   window.setFilename = (fn) => {setFilename(fn)}
   window.showSnackbar = (msg) => {window.messageText = msg; setSnackbarOpen(true)}
-
+  window.setShowNodes = (fn) => {setShowNodes(fn)}
+  
   return (
     <>
       <SelectNodeDialog openND={showNodes}  setOpenND={setShowNodes}/>

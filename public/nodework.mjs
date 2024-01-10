@@ -1,6 +1,7 @@
 import { NodiEnums } from "./enums.mjs";
 import Node from "./node.mjs";
 import LLink from "./link.mjs";
+import Vector2 from "./vector2.mjs";
 
 export default class NodeWork {
   static debug = false;
@@ -32,7 +33,9 @@ export default class NodeWork {
       console.log("Node registered: " + base_class.type);
     }
 
-    var categories = base_class.type.split("/");
+    let classType = base_class.type;
+    if (base_class.type2) classType = base_class.type2;
+    var categories = classType.split("/");
     var classname = base_class.name;
 
     base_class.category = categories[0];
@@ -50,37 +53,22 @@ export default class NodeWork {
       }
     }
 
-    var prev = this.registered_node_types[base_class.type];
-    if (prev) console.log("replacing node type: " + base_class.type);
+    var prev = this.registered_node_types[classType];
+    if (prev) console.log("replacing node type: " + classType);
     else {
       //warnings
       if (base_class.prototype.onPropertyChange) {
         console.warn(
           "LiteGraph node class " +
-            base_class.type +
+            classType +
             " has onPropertyChange method, it must be called onPropertyChanged with d at the end"
         );
       }
     }
 
-    this.registered_node_types[base_class.type] = base_class;
+    this.registered_node_types[classType] = base_class;
     if (base_class.constructor.name) {
       this.Nodes[classname] = base_class;
-    }
-    if (NodeWork.onNodeTypeRegistered) {
-      NodeWork.onNodeTypeRegistered(base_class.type, base_class);
-    }
-    if (prev && NodeWork.onNodeTypeReplaced) {
-      NodeWork.onNodeTypeReplaced(base_class.type, base_class, prev);
-    }
-
-    //warnings
-    if (base_class.prototype.onPropertyChange) {
-      console.warn(
-        "LiteGraph node class " +
-          base_class.type +
-          " has onPropertyChange method, it must be called onPropertyChanged with d at the end"
-      );
     }
   }
 
@@ -119,12 +107,12 @@ export default class NodeWork {
       return null;
     }
 
-    var node = { type: base_class.type };
+    var node = { type: base_class.type, type2: base_class.type };
 
     if (!node.properties) {
       node.properties = {};
     }
-    base_class.setup(node.properties);
+    base_class.setup(node);
 
     node.size = Node.computeSize(node.properties);
     node.pos = NodiEnums.DEFAULT_POSITION.concat();
@@ -167,6 +155,7 @@ export default class NodeWork {
    */
   clear() {
     this.nodes = [];
+    this.nodesByPos = {};
     this.links = [];
 
     //timing
@@ -199,13 +188,6 @@ export default class NodeWork {
     return this.elapsed_time;
   }
 
-  getNextID() {
-    for (let i = 0; i < Number.MAX_SAFE_INTEGER; i++) {
-      if (this.nodes[i] == null && this.links[i] == null) {
-        return i;
-      }
-    }
-  }
   /**
    * Adds a new node instance to this graph
    * @method add
@@ -215,7 +197,31 @@ export default class NodeWork {
     if (!node) return;
 
     this.nodes[node.nodeID] = node;
+    this.nodeDropped({nodeID: node.nodeID, moveTo: node.pos});
+  }
+
+  nodeDropped(msg) {
+    if (!msg) return;
+    let node = this.nodes[msg.nodeID];
+    node.moving = false;
+    
+    let next_gridPos = NodiEnums.toGrid(msg.moveTo);
+    if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
+      this.setNodeOnGrid(node.gridPos[0], node.gridPos[1], null);
+      this.setNodeOnGrid(next_gridPos[0], next_gridPos[1], node.nodeID);
+    } else {
+      node.pos = NodiEnums.toCanvas(node.gridPos);
+    }
+
     Node.alignToGrid(node);
+    let nodeClass = NodeWork.getNodeType(node.type);
+    if (nodeClass.replace) nodeClass.replace(node, this);
+  }
+
+  /* The node is on the mouse cursor and not on the field any more */
+  pickNode(msg) {
+    let node = this.nodes[msg.nodeID];
+    node.drag_start_pos = msg.drag_start_pos;
   }
 
   addLink(link) {
@@ -241,23 +247,28 @@ export default class NodeWork {
     return this.nodes[id];
   }
 
-  /**
-   * Returns the top-most node in this position of the canvas
-   * @method getNodeOnPos
-   * @param {number} x the x coordinate in canvas space
-   * @param {number} y the y coordinate in canvas space
-   * @param {Array} nodes_list a list with all the nodes to search from, by default is all the nodes in the graph
-   * @return {Node} the node at this position or null
-   */
-  getNodeOnPos(x, y, nodes_list, margin) {
-    var nRet = null;
-    for (var i = nodes_list.length - 1; i >= 0; i--) {
-      var n = this.nodes[nodes_list[i]];
-      if (Math.isPointInside(n, x, y, margin)) {
-        return n;
-      }
+  getNodeOnPos(x, y) {
+    let gridPos = [];
+    gridPos[0] = Math.floor(x / NodiEnums.CANVAS_GRID_SIZE);
+    gridPos[1] = Math.floor(y / NodiEnums.CANVAS_GRID_SIZE);
+    return this.getNodeOnGrid(gridPos[0], gridPos[1]);
+  }
+
+  getNodeOnGrid(x, y) {
+    let node = this.getNodeById(this.nodesByPos[x + "-" + y]);
+    if (node) {
+      return node;
+    } else {
+      return null;
     }
-    return nRet;
+  }
+
+  setNodeOnGrid(x, y, node) {
+    if (node == null) {
+      delete this.nodesByPos[x + "-" + y];
+    } else {
+      this.nodesByPos[x + "-" + y] = node;
+    }
   }
 
   /**
@@ -315,44 +326,13 @@ export default class NodeWork {
     delete this.links[link_id];
   }
 
-  /**
-   * Creates a Object containing all the info about this graph, it can be serialized
-   * @method serialize
-   * @return {Object} value of the node
-   */
   serialize() {
-    var nodes_info = [];
-    for (var i = 0, l = this.nodes.length; i < l; ++i) {
-      nodes_info.push(this.nodes[i].serialize());
-    }
-
-    //pack link info into a non-verbose format
-    var links = [];
-    for (i in this.links) {
-      //links is an OBJECT
-      var link = this.links[i];
-      if (!link.serialize) {
-        //weird bug I havent solved yet
-        console.warn("weird LLink bug, link info is not a LLink but a regular object");
-        var link2 = new LLink();
-        for (var j in link) {
-          link2[j] = link[j];
-        }
-        this.links[i] = link2;
-        link = link2;
-      }
-
-      links.push(link.serialize());
-    }
-
     var data = {
-      nodes: nodes_info,
-      links: links,
-      config: this.config,
+      nodes: this.nodes,
+      nodesByPos: this.nodesByPos,
+      links: this.links,
       version: NodiEnums.VERSION,
     };
-
-    if (this.onSerialize) this.onSerialize(data);
 
     return data;
   }
@@ -368,8 +348,8 @@ export default class NodeWork {
 
     this.clear();
     this.nodes = data.nodes;
+    this.nodesByPos = data.nodesByPos;
     this.links = data.links;
-    this.canvas.setDirty(true, true);
     return false;
   }
 }

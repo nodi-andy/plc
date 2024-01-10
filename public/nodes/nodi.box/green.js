@@ -1,14 +1,13 @@
 import WidgetLed from "../widget/led.mjs";
 
 export default class NodiBoxGreen extends WidgetLed {
-    static type = "nodi.box/green_led";
-    constructor() {
-        super();
-        this.properties.port.value = 23;
-        this.properties.label.value = "green";
-        this.properties.color.value = "00ff00";
-        this.type = WidgetLed.type;
-        this.device = "nodi.box";
+    static type2 = "nodi.box/green_led";
+
+    static setup(props) {
+        WidgetLed.setup(props);
+        props.port.value = 23;
+        props.label.value = "green";
+        props.color.value = "#00ff00";
+        props.device = "nodi.box";
     }
 }
-

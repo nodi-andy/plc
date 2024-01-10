@@ -14,7 +14,7 @@
 SocketIOclient socketIO;
 
 #define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
-#define DEVICE_NAME "esp32mcu"
+#define DEVICE_NAME "esp32mcu" //nodi.box , esp32mcu
 
 #include <FS.h>
 #define SPIFFS LITTLEFS
@@ -363,7 +363,8 @@ void noditronTask( void * pvParameters ) {
         if(msgid) order = sptr;
         deserializeJson(djsondoc, order.c_str(), order.length());
         String eventName = djsondoc[0];
-        int id = djsondoc[1]["nodeID"].as<int>();
+        JsonObject eventData = djsondoc[1];
+        int id = eventData["nodeID"].as<int>();
         USE_SERIAL.printf("[nodework:event] id: %d, name: %s\n", id, eventName.c_str());
 
         if (eventName == "upload") {
@@ -436,18 +437,18 @@ void noditronTask( void * pvParameters ) {
               djsondoc[1]["nodeID"] = newNode->id;
             }
             sendToSocket("nodeAdded", djsondoc[1]);
-        } else if (eventName == "movedNode") {
-            nodemap.nodes[id]->posX = djsondoc[1]["moveTo"][0].as<int>();
-            nodemap.nodes[id]->posY = djsondoc[1]["moveTo"][1].as<int>();
+        } else if (eventName == "dropNode") {
+            nodemap.nodes[id]->pos[0] = eventData["moveTo"][0].as<int>();
+            nodemap.nodes[id]->pos[1] = eventData["moveTo"][1].as<int>();
 
-            USE_SERIAL.printf("[nodework:moved] name: %s\n", eventName.c_str());
-            sendToSocket("nodeMoved", djsondoc[1]);
+            USE_SERIAL.printf("[nodework:dropped] name: %s\n", eventName.c_str());
+            sendToSocket("nodeMoved", eventData);
         } else if (eventName == "resizedNode") {
-            nodemap.nodes[id]->posX = djsondoc[1]["size"][0].as<int>();
-            nodemap.nodes[id]->posY = djsondoc[1]["size"][1].as<int>();
+            nodemap.nodes[id]->size[0] = eventData["size"][0].as<int>();
+            nodemap.nodes[id]->size[1] = eventData["size"][1].as<int>();
 
             USE_SERIAL.printf("[nodework:resized] name: %s\n", eventName.c_str());
-            sendToSocket("nodeResized", djsondoc[1]);
+            sendToSocket("nodeResized", eventData);
         } else if (eventName == "remNode") {
             USE_SERIAL.printf("[remNode] id: %d\n", id);
             nodemap.removeNode(id);

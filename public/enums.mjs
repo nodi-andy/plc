@@ -36,6 +36,13 @@ export const NodiEnums = {
   CENTER: 5,
   NORMAL_TITLE: 0,
   NO_TITLE: 1,
+
+  toGrid(p) {
+    return [Math.floor(p[0] / NodiEnums.CANVAS_GRID_SIZE), Math.floor(p[1] / NodiEnums.CANVAS_GRID_SIZE)];
+  },
+  toCanvas(p) {
+    return [p[0] * NodiEnums.CANVAS_GRID_SIZE, p[1] * NodiEnums.CANVAS_GRID_SIZE];
+  },
 };
 
 //timer that works everywhere

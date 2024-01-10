@@ -45,5 +45,3 @@ export default class Stepper extends Node{
         this.setOutputData(1, this.num);
     }
 }
-
-//NodeWork.registerNodeType(Stepper);

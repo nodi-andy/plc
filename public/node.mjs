@@ -391,10 +391,6 @@ export default class Node {
     return true;
   }
 
-  setDirtyCanvas(a, b) {
-    this.canvas.setDirty(a, b);
-  }
-
   /**
    * changes node size and triggers callback
    * @method setSize
@@ -508,30 +504,15 @@ export default class Node {
       return out;
     }
 
-    //default vertical slots
-    if (is_input) {
-      out[0] = node.pos[0];
-    } else {
-      out[0] = node.pos[0] + node.size[0];
-    }
+    out[0] = node.pos[0];
     out[1] = node.pos[1] + (slot_number + 0.5) * NodiEnums.NODE_SLOT_HEIGHT;
     return out;
   }
 
   /* Force align to grid */
   static alignToGrid(node) {
-    let gridSize = NodiEnums.CANVAS_GRID_SIZE;
-    if (node.type == "control/junction") gridSize /= 4;
-    if (node.size[0] >= gridSize) {
-      node.pos[0] = gridSize * Math.round(node.pos[0] / gridSize);
-    } else {
-      node.pos[0] = gridSize * (Math.round(node.pos[0] / gridSize) + 0.5) - node.size[0] / 2;
-    }
-    if (node.size[1] >= gridSize) {
-      node.pos[1] = gridSize * Math.round(node.pos[1] / gridSize);
-    } else {
-      node.pos[1] = gridSize * (Math.round(node.pos[1] / gridSize) + 0.5) - node.size[1] / 2;
-    }
+    node.gridPos = NodiEnums.toGrid(node.pos);
+    node.pos = NodiEnums.toCanvas(node.gridPos);
   }
 
   static setPos(node, x, y) {

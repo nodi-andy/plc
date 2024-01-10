@@ -18,6 +18,8 @@ import "./public/nodes/math/isless_core.mjs";
 import "./public/nodes/math/isgreater_core.mjs";
 import "./public/nodes/time/interval.mjs";
 import "./public/nodes/control/junction.mjs";
+import "./public/nodes/control/inserter.mjs";
+import Vector2 from "./public/vector2.mjs";
 
 const app = express();
 const server = http.createServer(app);
@@ -29,6 +31,7 @@ const io = new socketIOServer(server, {
 
 var nodeWorkJSON = new NodeWork();
 var iot = null;
+var settings = {ownerShip: false};
 
 function getFirstNullIndex(arr) {
   for (let i = 0; i < arr.length; i++) {
@@ -43,8 +46,26 @@ setInterval(() => {
   try {
     nodeWorkJSON.nodes.forEach((node) => {
       if (!node) return;
-      let c = NodeWork.getNodeType(node.type);
-      if (node.cmds && node.cmds.length) {
+      let curType = NodeWork.getNodeType(node.type);
+      if (node.movingTo) {
+        let curPos = new Vector2 (node.pos[0], node.pos[1]);
+        let target = new Vector2(node.movingTo[0], node.movingTo[1]);
+        let moveVector = new Vector2(node.movingTo[0] - node.pos[0], node.movingTo[1] - node.pos[1]).normalize().multiplyScalar(5);
+        //console.log("Dist: ", curPos.distanceTo(target));
+        if (curPos.distanceTo(target) > 5) {
+          node.pos[0] += moveVector.x;
+          node.pos[1] += moveVector.y;
+        } else {
+          node.pos[0] = target.x;
+          node.pos[1] = target.y;
+          delete node.movingTo;
+        }
+        
+        io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
+        //console.log("JA", moveVector);
+      }
+      
+      if (node.cmds?.length) {
         let command = node.cmds.shift();
         
         if (command.cmd == "updateNode") {
@@ -63,9 +84,15 @@ setInterval(() => {
       if (node.device == "server") {
         //if (node?.properties?.state?.inpValue) console.log(node?.properties?.state?.inpValue)
         //console.log(c)
-
-        if (c && c.run && c.run(node.properties) == true) {
+        let runResults = curType?.run && curType.run(node);
+        if ( runResults == true) {
           io.emit("updateNode", { nodeID: node.nodeID, newData: { properties: node.properties } });
+        }
+        if ( runResults.length) {
+          runResults.forEach((id) => {
+            io.emit("updateNode", { nodeID: id, newData: { properties: nodeWorkJSON.nodes[id].properties } });
+          }
+          )
         }
       }
     });
@@ -137,20 +164,22 @@ io.on("connection", (socket) => {
     console.log("[nodeAdded]");
     //console.log(msg);
     if (!msg) return;
-    nodeWorkJSON.nodes[msg.nodeID] = msg;
+    nodeWorkJSON.addNode(msg);
     io.emit("nodeAdded", msg);
   });
 
-  socket.on("addNode", (msg) => {
+  socket.on("addNode", (node) => {
     console.log("[addNode]");
     //console.log(msg);
-    if (!msg) return;
-    msg.nodeID = getFirstNullIndex(nodeWorkJSON.nodes);
-    nodeWorkJSON.nodes[msg.nodeID] = msg;
-    if (msg.device == "nodi.box" && iot) {
-      iot.emit("addNode", msg);
+    if (!node) return;
+    node.nodeID = getFirstNullIndex(nodeWorkJSON.nodes);
+    node.owner = socket.id;
+    node.moving = false;
+    nodeWorkJSON.addNode(node);
+    if (node.device == "nodi.box" && iot) {
+      iot.emit("addNode", node);
     } else {
-      io.emit("nodeAdded", msg);
+      io.emit("nodeAdded", node);
     }
   });
 
@@ -209,20 +238,39 @@ io.on("connection", (socket) => {
 
   socket.on("moveNode", (msg) => {
     console.log("[moveNode] ", msg);
-    nodeWorkJSON.nodes[msg.nodeID].pos = msg.moveTo;
+    let node = nodeWorkJSON.nodes[msg.nodeID];
+    if (!node) return;
+    if (settings.ownerShip && node.owner != socket.id) return;
+    node.pos = msg.moveTo;
+    node.moving = true;
     socket.to("browser_room").emit("moveNode", msg);
   });
 
-  socket.on("movedNode", (msg) => {
-    if (msg.nodeID == null) return;
-    if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
-
-    console.log("[movedNode] ", msg);
+  socket.on("movingTo", (msg) => {
+    console.log("[movingNode] ", msg);
+    if (!(nodeWorkJSON.nodes[msg.nodeID].cmds)) nodeWorkJSON.nodes[msg.nodeID].cmds = [];
+    if (settings.ownerShip && nodeWorkJSON.nodes[msg.nodeID].owner != socket.id) return;
+    nodeWorkJSON.nodes[msg.nodeID].movingTo = msg.dest;
     socket.to("browser_room").emit("moveNode", msg);
-    if (iot) {
-      //iot.emit("getNodework", "");
-    }
-    nodeWorkJSON.nodes[msg.nodeID].pos = msg.moveTo;
+  });
+
+  socket.on("dropNode", (msg) => {
+    if (msg.nodeID == null) return;
+    let node = nodeWorkJSON.nodes[msg.nodeID];
+    if (!node == null) return;
+    if (settings.ownerShip && nodeWorkJSON.nodes[msg.nodeID].owner != socket.id) return;
+
+    io.emit("nodeDropped", msg);
+    nodeWorkJSON.nodeDropped(msg);
+  });
+
+  socket.on("pickNode", (msg) => {
+    if (msg.nodeID == null) return;
+    let node = nodeWorkJSON.nodes[msg.nodeID];
+    if (!node == null) return;
+    if (settings.ownerShip && nodeWorkJSON.nodes[msg.nodeID].owner != socket.id) return;
+    nodeWorkJSON.pickNode(msg);
+    io.emit("nodePicked", msg.nodeID);
   });
 
   socket.on("setSize", (msg) => {
@@ -275,7 +323,8 @@ io.on("connection", (socket) => {
     //console.log("[updateNewClient]");
   });
   io.to(socket.id).emit("id", "");
-  //console.log("[newClient]");
+  io.to(socket.id).emit("setSettings", settings);
+  console.log("[newClient] ", socket.id);
 });
 app.use(express.static("data"));
 server.listen(8080);

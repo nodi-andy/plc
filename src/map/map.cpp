@@ -32,8 +32,8 @@ Node* Map::addNode(JsonObject json)
         } else {
             newNode->id = this->nodes.size();
         }
-        newNode->posX = json["widget"]["pos"][0].as<int>();
-        newNode->posY = json["widget"]["pos"][1].as<int>();
+        newNode->pos[0] = json["widget"]["pos"][0].as<int>();
+        newNode->pos[1] = json["widget"]["pos"][1].as<int>();
         newNode->type = json["type"].as<string>();
         addNode(newNode->id, newNode);
         Serial.printf("[Map:addNode:done] id: %d,  desc: %s, type: %s\n", newNode->id, newNode->desc.c_str(), newNode->getType().c_str());
@@ -77,8 +77,9 @@ DynamicJsonDocument Map::toJSON() {
        nodeObject["nodeID"] = n.second->id;
        nodeObject["type"] = n.second->type;
        nodeObject["properties"] = n.second->getProps();
-       nodeObject["posX"] = n.second->posX;
-       nodeObject["posY"] = n.second->posY;
+       JsonArray posArray = nodeObject.createNestedArray("pos");
+       posArray[0] = n.second->pos[0];
+       posArray[1] = n.second->pos[1];
     }
 
     JsonArray jsLinks = map.createNestedArray("links");

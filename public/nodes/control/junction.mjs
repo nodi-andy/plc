@@ -6,7 +6,8 @@ class Junction extends Node {
     static title = " ";
     static desc = "Junction";
 
-    static setup(prop) {
+    static setup(node) {
+        let props = node.properties;
         Node.setProperty(prop, "value", {label: " ", input: true, output: true});
         Junction.reset(prop);
     }

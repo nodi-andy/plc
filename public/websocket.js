@@ -11,7 +11,10 @@ import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
 const events = [
   "nodeAdded",
+  "nodeDropped",
+  "nodePicked",
   "updateNode",
+  "updatePos",
   "id",
   "linkAdded",
   "linkRemoved",
@@ -24,6 +27,7 @@ const events = [
   "remNode",
   "clear",
   "moveNode",
+  "setSettings",
   "setSize",
   "disconnect",
 ];
@@ -78,13 +82,16 @@ window.socketIO.on("id", () => {
   window.sendToServer("id", { id: "browser" });
 });
 
-window.order.nodeAdded = (message) => {
-  let newNode = NodeWork.createNode(message.type, message.properties);
-  newNode.nodeID = message.nodeID;
-  newNode.type = message.type;
-  newNode.pos = message.pos;
-  if (message.size) window.canvas.Node.setSize(newNode, message.size);
-  window.graph.addNode(message);
+window.order.nodeAdded = (node) => {
+  window.graph.addNode(node);
+};
+
+window.order.nodeDropped = (msg) => {
+  window.graph.nodeDropped(msg);
+};
+
+window.order.nodePicked = (node) => {
+  window.graph.pickNode(node);
 };
 
 window.order.nodeRemoved = (msg) => {
@@ -121,21 +128,30 @@ window.order.linkAdded = (msg) => {
   window.graph.links[msg.linkID] = msg;
 };
 
+window.order.updatePos = (msg) => {
+  if (window.graph.nodes[msg.nodeID] && msg.pos) {
+    window.graph.nodes[msg.nodeID].pos = msg.pos;
+  }
+};
+
+window.order.setSettings = (msg) => {
+  window.settings = msg;
+};
+
 window.order.linkRemoved = (msg) => {
   window.graph.links[msg.linkID] = null;
 };
 
 window.order.setNodework = (msg) => {
   window.graph.configure(msg, false);
-  window.graph.start();
 };
 
 window.order.nodeMoved = (msg) => {
   if (msg.nodeID == null) return;
-  if (window.graph.nodes[msg.nodeID] == null) return;
-  if (window.graph.nodes[msg.nodeID].widget == null) return;
+  if (window.graph.nodes[msg.nodeID]?.widget == null) return;
+  if (msg.moveTo == null) return;
 
-  console.log("[movedNode] ", msg);
+  console.log("[nodeMoved] ", msg);
   window.graph.nodes[msg.nodeID].pos = msg.moveTo;
 };
 
@@ -144,7 +160,7 @@ window.order.nodeResized = (msg) => {
   if (window.graph.nodes[msg.nodeID] == null) return;
   if (window.graph.nodes[msg.nodeID].widget == null) return;
 
-  console.log("[movedNode] ", msg);
+  console.log("[nodeResized] ", msg);
   window.graph.nodes[msg.nodeID].setSize(msg.size);
 };
 
@@ -165,7 +181,9 @@ window.order.clear = () => {
 };
 
 window.order.moveNode = (message) => {
-  window.graph.nodes[message.nodeID].pos = message.moveTo;
+  if (message.moveTo) {
+    window.graph.nodes[message.nodeID].pos = message.moveTo;
+  }
 };
 
 window.order.propUpdated = (message) => {

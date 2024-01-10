@@ -14,10 +14,10 @@ export default class WidgetToggle extends Node {
     }
 
     static setup(prop) {
-        Node.setProperty(prop, "state", {label: " ", output: true});
+        Node.setProperty(prop, "value", {value: null, input: false, output: true});
         Node.setProperty(prop, "press",  {label: " ", value: 1, input: false, autoInput: true});
         Node.setProperty(prop, "release", {label: " ", input: false, autoInput: true});
-        Node.setProperty(prop, "value", {value: null, input: false});
+        Node.setProperty(prop, "state", {label: " "});
         Node.setProperty(prop, "toggle");
         Node.setProperty(prop, "label", {value: "", autoInput: true});
         Node.setProperty(prop, "port", {value: null, input: false});

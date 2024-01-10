@@ -33,7 +33,8 @@ class Node
         int newvalue = 0;
         int state = 0;
         int newstate = 0;
-        int posX, posY;
+        int pos[2];
+        int size[2];
         virtual void setup();
         virtual int onExecute();
 

@@ -1,13 +1,13 @@
 import WidgetButton from "../widget/button.mjs";
 
 export default class NodiBoxB1 extends WidgetButton {
-    static type = "nodi.box/b1";
-    constructor() {
-        super();
-        this.properties.port.value = 18;
-        this.properties.label.value = "1";
-        this.properties.color.value = "#3399ff";
-        this.type = WidgetButton.type;
-        this.device = "nodi.box";
+    static type2 = "nodi.box/b1";
+
+    static setup(props) {
+        WidgetButton.setup(props);
+        props.port.value = 18;
+        props.label.value = "1";
+        props.color.value = "#3399ff";
+        props.device = "nodi.box";
     }
 }

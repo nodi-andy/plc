@@ -4,7 +4,6 @@ import NodeWork from "./nodework.mjs";
 export default class View {
   static pointerevents_method = "mouse"; // "mouse"|"pointer" use mouse for retrocompatibility issues? (none found @ now)
 
-
   constructor(element, skip_events) {
     this.offset = new Float32Array([0, 0]);
     this.scale = 3;
@@ -171,74 +170,6 @@ export default class View {
     this.visible_area[3] = endy - starty;
   }
 
-  onMouse(e) {
-    if (!this.enabled) {
-      return;
-    }
-
-    var canvas = this.element;
-    var rect = canvas.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-    e.canvasx = x;
-    e.canvasy = y;
-    e.dragging = this.dragging;
-
-    var is_inside =
-      !this.viewport ||
-      (this.viewport &&
-        x >= this.viewport[0] &&
-        x < this.viewport[0] + this.viewport[2] &&
-        y >= this.viewport[1] &&
-        y < this.viewport[1] + this.viewport[3]);
-
-    //console.log("pointerevents: View onMouse "+e.type+" "+is_inside);
-    var ignore = false;
-    if (this.onmouse) {
-      ignore = this.onmouse(e);
-    }
-
-    if (e.type == View.pointerevents_method + "down" && is_inside) {
-      this.dragging = true;
-      View.pointerListenerRemove(canvas, "move", this._binded_mouse_callback);
-      View.pointerListenerAdd(document, "move", this._binded_mouse_callback);
-      View.pointerListenerAdd(document, "up", this._binded_mouse_callback);
-    } else if (e.type == View.pointerevents_method + "move") {
-      if (!ignore) {
-        var deltax = x - this.last_mouse[0];
-        var deltay = y - this.last_mouse[1];
-        if (this.dragging) {
-          this.mouseDrag(deltax, deltay);
-        }
-      }
-    } else if (e.type == View.pointerevents_method + "up") {
-      this.dragging = false;
-      View.pointerListenerRemove(document, "move", this._binded_mouse_callback);
-      View.pointerListenerRemove(document, "up", this._binded_mouse_callback);
-      View.pointerListenerAdd(canvas, "move", this._binded_mouse_callback);
-    } else if (is_inside && (e.type == "mousewheel" || e.type == "wheel" || e.type == "DOMMouseScroll")) {
-      e.eventType = "mousewheel";
-      if (e.type == "wheel") {
-        e.wheel = -e.deltaY;
-      } else {
-        e.wheel = e.wheelDeltaY != null ? e.wheelDeltaY : e.detail * -60;
-      }
-
-      //from stack overflow
-      e.delta = e.wheelDelta ? e.wheelDelta / 40 : e.deltaY ? -e.deltaY / 3 : 0;
-      this.changeDeltaScale(1.0 + e.delta * 0.05);
-    }
-
-    this.last_mouse[0] = x;
-    this.last_mouse[1] = y;
-
-    if (is_inside) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-  }
-
   toCanvasContext(ctx) {
     ctx.scale(this.scale, this.scale);
     ctx.translate(this.offset[0], this.offset[1]);
@@ -255,14 +186,7 @@ export default class View {
     out[1] = pos[1] / this.scale - this.offset[1];
     return out;
   }
-  mouseDrag(x, y) {
-    this.offset[0] += x / this.scale;
-    this.offset[1] += y / this.scale;
 
-    if (this.onredraw) {
-      this.onredraw(this);
-    }
-  }
   changeScale(value, zooming_center) {
     if (value < this.min_scale) {
       value = this.min_scale;
@@ -300,6 +224,7 @@ export default class View {
       this.onredraw(this);
     }
   }
+
   changeDeltaScale(value, zooming_center) {
     this.changeScale(this.scale * value, zooming_center);
   }

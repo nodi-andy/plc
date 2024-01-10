@@ -93,6 +93,7 @@
     await loadJS("./nodes/math/counter.mjs", false);
     await loadJS("./nodes/time/interval.mjs", false);
     await loadJS("./nodes/control/junction.mjs", false);
+    await loadJS("./nodes/control/inserter.mjs", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
     await loadJS("./nodes/nodi.box/b2.js", false);
     await loadJS("./nodes/nodi.box/b3.js", false);
@@ -119,7 +120,7 @@
       var node = NodeWork.createNode(name);
       if (node) {
         let view = window.canvas.ds;
-        Node.setPos(node, -view.offset[0] + view.visible_area[2] * 0.5, -view.offset[1] + view.visible_area[3] * 0.5);
+        Node.setPos(node, window.canvas.grid_mouse[0], window.canvas.grid_mouse[1]);
       }
 
       // Do not send all values of node. Create a small export version
@@ -171,11 +172,14 @@
       });
     };
 
-    window.nodes.moved = (id, changedNodeData) => {
-      window.sendToServer("movedNode", {
+    window.nodes.dropNode = (id, changedNodeData) => {
+      window.sendToServer("dropNode", {
         nodeID: id,
         moveTo: changedNodeData.pos,
       });
+    };
+    window.nodes.pick = (node) => {
+      //window.sendToServer("pickNode", {nodeID: node.nodeID, pos: node.drag_start_pos});
     };
 
     window.nodes.update = (id, changedNodeData) => {

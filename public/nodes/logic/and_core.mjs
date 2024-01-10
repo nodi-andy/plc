@@ -7,6 +7,7 @@ export default class AndCore extends Node {
     static desc = "And gate";
 
     static setup(prop) {
+        let props = node.properties;
         Node.setProperty(prop, "in1", {label:" ", input: true});
         Node.setProperty(prop, "in2", {label:" ", input: true});
         Node.setProperty(prop, "value", {label:" ", output: true});

@@ -18,24 +18,26 @@ export default class WidgetNumber extends Node {
         WidgetNumber.setup(this.properties);
     }
 
-    static setup(prop) {
-        Node.setProperty(prop, "value", {label: " "});
-        Node.setProperty(prop, "read");
-        WidgetNumber.reset(prop);
+    static setup(node) {
+        let props = node.properties;
+        Node.setProperty(props, "value", {label: " "});
+        Node.setProperty(props, "read");
+        WidgetNumber.reset(props);
     }
 
-    static run(prop) {
+    static run(node) {
+        let props = node.properties;
         let ret = false;
 
-        if (prop.value.inpValue != null) {
-            prop.value.value = parseInt(prop.value.inpValue);
-            prop.value.inpValue = null;
-            prop.value.outValue = prop.value.value;
+        if (props.value.inpValue != null) {
+            props.value.value = parseInt(props.value.inpValue);
+            props.value.inpValue = null;
+            props.value.outValue = props.value.value;
             ret = true;
         }
-        if (prop.read.inpValue != null) {
-            prop.read.inpValue = null;
-            prop.read.outValue = prop.value.value;
+        if (props.read.inpValue != null) {
+            props.read.inpValue = null;
+            props.read.outValue = props.value.value;
             ret = true;
         }
         return ret;
