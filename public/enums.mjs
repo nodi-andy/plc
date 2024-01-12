@@ -43,6 +43,10 @@ export const NodiEnums = {
   toCanvas(p) {
     return [p[0] * NodiEnums.CANVAS_GRID_SIZE, p[1] * NodiEnums.CANVAS_GRID_SIZE];
   },
+  dirToVec : [{ x: 1, y: 0 },{ x: 0, y: 1 },{ x: -1, y: 0 },{ x: 0, y: -1 }],
+  dirToAng : [0, 90, 180, 270],
+  dirToRad : [0, Math.PI / 2, Math.PI, Math.PI * 3 / 2],
+  nbVec : [{ x: 1, y: 0 }, { x: 1, y: -1 }, { x: 0, y: -1 }, { x: -1, y: -1 }, { x: -1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 } , { x: 1, y: 1 }]
 };
 
 //timer that works everywhere

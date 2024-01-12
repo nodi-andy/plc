@@ -13,7 +13,7 @@ import {
   Grid
 } from '@mui/material';
 
-
+import Rotate90DegreesCcwIcon from '@mui/icons-material/Rotate90DegreesCcw';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -130,9 +130,13 @@ function SimpleSnackbar({openSB, setopenSB, sbMessage}) {
 
 
 function RightActionButtons({ showNodes, setShowEditMenu }) {
+  const [rotateClickable, setRotateClickable] = useState(false)
   const [editClickable, setEditClickable] = useState(false)
   const [removeClickable, setRemoveClickable] = useState(false)
 
+  window.showRotate = (v) => {
+    setRotateClickable(v);
+  };
   window.showEdit = (v) => {
     setEditClickable(v);
   };
@@ -165,15 +169,21 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
         flexGrow: 2,
       }}></Box>
       <Fab
+        color="info"
+        disabled = {!rotateClickable}
+        onClick={() => {
+          window.nodes.rotate();
+        }}>
+        <Rotate90DegreesCcwIcon />
+      </Fab>
+      <Fab
         color="warning"
-        variant="extended"
         disabled = {!editClickable}
         onClick={editMenuClick}>
         <EditIcon />
       </Fab>
       <Fab
         color="secondary"
-        variant="extended"
         aria-label="remove"
         disabled = {!removeClickable}
         onClick={() => {

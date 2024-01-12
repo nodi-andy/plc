@@ -49,17 +49,18 @@ export default class Button extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "state", {label: " ", output: true});
-        Node.setProperty(props, "press",  {label: " ", value: 1, input: false, autoInput: true});
-        Node.setProperty(props, "release", {label: " ", input: false, autoInput: true});
-        Node.setProperty(props, "value", {value: null, input: false});
+        Node.setProperty(props, "state", {label: " "});
+        Node.setProperty(props, "press",  {label: " ", value: 1, autoInput: true});
+        Node.setProperty(props, "release", {label: " ", value: 0, autoInput: true});
+        Node.setProperty(props, "value", {value: null});
         Node.setProperty(props, "label", {value: " ", autoInput: true});
         Node.setProperty(props, "port", {value: null, input: false});
         Node.setProperty(props, "color", {value: "gray", input: false, autoInput: true});
         Button.reset(props);
     }
 
-    static run(props) {
+    static run(node) {
+        let props = node.properties;
         let ret = false;
 
         for(let propKey in props) {
@@ -71,7 +72,7 @@ export default class Button extends Node {
             }
         }
 
-        if (props.value?.input == true) {
+        if (props.value?.inpValue != null) {
             if(props.state?.value == 1) {
                 props.value.outValue = props.value.inpValue;
                 ret = true;

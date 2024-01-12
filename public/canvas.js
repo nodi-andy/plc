@@ -156,7 +156,6 @@ export default class LGraphCanvas {
 
     this.last_mouse_down = [0, 0];
     this.last_mouseclick = 0;
-    this.pointer_is_down = false;
     this.visible_area.set([0, 0, 0, 0]);
 
     if (this.onClear) {
@@ -289,7 +288,7 @@ export default class LGraphCanvas {
 
     this._events_binded = true;
   }
-  
+
   /**
    * Used to attach the canvas in a popup
    *
@@ -337,20 +336,12 @@ export default class LGraphCanvas {
   }
 
   processMouseDown(e) {
-    if (!this.graph) {
-      return;
-    }
-
+    if (!this.graph) return;
+    if (e.which > 1) return;
     this.adjustMouseEvent(e);
-
-    var ref_window = this.getCanvasWindow();
 
     //console.log("pointerevents: processMouseDown pointerId:"+e.pointerId+" which:"+e.which+" isPrimary:"+e.isPrimary+" :: x y "+x+" "+y);
     this.ds.viewport = this.viewport;
-
-    var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
-
-    var skip_action = false;
     var now = NodiEnums.getTime();
     var is_primary = e.isPrimary === undefined || !e.isPrimary;
     var is_double_click = now - this.last_mouseclick < 300 && is_primary;
@@ -361,176 +352,154 @@ export default class LGraphCanvas {
     this.last_click_position = [this.mouse[0], this.mouse[1]];
     this.selectedLink = null;
 
-    this.pointer_is_down = true;
+    var node_mouse = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
+
+    //search for link connector
+    for (let link of this.graph.links) {
+      if (!link) continue;
+      var center = link.pos;
+      if (
+        !center ||
+        e.canvasX < center[0] - 4 ||
+        e.canvasX > center[0] + 4 ||
+        e.canvasY < center[1] - 4 ||
+        e.canvasY > center[1] + 4
+      ) {
+        continue;
+      }
+      //link clicked
+
+      this.deselectAllNodes();
+
+      this.selectedLink = link.linkID;
+      link.selected = true;
+      this.highlighted_links = {};
+      this.highlighted_links[link.linkID] = true;
+      this.onSelectionChange([link.linkID]);
+      this.over_link_center = null; //clear tooltip
+      break;
+    }
 
     this.canvas.focus();
-
     //left button mouse / single finger
-    if (e.which <= 1) {
-      if (e.ctrlKey) {
-        this.dragging_rectangle = new Float32Array(4);
-        this.dragging_rectangle[0] = e.canvasX;
-        this.dragging_rectangle[1] = e.canvasY;
-        this.dragging_rectangle[2] = 1;
-        this.dragging_rectangle[3] = 1;
-        skip_action = true;
-      }
-
+    if (e.ctrlKey) {
+      //multiselect
+      this.dragging_rectangle = new Float32Array(4);
+      this.dragging_rectangle[0] = e.canvasX;
+      this.dragging_rectangle[1] = e.canvasY;
+      this.dragging_rectangle[2] = 1;
+      this.dragging_rectangle[3] = 1;
+    } else if (e.altKey && node_mouse) {
       // clone node ALT dragging
-      if (e.altKey && node && !skip_action) {
-        let cloned = Node.clone(node);
-        if (cloned) {
-          cloned.pos[0] += 5;
-          cloned.pos[1] += 5;
-          this.graph.add(cloned, false, { doCalcSize: false });
-          node = cloned;
-          skip_action = true;
-          if (!block_drag_node) {
-            this.node_dragged = node;
-            if (!this.selected_nodes[node.nodeID]) {
-              this.processNodeSelected(node, e);
-            }
+      let cloned = Node.clone(node_mouse);
+      if (cloned) {
+        cloned.pos[0] += 5;
+        cloned.pos[1] += 5;
+        this.graph.add(cloned, false, { doCalcSize: false });
+        node_mouse = cloned;
+        if (!block_drag_node) {
+          this.node_dragged = node_mouse;
+          if (!this.selected_nodes[node_mouse.nodeID]) {
+            this.processNodeSelected(node_mouse, e);
           }
         }
       }
-
-      var clicking_canvas_bg = false;
-
+    } else if (node_mouse) {
+      //select
       //when clicked on top of a node
-      //and it is not interactive
-      if (node && !skip_action) {
-        //not dragging mouse to connect two slots
-        if (!this.connecting_node) {
-          if (
-            !skip_action &&
-            node.resizable !== false &&
-            Math.isInsideRectangle(
-              e.canvasX,
-              e.canvasY,
-              node.pos[0] + node.size[0] - 5,
-              node.pos[1] + node.size[1] - 5,
-              10,
-              10
-            )
-          ) {
-            this.resizing_node = node;
-            this.canvas.style.cursor = "se-resize";
-            skip_action = true;
-          } else {
-            //search for outputs
-            for (var i = 0, l = Node.getOutputs(node.properties).length; i < l; ++i) {
-              var output = Node.getOutputs(node.properties)[i];
-              var link_pos = Node.getConnectionPos(node, false, i);
-              if (Math.isInsideRectangle(e.canvasX, e.canvasY, link_pos[0] - 15, link_pos[1] - 10, 30, 20)) {
-                this.connecting_node = node;
-                this.connecting_output = output;
-                this.connecting_output.slot_index = i;
-                this.connecting_pos = Node.getConnectionPos(node, false, i);
+      //not dragging mouse to connect two slots
+      if (!this.connecting_node) {
+        if (
+          node_mouse.resizable !== false &&
+          Math.isInsideRectangle(
+            e.canvasX,
+            e.canvasY,
+            node_mouse.pos[0] + node_mouse.size[0] - 5,
+            node_mouse.pos[1] + node_mouse.size[1] - 5,
+            10,
+            10
+          )
+        ) {
+          this.resizing_node = node_mouse;
+          this.canvas.style.cursor = "se-resize";
+        } else {
+          //search for outputs
+          for (var i = 0, l = Node.getOutputs(node_mouse.properties).length; i < l; ++i) {
+            var output = Node.getOutputs(node_mouse.properties)[i];
+            var link_pos = Node.getConnectionPos(node_mouse, false, i);
+            if (Math.isInsideRectangle(e.canvasX, e.canvasY, link_pos[0] - 15, link_pos[1] - 10, 30, 20)) {
+              this.connecting_node = node_mouse;
+              this.connecting_output = output;
+              this.connecting_output.slot_index = i;
+              this.connecting_pos = Node.getConnectionPos(node_mouse, false, i);
 
-                if (is_double_click) {
-                  if (node.onOutputDblClick) {
-                    node.onOutputDblClick(i, e);
-                  }
-                } else {
-                  if (node.onOutputClick) {
-                    node.onOutputClick(i, e);
-                  }
+              if (is_double_click) {
+                if (node_mouse.onOutputDblClick) {
+                  node_mouse.onOutputDblClick(i, e);
                 }
-
-                skip_action = true;
-                break;
-              }
-            }
-
-            //search for inputs
-            for (i = 0, l = Node.getInputs(node.properties).length; i < l; ++i) {
-              var input = Node.getInputs(node.properties)[i];
-              link_pos = Node.getConnectionPos(node, true, i);
-              if (Math.isInsideRectangle(e.canvasX, e.canvasY, link_pos[0] - 15, link_pos[1] - 10, 30, 20)) {
-                if (is_double_click) {
-                  if (node.onInputDblClick) {
-                    node.onInputDblClick(i, e);
-                  }
-                } else {
-                  if (node.onInputClick) {
-                    node.onInputClick(i, e);
-                  }
-                }
-
-                if (!skip_action) {
-                  // connect from in to out, from to to from
-                  this.connecting_node = node;
-                  this.connecting_input = input;
-                  this.connecting_input.slot_index = i;
-                  this.connecting_pos = Node.getConnectionPos(node, true, i);
-
-                  this.dirty_bgcanvas = true;
-                  skip_action = true;
+              } else {
+                if (node_mouse.onOutputClick) {
+                  node_mouse.onOutputClick(i, e);
                 }
               }
-            }
-          } //not resizing
-        }
 
-        //it wasn't clicked on the links boxes
-        if (!skip_action) {
-          var block_drag_node = false;
-          var pos = [e.canvasX - node.pos[0], e.canvasY - node.pos[1]];
-
-          //if do not capture mouse
-          if (
-            NodeWork.getNodeType(node.type).onMouseDown &&
-            NodeWork.getNodeType(node.type).onMouseDown(node, e, pos, this)
-          ) {
-            block_drag_node = true;
-          }
-
-          if (!block_drag_node) {
-            this.node_dragged = node;
-            if (!this.selected_nodes[node.nodeID]) {
-              this.processNodeSelected(node, e);
+              break;
             }
           }
 
-        }
+          //search for inputs
+          for (i = 0, l = Node.getInputs(node_mouse.properties).length; i < l; ++i) {
+            var input = Node.getInputs(node_mouse.properties)[i];
+            link_pos = Node.getConnectionPos(node_mouse, true, i);
+            if (Math.isInsideRectangle(e.canvasX, e.canvasY, link_pos[0] - 15, link_pos[1] - 10, 30, 20)) {
+              if (is_double_click) {
+                if (node_mouse.onInputDblClick) {
+                  node_mouse.onInputDblClick(i, e);
+                }
+              } else {
+                if (node_mouse.onInputClick) {
+                  node_mouse.onInputClick(i, e);
+                }
+              }
 
-      } else {
-        //clicked outside of nodes
-        if (!skip_action) {
-          //search for link connector
-          for (let link of this.graph.links) {
-            if (!link) continue;
-            var center = link.pos;
-            if (
-              !center ||
-              e.canvasX < center[0] - 4 ||
-              e.canvasX > center[0] + 4 ||
-              e.canvasY < center[1] - 4 ||
-              e.canvasY > center[1] + 4
-            ) {
-              continue;
+              // connect from in to out, from to to from
+              this.connecting_node = node_mouse;
+              this.connecting_input = input;
+              this.connecting_input.slot_index = i;
+              this.connecting_pos = Node.getConnectionPos(node_mouse, true, i);
+
+              this.dirty_bgcanvas = true;
             }
-            //link clicked
-
-            this.deselectAllNodes();
-
-            this.selectedLink = link.linkID;
-            link.selected = true;
-            this.highlighted_links = {};
-            this.highlighted_links[link.linkID] = true;
-            this.onSelectionChange([link.linkID]);
-            this.over_link_center = null; //clear tooltip
-            break;
           }
-
-          clicking_canvas_bg = true;
-        }
+        } //not resizing
       }
 
-      if (!skip_action && clicking_canvas_bg && this.allow_dragcanvas) {
-        //console.log("pointerevents: dragging_canvas start");
-        this.dragging_canvas = true;
+      //it wasn't clicked on the links boxes
+      var block_drag_node = false;
+      var pos = [e.canvasX - node_mouse.pos[0], e.canvasY - node_mouse.pos[1]];
+
+      //if do not capture mouse
+      if (
+        NodeWork.getNodeType(node_mouse.type).onMouseDown &&
+        NodeWork.getNodeType(node_mouse.type).onMouseDown(node_mouse, e, pos, this)
+      ) {
+        block_drag_node = true;
       }
+
+      if (!block_drag_node) {
+        this.node_dragged = node_mouse;
+        if (!this.selected_nodes[node_mouse.nodeID]) {
+          this.processNodeSelected(node_mouse, e);
+        }
+      }
+    } else if (this.current_node && !node_mouse) {
+      // unselect
+      this.current_node.selected = false;
+      this.current_node = null;
+      this.deselectAllNodes();
+    } else if (!this.current_node && !node_mouse) {
+      // add node
+      this.gripped = "canvas";
     }
 
     this.last_mouse_down[0] = e.clientX;
@@ -542,19 +511,7 @@ export default class LGraphCanvas {
 
     this.graph.change();
 
-    //this is to ensure to defocus(blur) if a text input element is on focus
-    if (
-      !ref_window.document.activeElement ||
-      (ref_window.document.activeElement.nodeName.toLowerCase() != "input" &&
-        ref_window.document.activeElement.nodeName.toLowerCase() != "textarea")
-    ) {
-      e.preventDefault();
-    }
     e.stopPropagation();
-
-    if (this.onMouseDown) {
-      this.onMouseDown(e);
-    }
 
     return false;
   }
@@ -573,7 +530,7 @@ export default class LGraphCanvas {
     }
 
     this.adjustMouseEvent(e);
-    this.mouse = [e.clientX, e.clientY]
+    this.mouse = [e.clientX, e.clientY];
     var delta = [this.mouse[0] - this.last_mouse_down[0], this.mouse[1] - this.last_mouse_down[1]];
     this.graph_mouse = [e.canvasX, e.canvasY];
     this.gridPos = NodiEnums.toGrid([e.canvasX, e.canvasY]);
@@ -588,12 +545,11 @@ export default class LGraphCanvas {
     } else if (this.dragging_rectangle) {
       this.dragging_rectangle[2] = e.canvasX - this.dragging_rectangle[0];
       this.dragging_rectangle[3] = e.canvasY - this.dragging_rectangle[1];
-    } else if (this.dragging_canvas) {
+    } else if (this.gripped == "canvas" && this.allow_dragcanvas) {
       ////console.log("pointerevents: processMouseMove is dragging_canvas");
       this.ds.offset[0] += delta[0] / this.ds.scale;
       this.ds.offset[1] += delta[1] / this.ds.scale;
     } else {
-
       //get node over
       var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
 
@@ -761,18 +717,7 @@ export default class LGraphCanvas {
    * @method processMouseUp
    */
   processMouseUp(e) {
-    var is_primary = e.isPrimary === undefined || e.isPrimary;
-
-    //early exit for extra pointer
-    if (!is_primary) {
-      /*e.stopPropagation();
-            e.preventDefault();*/
-      //console.log("pointerevents: processMouseUp pointerN_stop "+e.pointerId+" "+e.isPrimary);
-      return false;
-    }
-
     //console.log("pointerevents: processMouseUp "+e.pointerId+" "+e.isPrimary+" :: "+e.clientX+" "+e.clientY);
-
     if (!this.graph) return;
 
     var window = this.getCanvasWindow();
@@ -782,132 +727,127 @@ export default class LGraphCanvas {
     e.click_time = now - this.last_mouseclick;
     this.last_mouse_dragging = false;
 
-
     //console.log("pointerevents: processMouseUp which: "+e.which);
-    if (e.which <= 1) {
-      if (this.node_widget) this.processNodeWidgets(this.node_widget[0], this.graph_mouse, e);
+    if (e.which > 1) return;
+    if (this.node_widget) this.processNodeWidgets(this.node_widget[0], this.graph_mouse, e);
 
-      //left button
-      this.node_widget = null;
+    //left button
+    this.node_widget = null;
 
-      var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
+    var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
+    if (this.gripped == "canvas") {
+      this.dragging_canvas = false;
+    } else if (this.dragging_rectangle) {
+      if (this.graph) {
+        var nodes = this.graph.nodes;
 
-      if (this.dragging_rectangle) {
-        if (this.graph) {
-          var nodes = this.graph.nodes;
+        //compute bounding and flip if left to right
+        var w = Math.abs(this.dragging_rectangle[2]);
+        var h = Math.abs(this.dragging_rectangle[3]);
+        var startx = this.dragging_rectangle[2] < 0 ? this.dragging_rectangle[0] - w : this.dragging_rectangle[0];
+        var starty = this.dragging_rectangle[3] < 0 ? this.dragging_rectangle[1] - h : this.dragging_rectangle[1];
+        this.dragging_rectangle[0] = startx;
+        this.dragging_rectangle[1] = starty;
+        this.dragging_rectangle[2] = w;
+        this.dragging_rectangle[3] = h;
 
-          //compute bounding and flip if left to right
-          var w = Math.abs(this.dragging_rectangle[2]);
-          var h = Math.abs(this.dragging_rectangle[3]);
-          var startx = this.dragging_rectangle[2] < 0 ? this.dragging_rectangle[0] - w : this.dragging_rectangle[0];
-          var starty = this.dragging_rectangle[3] < 0 ? this.dragging_rectangle[1] - h : this.dragging_rectangle[1];
-          this.dragging_rectangle[0] = startx;
-          this.dragging_rectangle[1] = starty;
-          this.dragging_rectangle[2] = w;
-          this.dragging_rectangle[3] = h;
+        // test dragging rect size, if minimun simulate a click
+        if (!node || (w > 10 && h > 10)) {
+          //test against all nodes (not visible because the rectangle maybe start outside
+          var to_select = [];
+          for (var i = 0; i < nodes.length; ++i) {
+            var nodeX = nodes[i];
+            let node_bounding = Math.getBounding(nodeX);
+            if (!Math.overlapBounding(this.dragging_rectangle, node_bounding)) {
+              continue;
+            } //out of the visible area
+            to_select.push(nodeX);
+          }
+          if (to_select.length) {
+            this.selectNodes(to_select, e.shiftKey); // add to selection with shift
+          }
+        } else {
+          // will select of update selection
+          this.selectNodes([node], e.shiftKey || e.ctrlKey); // add to selection add to selection with ctrlKey or shiftKey
+        }
+      }
+      this.dragging_rectangle = null;
+    } else if (this.connecting_node) {
+      //dragging a connection
 
-          // test dragging rect size, if minimun simulate a click
-          if (!node || (w > 10 && h > 10)) {
-            //test against all nodes (not visible because the rectangle maybe start outside
-            var to_select = [];
-            for (var i = 0; i < nodes.length; ++i) {
-              var nodeX = nodes[i];
-              let node_bounding = Math.getBounding(nodeX);
-              if (!Math.overlapBounding(this.dragging_rectangle, node_bounding)) {
-                continue;
-              } //out of the visible area
-              to_select.push(nodeX);
-            }
-            if (to_select.length) {
-              this.selectNodes(to_select, e.shiftKey); // add to selection with shift
-            }
-          } else {
-            // will select of update selection
-            this.selectNodes([node], e.shiftKey || e.ctrlKey); // add to selection add to selection with ctrlKey or shiftKey
+      var slot;
+      //node below mouse
+      if (node) {
+        //slot below mouse? connect
+        if (this.connecting_output) {
+          slot = this.isOverNodeInput(node, e.canvasX, e.canvasY);
+          if (slot != null && slot >= 0) {
+            let input = Node.getInputByIndex(node, slot);
+            window.sendToServer("addLink", {
+              from: this.connecting_node.nodeID,
+              fromSlot: this.connecting_output.name,
+              to: node.nodeID,
+              toSlot: input.name,
+            });
+          }
+        } else if (this.connecting_input) {
+          slot = this.isOverNodeOutput(node, e.canvasX, e.canvasY);
+          if (slot != null && slot >= 0) {
+            let output = Node.getOutputByIndex(node, slot);
+            window.sendToServer("addLink", {
+              to: this.connecting_node.nodeID,
+              toSlot: this.connecting_input.name,
+              from: node.nodeID,
+              fromSlot: output.name,
+            });
           }
         }
-        this.dragging_rectangle = null;
-      } else if (this.connecting_node) {
-        //dragging a connection
-        var slot;
-        //node below mouse
-        if (node) {
-          //slot below mouse? connect
-          if (this.connecting_output) {
-            slot = this.isOverNodeInput(node, e.canvasX, e.canvasY);
-            if (slot != null && slot >= 0) {
-              let input = Node.getInputByIndex(node, slot);
-              window.sendToServer("addLink", {
-                from: this.connecting_node.nodeID,
-                fromSlot: this.connecting_output.name,
-                to: node.nodeID,
-                toSlot: input.name,
-              });
-            }
-          } else if (this.connecting_input) {
-            slot = this.isOverNodeOutput(node, e.canvasX, e.canvasY);
-            if (slot != null && slot >= 0) {
-              let output = Node.getOutputByIndex(node, slot);
-              window.sendToServer("addLink", {
-                to: this.connecting_node.nodeID,
-                toSlot: this.connecting_input.name,
-                from: node.nodeID,
-                fromSlot: output.name,
-              });
-            }
-          }
-        }
-        this.connecting_output = null;
-        this.connecting_input = null;
-        this.connecting_pos = null;
-        this.connecting_node = null;
-      } //not dragging connection
-      else if (this.resizing_node) {
-        this.resizing_node = null;
-      } else if (this.node_dragged) {
-        window.nodes.dropNode(this.node_dragged.nodeID, {
-          pos: this.node_dragged.pos,
-        });
-        this.node_dragged = null;
-      } //no node being dragged
-      else {
-        if (!node && this.selectedLink == null) {
-          this.deselectAllNodes();
-        }
+      }
+      this.connecting_output = null;
+      this.connecting_input = null;
+      this.connecting_pos = null;
+      this.connecting_node = null;
+    } else if (this.resizing_node) {
+      this.resizing_node = null;
+    } else if (this.node_dragged) {
+      window.nodes.dropNode(this.node_dragged.nodeID, {
+        pos: [e.canvasX, e.canvasY],
+      });
+      this.node_dragged = null;
+    } else {
+      //no node being dragged
+      if (!node && this.selectedLink == null) {
+        this.deselectAllNodes();
+      }
 
-        this.dragging_canvas = false;
+      if (node && NodeWork.getNodeType(node.type).onMouseUp) {
+        NodeWork.getNodeType(node.type).onMouseUp(
+          this.node_over,
+          e,
+          [e.canvasX - this.node_over.pos[0], e.canvasY - this.node_over.pos[1]],
+          this
+        );
+      }
 
-        if (node && NodeWork.getNodeType(node.type).onMouseUp) {
-          NodeWork.getNodeType(node.type).onMouseUp(
-            this.node_over,
-            e,
-            [e.canvasX - this.node_over.pos[0], e.canvasY - this.node_over.pos[1]],
-            this
-          );
-        }
-
-        if (this.node_capturing_input && this.node_capturing_input.onMouseUp) {
-          this.node_capturing_input.onMouseUp(e, [
-            e.canvasX - this.node_capturing_input.pos[0],
-            e.canvasY - this.node_capturing_input.pos[1],
-          ]);
-        }
+      if (this.node_capturing_input && this.node_capturing_input.onMouseUp) {
+        this.node_capturing_input.onMouseUp(e, [
+          e.canvasX - this.node_capturing_input.pos[0],
+          e.canvasY - this.node_capturing_input.pos[1],
+        ]);
       }
     }
 
-    //if((this.dirty_canvas || this.dirty_bgcanvas) && this.rendering_timer_id == null) {
     this.draw();
-    //}
-
-    if (is_primary) {
-      this.pointer_is_down = false;
-    }
 
     this.graph.change();
-    if (Math.abs(this.last_click_position[0] - e.clientX) < 5 && Math.abs(this.last_click_position[1] - e.clientY) < 5) {
+    if (
+      Math.abs(this.last_click_position[0] - e.clientX) < 5 &&
+      Math.abs(this.last_click_position[1] - e.clientY) < 5
+    ) {
       this.processMouseClick(e);
     }
     this.last_click_position = null;
+    this.gripped = "";
 
     //console.log("pointerevents: processMouseUp stopPropagation");
     e.stopPropagation();
@@ -916,7 +856,7 @@ export default class LGraphCanvas {
   }
 
   processMouseClick(e) {
-    if (!this.selectedLink && !this.current_node) {
+    if (this.gripped == "canvas") {
       window.setShowNodes(true);
     }
   }
@@ -1032,7 +972,6 @@ export default class LGraphCanvas {
     if (e.type == "keydown") {
       if (e.keyCode == 32) {
         //space
-        this.dragging_canvas = true;
         block_default = true;
       }
 
@@ -1079,11 +1018,6 @@ export default class LGraphCanvas {
         }
       }
     } else if (e.type == "keyup") {
-      if (e.keyCode == 32) {
-        // space
-        this.dragging_canvas = false;
-      }
-
       if (this.selected_nodes) {
         for (let n of this.selected_nodes) {
           if (n?.onKeyUp) n.onKeyUp(e);
@@ -1422,7 +1356,6 @@ export default class LGraphCanvas {
       e.clientY = e.changedTouches[0].clientY;
     }
 
-
     if (this.canvas) {
       var b = this.canvas.getBoundingClientRect();
       clientX_rel = e.clientX - b.left;
@@ -1504,7 +1437,15 @@ export default class LGraphCanvas {
       this.ds.computeVisibleArea(this.viewport);
     }
 
-    this.drawBackCanvas();
+    var ctx = this.ctx;
+    var viewport = [0, 0, ctx.canvas.width, ctx.canvas.height];
+
+    //clear
+    ctx.clearRect(viewport[0], viewport[1], viewport[2], viewport[3]);
+    //apply transformations
+    ctx.fillStyle = "#ccc";
+    ctx.fillRect(viewport[0], viewport[1], viewport[2], viewport[3]);
+
     this.drawFrontCanvas();
 
     this.fps = this.render_time ? 1.0 / this.render_time : 0;
@@ -1516,6 +1457,31 @@ export default class LGraphCanvas {
    */
   drawFrontCanvas() {
     var ctx = this.ctx;
+
+    ctx.save();
+    this.ds.toCanvasContext(ctx);
+    let s = NodiEnums.CANVAS_GRID_SIZE;
+    let grid_area = [
+      this.visible_area[0] - s,
+      this.visible_area[1] - s,
+      this.visible_area[0] + this.visible_area[2] + s,
+      this.visible_area[1] + this.visible_area[3] + s,
+    ];
+
+    let l = Math.floor(grid_area[0] / s) * s;
+    let t = Math.floor(grid_area[1] / s) * s;
+    let r = grid_area[2];
+    let d = grid_area[3];
+
+    ctx.fillStyle = "rgb(0,0,0,0.05)";
+
+    for (var x = l; x <= r; x += s) {
+      for (var y = t; y <= d; y += s) {
+        ctx.fillRect(x - 4 + s / 2, y - 4 + s / 2, 8, 8);
+        //ctx.fillRect(x - 4, y + 28, 8, 8);
+      }
+    }
+    ctx.restore();
 
     if (this.graph) {
       //apply transformations
@@ -1610,20 +1576,6 @@ export default class LGraphCanvas {
     }
   }
 
-  /**
-   * draws the back canvas (the one containing the background and the connections)
-   * @method drawBackCanvas
-   */
-  drawBackCanvas() {
-    var ctx = this.ctx;
-    var viewport = [0, 0, ctx.canvas.width, ctx.canvas.height];
-
-    //clear
-    ctx.clearRect(viewport[0], viewport[1], viewport[2], viewport[3]);
-    //apply transformations
-    ctx.fillStyle = "#ccc";
-    ctx.fillRect(viewport[0], viewport[1], viewport[2], viewport[3]);
-  }
   /**
    * draws the given node inside the canvas
    * @method drawNode

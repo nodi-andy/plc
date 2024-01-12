@@ -13,19 +13,21 @@ export default class WidgetToggle extends Node {
         WidgetToggle.setup(this.properties);
     }
 
-    static setup(prop) {
-        Node.setProperty(prop, "value", {value: null, input: false, output: true});
-        Node.setProperty(prop, "press",  {label: " ", value: 1, input: false, autoInput: true});
-        Node.setProperty(prop, "release", {label: " ", input: false, autoInput: true});
-        Node.setProperty(prop, "state", {label: " "});
-        Node.setProperty(prop, "toggle");
-        Node.setProperty(prop, "label", {value: "", autoInput: true});
-        Node.setProperty(prop, "port", {value: null, input: false});
-        Node.setProperty(prop, "color", {value: "red", input: false, autoInput: true});
-        WidgetToggle.reset(prop);
+    static setup(node) {
+        let props = node.properties;
+        Node.setProperty(props, "value", {value: null, input: false});
+        Node.setProperty(props, "press",  {label: " ", value: 1, input: false, autoInput: true});
+        Node.setProperty(props, "release", {label: " ", input: false, autoInput: true});
+        Node.setProperty(props, "state", {label: " "});
+        Node.setProperty(props, "toggle");
+        Node.setProperty(props, "label", {value: "", autoInput: true});
+        Node.setProperty(props, "port", {value: null, input: false});
+        Node.setProperty(props, "color", {value: "red", input: false, autoInput: true});
+        WidgetToggle.reset(props);
     }
 
-    static run(props) {
+    static run(node) {
+        let props = node.properties;
         let ret = false;
 
         for(let propKey in props) {
@@ -43,7 +45,7 @@ export default class WidgetToggle extends Node {
             ret = true;
         } 
 
-        if (props.value?.input == true) {
+        if (props.value?.inpValue != null) {
             if(props.state?.value == 1) {
                 props.value.outValue = props.value.inpValue;
                 props.value.inpValue = null;

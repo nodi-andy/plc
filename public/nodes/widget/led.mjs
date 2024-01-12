@@ -14,53 +14,54 @@ export default class WidgetLed extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value", {label: " ", input: true});
+        Node.setProperty(props, "value", {label: " "});
         Node.setProperty(props, "set");
         Node.setProperty(props, "clear");
         Node.setProperty(props, "toggle");
         Node.setProperty(props, "in");
         Node.setProperty(props, "label", {label: "LED"});
         Node.setProperty(props, "port");
-        Node.setProperty(props, "color", {value: "FF3333", input: false});
+        Node.setProperty(props, "color", {value: "FF3333"});
     }
 
-    static run(prop) {
-        for(let input in prop) {
-            if (prop.input == false) continue;
+    static run(node) {
+        let props = node.properties;
+        for(let input in props) {
+            if (props.input == false) continue;
             if (input.name == "value") continue;
-            if (prop.inpValue != null) {
-                prop.value = prop.inpValue;
-                prop.inpValue = null;
+            if (props.inpValue != null) {
+                props.value = props.inpValue;
+                props.inpValue = null;
             }
         }
         
-        if (prop.value?.inpValue != null) {
-            prop.value.value = prop.value.inpValue;
-            prop.value.inpValue = null;
-            prop.value.outValue = prop.value.value;
+        if (props.value?.inpValue != null) {
+            props.value.value = props.value.inpValue;
+            props.value.inpValue = null;
+            props.value.outValue = props.value.value;
             return true;
         }
 
-        if (prop.toggle?.inpValue == 1) {
-            if ( prop.value.value == 1) {
-                prop.value.value = 0;
+        if (props.toggle?.inpValue == 1) {
+            if ( props.value.value == 1) {
+                props.value.value = 0;
             } else {
-                prop.value.value = 1;
+                props.value.value = 1;
             }
-            prop.toggle.inpValue = null;
+            props.toggle.inpValue = null;
             return true;
         }
         
-        if (prop.set?.inpValue == 1) {
-            prop.value.value = 1;
-            prop.set.inpValue = null;
-            prop.value.outValue = prop.value.value;
+        if (props.set?.inpValue == 1) {
+            props.value.value = 1;
+            props.set.inpValue = null;
+            props.value.outValue = props.value.value;
         }
 
-        if (prop.clear?.inpValue == 1) {
-            prop.value.value = 0;
-            prop.clear.inpValue = null;
-            prop.value.outValue = prop.value.value;
+        if (props.clear?.inpValue == 1) {
+            props.value.value = 0;
+            props.clear.inpValue = null;
+            props.value.outValue = props.value.value;
         }
         return false;
     }

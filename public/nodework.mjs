@@ -208,12 +208,9 @@ export default class NodeWork {
     let next_gridPos = NodiEnums.toGrid(msg.moveTo);
     if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
       this.setNodeOnGrid(node.gridPos[0], node.gridPos[1], null);
-      this.setNodeOnGrid(next_gridPos[0], next_gridPos[1], node.nodeID);
-    } else {
-      node.pos = NodiEnums.toCanvas(node.gridPos);
+      this.setNodeOnGrid(next_gridPos[0], next_gridPos[1], node);
     }
-
-    Node.alignToGrid(node);
+    node.pos = NodiEnums.toCanvas(node.gridPos);
     let nodeClass = NodeWork.getNodeType(node.type);
     if (nodeClass.replace) nodeClass.replace(node, this);
   }
@@ -267,7 +264,8 @@ export default class NodeWork {
     if (node == null) {
       delete this.nodesByPos[x + "-" + y];
     } else {
-      this.nodesByPos[x + "-" + y] = node;
+      node.gridPos = [x, y];
+      this.nodesByPos[x + "-" + y] = node.nodeID;
     }
   }
 

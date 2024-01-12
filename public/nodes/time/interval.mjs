@@ -15,21 +15,23 @@ class TimeInterval extends Node {
     TimeInterval.setup(this.properties);
   }
 
-  static setup(prop) {
-    Node.setProperty(prop, "state", { output: true });
-    Node.setProperty(prop, "enable", {value: 1, autoInput: true});
-    Node.setProperty(prop, "press", { value: 1 });
-    Node.setProperty(prop, "release");
-    Node.setProperty(prop, "ton", { value: 500 });
-    Node.setProperty(prop, "toff", { value: 500 });
-    Node.setProperty(prop, "value");
-    Node.setProperty(prop, "lastOn");
-    Node.setProperty(prop, "lastOff");
+  static setup(node) {
+    let props = node.properties;
+    Node.setProperty(props, "state");
+    Node.setProperty(props, "enable", {value: 1, autoInput: true});
+    Node.setProperty(props, "press", { value: 1 });
+    Node.setProperty(props, "release", { value: 0 });
+    Node.setProperty(props, "ton", { value: 500 });
+    Node.setProperty(props, "toff", { value: 500 });
+    Node.setProperty(props, "value");
+    Node.setProperty(props, "lastOn");
+    Node.setProperty(props, "lastOff");
     this.type = Node.type;
-    TimeInterval.reset(prop);
+    TimeInterval.reset(props);
   }
 
-  static run(props) {
+  static run(node) {
+    let props = node.properties;
     var now = NodiEnums.getTime();
     let ret = false;
     for(let propKey in props) {

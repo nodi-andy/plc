@@ -221,6 +221,20 @@ io.on("connection", (socket) => {
     //console.log(nodeWorkJSON);
   });
 
+  socket.on("update", (msg) => {
+    console.log("[update] ", msg.nodeID, msg.newData);
+
+    //socket.broadcast.emit('updateNode', msg);
+    if (msg.newData == null) return;
+    if (msg.nodeID == null) return;
+    if (nodeWorkJSON.nodes[msg.nodeID] == null) return;
+
+    for(const property in msg.newData) {
+      nodeWorkJSON.nodes[msg.nodeID][property] = msg.newData[property];
+    }
+    //console.log(nodeWorkJSON);
+  });
+
   socket.on("addLink", (msg) => {
     if (!msg) return;
 

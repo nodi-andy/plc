@@ -139,6 +139,15 @@
       if (canvas.selectedLink != null) window.sendToServer("remLink", { nodeID: canvas.selectedLink });
     };
 
+    window.nodes.rotate = () => {
+      let cn = window.canvas.current_node;
+      cn.direction = (cn.direction + 1) % 4;
+      window.sendToServer("update", {
+        nodeID: cn.nodeID,
+        newData: { direction: cn.direction },
+      });
+    };
+
     window.nodes.editNode = () => {
       window.canvas.processContextMenu();
     };
@@ -198,15 +207,15 @@
     if (localStorage.files == null) localStorage.files = JSON.stringify({});
 
     window.canvas.onSelectionChange = (nodes) => {
-      if (Object.keys(nodes).length) {
+      if (Object.keys(nodes).length == 1) {
+        let node = nodes[Object.keys(nodes)[0]]; // selected nodes are not indexed correctly
         window.showRemove(true);
         window.showEdit(true);
-        window.removeClickable = true;
+        window.showRotate(NodeWork.getNodeType(node.type).rotatable);
         console.log("disable");
       } else {
         window.showRemove(false);
         window.showEdit(false);
-        window.removeClickable = false;
         console.log("enable");
       }
     };
