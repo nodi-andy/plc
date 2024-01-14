@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 export default class NotCore extends Node {
     static type = "logic/not";
     static title = "NOT";
-    static desc = "Not gate";
 
     static setup(prop) {
         Node.setProperty(prop, "in1",  {label:" ", input: true});

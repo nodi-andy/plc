@@ -2,16 +2,14 @@ import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 export default class WidgetNumber extends Node {
-    static title = "Number";
-    static desc = "Widget to select number value";
-    static title_mode = NodeWork.NO_TITLE;
-    static pixels_threshold = 10;
-    static markers_color = "#666";
     static type = "widget/number";
+    static pixels_threshold = 10;
     static old_y = -1;
     static _remainder = 0;
     static _precision = 0;
     static mouse_captured = false;
+    static defaultInput = "value";
+    static defaultOutput = "value";
     
     constructor() {
         super();
@@ -30,7 +28,12 @@ export default class WidgetNumber extends Node {
         let ret = false;
 
         if (props.value.inpValue != null) {
-            props.value.value = parseInt(props.value.inpValue);
+            if (props.value.inpValue.constructor === Object) {
+                props.value.value = Math.max(...Object.values(props.value.inpValue));
+            } else {
+                props.value.value = props.value.inpValue;
+            }
+            
             props.value.inpValue = null;
             props.value.outValue = props.value.value;
             ret = true;

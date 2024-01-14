@@ -3,7 +3,6 @@ import NodeWork from "../../nodework.mjs";
 
 export default class Stepper extends Node{
     static title = "Stepper";
-    static desc = "Stepper";
     static title_mode = NodeWork.NO_TITLE;
     static type = "nodi.box/stepper";
     static device = "nodi.box";

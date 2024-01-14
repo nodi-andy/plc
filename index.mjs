@@ -6,11 +6,11 @@ import "./public/nodes/widget/button.mjs";
 import "./public/nodes/widget/toggle.mjs";
 import "./public/nodes/widget/led.mjs";
 import "./public/nodes/widget/number.mjs";
-import "./public/nodes/logic/and_core.mjs";
+import "./public/nodes/logic/and.mjs";
 import "./public/nodes/logic/or_core.mjs";
 import "./public/nodes/logic/xor_core.mjs";
 import "./public/nodes/logic/not_core.mjs";
-import "./public/nodes/math/add_core.mjs";
+import "./public/nodes/math/add.mjs";
 import "./public/nodes/math/mult_core.mjs";
 import "./public/nodes/math/counter.mjs";
 import "./public/nodes/math/isequal_core.mjs";
@@ -69,7 +69,7 @@ setInterval(() => {
         let command = node.cmds.shift();
         
         if (command.cmd == "updateNode") {
-          mergeObjects(node.properties, command.what);
+          Object.mergeObjects(node.properties, command.what);
           io.emit("updateNode", { nodeID: node.nodeID, newData: { properties: node.properties } });
         }
 
@@ -82,7 +82,6 @@ setInterval(() => {
         }
       }
       if (node.device == "server") {
-        //if (node?.properties?.state?.inpValue) console.log(node?.properties?.state?.inpValue)
         //console.log(c)
         let runResults = curType?.run && curType.run(node);
         if ( runResults == true) {
@@ -124,9 +123,9 @@ setInterval(() => {
   } catch (e) {
     console.log(e);
   }
-}, "20");
+}, 20);
 
-function mergeObjects(objA, objB) {
+Object.mergeObjects = (objA, objB) => {
   const mergedObject = { ...objA };
 
   for (const keyA in objB) {

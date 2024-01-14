@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 class Junction extends Node {
     static type = "control/junction";
     static title = " ";
-    static desc = "Junction";
 
     static setup(node) {
         let props = node.properties;

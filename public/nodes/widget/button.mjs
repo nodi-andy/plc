@@ -4,8 +4,8 @@ import Node from "../../node.mjs";
 export default class Button extends Node {
     static type = "widget/button";
     static title = " ";
-    static desc = "Triggers an event";
     static margin = 12;
+    static defaultOutput = "value";
 
     static onDrawForeground(node, ctx) {
         let props = node.properties;

@@ -3,14 +3,7 @@ import Node from "../../node.mjs";
 
 export default class WidgetLed extends Node {
     static type = "widget/led";
-    static title = "";
-    static desc = "LED";
-    
-    constructor() {
-        super();
-        this.properties = {}
-        WidgetLed.setup(this.properties);
-    }
+    static defaultInput = "value";
 
     static setup(node) {
         let props = node.properties;
@@ -22,6 +15,8 @@ export default class WidgetLed extends Node {
         Node.setProperty(props, "label", {label: "LED"});
         Node.setProperty(props, "port");
         Node.setProperty(props, "color", {value: "FF3333"});
+        props.value.inpValue = [];
+
     }
 
     static run(node) {
@@ -35,9 +30,9 @@ export default class WidgetLed extends Node {
             }
         }
         
-        if (props.value?.inpValue != null) {
-            props.value.value = props.value.inpValue;
-            props.value.inpValue = null;
+        if (props.value?.inpValue.length > 0) {
+            props.value.value = Math.max(...props.value.inpValue);
+            props.value.inpValue = [];
             props.value.outValue = props.value.value;
             return true;
         }

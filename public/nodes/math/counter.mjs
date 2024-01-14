@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 class MathCounter extends Node {
     static type = "math/counter";
     static title = " ";
-    static desc = "Counter";
 
     static setup(prop) {
         Node.setProperty(prop, "inc", {input: true});

@@ -1,18 +1,17 @@
 import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
-export default class AndCore extends Node {
+export default class LogicAnd extends Node {
     static type = "logic/and";
     static title = "AND";
-    static desc = "And gate";
 
-    static setup(prop) {
+    static setup(node) {
         let props = node.properties;
-        Node.setProperty(prop, "in1", {label:" ", input: true});
-        Node.setProperty(prop, "in2", {label:" ", input: true});
-        Node.setProperty(prop, "value", {label:" ", output: true});
-        this.type = AndCore.type
-        AndCore.reset(prop);
+        Node.setProperty(props, "in1");
+        Node.setProperty(props, "in2");
+        Node.setProperty(props, "value");
+        this.type = LogicAnd.type
+        LogicAnd.reset(props);
     }
 
     static run(prop) {
@@ -37,4 +36,4 @@ export default class AndCore extends Node {
 
 }
 
-NodeWork.registerNodeType(AndCore)
+NodeWork.registerNodeType(LogicAnd)

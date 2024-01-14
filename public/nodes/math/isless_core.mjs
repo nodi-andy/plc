@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 export default class MathIsLessCore extends Node {
     static type = "math/isless";
     static title = "?<";
-    static desc = "IsLess";
 
     static setup(prop) {
         Node.setProperty(prop, "in1", {label:" ", input: true});

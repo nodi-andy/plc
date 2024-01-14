@@ -4,7 +4,6 @@ import NodeWork from "../../nodework.mjs";
 export default class WidgetToggle extends Node {
     static type = "widget/toggle";
     static title = "";
-    static desc = "Toggles between true or false";
 
     constructor() {
         super();

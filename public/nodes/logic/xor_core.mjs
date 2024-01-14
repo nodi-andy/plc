@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 export default class XOrCore extends Node {
     static type = "logic/xor";
     static title = "XOR";
-    static desc = "XOr gate";
 
     static setup(prop) {
         Node.setProperty(prop, "in1", {label:" ", input: true});

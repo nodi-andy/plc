@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 export default class OrCore extends Node {
     static type = "logic/or";
     static title = "OR";
-    static desc = "Or gate";
 
     static setup(prop) {
         Node.setProperty(prop, "in1", {label:" ", input: true});

@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 export default class MathIsEqual extends Node {
     static type = "math/isequal";
     static title = "?=";
-    static desc = "Add";
 
     static setup(prop) {
         Node.setProperty(prop, "in1", {label:" ", input: true});

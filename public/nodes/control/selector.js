@@ -4,7 +4,6 @@ import NodeWork from "../../nodework.mjs";
 class Selector extends Node{
     static type = "control/selector";
     static title = "SEL";
-    static desc = "selects an output";
 
     constructor() {
         super();

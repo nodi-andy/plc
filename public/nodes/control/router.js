@@ -4,7 +4,6 @@ import NodeWork from "../../nodework.mjs";
 class Filter extends Node{
     static type = "control/filter";
     static title = "Router";
-    static desc = "Route input to specific output";
 
     constructor() {
         super();

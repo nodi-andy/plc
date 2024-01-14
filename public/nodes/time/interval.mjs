@@ -5,7 +5,6 @@ import Node from "../../node.mjs";
 class TimeInterval extends Node {
   static type = "time/interval";
   static title = "T";
-  static desc = "Interval";
   static on_color = "#AAA";
   static off_color = "#222";
 

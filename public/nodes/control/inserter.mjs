@@ -4,7 +4,6 @@ import { NodiEnums } from "../../enums.mjs";
 
 class Inserter extends Node {
     static type = "control/inserter";
-    static desc = "Inserter";
     static rotatable = true;
     static drawBase = false;
 
@@ -13,8 +12,8 @@ class Inserter extends Node {
         node.toNode = null;
         node.direction = 0;
         let props = node.properties;
-        Node.setProperty(props, "from", {value: "value"});
-        Node.setProperty(props, "to", {value: "value"});
+        Node.setProperty(props, "from");
+        Node.setProperty(props, "to");
         Node.setProperty(props, "value", {autoInput: true});
     }
 
@@ -29,14 +28,18 @@ class Inserter extends Node {
                 ret = []; //TBD
             }
         }
+        
         if (node.toNode && props.value.value != null) {
-            node.toNode.properties[props.to.value].inpValue = props.value.value;
+            let toProps = node.toNode.properties[props.to.value];
+            if (toProps.inpValue == null) toProps.inpValue = {};
+            toProps.inpValue[node.nodeID] = props.value.value;
             props.value.value = null;
             ret.push(node.toNode.nodeID);
         }
         
-        if (node.fromNode && node.fromNode.properties[props.from.value].outValue != null) {
+        if (node.fromNode?.properties[props.from.value]?.outValue != null) {
             props.value.value = node.fromNode.properties[props.from.value].outValue;
+            node.fromNode.properties[props.from.value].outValue = null;
         }
         return ret;
     }
@@ -45,7 +48,13 @@ class Inserter extends Node {
         let gridPos = NodiEnums.toGrid(node.pos);
         let dirVec = NodiEnums.dirToVec[node.direction];
         node.fromNode = nw.getNodeOnGrid(gridPos[0] - dirVec.x, gridPos[1] - dirVec.y);
-        node.toNode = nw.getNodeOnGrid(gridPos[0] + dirVec.x, gridPos[1] + + dirVec.y);
+        node.toNode = nw.getNodeOnGrid(gridPos[0] + dirVec.x, gridPos[1] + dirVec.y);
+        if (node.fromNode) {
+            node.properties.from.value = NodeWork.getNodeType(node.fromNode.type).defaultOutput;
+        }
+        if (node.toNode) {
+            node.properties.to.value = NodeWork.getNodeType(node.toNode.type).defaultInput;
+        }
     }
 
     static onDrawForeground(node, ctx) {
@@ -60,7 +69,15 @@ class Inserter extends Node {
         ctx.lineTo(NodiEnums.CANVAS_GRID_SIZE * 0.3, 0);
         ctx.lineTo(NodiEnums.CANVAS_GRID_SIZE * -0.2, 8);
         ctx.fill();
+
+        //ctx.drawImage(Inserter.platform, 0, 0, NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE, 0, 0, NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE)
+
     }
 }
+/*
+if (typeof window !== 'undefined') {
+    Inserter.platform = new Image(64, 64)
+    Inserter.platform.src = 'nodes/control/inserter_platform.png'
+}*/
 
 NodeWork.registerNodeType(Inserter);

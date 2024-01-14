@@ -1604,9 +1604,12 @@ export default class LGraphCanvas {
     let nodeDrawFunction = NodeWork.getNodeType(node.type).onDrawForeground;
     if (nodeDrawFunction) nodeDrawFunction(node, ctx, this.visible_rect);
 
-    //connection slots
+    // Draw the title on the node
     ctx.textAlign = "center";
     ctx.font = this.inner_text_font;
+    ctx.fillStyle = NodiEnums.NODE_TEXT_COLOR;
+    let nodeTitle = NodeWork.getNodeType(node.type).title;
+    if (nodeTitle) ctx.fillText(NodeWork.getNodeType(node.type).title, node.size[0] / 2, node.size[1] / 2);
 
     var render_text = !low_quality;
 
@@ -1682,8 +1685,6 @@ export default class LGraphCanvas {
       i++;
     }
 
-    ctx.textAlign = "left";
-    ctx.globalAlpha = 1;
   }
   //used by this.over_link_center
   drawLinkTooltip(ctx, link) {

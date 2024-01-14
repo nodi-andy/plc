@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 export default class MathIsGreater extends Node {
     static type = "math/isgreater";
     static title = "?>";
-    static desc = "Is greater";
 
     static setup(prop) {
         Node.setProperty(prop, "in1", {label:" ", input: true});

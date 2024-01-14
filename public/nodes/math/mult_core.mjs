@@ -4,7 +4,6 @@ import Node from "../../node.mjs";
 export default class MathMultCore extends Node {
     static type = "math/mult";
     static title = "*";
-    static desc = "Mult";
 
     static setup(prop) {
         Node.setProperty(prop, "in1", {label:" ", input: true});
