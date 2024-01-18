@@ -393,17 +393,6 @@ void noditronTask( void * pvParameters ) {
                 nodemap.addNode(node);
             }
 
-            JsonArray links = root["links"];
-            for (JsonVariant kv : links) {
-                JsonObject linkData = kv.as<JsonObject>();
-                int id = linkData["nodeID"].as<int>();
-                int fromNode = linkData["from"].as<int>();
-                std::string fromPort = linkData["src"].as<std::string>();
-                int toNode = linkData["to"].as<int>();
-                std::string toPort = linkData["dst"].as<std::string>();
-                nodemap.addLink(fromNode, fromPort, toNode, toPort, &id);
-            }
-
             nodemap.report();
         } else if (eventName == "getNodework") {
             //USE_SERIAL.printf("[getMap] : %s\n", mapJSON.c_str());
@@ -437,7 +426,7 @@ void noditronTask( void * pvParameters ) {
               djsondoc[1]["nodeID"] = newNode->id;
             }
             sendToSocket("nodeAdded", djsondoc[1]);
-        } else if (eventName == "dropNode") {
+        } else if (eventName == "moveNodeOnGrid") {
             nodemap.nodes[id]->pos[0] = eventData["moveTo"][0].as<int>();
             nodemap.nodes[id]->pos[1] = eventData["moveTo"][1].as<int>();
 
@@ -455,26 +444,6 @@ void noditronTask( void * pvParameters ) {
             StaticJsonDocument<16> data;
             data["id"] = id;
             sendToSocket("nodeRemoved", data.as<JsonObject>());
-
-        } else if (eventName == "addLink") {
-            int fromNode        = djsondoc[1]["from"].as<int>();
-            int toNode          = djsondoc[1]["to"].as<int>();
-            string fromPort     = djsondoc[1]["fromSlot"].as<string>();
-            string toPort       = djsondoc[1]["toSlot"].as<string>();
-            Link* newLink = nodemap.addLink(fromNode, fromPort, toNode, toPort);
-            if (newLink) {
-              djsondoc[1]["nodeID"] = newLink->id;
-            }
-
-            sendToSocket("linkAdded", djsondoc[1]);
-            USE_SERIAL.printf("[addLink] id: %d\n", id);
-        } else if (eventName == "remLink") {
-            USE_SERIAL.printf("[remLink] id: %d\n", id);
-            nodemap.removeLink(id);
-            StaticJsonDocument<16> data;
-            data["nodeID"] = id;
-            sendToSocket("linkRemoved", data.as<JsonObject>());
-
         } else if (eventName == "save") {
             String mapJSON = nodemap.toJSON().as<String>();
 
@@ -565,12 +534,6 @@ void noditronTask( void * pvParameters ) {
         }
     }
     
-    for (auto n : nodemap.links) {
-        if (n.second) {
-            n.second->onExecute();
-        }
-    }
-
     // Clean output after all links are done
     for (auto n : nodemap.nodes) {
         Node *node = n.second;
@@ -713,7 +676,7 @@ void loop() {
 
         // Send event
         //socketIO.sendEVENT(output);*/
-        USE_SERIAL.printf("Nodes: %d, Links: %d\n", nodemap.nodes.size(), nodemap.links.size());
+        USE_SERIAL.printf("Nodes: %d\n", nodemap.nodes.size());
 
         // Print JSON for debugging
         //USE_SERIAL.println(output);

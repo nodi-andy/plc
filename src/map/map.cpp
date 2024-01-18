@@ -41,24 +41,10 @@ Node* Map::addNode(JsonObject json)
     return newNode;
 }
 
-Link* Map::addLink(int fromNode, string fromOutput, int toNode, string toOutput, int *linkID) {
-    Link* link = new Link(nodes[fromNode], fromOutput, nodes[toNode], toOutput);
-
-    if (linkID)
-        link->id = *linkID;
-    else
-        link->id = this->links.size();;
-        
-    links[link->id] = link;
-    link->setup();
-    Serial.printf("[addLink] : linkID = %d  From: %d.%s To:%d.%s\n", link->id, fromNode, fromOutput.c_str(), toNode, toOutput.c_str());
-    return link;
-}
 
 void Map::clear()
 {
     nodes.clear();
-    links.clear();
     usedIDs.clear();
     nextID = 0;
     Serial.println("[Map::clear]");
@@ -81,19 +67,9 @@ DynamicJsonDocument Map::toJSON() {
        posArray[0] = n.second->pos[0];
        posArray[1] = n.second->pos[1];
     }
-
-    JsonArray jsLinks = map.createNestedArray("links");
-    for (auto link : links) {
-      Serial.printf("\tlinks: %d\n", link.second->id);
-      JsonObject linkObject = jsLinks.createNestedObject();
-      linkObject["nodeID"] = link.second->id;
-      linkObject["from"] = link.second->from->id;
-      linkObject["src"] = link.second->src;
-      linkObject["to"] = link.second->to->id;
-      linkObject["dst"] = link.second->dst;
-    }
     return doc;
 }
+
 void Map::report() {
     Serial.println("");
     Serial.println(">>>>>>>");
@@ -105,14 +81,7 @@ void Map::report() {
         Serial.println(n.second->getType().c_str());
       }
     }
-    Serial.println("LINKS:");
-    for (auto n : links) {
-      Serial.print(n.first);
-      Serial.print(" : ");
-      if (n.second) {
-        Serial.println(n.second->getType().c_str());
-      }
-    }
+
     Serial.println(">>>>>>>");
     Serial.println("");
 }
@@ -131,20 +100,9 @@ void Map::removeID(int idToRemove) {
 
 void Map::removeNode(int idToRemove) {
 
-    for (auto link : links) {
-      if(link.second->from->id == idToRemove || link.second->to->id == idToRemove) {
-        //remove link
-        string cmd ="[\"remLink\", {nodeID:" + std::to_string(link.first) + "}]";
-        orders.push(cmd);
-      }    
-    }
     // Erase the node from the nodes map
     nodes.erase(idToRemove);
 
     // Remove ID from usedIDs set
     removeID(idToRemove);
-}
-
-void Map::removeLink(int linkIDToRemove) {
-    links.erase(linkIDToRemove);
 }

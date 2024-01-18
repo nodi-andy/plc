@@ -1,5 +1,6 @@
 export const NodiEnums = {
   CANVAS_GRID_SIZE: 64,
+  POS_SEP: "x",
 
   NODE_TITLE_HEIGHT: 24,
   NODE_SLOT_HEIGHT: 64,
@@ -18,9 +19,6 @@ export const NodiEnums = {
 
   WIDGET_OUTLINE_COLOR: "#666",
   WIDGET_TEXT_COLOR: "#DDD",
-
-  LINK_COLOR: "#6B6",
-  CONNECTING_LINK_COLOR: "#AFA",
 
   DEFAULT_POSITION: [32, 32], //default node position
 

@@ -2,7 +2,7 @@ import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 export default class WidgetToggle extends Node {
-    static type = "widget/toggle";
+    static type = "basic/toggle";
     static title = "";
 
     constructor() {

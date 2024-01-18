@@ -1,4 +1,4 @@
-import WidgetLed from "../widget/led.mjs";
+import WidgetLed from "../basic/led.mjs";
 
 export default class NodiBoxGreen extends WidgetLed {
     static type2 = "nodi.box/green_led";

@@ -7,6 +7,8 @@ class TimeInterval extends Node {
   static title = "T";
   static on_color = "#AAA";
   static off_color = "#222";
+  static defaultInput = "enable";
+  static defaultOutput = "value";
 
   constructor() {
     super();

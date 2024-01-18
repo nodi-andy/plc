@@ -3,24 +3,22 @@
 
 
 //Toggle a bit
-class LED : public Node
+class Toggle : public Node
 {
     public:
-    LED();
+    Toggle();
     bool isNotConnected = false;
     virtual std::string getType() const override {
-        return "widget/led";
+        return "basic/toggle";
     }
-    virtual LED* createInstance() const override {
-        return new LED(*this); // Create a new instance of the Toggle object
+    virtual Toggle* createInstance() const override {
+        return new Toggle(*this); // Create a new instance of the Toggle object
     }
-
-    
     void setup();
     int onExecute();
 };
 
 static bool toogleRegistered = []() {
-    RegistryManager::getInstance().registerNode(new LED());
+    RegistryManager::getInstance().registerNode(new Toggle());
     return true;
 }();

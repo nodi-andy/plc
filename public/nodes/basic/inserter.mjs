@@ -3,7 +3,7 @@ import Node from "../../node.mjs";
 import { NodiEnums } from "../../enums.mjs";
 
 class Inserter extends Node {
-    static type = "control/inserter";
+    static type = "basic/inserter";
     static rotatable = true;
     static drawBase = false;
 
@@ -12,8 +12,8 @@ class Inserter extends Node {
         node.toNode = null;
         node.direction = 0;
         let props = node.properties;
-        Node.setProperty(props, "from");
-        Node.setProperty(props, "to");
+        Node.setProperty(props, "from", {autoInput: true});
+        Node.setProperty(props, "to", {autoInput: true});
         Node.setProperty(props, "value", {autoInput: true});
     }
 
@@ -31,10 +31,12 @@ class Inserter extends Node {
         
         if (node.toNode && props.value.value != null) {
             let toProps = node.toNode.properties[props.to.value];
-            if (toProps.inpValue == null) toProps.inpValue = {};
-            toProps.inpValue[node.nodeID] = props.value.value;
-            props.value.value = null;
-            ret.push(node.toNode.nodeID);
+            if (toProps) {
+                if (toProps.inpValue == null) toProps.inpValue = {};
+                toProps.inpValue[node.nodeID] = props.value.value;
+                props.value.value = null;
+                ret.push(node.toNode.nodeID);
+            }
         }
         
         if (node.fromNode?.properties[props.from.value]?.outValue != null) {
@@ -77,7 +79,7 @@ class Inserter extends Node {
 /*
 if (typeof window !== 'undefined') {
     Inserter.platform = new Image(64, 64)
-    Inserter.platform.src = 'nodes/control/inserter_platform.png'
+    Inserter.platform.src = 'nodes/basic/inserter_platform.png'
 }*/
 
 NodeWork.registerNodeType(Inserter);

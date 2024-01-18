@@ -48,7 +48,7 @@ To add your first block:
 <img src="https://user-images.githubusercontent.com/19575988/226484676-56ec907a-3cb7-420c-95fb-651981efb0b9.png" width="640">
 
 ## Connecting the blocks
-1. Create a button (`widget/button`) using the same method as before.
+1. Create a button (`basic/button`) using the same method as before.
 1. Set the port of the button on `0` in the same menu described above
 1. Port `0` is connected to the default button on esp32
 1. Connect the output of button in the function block diagram to the input of toggle

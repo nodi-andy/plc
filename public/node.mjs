@@ -1,8 +1,7 @@
 import { NodiEnums } from "./enums.mjs";
-import LLink from "./link.mjs";
 
 export default class Node {
-  constructor(title) {
+  constructor() {
     this.update = false;
     this.device = "server";
     this.properties = {}; //for the values
@@ -23,27 +22,6 @@ export default class Node {
         }
         continue;
       }
-    }
-
-    for (let i = 0; i < Node.getInputs(this.properties).length; ++i) {
-      var input = Node.getInputs(this.properties)[i];
-      var link_info = this.graph ? this.graph.links[input.link] : null;
-      if (this.onConnectionsChange) this.onConnectionsChange(NodiEnums.INPUT, i, true, link_info, input); //link_info has been created now, so its updated
-
-      if (this.onInputAdded) this.onInputAdded(input);
-    }
-
-    for (let i = 0; i < Node.getOutputs(this.properties).length; ++i) {
-      var output = Node.getOutputs(this.properties)[i];
-      if (!output.links) {
-        continue;
-      }
-      for (let j = 0; j < output.links.length; ++j) {
-        let link_info = this.graph ? this.graph.links[output.links[j]] : null;
-        if (this.onConnectionsChange) this.onConnectionsChange(NodiEnums.OUTPUT, i, true, link_info, output); //link_info has been created now, so its updated
-      }
-
-      if (this.onOutputAdded) this.onOutputAdded(output);
     }
 
     if (this.widgets) {
@@ -105,7 +83,6 @@ export default class Node {
     for (let i in info) {
       prop[i] = info[i];
     }
-    prop.links = [];
   }
 
   // Execution *************************
@@ -140,26 +117,6 @@ export default class Node {
     return Node.getInputs(this.properties)[slot].value;
   }
 
-  /**
-   * returns the node connected in the input slot
-   * @method getInputNode
-   * @param {number} slot
-   * @return {Node} node or null
-   */
-  getInputNode(slot) {
-    if (slot >= Node.getInputs(this.properties).length) {
-      return null;
-    }
-    var input = Node.getInputs(this.properties)[slot];
-    if (!input || input.link === null) {
-      return null;
-    }
-    var link_info = this.graph.links[input.link];
-    if (!link_info) {
-      return null;
-    }
-    return this.graph.getNodeById(link_info.origin_id);
-  }
 
   getInputByName(name) {
     let slot = this.properties[name];
@@ -202,94 +159,10 @@ export default class Node {
     return slot.output ? slot : null;
   }
 
-  /**
-   * retrieves all the nodes connected to this output slot
-   * @method getOutputNodes
-   * @param {number} slot
-   * @return {array}
-   */
-  getOutputNodes(slot) {
-    if (!Node.getOutputs(this.properties) || Node.getOutputs(this.properties).length == 0) {
-      return null;
-    }
-
-    if (slot >= Node.getOutputs(this.properties).length) {
-      return null;
-    }
-
-    var output = Node.getOutputs(this.properties)[slot];
-    if (!output.links || output.links.length == 0) {
-      return null;
-    }
-
-    var r = [];
-    for (var i = 0; i < output.links.length; i++) {
-      var link_id = output.links[i];
-      var link = this.graph.links[link_id];
-      if (link) {
-        var target_node = this.graph.getNodeById(link.to);
-        if (target_node) {
-          r.push(target_node);
-        }
-      }
-    }
-    return r;
-  }
-
   removeProperty(name) {
     delete this.properties[name];
   }
   //connections
-  /**
-   * add a new output slot to use in this node
-   * @method addOutput
-   * @param {string} name
-   * @param {string} type string defining the output type ("vec3","number",...)
-   * @param {Object} extra_info this can be used to have special properties of an output (label, special color, position, etc)
-   */
-  addOutput(name, type, extra_info, label) {
-    label = label || name;
-    var output = { name: name, type: type, links: null, label: label };
-    if (extra_info) {
-      for (var i in extra_info) {
-        output[i] = extra_info[i];
-      }
-    }
-
-    Node.getOutputs(this.properties).push(output);
-    if (this.onOutputAdded) {
-      this.onOutputAdded(output);
-    }
-
-    return output;
-  }
-
-  /**
-   * remove an existing output slot
-   * @method removeOutput
-   * @param {number} slot
-   */
-  removeOutput(slot) {
-    this.disconnectOutput(slot);
-    Node.getOutputs(this.properties).splice(slot, 1);
-    for (var i = slot; i < Node.getOutputs(this.properties).length; ++i) {
-      if (!Node.getOutputs(this.properties)[i] || !Node.getOutputs(this.properties)[i].links) {
-        continue;
-      }
-      var links = Node.getOutputs(this.properties)[i].links;
-      for (var j = 0; j < links.length; ++j) {
-        var link = this.graph.links[links[j]];
-        if (!link) {
-          continue;
-        }
-        link.toSlot -= 1;
-      }
-    }
-
-    if (this.onOutputRemoved) {
-      this.onOutputRemoved(slot);
-    }
-  }
 
   static updateProp(node, prop) {
     node.properties[prop.name] = prop;
@@ -343,53 +216,6 @@ export default class Node {
     }
   }
 
-  /**
-   * connect this node output to the input of another node
-   * @method connect
-   * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
-   * @param {Node} node the target node
-   * @param {number_or_string} fromSlot the input slot of the target node (could be the number of the slot or the string with the name of the slot, or -1 to connect a trigger)
-   * @return {Object} the link_info is created, otherwise null
-   */
-  connect(slot, target_node, fromSlot, id) {
-    var link_info = new LLink(id, "number", this.id, slot, target_node, fromSlot);
-
-    //add to graph links list
-    this.graph.links[link_info.id] = link_info;
-
-    return link_info;
-  }
-
-  /**
-   * disconnect one output to an specific node
-   * @method disconnectOutput
-   * @param {number_or_string} slot (could be the number of the slot or the string with the name of the slot)
-   * @param {Node} target_node the target node to which this slot is connected [Optional, if not target_node is specified all nodes will be disconnected]
-   * @return {boolean} if it was disconnected successfully
-   */
-  disconnectOutput(link) {
-    var output = this.getOutputByName(link.toSlot);
-    if (!output) {
-      return false;
-    }
-
-    var link_id = link.linkID;
-    if (link_id != null && output && output.links) {
-      // Find the index of the value you want to remove
-      let indexToRemove = output.links.indexOf(link_id);
-
-      // Check if the value exists in the array
-      if (indexToRemove !== -1) {
-        // Use splice to remove the value
-        output.links.splice(indexToRemove, 1);
-        console.log(`Removed ${link_id} from the array.`);
-      } else {
-        console.log(`${link_id} not found in the array.`);
-      }
-    } //link != null
-
-    return true;
-  }
 
   /**
    * changes node size and triggers callback
@@ -444,38 +270,6 @@ export default class Node {
     return size;
   }
 
-  /**
-   * checks if a point is inside a node slot, and returns info about which slot
-   * @method getSlotInPosition
-   * @param {number} x
-   * @param {number} y
-   * @return {Object} if found the object contains { input|output: slot object, slot: number, link_pos: [x,y] }
-   */
-  getSlotInPosition(x, y) {
-    //search for inputs
-    var link_pos = new Float32Array(2);
-    if (Node.getInputs(this.properties)) {
-      for (var i = 0, l = Node.getInputs(this.properties).length; i < l; ++i) {
-        var input = Node.getInputs(this.properties)[i];
-        Node.getConnectionPos(true, i, link_pos);
-        if (Math.isInsideRectangle(x, y, link_pos[0] - 10, link_pos[1] - 5, 20, 10)) {
-          return { input: input, slot: i, link_pos: link_pos };
-        }
-      }
-    }
-
-    if (Node.getOutputs(this.properties)) {
-      for (let i = 0, l = Node.getOutputs(this.properties).length; i < l; ++i) {
-        var output = Node.getOutputs(this.properties)[i];
-        Node.getConnectionPos(node, false, i, link_pos);
-        if (Math.isInsideRectangle(x, y, link_pos[0] - 10, link_pos[1] - 5, 20, 10)) {
-          return { output: output, slot: i, link_pos: link_pos };
-        }
-      }
-    }
-
-    return null;
-  }
 
   // returns the center of a connection point in canvas coords
   // @method getConnectionPos
@@ -486,10 +280,7 @@ export default class Node {
 
   static getConnectionPos(node, is_input, slot_number, out) {
     out = out || new Float32Array(2);
-    if (node.type == "control/junction") {
-      out = [node.pos[0] + 8, node.pos[1] + 8];
-      return out;
-    }
+
     var num_slots = 0;
     if (is_input && Node.getInputs(node.properties)) {
       num_slots = Node.getInputs(node.properties).length;

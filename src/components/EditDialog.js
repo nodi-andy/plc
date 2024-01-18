@@ -51,11 +51,6 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
           <Box sx={{ width: 250 }} role="presentation" onClick={toggleEditDialog(false)} onKeyDown={toggleEditDialog(false)}>
             {window.canvas?.current_node?.properties && Object.entries(window.canvas?.current_node?.properties).map(([key, value]) => (
               <div style={{ display: 'flex', alignItems: 'center' }} key={key}>
-                <Checkbox 
-                  checked = {value.input} 
-                  id={key}
-                  onChange={handleCheckboxChange} 
-                  onClick={(event) => event.stopPropagation()} />
                 <TextField
                   label={key}
                   id="outlined-size-small"
@@ -64,11 +59,6 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
                   onChange={(event) => handlePropertyChange(event, key)}
                   onClick={(event) => event.stopPropagation()} // Stop event propagation to prevent closing the drawer
                 />
-                <Checkbox 
-                  checked = {value.output} 
-                  id={key}
-                  onChange={handleOutputCheckboxChange} 
-                  onClick={(event) => event.stopPropagation()} />
               </div>
             ))}
           </Box>

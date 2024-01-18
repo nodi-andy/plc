@@ -2,10 +2,10 @@ import express from "express";
 import http from "http";
 import { Server as socketIOServer } from "socket.io";
 import NodeWork from "./public/nodework.mjs";
-import "./public/nodes/widget/button.mjs";
-import "./public/nodes/widget/toggle.mjs";
-import "./public/nodes/widget/led.mjs";
-import "./public/nodes/widget/number.mjs";
+import "./public/nodes/basic/button.mjs";
+import "./public/nodes/basic/toggle.mjs";
+import "./public/nodes/basic/led.mjs";
+import "./public/nodes/basic/number.mjs";
 import "./public/nodes/logic/and.mjs";
 import "./public/nodes/logic/or_core.mjs";
 import "./public/nodes/logic/xor_core.mjs";
@@ -13,12 +13,11 @@ import "./public/nodes/logic/not_core.mjs";
 import "./public/nodes/math/add.mjs";
 import "./public/nodes/math/mult_core.mjs";
 import "./public/nodes/math/counter.mjs";
-import "./public/nodes/math/isequal_core.mjs";
+import "./public/nodes/math/isequal.mjs";
 import "./public/nodes/math/isless_core.mjs";
 import "./public/nodes/math/isgreater_core.mjs";
 import "./public/nodes/time/interval.mjs";
-import "./public/nodes/control/junction.mjs";
-import "./public/nodes/control/inserter.mjs";
+import "./public/nodes/basic/inserter.mjs";
 import Vector2 from "./public/vector2.mjs";
 
 const app = express();
@@ -96,30 +95,6 @@ setInterval(() => {
       }
     });
 
-    if (nodeWorkJSON.links == null) return;
-
-    nodeWorkJSON.links.forEach((link) => {
-      if (!link) return;
-      let dataFromNode = null;
-      if (nodeWorkJSON.nodes[link.from]) {
-        dataFromNode = nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue;
-      }
-      if (dataFromNode !== null) {
-        let toNode = nodeWorkJSON.nodes[link.to];
-        if (toNode) {
-          if (toNode.device == "server") {
-            toNode.properties[link.toSlot].inpValue = dataFromNode;
-          } else if (toNode.device == "nodi.box") {
-            iot.emit("updateSlot", { nodeID: link.to, newData: { prop: link.toSlot, value: dataFromNode } });
-          }
-        }
-      }
-    });
-
-    nodeWorkJSON.links.forEach((link) => {
-      if (!link) return;
-      nodeWorkJSON.nodes[link.from].properties[link.fromSlot].outValue = null;
-    });
   } catch (e) {
     console.log(e);
   }
@@ -142,7 +117,7 @@ io.on("connection", (socket) => {
   socket.on("clear", (msg) => {
     console.log("[clear]");
 
-    nodeWorkJSON = { nodes: [], links: [] };
+    nodeWorkJSON = { nodes: [], nodesByPos: {} };
     io.emit("clear", msg);
   });
 
@@ -182,6 +157,14 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("addExistingNode", (msg) => {
+    console.log("[addExistingNode]");
+    //console.log(msg);
+    if (msg?.nodeID == null || msg?.pos == null) return;
+    nodeWorkJSON.addExistingNode(msg);
+    io.emit("addExistingNode", msg);
+  });
+
   socket.on("updateProp", (msg) => {
     console.log("[updateProp]");
     //console.log(msg);
@@ -198,12 +181,6 @@ io.on("connection", (socket) => {
   socket.on("remNode", (msg) => {
     console.log("[remNode]");
     io.emit("nodeRemoved", msg);
-    for (const [, nodeProp] of Object.entries(nodeWorkJSON.nodes[msg.nodeID].properties)) {
-      nodeProp.links.forEach((linkID) => {
-        io.emit("linkRemoved", {linkID: linkID});
-        nodeWorkJSON.links[linkID] = null;
-      })
-    }
     nodeWorkJSON.nodes[msg.nodeID] = null;
   });
 
@@ -234,21 +211,6 @@ io.on("connection", (socket) => {
     //console.log(nodeWorkJSON);
   });
 
-  socket.on("addLink", (msg) => {
-    if (!msg) return;
-
-    console.log("[addLink] ", msg);
-    msg.linkID = getFirstNullIndex(nodeWorkJSON.links);
-    nodeWorkJSON.addLink(msg);
-    if (nodeWorkJSON.nodes[msg.from].links) {
-      nodeWorkJSON.nodes[msg.from].links.push(msg.linkID);
-    } else {
-      nodeWorkJSON.nodes[msg.from].links = [msg.linkID];
-
-    }
-    io.emit("addLink", msg);
-  });
-
   socket.on("moveNode", (msg) => {
     console.log("[moveNode] ", msg);
     let node = nodeWorkJSON.nodes[msg.nodeID];
@@ -267,14 +229,14 @@ io.on("connection", (socket) => {
     socket.to("browser_room").emit("moveNode", msg);
   });
 
-  socket.on("dropNode", (msg) => {
-    if (msg.nodeID == null) return;
-    let node = nodeWorkJSON.nodes[msg.nodeID];
+  socket.on("moveNodeOnGrid", (msg) => {
+    if (msg.id == null) return;
+    let node = nodeWorkJSON.nodes[msg.id];
     if (!node == null) return;
-    if (settings.ownerShip && nodeWorkJSON.nodes[msg.nodeID].owner != socket.id) return;
+    if (settings.ownerShip && nodeWorkJSON.nodes[msg.id].owner != socket.id) return;
 
-    io.emit("nodeDropped", msg);
-    nodeWorkJSON.nodeDropped(msg);
+    io.emit("moveNodeOnGrid", msg);
+    nodeWorkJSON.moveNodeOnGrid(msg);
   });
 
   socket.on("pickNode", (msg) => {
@@ -316,16 +278,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("remLink", (msg) => {
-    console.log("[remLink] ", msg.nodeID);
-    nodeWorkJSON.links[msg.nodeID] = null;
-
-    if (msg.device != "server" && iot) {
-      iot.emit("remLink", msg);
-    } else {
-      io.emit("linkRemoved", {linkID: msg.nodeID});
-    }
-  });
 
   socket.on("getNodework", (msg) => {
     //if (cmds == null) cmds = [];

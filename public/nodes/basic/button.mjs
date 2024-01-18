@@ -2,7 +2,7 @@ import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
 export default class Button extends Node {
-    static type = "widget/button";
+    static type = "basic/button";
     static title = " ";
     static margin = 12;
     static defaultOutput = "value";
@@ -65,8 +65,9 @@ export default class Button extends Node {
 
         for(let propKey in props) {
             let prop = props[propKey];
-            if (prop.autoInput && prop.inpValue != null) {
-                prop.value = prop.inpValue;
+            if (prop.autoInput && prop.inpValue !== null) {
+                if (prop.inpValue == '') prop.value = null;
+                else if (prop.inpValue != null) prop.value = prop.inpValue;
                 prop.inpValue = null;
                 ret = true;
             }

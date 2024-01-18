@@ -2,8 +2,9 @@ import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
 export default class WidgetLed extends Node {
-    static type = "widget/led";
+    static type = "basic/led";
     static defaultInput = "value";
+    static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
@@ -15,8 +16,6 @@ export default class WidgetLed extends Node {
         Node.setProperty(props, "label", {label: "LED"});
         Node.setProperty(props, "port");
         Node.setProperty(props, "color", {value: "FF3333"});
-        props.value.inpValue = [];
-
     }
 
     static run(node) {
@@ -30,9 +29,13 @@ export default class WidgetLed extends Node {
             }
         }
         
-        if (props.value?.inpValue.length > 0) {
-            props.value.value = Math.max(...props.value.inpValue);
-            props.value.inpValue = [];
+        if (props.value.inpValue != null) {
+            if (props.value.inpValue.constructor === Object) {
+                props.value.value = Math.max(...Object.values(props.value.inpValue));
+            } else {
+                props.value.value = props.value.inpValue;
+            }
+            props.value.inpValue = null;
             props.value.outValue = props.value.value;
             return true;
         }

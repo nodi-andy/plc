@@ -75,25 +75,23 @@
     await loadJS("./math.js", false);
     await loadJS("./nodework.mjs", false);
     await loadJS("./node.mjs", false);
-    await loadJS("./link.mjs", false);
     await loadJS("./view.js", false);
-    await loadJS("./nodes/widget/button.mjs", false);
-    await loadJS("./nodes/widget/toggle.mjs", false);
-    await loadJS("./nodes/widget/led.mjs", false);
-    await loadJS("./nodes/widget/number.mjs", false);
+    await loadJS("./nodes/basic/button.mjs", false);
+    await loadJS("./nodes/basic/toggle.mjs", false);
+    await loadJS("./nodes/basic/led.mjs", false);
+    await loadJS("./nodes/basic/number.mjs", false);
     await loadJS("./nodes/logic/and.mjs", false);
     await loadJS("./nodes/logic/or.js", false);
     await loadJS("./nodes/logic/xor.js", false);
     await loadJS("./nodes/logic/not.js", false);
     await loadJS("./nodes/math/add.mjs", false);
     await loadJS("./nodes/math/mult.js", false);
-    await loadJS("./nodes/math/isequal.js", false);
+    await loadJS("./nodes/math/isequal.mjs", false);
     await loadJS("./nodes/math/isless.js", false);
     await loadJS("./nodes/math/isgreater.js", false);
     await loadJS("./nodes/math/counter.mjs", false);
     await loadJS("./nodes/time/interval.mjs", false);
-    await loadJS("./nodes/control/junction.mjs", false);
-    await loadJS("./nodes/control/inserter.mjs", false);
+    await loadJS("./nodes/basic/inserter.mjs", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
     await loadJS("./nodes/nodi.box/b2.js", false);
     await loadJS("./nodes/nodi.box/b3.js", false);
@@ -131,12 +129,16 @@
       window.sendToServer("addNode", exportNode);
     };
 
+    window.nodes.copyNode = () => {
+      if (window.canvas.copyNode == null && window.canvas.current_node)
+        window.canvas.copyNode = window.canvas.current_node.nodeID;
+      else window.canvas.copyNode = null;
+    };
+
     window.nodes.remNode = () => {
       window.canvas.selected_nodes.forEach((n) => {
         window.sendToServer("remNode", { nodeID: n.nodeID });
       });
-
-      if (canvas.selectedLink != null) window.sendToServer("remLink", { nodeID: canvas.selectedLink });
     };
 
     window.nodes.rotate = () => {
@@ -181,14 +183,12 @@
       });
     };
 
-    window.nodes.dropNode = (id, changedNodeData) => {
-      window.sendToServer("dropNode", {
-        nodeID: id,
-        moveTo: changedNodeData.pos,
+    window.nodes.moveNodeOnGrid = (id, from, to) => {
+      window.sendToServer("moveNodeOnGrid", {
+        id: id,
+        from: from,
+        to: to,
       });
-    };
-    window.nodes.pick = (node) => {
-      //window.sendToServer("pickNode", {nodeID: node.nodeID, pos: node.drag_start_pos});
     };
 
     window.nodes.update = (id, changedNodeData) => {

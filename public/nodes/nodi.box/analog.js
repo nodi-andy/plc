@@ -1,4 +1,4 @@
-import WidgetNumber from "../widget/number.js";
+import WidgetNumber from "../basic/number.js";
 
 export default class NodiBoxAnalog extends WidgetNumber {
     constructor() {

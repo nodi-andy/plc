@@ -8,7 +8,7 @@ class Button : public Node
     ~Button(){};
     Button(int portNr = -1);
     virtual std::string getType() const override {
-        return "widget/button";
+        return "basic/button";
     }
     virtual Button* createInstance() const override {
         return new Button(*this); // Create a new instance of the Button object

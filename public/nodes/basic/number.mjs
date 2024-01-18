@@ -2,7 +2,7 @@ import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 export default class WidgetNumber extends Node {
-    static type = "widget/number";
+    static type = "basic/number";
     static pixels_threshold = 10;
     static old_y = -1;
     static _remainder = 0;

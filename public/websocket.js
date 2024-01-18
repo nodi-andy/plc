@@ -11,18 +11,15 @@ import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
 const events = [
   "nodeAdded",
-  "nodeDropped",
+  "moveNodeOnGrid",
+  "addExistingNode",
   "nodePicked",
   "updateNode",
   "updatePos",
   "id",
-  "linkAdded",
-  "linkRemoved",
   "nodeRemoved",
   "nodeMoved",
   "nodeResized",
-  "addLink",
-  "remLink",
   "propUpdated",
   "remNode",
   "clear",
@@ -86,9 +83,6 @@ window.order.nodeAdded = (node) => {
   window.graph.addNode(node);
 };
 
-window.order.nodeDropped = (msg) => {
-  window.graph.nodeDropped(msg);
-};
 
 window.order.nodePicked = (node) => {
   window.graph.pickNode(node);
@@ -124,10 +118,6 @@ window.order.updateNode = (message) => {
   }
 };
 
-window.order.linkAdded = (msg) => {
-  window.graph.links[msg.linkID] = msg;
-};
-
 window.order.updatePos = (msg) => {
   if (window.graph.nodes[msg.nodeID] && msg.pos) {
     window.graph.nodes[msg.nodeID].pos = msg.pos;
@@ -136,10 +126,6 @@ window.order.updatePos = (msg) => {
 
 window.order.setSettings = (msg) => {
   window.settings = msg;
-};
-
-window.order.linkRemoved = (msg) => {
-  window.graph.links[msg.linkID] = null;
 };
 
 window.order.setNodework = (msg) => {
@@ -162,14 +148,6 @@ window.order.nodeResized = (msg) => {
 
   console.log("[nodeResized] ", msg);
   window.graph.nodes[msg.nodeID].setSize(msg.size);
-};
-
-window.order.addLink = (msg) => {
-  window.graph.links[msg.linkID] = msg;
-};
-
-window.order.remLink = (msg) => {
-  window.graph.removeLink(msg.nodeID);
 };
 
 window.order.remNode = (message) => {
@@ -213,7 +191,8 @@ window.order.connectionSettings = (msg) => {
 events.forEach((event) => {
   if (window.socketIO) {
     window.socketIO.on(event, (message) => {
-      window.order[event](message);
+      if (window.graph[event]) window.graph[event](message);
+      else window.order[event](message);
     });
   }
 });

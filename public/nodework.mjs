@@ -1,7 +1,5 @@
 import { NodiEnums } from "./enums.mjs";
 import Node from "./node.mjs";
-import LLink from "./link.mjs";
-import Vector2 from "./vector2.mjs";
 
 export default class NodeWork {
   static debug = false;
@@ -156,7 +154,6 @@ export default class NodeWork {
   clear() {
     this.nodes = [];
     this.nodesByPos = {};
-    this.links = [];
 
     //timing
     this.globaltime = 0;
@@ -197,20 +194,28 @@ export default class NodeWork {
     if (!node) return;
 
     this.nodes[node.nodeID] = node;
-    this.nodeDropped({nodeID: node.nodeID, moveTo: node.pos});
+    this.moveNodeOnGrid({id: node.nodeID, to: NodiEnums.toGrid(node.pos)});
   }
 
-  nodeDropped(msg) {
+  addExistingNode(msg) {
+    if (msg?.nodeID == null || msg?.pos == null) return;
+
+    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+  }
+
+  moveNodeOnGrid(msg) {
     if (!msg) return;
-    let node = this.nodes[msg.nodeID];
+    let node = this.nodes[msg.id];
     node.moving = false;
     
-    let next_gridPos = NodiEnums.toGrid(msg.moveTo);
+    let next_gridPos = msg.to;
     if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
-      this.setNodeOnGrid(node.gridPos[0], node.gridPos[1], null);
-      this.setNodeOnGrid(next_gridPos[0], next_gridPos[1], node);
+      if (msg.from) {
+        this.setNodeOnGrid(msg.from[0], msg.from[1], null);
+      }
+      this.setNodeOnGrid(msg.to[0], msg.to[1], node);
     }
-    node.pos = NodiEnums.toCanvas(node.gridPos);
+
     let nodeClass = NodeWork.getNodeType(node.type);
     if (nodeClass.replace) nodeClass.replace(node, this);
   }
@@ -219,12 +224,6 @@ export default class NodeWork {
   pickNode(msg) {
     let node = this.nodes[msg.nodeID];
     node.drag_start_pos = msg.drag_start_pos;
-  }
-
-  addLink(link) {
-    this.links[link.linkID] = link;
-    this.nodes[link.to].properties[link.toSlot].links.push(link.linkID);
-    this.nodes[link.from].properties[link.fromSlot].links.push(link.linkID);
   }
 
   nodeRemoved(nodeID) {
@@ -252,7 +251,7 @@ export default class NodeWork {
   }
 
   getNodeOnGrid(x, y) {
-    let node = this.getNodeById(this.nodesByPos[x + "-" + y]);
+    let node = this.getNodeById(this.getNodeIDOnGrid(x, y));
     if (node) {
       return node;
     } else {
@@ -262,10 +261,22 @@ export default class NodeWork {
 
   setNodeOnGrid(x, y, node) {
     if (node == null) {
-      delete this.nodesByPos[x + "-" + y];
+      delete this.nodesByPos[x + NodiEnums.POS_SEP + y];
     } else {
       node.gridPos = [x, y];
-      this.nodesByPos[x + "-" + y] = node.nodeID;
+      this.setNodeIDOnGrid(x, y, node.nodeID);
+    }
+  }
+
+  getNodeIDOnGrid(x, y) {
+    return this.nodesByPos[x + NodiEnums.POS_SEP + y];
+  }
+
+  setNodeIDOnGrid(x, y, id) {
+    if (id == null) {
+      delete this.nodesByPos[x + NodiEnums.POS_SEP + y];
+    } else {
+      this.nodesByPos[x + NodiEnums.POS_SEP + y] = id;
     }
   }
 
@@ -298,37 +309,10 @@ export default class NodeWork {
     }
   }
 
-  /**
-   * Destroys a link
-   * @method removeLink
-   * @param {Number} link_id
-   */
-  removeLink(link_id) {
-    var link = this.links[link_id];
-    if (!link) return;
-
-    var node = this.getNodeById(link.to);
-    if (node) {
-      node.properties[link.toSlot].links.filter((v) => {
-        v == link.to;
-      });
-    }
-
-    node = this.getNodeById(link.from);
-    if (node) {
-      node.properties[link.fromSlot].links.filter((v) => {
-        v == link.from;
-      });
-    }
-
-    delete this.links[link_id];
-  }
-
   serialize() {
     var data = {
       nodes: this.nodes,
       nodesByPos: this.nodesByPos,
-      links: this.links,
       version: NodiEnums.VERSION,
     };
 
@@ -347,7 +331,6 @@ export default class NodeWork {
     this.clear();
     this.nodes = data.nodes;
     this.nodesByPos = data.nodesByPos;
-    this.links = data.links;
     return false;
   }
 }

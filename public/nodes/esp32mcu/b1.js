@@ -1,4 +1,4 @@
-import WidgetButton from "../widget/button.mjs";
+import WidgetButton from "../basic/button.mjs";
 
 export default class esp32mcuB1 extends WidgetButton {
     static type2 = "esp32mcu/b1";
