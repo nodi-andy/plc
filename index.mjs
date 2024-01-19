@@ -22,24 +22,17 @@ import Vector2 from "./public/vector2.mjs";
 
 const app = express();
 const server = http.createServer(app);
-const io = new socketIOServer(server, {
+global.io = new socketIOServer(server, {
   cors: {
     origin: "*",
   },
 });
 
 var nodeWorkJSON = new NodeWork();
-var iot = null;
+global.iot = null;
 var settings = {ownerShip: false};
 
-function getFirstNullIndex(arr) {
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i] == null) {
-      return i;
-    }
-  }
-  return arr.length; // If no null item is found
-}
+
 
 setInterval(() => {
   try {
@@ -134,27 +127,11 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("nodeAdded", (msg) => {
-    console.log("[nodeAdded]");
+  socket.on("createNode", (msg) => {
+    console.log("[createNode]");
     //console.log(msg);
-    if (!msg) return;
-    nodeWorkJSON.addNode(msg);
-    io.emit("nodeAdded", msg);
-  });
+    nodeWorkJSON.createNode(msg, socket);
 
-  socket.on("addNode", (node) => {
-    console.log("[addNode]");
-    //console.log(msg);
-    if (!node) return;
-    node.nodeID = getFirstNullIndex(nodeWorkJSON.nodes);
-    node.owner = socket.id;
-    node.moving = false;
-    nodeWorkJSON.addNode(node);
-    if (node.device == "nodi.box" && iot) {
-      iot.emit("addNode", node);
-    } else {
-      io.emit("nodeAdded", node);
-    }
   });
 
   socket.on("addExistingNode", (msg) => {
@@ -162,7 +139,6 @@ io.on("connection", (socket) => {
     //console.log(msg);
     if (msg?.nodeID == null || msg?.pos == null) return;
     nodeWorkJSON.addExistingNode(msg);
-    io.emit("addExistingNode", msg);
   });
 
   socket.on("updateProp", (msg) => {
@@ -178,10 +154,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("remNode", (msg) => {
-    console.log("[remNode]");
-    io.emit("nodeRemoved", msg);
-    nodeWorkJSON.nodes[msg.nodeID] = null;
+  socket.on("removeNode", (msg) => {
+    console.log("[removeNode]");
+    nodeWorkJSON.removeNode(msg);
   });
 
   socket.on("updateNode", (msg) => {

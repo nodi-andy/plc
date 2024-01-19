@@ -46,11 +46,10 @@ class Inserter extends Node {
         return ret;
     }
 
-    static replace(node, nw) {
-        let gridPos = NodiEnums.toGrid(node.pos);
+    static reconnect(node, nw, pos) {
         let dirVec = NodiEnums.dirToVec[node.direction];
-        node.fromNode = nw.getNodeOnGrid(gridPos[0] - dirVec.x, gridPos[1] - dirVec.y);
-        node.toNode = nw.getNodeOnGrid(gridPos[0] + dirVec.x, gridPos[1] + dirVec.y);
+        node.fromNode = nw.getNodeOnGrid(pos[0] - dirVec.x, pos[1] - dirVec.y);
+        node.toNode = nw.getNodeOnGrid(pos[0] + dirVec.x, pos[1] + dirVec.y);
         if (node.fromNode) {
             node.properties.from.value = NodeWork.getNodeType(node.fromNode.type).defaultOutput;
         }

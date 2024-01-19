@@ -107,38 +107,15 @@
     import NodeWork from "./nodework.mjs";
     import LGraphCanvas from "./canvas.js";
 
-    window.graph = new NodeWork();
-    window.canvas = new LGraphCanvas("#mycanvas", graph);
+    window.nodeWork = new NodeWork();
+    window.canvas = new LGraphCanvas("#mycanvas", window.nodeWork);
     window.nodeworkID = window.location.search.slice(1);
     window.nodes = {};
-
-    window.nodes.addNode = (name) => {
-      name = name.toLowerCase();
-      console.log(name);
-      var node = NodeWork.createNode(name);
-      if (node) {
-        let view = window.canvas.ds;
-        Node.setPos(node, window.canvas.grid_mouse[0], window.canvas.grid_mouse[1]);
-      }
-
-      // Do not send all values of node. Create a small export version
-      var exportNode = Node.clone(node);
-      delete exportNode.widget;
-      exportNode.type = node.type;
-      exportNode.device = "server";
-      window.sendToServer("addNode", exportNode);
-    };
 
     window.nodes.copyNode = () => {
       if (window.canvas.copyNode == null && window.canvas.current_node)
         window.canvas.copyNode = window.canvas.current_node.nodeID;
       else window.canvas.copyNode = null;
-    };
-
-    window.nodes.remNode = () => {
-      window.canvas.selected_nodes.forEach((n) => {
-        window.sendToServer("remNode", { nodeID: n.nodeID });
-      });
     };
 
     window.nodes.rotate = () => {
@@ -166,7 +143,7 @@
 
     window.nodes.upload = () => {
       if (window.socket) {
-        let storeGraph = JSON.parse(JSON.stringify(window.graph.serialize()));
+        let storeGraph = JSON.parse(JSON.stringify(window.nodeWork.serialize()));
         delete storeGraph.config;
         for (let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
@@ -199,7 +176,7 @@
     };
 
     window.load = (filename) => {
-      graph.configure(JSON.parse(localStorage.files)[filename]);
+      window.nodeWork.setNodework(JSON.parse(localStorage.files)[filename]);
       window.showSnackbar("Loaded nodework: " + filename);
     };
 
@@ -221,7 +198,7 @@
     };
 
     if (localStorage.selected == null) localStorage.selected = "nodework_0";
-    graph.configure(JSON.parse(localStorage.files)[localStorage.selected]);
+    window.nodeWork.setNodework(JSON.parse(localStorage.files)[localStorage.selected]);
 
     window.addEventListener("resize", function () {
       canvas.resize();

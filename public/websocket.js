@@ -10,18 +10,17 @@ import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
 const events = [
-  "nodeAdded",
   "moveNodeOnGrid",
   "addExistingNode",
   "nodePicked",
   "updateNode",
   "updatePos",
   "id",
-  "nodeRemoved",
+  "createNode",
   "nodeMoved",
   "nodeResized",
   "propUpdated",
-  "remNode",
+  "removeNode",
   "clear",
   "moveNode",
   "setSettings",
@@ -72,24 +71,20 @@ window.socketIO.on("connect", () => {
 });
 
 window.socketIO.on("setNodework", (message) => {
-  window.graph.configure(message, false);
+  window.nodeWork.setNodework(message, false);
 });
 
 window.socketIO.on("id", () => {
   window.sendToServer("id", { id: "browser" });
 });
 
-window.order.nodeAdded = (node) => {
-  window.graph.addNode(node);
-};
-
 
 window.order.nodePicked = (node) => {
-  window.graph.pickNode(node);
+  window.nodeWork.pickNode(node);
 };
 
 window.order.nodeRemoved = (msg) => {
-  window.graph.nodeRemoved(msg.nodeID);
+  window.nodeWork.nodeRemoved(msg.nodeID);
 };
 
 window.order.id = (message) => {
@@ -110,17 +105,17 @@ window.order.id = (message) => {
 
 window.order.updateNode = (message) => {
   // Handle incoming messages here
-  if (window.graph.nodes[message.nodeID]) {
-    window.graph.nodes[message.nodeID].properties = mergeObjects(
-      window.graph.nodes[message.nodeID].properties,
+  if (window.nodeWork.nodes[message.nodeID]) {
+    window.nodeWork.nodes[message.nodeID].properties = mergeObjects(
+      window.nodeWork.nodes[message.nodeID].properties,
       message.newData.properties
     );
   }
 };
 
 window.order.updatePos = (msg) => {
-  if (window.graph.nodes[msg.nodeID] && msg.pos) {
-    window.graph.nodes[msg.nodeID].pos = msg.pos;
+  if (window.nodeWork.nodes[msg.nodeID] && msg.pos) {
+    window.nodeWork.nodes[msg.nodeID].pos = msg.pos;
   }
 };
 
@@ -128,49 +123,41 @@ window.order.setSettings = (msg) => {
   window.settings = msg;
 };
 
-window.order.setNodework = (msg) => {
-  window.graph.configure(msg, false);
-};
-
 window.order.nodeMoved = (msg) => {
   if (msg.nodeID == null) return;
-  if (window.graph.nodes[msg.nodeID]?.widget == null) return;
+  if (window.nodeWork.nodes[msg.nodeID]?.widget == null) return;
   if (msg.moveTo == null) return;
 
   console.log("[nodeMoved] ", msg);
-  window.graph.nodes[msg.nodeID].pos = msg.moveTo;
+  window.nodeWork.nodes[msg.nodeID].pos = msg.moveTo;
 };
 
 window.order.nodeResized = (msg) => {
   if (msg.nodeID == null) return;
-  if (window.graph.nodes[msg.nodeID] == null) return;
-  if (window.graph.nodes[msg.nodeID].widget == null) return;
+  if (window.nodeWork.nodes[msg.nodeID] == null) return;
+  if (window.nodeWork.nodes[msg.nodeID].widget == null) return;
 
   console.log("[nodeResized] ", msg);
-  window.graph.nodes[msg.nodeID].setSize(msg.size);
-};
-
-window.order.remNode = (message) => {
-  window.graph.removeNode(message);
+  window.nodeWork.nodes[msg.nodeID].setSize(msg.size);
 };
 
 window.order.clear = () => {
-  window.graph.clear();
+  window.nodeWork.clear();
 };
 
 window.order.moveNode = (message) => {
   if (message.moveTo) {
-    window.graph.nodes[message.nodeID].pos = message.moveTo;
+    window.nodeWork.nodes[message.nodeID].pos = message.moveTo;
   }
 };
 
 window.order.propUpdated = (message) => {
-  window.graph.nodes[message.nodeID].properties[message.prop.name] = message.prop;
+  window.nodeWork.nodes[message.nodeID].properties[message.prop.name] = message.prop;
   window.updateEditDialog();
 };
 
 window.order.setSize = (message) => {
-  window.graph.nodes[message.nodeID].size = message.size;
+  window.nodeWork.nodes[message.nodeID].size = message.size;
 };
 
 window.order.disconnect = () => {
@@ -191,7 +178,7 @@ window.order.connectionSettings = (msg) => {
 events.forEach((event) => {
   if (window.socketIO) {
     window.socketIO.on(event, (message) => {
-      if (window.graph[event]) window.graph[event](message);
+      if (window.nodeWork[event]) window.nodeWork[event](message);
       else window.order[event](message);
     });
   }

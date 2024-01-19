@@ -97,6 +97,7 @@ export default class WidgetLed extends Node {
 
             return true;
         }
+        return false;
     }
 }
 

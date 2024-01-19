@@ -3,9 +3,7 @@ import View from "./view.js";
 import NodeWork from "./nodework.mjs";
 import Node from "./node.mjs";
 
-var margin_area = new Float32Array(4);
 var tmp_area = new Float32Array(4);
-var link_bounding = new Float32Array(4);
 
 export default class LGraphCanvas {
   constructor(canvas, graph, options) {
@@ -360,11 +358,13 @@ export default class LGraphCanvas {
           this.processNodeSelected(node_mouse, e);
         }
       }
-    } else if (node_mouse != null && this.current_node != node_mouse) { // select first node
-      var pos = [e.canvasX - node_mouse.pos[0], e.canvasY - node_mouse.pos[1]];
+    } else if (node_mouse != null) {
+      // select first node
+      var gridCorner = NodiEnums.toCanvas(e.gridPos);
+      var pos = [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]];
 
       // Capture mouse by node gui
-      if ((node_type.onMouseDown && node_type.onMouseDown(node_mouse, e, pos, this)) == false) {
+      if (node_type.onMouseDown == null || node_type.onMouseDown(node_mouse, e, pos, this) == false) {
         this.grid_pressed = e.gridPos;
         this.node_pressed = node_mouse;
         this.gripped = "node";
@@ -372,25 +372,26 @@ export default class LGraphCanvas {
           this.processNodeSelected(node_mouse, e);
         }
       }
-    } else if (this.current_node && !node_mouse && window.canvas.copyNode == null) {  // unselect
+    } else if (node_mouse == null && this.current_node && window.canvas.copyNode == null) {
+      // unselect
       this.gripped = "none";
       this.current_node.selected = false;
       this.current_node = null;
       this.deselectAllNodes();
-    } else if (!this.current_node && !node_mouse) {
+    } else if (node_mouse == null && this.current_node == null) {
+      // move canvas
       // add node
       this.gripped = "canvas";
-    } else if (window.canvas.copyNode != null) {
+    } else if (node_mouse == null && window.canvas.copyNode != null) {
+      // add existing node
       this.gripped = "copyNode";
-      window.sendToServer("addExistingNode", { nodeID: this.copyNode, pos: e.gridPos });
+      this.nodework.addExistingNode({ nodeID: this.copyNode, pos: e.gridPos });
     }
 
     this.last_mouse_down = [e.clientX, e.clientY];
     this.last_mouse_dragging = true;
 
     this.draw();
-
-    this.graph.change();
 
     e.stopPropagation();
 
@@ -416,6 +417,8 @@ export default class LGraphCanvas {
     this.graph_mouse = [e.canvasX, e.canvasY];
     this.gridPos = NodiEnums.toGrid([e.canvasX, e.canvasY]);
     this.grid_mouse = NodiEnums.toCanvas(this.gridPos);
+    //get node over
+    var cursor_node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
 
     console.log("processMouseMove " + this.last_mouse_down);
 
@@ -432,25 +435,24 @@ export default class LGraphCanvas {
       ////console.log("pointerevents: processMouseMove is dragging_canvas");
       this.ds.offset[0] += delta[0] / this.ds.scale;
       this.ds.offset[1] += delta[1] / this.ds.scale;
+    } else if (this.gripped == "copyNode" && cursor_node == null) {
+      this.nodework.addExistingNode({ nodeID: this.copyNode, pos: e.gridPos });
     } else if (this.gripped == "node" && this.node_dragging) {
-        //node being dragged
-        if (window.settings?.ownerShip == false || this.node_dragging.owner == window.socketIO.id) {
-          if (delta[0] != 0 && delta[1] != 0) {
-            window.nodes.move(this.node_dragging.nodeID, {
-              pos: this.node_dragging.pos,
-            });
-          }
+      //node being dragged
+      if (window.settings?.ownerShip == false || this.node_dragging.owner == window.socketIO.id) {
+        if (delta[0] != 0 && delta[1] != 0) {
+          window.nodes.move(this.node_dragging.nodeID, {
+            pos: this.node_dragging.pos,
+          });
         }
-    } else  {
-      //get node over
-      var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
-
+      }
+    } else {
       //remove mouseover flag
-      this.graph.nodes.forEach((node) => {
-        if (!node) return;
-        if (node.mouseOver) {
+      this.graph.nodes.forEach((cursor_node) => {
+        if (!cursor_node) return;
+        if (cursor_node.mouseOver) {
           //mouse leave
-          node.mouseOver = false;
+          cursor_node.mouseOver = false;
           if (this.node_over && this.node_over.onMouseLeave) {
             this.node_over.onMouseLeave(e);
           }
@@ -459,17 +461,17 @@ export default class LGraphCanvas {
       });
 
       //mouse over a node
-      if (node) {
-        if (!node.mouseOver) {
+      if (cursor_node) {
+        if (!cursor_node.mouseOver) {
           //mouse enter
-          node.mouseOver = true;
-          this.node_over = node;
+          cursor_node.mouseOver = true;
+          this.node_over = cursor_node;
 
-          if (node.onMouseEnter) {
-            node.onMouseEnter(e);
+          if (cursor_node.onMouseEnter) {
+            cursor_node.onMouseEnter(e);
           }
         }
-
+        /*
         //in case the node wants to do something
         if (node.onMouseMove) {
           node.onMouseMove(e, [e.canvasX - node.pos[0], e.canvasY - node.pos[1]], this);
@@ -491,7 +493,7 @@ export default class LGraphCanvas {
           } else {
             this.canvas.style.cursor = "crosshair";
           }
-        }
+        }*/
       } else {
         //not over a node
 
@@ -508,8 +510,6 @@ export default class LGraphCanvas {
           this
         );
       }
-
-
 
       if (this.resizing_node) {
         //convert mouse to node space
@@ -601,10 +601,12 @@ export default class LGraphCanvas {
       }
 
       if (node && NodeWork.getNodeType(node.type).onMouseUp) {
+        var gridCorner = NodiEnums.toCanvas(e.gridPos);
+
         NodeWork.getNodeType(node.type).onMouseUp(
           this.node_over,
           e,
-          [e.canvasX - this.node_over.pos[0], e.canvasY - this.node_over.pos[1]],
+          [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]],
           this
         );
       }
@@ -829,7 +831,7 @@ export default class LGraphCanvas {
     for (let node_data of clipboard_info.nodes) {
       var node = NodeWork.createNode(node_data.type);
       if (node) {
-        node.configure(node_data);
+        node.setNodework(node_data);
 
         //paste in last known mouse position
         node.pos[0] += this.graph_mouse[0] - posMin[0]; //+= 5;

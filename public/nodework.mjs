@@ -1,6 +1,16 @@
 import { NodiEnums } from "./enums.mjs";
 import Node from "./node.mjs";
 
+
+function getFirstNullIndex(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] == null) {
+      return i;
+    }
+  }
+  return arr.length; // If no null item is found
+}
+
 export default class NodeWork {
   static debug = false;
   static registered_node_types = {}; //nodetypes by string
@@ -12,7 +22,7 @@ export default class NodeWork {
     }
     this.clear();
     if (o) {
-      this.configure(o);
+      this.setNodework(o);
     }
   }
   /**
@@ -90,33 +100,46 @@ export default class NodeWork {
     this.Nodes = {};
   }
 
-  /**
-   * Create a node of a given type with a name. The node is not attached to any graph yet.
-   * @method createNode
-   * @param {String} type full name of the node class. p.e. "math/sin"
-   * @param {String} name a name to distinguish from other nodes
-   * @param {Object} options to set options
-   */
 
-  static createNode(type, title, options) {
-    var base_class = this.registered_node_types[type];
-    if (!base_class) {
-      if (NodeWork.debug) console.log('GraphNode type "' + type + '" not registered.');
-      return null;
-    }
+  createNode(msg, socket) {
+    if (typeof window !== 'undefined') {
+      if (msg.node) {
+          this.nodes[msg.node.nodeID] = msg.node;
+          msg.nodeID = msg.node.nodeID;
+          this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+      } else {
+        msg.type = msg.type.toLowerCase()
+        var base_class = NodeWork.getNodeType(msg.type);
+        if (!base_class) {
+          if (NodeWork.debug) console.log('GraphNode type "' + msg.type + '" not registered.');
+          return null;
+        }
 
-    var node = { type: base_class.type, type2: base_class.type };
+        var node = { type: base_class.type, type2: base_class.type, properties : {}};
 
-    if (!node.properties) {
-      node.properties = {};
-    }
-    base_class.setup(node);
+        base_class.setup(node);
 
-    node.size = Node.computeSize(node.properties);
-    node.pos = NodiEnums.DEFAULT_POSITION.concat();
+        node.size = Node.computeSize(node.properties);
 
-    for (var i in options) {
-      node.properties[i] = options[i];
+        for (var i in msg.options) {
+          node.properties[i] = msg.options[i];
+        }
+        node.device = "server";
+        msg.node = node;
+        window.sendToServer("createNode", msg);
+      }
+    } else {
+      msg.node.nodeID = getFirstNullIndex(this.nodes);
+      msg.node.owner = socket.id;
+      msg.node.moving = false;
+      this.nodes[msg.node.nodeID] = msg.node;
+      msg.nodeID = msg.node.nodeID;
+      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+      if (msg.node.device == "nodi.box" && global.iot) {
+        global.iot.emit("createNode", msg);
+      } else {
+        global.io.emit("createNode", msg);
+      }
     }
     return node;
   }
@@ -190,17 +213,24 @@ export default class NodeWork {
    * @method add
    * @param {Node} node the instance of the node
    */
-  addNode(node) {
-    if (!node) return;
-
-    this.nodes[node.nodeID] = node;
-    this.moveNodeOnGrid({id: node.nodeID, to: NodiEnums.toGrid(node.pos)});
+  addNode(msg) {
+    if (!msg.node) return;
+    this.nodes[msg.node.nodeID] = msg.node;
+    this.addExistingNode(msg);
   }
 
   addExistingNode(msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
 
-    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+    if (typeof window !== 'undefined' && msg.done == true) {
+      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+    } else if (typeof window !== 'undefined' && msg.done == undefined) {
+      window.sendToServer("addExistingNode", msg);
+    } else {
+      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+      msg.done = true;
+      global.io.emit("addExistingNode", msg);
+    }
   }
 
   moveNodeOnGrid(msg) {
@@ -215,9 +245,6 @@ export default class NodeWork {
       }
       this.setNodeOnGrid(msg.to[0], msg.to[1], node);
     }
-
-    let nodeClass = NodeWork.getNodeType(node.type);
-    if (nodeClass.replace) nodeClass.replace(node, this);
   }
 
   /* The node is on the mouse cursor and not on the field any more */
@@ -226,8 +253,16 @@ export default class NodeWork {
     node.drag_start_pos = msg.drag_start_pos;
   }
 
-  nodeRemoved(nodeID) {
-    this.nodes[nodeID] = null;
+  removeNode(msg) {
+    if (typeof window !== 'undefined' && msg.done == true) {
+      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
+    } else if (typeof window !== 'undefined' && msg.done == undefined) {
+      window.sendToServer("removeNode", msg);
+    } else {
+      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
+      msg.done = true;
+      global.io.emit("removeNode", msg);
+    }
   }
 
   updateProp(nodeID, prop) {
@@ -278,26 +313,16 @@ export default class NodeWork {
     } else {
       this.nodesByPos[x + NodiEnums.POS_SEP + y] = id;
     }
+
+    NodiEnums.allVec.forEach(nb => {
+      let nbNode = this.getNodeOnGrid(x + nb.x, y + nb.y);
+      if (nbNode) {
+        let nodeClass = NodeWork.getNodeType(nbNode.type);
+        if (nodeClass.reconnect) nodeClass.reconnect(nbNode, this, [x + nb.x, y + nb.y]);
+      }
+    });
   }
 
-  /**
-   * Checks that the node type matches the node type registered, used when replacing a nodetype by a newer version during execution
-   * this replaces the ones using the old version with the new version
-   * @method checkNodeTypes
-   */
-  checkNodeTypes() {
-    for (var i = 0; i < this.nodes.length; i++) {
-      var node = this.nodes[i];
-      var ctor = NodeWork.registered_node_types[node.type];
-      if (node.constructor == ctor) {
-        continue;
-      }
-      console.log("node being replaced by newer version: " + node.type);
-      var newnode = NodeWork.createNode(node.type);
-      this.nodes[i] = newnode;
-      newnode.configure(node.serialize());
-    }
-  }
 
   /* Called when something visually changed (not the graph!) */
   change() {
@@ -325,7 +350,7 @@ export default class NodeWork {
    * @param {String} str configure a graph from a JSON string
    * @param {Boolean} returns if there was any error parsing
    */
-  configure(data) {
+  setNodework(data) {
     if (!data) return;
 
     this.clear();

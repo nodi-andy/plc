@@ -107,6 +107,7 @@ export default class WidgetToggle extends Node {
             window.nodes.update(node.nodeID, {"state": {"inpValue" : nextState}});
             return true;
         }
+        return false;
     }
 }
 

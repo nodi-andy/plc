@@ -49,11 +49,11 @@ export default class Button extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "state", {label: " "});
-        Node.setProperty(props, "press",  {label: " ", value: 1, autoInput: true});
-        Node.setProperty(props, "release", {label: " ", value: 0, autoInput: true});
+        Node.setProperty(props, "state");
+        Node.setProperty(props, "press",  { value: 1, autoInput: true});
+        Node.setProperty(props, "release", {value: 0, autoInput: true});
         Node.setProperty(props, "value", {value: null});
-        Node.setProperty(props, "label", {value: " ", autoInput: true});
+        Node.setProperty(props, "label", {value: "", autoInput: true});
         Node.setProperty(props, "port", {value: null, input: false});
         Node.setProperty(props, "color", {value: "gray", input: false, autoInput: true});
         Button.reset(props);

@@ -11,8 +11,8 @@ export default class MathIsEqual extends Node {
         let props = node.properties;
         Node.setProperty(props, "in");
         Node.setProperty(props, "value");
-        Node.setProperty(props, "true");
-        Node.setProperty(props, "false");
+        Node.setProperty(props, "yes");
+        Node.setProperty(props, "no");
         MathIsEqual.reset(props);
     }
 
@@ -27,10 +27,15 @@ export default class MathIsEqual extends Node {
                 changed = true;
             }
         }
-
-        if (props.in?.value && Object.values(props.in?.value).length > 0 && changed) {
-            props.value.value = Object.values(props.in.value).reduce((a, b) => Number(a) === Number(b) ? a : 0);
+        let values = Object.values(props.in?.value ?? {});
+        if (values?.length > 1 && changed) {
+            props.value.value = values.every(val => Number(val) === Number(values[0])) ? 1 : 0;
             props.value.outValue = props.value.value;
+            if (props.value.value) {
+                props.yes.outValue = 1;
+            } else {
+                props.no.outValue = 1;
+            }
         }
         return true;
     }

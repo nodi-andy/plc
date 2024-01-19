@@ -438,8 +438,8 @@ void noditronTask( void * pvParameters ) {
 
             USE_SERIAL.printf("[nodework:resized] name: %s\n", eventName.c_str());
             sendToSocket("nodeResized", eventData);
-        } else if (eventName == "remNode") {
-            USE_SERIAL.printf("[remNode] id: %d\n", id);
+        } else if (eventName == "removeNode") {
+            USE_SERIAL.printf("[removeNode] id: %d\n", id);
             nodemap.removeNode(id);
             StaticJsonDocument<16> data;
             data["id"] = id;

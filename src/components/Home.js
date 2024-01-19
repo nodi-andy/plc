@@ -79,7 +79,7 @@ function SelectNodeDialog({ openND, setOpenND }) {
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        window.nodes.addNode(`${category}/${label}`);
+                        window.nodeWork.createNode({type:`${category}/${label}`, pos: window.canvas.gridPos});
                         setOpenND(false);
                       }}
                     >
@@ -177,7 +177,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
           aria-label="remove"
           disabled={!removeClickable}
           onClick={() => {
-            window.nodes.remNode();
+            window.nodeWork.removeNode({pos: window.canvas.grid_pressed});
             setShowEditMenu(false);
           }}
         >
