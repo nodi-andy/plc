@@ -4,39 +4,35 @@ import Node from "../../node.mjs";
 export default class MathAddCore extends Node {
     static type = "math/add";
     static title = "+";
-    static defaultInput = "in";
+    static defaultInput = "value";
     static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "in");
         Node.setProperty(props, "value");
         MathAddCore.reset(props);
     }
 
     static run(node) {
-        let changed = false;
         let props = node.properties;
-        for(let input in props) {
-            let prop = props[input];
-            if (prop.inpValue != null) {
-                prop.value = {...prop.value, ...prop.inpValue};
-                prop.inpValue = null;
-                changed = true;
+        let ret = [];
+        let sum = 0;
+
+        for (const valueInputs of Object.values(props.value.inpValue)) {
+            sum += valueInputs.val;
+            props.value.value = sum;
+            
+            if (valueInputs.update === true) {
+                props.value.outValue = props.value.value;
+                ret.push("value");
             }
         }
 
-        if (props.in?.value && Object.values(props.in?.value).length > 0 && changed) {
-            props.value.value = Object.values(props.in.value).reduce((a, b) => Number(a) + Number(b), 0);
-            props.value.outValue = props.value.value;
-        }
-
-        return true;
+        return ret;
     }
 
     static reset(prop) {
         prop.value.value = 0;
-        prop.in.inpValue = [];
     }
 
     onDrawForeground(ctx) {

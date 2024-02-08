@@ -18,31 +18,70 @@ export default class WidgetNumber extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value", {label: " "});
+        Node.setProperty(props, "inc");
+        Node.setProperty(props, "dec");
+        Node.setProperty(props, "value", {value : 0, label:" "});
         Node.setProperty(props, "read");
         WidgetNumber.reset(props);
     }
 
     static run(node) {
         let props = node.properties;
-        let ret = false;
+        let ret = [];
+        let valueUpdate = false;
+        let maxVal = -Infinity
+        
+        for (const valueInputs of Object.values(props.value.inpValue)) {
+            if (valueInputs.update === true) valueUpdate = true;
+            maxVal = Math.max(maxVal, valueInputs.val);
+            valueInputs.update = false;
+        }
 
-        if (props.value.inpValue != null) {
-            if (props.value.inpValue.constructor === Object) {
+        if (valueUpdate) {
+            props.value.value = maxVal;
+            props.value.outValue = props.value.value;
+            ret.push("value");
+        }
+
+        for (const valueInputs of Object.values(props.inc.inpValue)) {
+            if (valueInputs.update === true) {
+                props.value.value += valueInputs.val;
+                valueInputs.update = false;
+                props.value.outValue = props.value.value;
+                ret.push("value");
+            }
+        }
+
+
+        let readUpdate = Object.values(props.read.inpValue).length > 0;
+        if (readUpdate) {
+            props.read.outValue = props.value.value;
+            props.value.outValue = props.value.value;
+            props.read.inpValue = {}
+            ret.push("read");
+        }
+        for (const valueInputs of Object.values(props.dec.inpValue)) {
+            if (valueInputs.update === true) {
+                props.value.value -= valueInputs.val;
+                valueInputs.update = false;
+            }
+            props.value.outValue = props.value.value;
+            ret.push("value");
+        }
+/*
+
+
+        if (node.inpUpdate.includes("value") && Object.keys(props.value.inpValue).length) {
+            if (props.value.inpValue?.constructor === Object) {
                 props.value.value = Math.max(...Object.values(props.value.inpValue));
             } else {
                 props.value.value = props.value.inpValue;
             }
-            
-            props.value.inpValue = null;
             props.value.outValue = props.value.value;
-            ret = true;
-        }
-        if (props.read.inpValue != null) {
-            props.read.inpValue = null;
-            props.read.outValue = props.value.value;
-            ret = true;
-        }
+            props.value.inpValue = null;
+            return true;
+        }*/
+
         return ret;
     }
 

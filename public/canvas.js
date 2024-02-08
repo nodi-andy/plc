@@ -621,7 +621,6 @@ export default class LGraphCanvas {
 
     this.draw();
 
-    this.graph.change();
     if (
       Math.abs(this.last_click_position[0] - e.clientX) < 5 &&
       Math.abs(this.last_click_position[1] - e.clientY) < 5
@@ -669,8 +668,6 @@ export default class LGraphCanvas {
 
     //this.setZoom( scale, [ e.clientX, e.clientY ] );
     this.ds.changeScale(Math.clamp(scale, 0.2, 4), [e.clientX, e.clientY]);
-
-    this.graph.change();
 
     e.preventDefault();
   }
@@ -753,9 +750,6 @@ export default class LGraphCanvas {
         }
       }
 
-      //collapse
-      //...
-      //TODO
       if (this.selected_nodes) {
         for (let node of this.selected_nodes) {
           if (node?.onKeyDown) node.onKeyDown(e);
@@ -768,8 +762,6 @@ export default class LGraphCanvas {
         }
       }
     }
-
-    this.graph.change();
 
     if (block_default) {
       e.preventDefault();
@@ -1163,14 +1155,18 @@ export default class LGraphCanvas {
     let r = grid_area[2];
     let d = grid_area[3];
 
-    ctx.fillStyle = "rgb(0,0,0,0.05)";
-
+    ctx.strokeStyle = "rgb(0,0,0,0.25)";
+    ctx.beginPath(); // Start a new path
+    //ctx.setLineDash([5, 10]);
     for (var x = l; x <= r; x += s) {
-      for (var y = t; y <= d; y += s) {
-        ctx.fillRect(x - 4 + s / 2, y - 4 + s / 2, 8, 8);
-        //ctx.fillRect(x - 4, y + 28, 8, 8);
-      }
+        ctx.moveTo(x, t);
+        ctx.lineTo(x, d);
     }
+    for (var y = t; y <= d; y += s) {
+      ctx.moveTo(l, y);
+      ctx.lineTo(r, y);
+    }
+    ctx.stroke(); // Render the path
     ctx.restore();
 
     if (this.graph) {
@@ -1232,11 +1228,20 @@ export default class LGraphCanvas {
     if (this.cursorMode == 0 && this.grid_mouse) {
       ctx.save();
       this.ds.toCanvasContext(ctx);
-      ctx.setLineDash([5, 15]);
+      ctx.fillStyle = "rgb(0,0,0,0.25)";
       ctx.strokeStyle = "black";
-      ctx.strokeRect(this.grid_mouse[0], this.grid_mouse[1], NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE);
+      ctx.fillRect(this.grid_mouse[0], this.grid_mouse[1], NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE);
       ctx.restore();
     }
+    if (this.grid_pressed) {
+      ctx.save();
+      this.ds.toCanvasContext(ctx);
+      ctx.fillStyle = "rgb(0.2,0,0,0.25)";
+      ctx.fillRect(this.grid_pressed[0] * NodiEnums.CANVAS_GRID_SIZE - 4, this.grid_pressed[1] * NodiEnums.CANVAS_GRID_SIZE - 4, NodiEnums.CANVAS_GRID_SIZE + 8, NodiEnums.CANVAS_GRID_SIZE + 8);
+      ctx.restore();
+    }
+
+    
   }
 
   /**
@@ -1309,21 +1314,6 @@ export default class LGraphCanvas {
       ctx.textAlign = "center";
       ctx.fillStyle = "white";
       ctx.fillText(node.properties.label.value, node.size[0] / 2, (node.size[1] + fontSize) / 2);
-    }
-    //render selection marker
-    if (selected) {
-      if (node.onBounding) {
-        node.onBounding(area);
-      }
-
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.8;
-      ctx.beginPath();
-      ctx.roundRect(-6 + area[0], -6 + area[1], 12 + area[2], 12 + area[3], [this.round_radius * 2]);
-      ctx.strokeStyle = NodiEnums.NODE_BOX_OUTLINE_COLOR;
-      ctx.stroke();
-      ctx.strokeStyle = fgcolor;
-      ctx.globalAlpha = 1;
     }
   }
 

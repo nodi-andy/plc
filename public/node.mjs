@@ -1,15 +1,6 @@
 import { NodiEnums } from "./enums.mjs";
 
 export default class Node {
-  constructor() {
-    this.update = false;
-    this.device = "server";
-    this.properties = {}; //for the values
-    this.graph = null;
-    this.update = false;
-    this.type = null;
-  }
-
   configure(info) {
     for (var j in info) {
       if (j == "properties") {
@@ -77,9 +68,7 @@ export default class Node {
     var prop = properties[name];
     prop.name = name;
     prop.value = null;
-    prop.label = name;
-    prop.input = false;
-    prop.output = false;
+    prop.inpValue = {};
     for (let i in info) {
       prop[i] = info[i];
     }
@@ -168,38 +157,6 @@ export default class Node {
     node.properties[prop.name] = prop;
   }
 
-  static addInput(node, name) {
-    node.properties[name].input = true;
-    window.sendToServer("updateProp", {
-      nodeID: node.nodeID,
-      prop: node.properties[name]
-    });
-  }
-
-  static addOutput(node, name) {
-    node.properties[name].output = true;
-    window.sendToServer("updateProp", {
-      nodeID: node.nodeID,
-      prop: node.properties[name]
-    });
-  }
-
-  static removeInput(node, name) {
-    node.properties[name].input = false;
-    window.sendToServer("updateProp", {
-      nodeID: node.nodeID,
-      prop: node.properties[name]
-    });
-  }
-
-  static removeOutput(node, name) {
-    node.properties[name].output = false;
-    window.sendToServer("updateProp", {
-      nodeID: node.nodeID,
-      prop: node.properties[name]
-    });
-  }
-
   static getInputs(prop) {
     if (prop) {
       return Object.values(prop).filter((obj) => obj.input == true);
@@ -235,9 +192,12 @@ export default class Node {
 
   static updateProperties(node, name, type, val) {
     node.properties[name][type] = val;
+    let prop = {};
+    prop[name] = {};
+    prop[name][type] = val;
     window.sendToServer("updateNode", {
       nodeID: node.nodeID,
-      newData: { properties: node.properties },
+      properties: prop
     });
   }
 

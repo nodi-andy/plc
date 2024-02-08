@@ -54,7 +54,7 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
                 <TextField
                   label={key}
                   id="outlined-size-small"
-                  defaultValue= {value.value}
+                  defaultValue= {value?.value}
                   sx={{ margin: '8px' }}
                   onChange={(event) => handlePropertyChange(event, key)}
                   onClick={(event) => event.stopPropagation()} // Stop event propagation to prevent closing the drawer

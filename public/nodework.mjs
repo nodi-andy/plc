@@ -1,7 +1,6 @@
 import { NodiEnums } from "./enums.mjs";
 import Node from "./node.mjs";
 
-
 function getFirstNullIndex(arr) {
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] == null) {
@@ -15,6 +14,20 @@ export default class NodeWork {
   static debug = false;
   static registered_node_types = {}; //nodetypes by string
   static Nodes = {}; //node types by classname
+
+  static events =  [
+    "moveNodeOnGrid",
+    "addExistingNode",
+    "rotateNode",
+    "nodePicked",
+    "updateNode",
+    "updatePos",
+    "createNode",
+    "nodeMoved",
+    "propUpdated",
+    "removeNode",
+    "clear"
+  ]
 
   constructor(o) {
     if (NodeWork.debug) {
@@ -48,7 +61,8 @@ export default class NodeWork {
 
     base_class.category = categories[0];
     base_class.elementName = categories[1];
-
+    var prev = this.registered_node_types[classType];
+    if (prev) console.log("replacing node type: " + classType);
     //info.name = name.substr(pos+1,name.length - pos);
 
     //extend class
@@ -100,22 +114,21 @@ export default class NodeWork {
     this.Nodes = {};
   }
 
-
   createNode(msg, socket) {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (msg.node) {
-          this.nodes[msg.node.nodeID] = msg.node;
-          msg.nodeID = msg.node.nodeID;
-          this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+        this.nodes[msg.node.nodeID] = msg.node;
+        msg.nodeID = msg.node.nodeID;
+        this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
       } else {
-        msg.type = msg.type.toLowerCase()
+        msg.type = msg.type.toLowerCase();
         var base_class = NodeWork.getNodeType(msg.type);
         if (!base_class) {
           if (NodeWork.debug) console.log('GraphNode type "' + msg.type + '" not registered.');
           return null;
         }
 
-        var node = { type: base_class.type, type2: base_class.type, properties : {}};
+        var node = { type: base_class.type, type2: base_class.type, properties: {} };
 
         base_class.setup(node);
 
@@ -142,6 +155,27 @@ export default class NodeWork {
       }
     }
     return node;
+  }
+
+  rotateNode(msg) {
+    if (typeof window !== "undefined" && msg.done == true) {
+      let node = this.getNodeOnGrid(msg.x, msg.y);
+      if (node) {
+        node.direction = (node.direction + 1) % 4;
+        this.updateNBs(msg.x, msg.y);
+      }
+    } else if (typeof window !== "undefined" && msg.done == undefined) {
+      window.sendToServer("rotateNode", msg);
+    } else {
+      let node = this.getNodeOnGrid(msg.x, msg.y);
+      if (node) {
+        node.direction = (node.direction + 1) % 4;
+        this.updateNBs(msg.x, msg.y);
+        msg.done = true;
+        global.io.emit("rotateNode", msg);
+      }
+    }
+
   }
 
   /**
@@ -177,6 +211,7 @@ export default class NodeWork {
   clear() {
     this.nodes = [];
     this.nodesByPos = {};
+    this.cleanUpOutputs = [];
 
     //timing
     this.globaltime = 0;
@@ -184,9 +219,6 @@ export default class NodeWork {
     this.elapsed_time = 0.01;
     this.last_update_time = 0;
     this.starttime = 0;
-
-    //notify canvas to redraw
-    this.change();
   }
 
   /**
@@ -208,23 +240,13 @@ export default class NodeWork {
     return this.elapsed_time;
   }
 
-  /**
-   * Adds a new node instance to this graph
-   * @method add
-   * @param {Node} node the instance of the node
-   */
-  addNode(msg) {
-    if (!msg.node) return;
-    this.nodes[msg.node.nodeID] = msg.node;
-    this.addExistingNode(msg);
-  }
 
   addExistingNode(msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
 
-    if (typeof window !== 'undefined' && msg.done == true) {
+    if (typeof window !== "undefined" && msg.done == true) {
       this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
-    } else if (typeof window !== 'undefined' && msg.done == undefined) {
+    } else if (typeof window !== "undefined" && msg.done == undefined) {
       window.sendToServer("addExistingNode", msg);
     } else {
       this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
@@ -235,28 +257,32 @@ export default class NodeWork {
 
   moveNodeOnGrid(msg) {
     if (!msg) return;
-    let node = this.nodes[msg.id];
-    node.moving = false;
-    
-    let next_gridPos = msg.to;
-    if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
-      if (msg.from) {
-        this.setNodeOnGrid(msg.from[0], msg.from[1], null);
+
+    if (msg.done == true || typeof window == "undefined") {
+      let node = this.nodes[msg.id];
+      node.moving = false;
+
+      let next_gridPos = msg.to;
+      if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
+        if (msg.from) {
+          this.setNodeOnGrid(msg.from[0], msg.from[1], null);
+        }
+        this.setNodeOnGrid(msg.to[0], msg.to[1], node);
       }
-      this.setNodeOnGrid(msg.to[0], msg.to[1], node);
+    }
+
+    if (typeof window == "undefined") {
+      msg.done = true;
+      global.io.emit("moveNodeOnGrid", msg);
     }
   }
 
-  /* The node is on the mouse cursor and not on the field any more */
-  pickNode(msg) {
-    let node = this.nodes[msg.nodeID];
-    node.drag_start_pos = msg.drag_start_pos;
-  }
+
 
   removeNode(msg) {
-    if (typeof window !== 'undefined' && msg.done == true) {
+    if (typeof window !== "undefined" && msg.done == true) {
       this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
-    } else if (typeof window !== 'undefined' && msg.done == undefined) {
+    } else if (typeof window !== "undefined" && msg.done == undefined) {
       window.sendToServer("removeNode", msg);
     } else {
       this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
@@ -295,12 +321,7 @@ export default class NodeWork {
   }
 
   setNodeOnGrid(x, y, node) {
-    if (node == null) {
-      delete this.nodesByPos[x + NodiEnums.POS_SEP + y];
-    } else {
-      node.gridPos = [x, y];
-      this.setNodeIDOnGrid(x, y, node.nodeID);
-    }
+    this.setNodeIDOnGrid(x, y, node?.nodeID);
   }
 
   getNodeIDOnGrid(x, y) {
@@ -313,25 +334,17 @@ export default class NodeWork {
     } else {
       this.nodesByPos[x + NodiEnums.POS_SEP + y] = id;
     }
+    this.updateNBs(x, y);
+  }
 
-    NodiEnums.allVec.forEach(nb => {
+  updateNBs(x, y) {
+    NodiEnums.allVec.forEach((nb) => {
       let nbNode = this.getNodeOnGrid(x + nb.x, y + nb.y);
       if (nbNode) {
         let nodeClass = NodeWork.getNodeType(nbNode.type);
         if (nodeClass.reconnect) nodeClass.reconnect(nbNode, this, [x + nb.x, y + nb.y]);
       }
     });
-  }
-
-
-  /* Called when something visually changed (not the graph!) */
-  change() {
-    if (NodeWork.debug) {
-      console.log("Graph changed");
-    }
-    if (this.on_change) {
-      this.on_change(this);
-    }
   }
 
   serialize() {

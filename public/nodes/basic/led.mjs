@@ -8,36 +8,41 @@ export default class WidgetLed extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value", {label: " "});
+        Node.setProperty(props, "value");
         Node.setProperty(props, "set");
         Node.setProperty(props, "clear");
         Node.setProperty(props, "toggle");
         Node.setProperty(props, "in");
-        Node.setProperty(props, "label", {label: "LED"});
+        Node.setProperty(props, "label");
         Node.setProperty(props, "port");
         Node.setProperty(props, "color", {value: "FF3333"});
     }
 
     static run(node) {
         let props = node.properties;
-        for(let input in props) {
-            if (props.input == false) continue;
-            if (input.name == "value") continue;
-            if (props.inpValue != null) {
-                props.value = props.inpValue;
-                props.inpValue = null;
+        let ret = [];
+
+        let valueUpdate = false;
+        
+        for (const valueInputs of Object.values(props.value.inpValue)) {
+            if (valueInputs.update === true) {
+                valueUpdate = true;
+                break;
             }
         }
-        
-        if (props.value.inpValue != null) {
-            if (props.value.inpValue.constructor === Object) {
-                props.value.value = Math.max(...Object.values(props.value.inpValue));
-            } else {
-                props.value.value = props.value.inpValue;
-            }
-            props.value.inpValue = null;
+
+        if (valueUpdate) {
+            props.value.value = Object.values(props.value.inpValue).reduce((a, b) => {
+                b.val = Number(b.val);
+                if (b.update == true && typeof b.val === 'number' && !isNaN(b.val)) {
+                    b.update = false;
+                    return {val: Math.max(a.val,b.val), update: true};
+                }
+                b.update = false;
+                return {val: a.val, update: true};
+            }, {val: 0, update: false}).val;
             props.value.outValue = props.value.value;
-            return true;
+            ret.push("value");
         }
 
         if (props.toggle?.inpValue == 1) {
@@ -47,7 +52,7 @@ export default class WidgetLed extends Node {
                 props.value.value = 1;
             }
             props.toggle.inpValue = null;
-            return true;
+            ret = true;
         }
         
         if (props.set?.inpValue == 1) {
@@ -61,7 +66,7 @@ export default class WidgetLed extends Node {
             props.clear.inpValue = null;
             props.value.outValue = props.value.value;
         }
-        return false;
+        return ret;
     }
 
     static onDrawForeground(node, ctx) {

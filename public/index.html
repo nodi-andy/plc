@@ -89,7 +89,6 @@
     await loadJS("./nodes/math/isequal.mjs", false);
     await loadJS("./nodes/math/isless.js", false);
     await loadJS("./nodes/math/isgreater.js", false);
-    await loadJS("./nodes/math/counter.mjs", false);
     await loadJS("./nodes/time/interval.mjs", false);
     await loadJS("./nodes/basic/inserter.mjs", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
@@ -118,14 +117,7 @@
       else window.canvas.copyNode = null;
     };
 
-    window.nodes.rotate = () => {
-      let cn = window.canvas.current_node;
-      cn.direction = (cn.direction + 1) % 4;
-      window.sendToServer("update", {
-        nodeID: cn.nodeID,
-        newData: { direction: cn.direction },
-      });
-    };
+
 
     window.nodes.editNode = () => {
       window.canvas.processContextMenu();
@@ -171,7 +163,7 @@
     window.nodes.update = (id, changedNodeData) => {
       window.sendToServer("updateNode", {
         nodeID: id,
-        newData: { properties: changedNodeData },
+        properties: changedNodeData,
       });
     };
 
@@ -189,8 +181,11 @@
         window.showRemove(true);
         window.showEdit(true);
         window.showRotate(NodeWork.getNodeType(node.type).rotatable);
+        window.showAdd(!Boolean(NodeWork.getNodeType(node.type).singleton));
         console.log("disable");
       } else {
+        window.showAdd(false);
+        window.showRotate(false);
         window.showRemove(false);
         window.showEdit(false);
         console.log("enable");

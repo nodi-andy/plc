@@ -128,6 +128,9 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
 
   window.showEdit = (v) => {
     setEditClickable(v);
+  };
+
+  window.showAdd = (v) => {
     setAddClickable(v);
   };
 
@@ -164,7 +167,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
           color="info"
           disabled={!rotateClickable}
           onClick={() => {
-            window.nodes.rotate();
+            window.nodeWork.rotateNode({x: window.canvas.grid_pressed[0], y: window.canvas.grid_pressed[1]});
           }}
         >
           <Rotate90DegreesCcwIcon />

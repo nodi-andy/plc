@@ -1,3 +1,4 @@
+import { NodiEnums } from "./enums.mjs";
 import NodeWork from "./nodework.mjs";
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
@@ -9,24 +10,6 @@ import Stepper from "./nodes/nodi.box/stepper.js";
 import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
-const events = [
-  "moveNodeOnGrid",
-  "addExistingNode",
-  "nodePicked",
-  "updateNode",
-  "updatePos",
-  "id",
-  "createNode",
-  "nodeMoved",
-  "nodeResized",
-  "propUpdated",
-  "removeNode",
-  "clear",
-  "moveNode",
-  "setSettings",
-  "setSize",
-  "disconnect",
-];
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
 
 var uri = window.location.hostname;
@@ -78,15 +61,6 @@ window.socketIO.on("id", () => {
   window.sendToServer("id", { id: "browser" });
 });
 
-
-window.order.nodePicked = (node) => {
-  window.nodeWork.pickNode(node);
-};
-
-window.order.nodeRemoved = (msg) => {
-  window.nodeWork.nodeRemoved(msg.nodeID);
-};
-
 window.order.id = (message) => {
   if (message.id == "nodi.box") {
     NodeWork.registerNodeType(NodiBoxB1);
@@ -106,10 +80,7 @@ window.order.id = (message) => {
 window.order.updateNode = (message) => {
   // Handle incoming messages here
   if (window.nodeWork.nodes[message.nodeID]) {
-    window.nodeWork.nodes[message.nodeID].properties = mergeObjects(
-      window.nodeWork.nodes[message.nodeID].properties,
-      message.newData.properties
-    );
+    window.nodeWork.nodes[message.nodeID].properties[message.prop] = message.properties;
   }
 };
 
@@ -132,19 +103,6 @@ window.order.nodeMoved = (msg) => {
   window.nodeWork.nodes[msg.nodeID].pos = msg.moveTo;
 };
 
-window.order.nodeResized = (msg) => {
-  if (msg.nodeID == null) return;
-  if (window.nodeWork.nodes[msg.nodeID] == null) return;
-  if (window.nodeWork.nodes[msg.nodeID].widget == null) return;
-
-  console.log("[nodeResized] ", msg);
-  window.nodeWork.nodes[msg.nodeID].setSize(msg.size);
-};
-
-window.order.clear = () => {
-  window.nodeWork.clear();
-};
-
 window.order.moveNode = (message) => {
   if (message.moveTo) {
     window.nodeWork.nodes[message.nodeID].pos = message.moveTo;
@@ -156,9 +114,6 @@ window.order.propUpdated = (message) => {
   window.updateEditDialog();
 };
 
-window.order.setSize = (message) => {
-  window.nodeWork.nodes[message.nodeID].size = message.size;
-};
 
 window.order.disconnect = () => {
   console.log("Disconnected from the server!");
@@ -175,7 +130,7 @@ window.order.connectionSettings = (msg) => {
   window.setWiFiEnabled(msg.connectionSettings.STA_Enabled);
 };
 
-events.forEach((event) => {
+NodeWork.events.forEach((event) => {
   if (window.socketIO) {
     window.socketIO.on(event, (message) => {
       if (window.nodeWork[event]) window.nodeWork[event](message);

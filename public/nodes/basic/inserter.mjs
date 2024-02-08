@@ -5,6 +5,7 @@ import { NodiEnums } from "../../enums.mjs";
 class Inserter extends Node {
     static type = "basic/inserter";
     static rotatable = true;
+    static singleton = true;
     static drawBase = false;
 
     static setup(node) {
@@ -12,50 +13,73 @@ class Inserter extends Node {
         node.toNode = null;
         node.direction = 0;
         let props = node.properties;
-        Node.setProperty(props, "from", {autoInput: true});
-        Node.setProperty(props, "to", {autoInput: true});
-        Node.setProperty(props, "value", {autoInput: true});
+        Node.setProperty(props, "from");
+        Node.setProperty(props, "to",);
+        Node.setProperty(props, "value");
     }
 
-    static run(node) {
+    static run(node, nodework) {
         let props = node.properties;
         let ret = [];
-        for(let propKey in props) {
-            let prop = props[propKey];
-            if (prop.autoInput && prop.inpValue != null) {
-                prop.value = prop.inpValue;
-                prop.inpValue = null;
-                ret = []; //TBD
+        for(let prop of Object.values(props)) {
+            if (prop.inpValue !== null) {
+                for (const valueInputs of Object.values(prop.inpValue)) {
+                    if (valueInputs.update) {
+                        prop.value = valueInputs.val;
+                        valueInputs.update = false;
+                    }
+                }
             }
         }
         
-        if (node.toNode && props.value.value != null) {
+        if (node.toNode && props.value.value !== null) {
             let toProps = node.toNode.properties[props.to.value];
             if (toProps) {
-                if (toProps.inpValue == null) toProps.inpValue = {};
-                toProps.inpValue[node.nodeID] = props.value.value;
+                toProps.inpValue[node.nodeID] = {val: props.value.value, update: true};
                 props.value.value = null;
                 ret.push(node.toNode.nodeID);
             }
         }
-        
-        if (node.fromNode?.properties[props.from.value]?.outValue != null) {
-            props.value.value = node.fromNode.properties[props.from.value].outValue;
-            node.fromNode.properties[props.from.value].outValue = null;
+        let out = node.fromNode?.properties[props.from.value]?.outValue;
+        if ( props.from.value && out != null) {
+            props.value.value = out;
+            nodework.cleanUpOutputs.push([node.fromNode.nodeID, node.properties.from.value]);
         }
         return ret;
     }
 
-    static reconnect(node, nw, pos) {
-        let dirVec = NodiEnums.dirToVec[node.direction];
-        node.fromNode = nw.getNodeOnGrid(pos[0] - dirVec.x, pos[1] - dirVec.y);
-        node.toNode = nw.getNodeOnGrid(pos[0] + dirVec.x, pos[1] + dirVec.y);
-        if (node.fromNode) {
-            node.properties.from.value = NodeWork.getNodeType(node.fromNode.type).defaultOutput;
+    static reconnect(inserter, nw, pos) {
+        let props = inserter.properties;
+        const dirVec = NodiEnums.dirToVec[inserter.direction];
+        const nextFromNode = nw.getNodeOnGrid(pos[0] - dirVec.x, pos[1] - dirVec.y);
+        const nextToNode = nw.getNodeOnGrid(pos[0] + dirVec.x, pos[1] + dirVec.y);
+
+        // Disconnect
+        if (inserter.toNode != nextToNode) {
+            let target = inserter.toNode?.properties[props.to.value];
+            if (target) delete target.inpValue[inserter.nodeID];
         }
-        if (node.toNode) {
-            node.properties.to.value = NodeWork.getNodeType(node.toNode.type).defaultInput;
+        if (inserter.fromNode != nextFromNode) {
+            props.from.value = null;
         }
+
+        if (nextFromNode == null && inserter.fromNode) {
+            props.value.inpValue = {};
+        }
+
+        // Connect
+        if (nextFromNode != null && (inserter.fromNode == null  || inserter.fromNode != nextFromNode)) {
+            props.from.value = NodeWork.getNodeType(nextFromNode.type).defaultOutput;
+        }
+        inserter.fromNode = nextFromNode;
+        
+        if (nextToNode != null && (inserter.toNode == null || inserter.toNode != nextToNode)) {
+            if (props.to.value == null) 
+                props.to.value = NodeWork.getNodeType(nextToNode.type).defaultInput;
+            else 
+                nextToNode.properties[props.to.value].inpValue[inserter.nodeID] = {val: undefined, update: true};
+        }
+        inserter.toNode = nextToNode;
     }
 
     static onDrawForeground(node, ctx) {

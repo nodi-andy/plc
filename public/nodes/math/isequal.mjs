@@ -4,12 +4,11 @@ import Node from "../../node.mjs";
 export default class MathIsEqual extends Node {
     static type = "math/isequal";
     static title = "?=";
-    static defaultInput = "in";
+    static defaultInput = "value";
     static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "in");
         Node.setProperty(props, "value");
         Node.setProperty(props, "yes");
         Node.setProperty(props, "no");
@@ -17,27 +16,31 @@ export default class MathIsEqual extends Node {
     }
 
     static run(node) {
-        let changed = false;
         let props = node.properties;
-        for(let input in props) {
-            let prop = props[input];
-            if (prop.inpValue != null) {
-                prop.value = {...prop.value, ...prop.inpValue};
-                prop.inpValue = null;
-                changed = true;
+        let ret = [];
+        let res = 1;
+        let firstVal = undefined; 
+        for (const valueInputs of Object.values(props.value.inpValue)) {
+            if (firstVal == undefined) firstVal = valueInputs.val;
+            else if (valueInputs.val !== firstVal) {
+                res = 0;
             }
+            
+            if (valueInputs.update === true) {
+                ret.push("value");
+            }
+            valueInputs.update = false;
         }
-        let values = Object.values(props.in?.value ?? {});
-        if (values?.length > 1 && changed) {
-            props.value.value = values.every(val => Number(val) === Number(values[0])) ? 1 : 0;
+        
+        if (ret.includes("value")) {
+            props.value.value = res;
             props.value.outValue = props.value.value;
-            if (props.value.value) {
-                props.yes.outValue = 1;
-            } else {
-                props.no.outValue = 1;
-            }
+            if (props.value.value == 1) props.yes.outValue = 1;
+            if (props.value.value == 0) props.no.outValue = 1;
         }
-        return true;
+
+
+        return ret;
     }
 
     static reset(prop) {
