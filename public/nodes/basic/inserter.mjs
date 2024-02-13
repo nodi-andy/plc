@@ -72,6 +72,11 @@ class Inserter extends Node {
             props.from.value = NodeWork.getNodeType(nextFromNode.type).defaultOutput;
         }
         inserter.fromNode = nextFromNode;
+        if (inserter.fromNode == null) {
+            props.value.value = undefined;
+        } else {
+            props.value.value = inserter.fromNode.properties[props.from.value].value;
+        }
         
         if (nextToNode != null && (inserter.toNode == null || inserter.toNode != nextToNode)) {
             if (props.to.value == null) 

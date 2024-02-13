@@ -1,17 +1,17 @@
 import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
-export default class LogicAnd extends Node {
-    static type = "logic/and";
-    static title = "AND";
+export default class LogicOr extends Node {
+    static type = "logic/or";
+    static title = "OR";
     static defaultInput = "value";
     static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
         Node.setProperty(props, "value");
-        this.type = LogicAnd.type
-        LogicAnd.reset(props);
+        this.type = LogicOr.type
+        LogicOr.reset(props);
     }
 
     static run(node) {
@@ -21,8 +21,8 @@ export default class LogicAnd extends Node {
         props.value.value = undefined;
         for (const valueInputs of Object.values(props.value.inpValue)) {
             if (props.value.value == undefined) props.value.value = valueInputs.val;
-            if (valueInputs.val == 0) {
-                props.value.value = 0;
+            if (valueInputs.val == 1) {
+                props.value.value = 1;
                 props.value.outValue = props.value.value;
             }
             
@@ -41,4 +41,4 @@ export default class LogicAnd extends Node {
 
 }
 
-NodeWork.registerNodeType(LogicAnd)
+NodeWork.registerNodeType(LogicOr)

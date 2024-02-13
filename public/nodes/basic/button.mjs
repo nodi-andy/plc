@@ -106,10 +106,12 @@ export default class Button extends Node {
           { val: 0, update: false }
         );
         if (newState == 0 && props.state.value == 1) {
-          props.value.outValue = props.release.value;
+          props.value.value = props.release.value;
+          props.value.outValue = props.value.value;
         }
         if (newState == 1 && props.state.value == 0) {
-          props.value.outValue = props.press.value;
+          props.value.value = props.press.value;
+          props.value.outValue = props.value.value;
         }
         props.state.value = newState;
         props.state.inpValue = {};
@@ -123,6 +125,10 @@ export default class Button extends Node {
   static reset(props) {
     props.state.value = props.release.value;
     props.state.outValue = props.state.value;
+  }
+
+  static reconnect(node, nw, pos) {
+    node.properties.value.outValue = node.properties.value.value;
   }
 }
 

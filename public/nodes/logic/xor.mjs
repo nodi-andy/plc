@@ -1,17 +1,17 @@
 import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
-export default class LogicAnd extends Node {
-    static type = "logic/and";
-    static title = "AND";
+export default class LogicXor extends Node {
+    static type = "logic/xor";
+    static title = "XOR";
     static defaultInput = "value";
     static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
         Node.setProperty(props, "value");
-        this.type = LogicAnd.type
-        LogicAnd.reset(props);
+        this.type = LogicXor.type
+        LogicXor.reset(props);
     }
 
     static run(node) {
@@ -19,18 +19,21 @@ export default class LogicAnd extends Node {
         let ret = [];
 
         props.value.value = undefined;
+        let firstVal = undefined;
         for (const valueInputs of Object.values(props.value.inpValue)) {
-            if (props.value.value == undefined) props.value.value = valueInputs.val;
-            if (valueInputs.val == 0) {
+            if (firstVal == undefined) firstVal = valueInputs.val;
+            if (firstVal != null && valueInputs.val != firstVal) {
+                props.value.value = 1;
+            } else {
                 props.value.value = 0;
-                props.value.outValue = props.value.value;
             }
             
-            if (valueInputs.update === true) {
-                props.value.outValue = props.value.value;
-                ret.push("value");
-            }
+            if (valueInputs.update === true) ret.push("value");
             valueInputs.update = false;
+        }
+
+        if (ret.includes("value")) {
+            props.value.outValue = props.value.value;
         }
         return true;
     }
@@ -41,4 +44,4 @@ export default class LogicAnd extends Node {
 
 }
 
-NodeWork.registerNodeType(LogicAnd)
+NodeWork.registerNodeType(LogicXor)

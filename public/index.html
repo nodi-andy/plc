@@ -81,14 +81,14 @@
     await loadJS("./nodes/basic/led.mjs", false);
     await loadJS("./nodes/basic/number.mjs", false);
     await loadJS("./nodes/logic/and.mjs", false);
-    await loadJS("./nodes/logic/or.js", false);
-    await loadJS("./nodes/logic/xor.js", false);
-    await loadJS("./nodes/logic/not.js", false);
+    await loadJS("./nodes/logic/or.mjs", false);
+    await loadJS("./nodes/logic/xor.mjs", false);
+    await loadJS("./nodes/logic/not.mjs", false);
     await loadJS("./nodes/math/add.mjs", false);
-    await loadJS("./nodes/math/mult.js", false);
+    await loadJS("./nodes/math/mult.mjs", false);
     await loadJS("./nodes/math/isequal.mjs", false);
-    await loadJS("./nodes/math/isless.js", false);
-    await loadJS("./nodes/math/isgreater.js", false);
+    await loadJS("./nodes/math/isless.mjs", false);
+    await loadJS("./nodes/math/isgreater.mjs", false);
     await loadJS("./nodes/time/interval.mjs", false);
     await loadJS("./nodes/basic/inserter.mjs", false);
     await loadJS("./nodes/nodi.box/b1.js", false);
@@ -129,8 +129,8 @@
       localStorage.files = JSON.stringify(localFiles)
       window.showSnackbar("Saved nodework: " + localStorage.selected)*/
 
-      window.sendToServer("save", {});
       window.showSnackbar("Nodework saved in IoT");
+      window.sendToServer("save", {});
     };
 
     window.nodes.upload = () => {

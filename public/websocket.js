@@ -34,7 +34,7 @@ function mergeObjects(objA, objB) {
 
 window.sendToServer = (msg, obj) => {
   // send to server
-  if (window.socket.emit && window.socket.connected == true) {
+  if (window.socket?.emit && window.socket.connected == true) {
     window.socket.emit(msg, obj);
   } // send to IoT
   else if (websocket.send && websocket.readyState == 1) {

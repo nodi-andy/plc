@@ -1,32 +1,38 @@
 import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
-export default class MathAddCore extends Node {
+export default class MathAdd extends Node {
     static type = "math/add";
-    static title = "+";
-    static defaultInput = "value";
+    static title = "ADD/SUB";
+    static defaultInput = "add";
     static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
+        Node.setProperty(props, "add");
+        Node.setProperty(props, "sub");
         Node.setProperty(props, "value");
-        MathAddCore.reset(props);
+        MathAdd.reset(props);
     }
 
     static run(node) {
         let props = node.properties;
         let ret = [];
-        let sum = 0;
 
-        for (const valueInputs of Object.values(props.value.inpValue)) {
+        let sum = 0;
+        for (const valueInputs of Object.values(props.add.inpValue)) {
             sum += valueInputs.val;
             props.value.value = sum;
-            
-            if (valueInputs.update === true) {
-                props.value.outValue = props.value.value;
-                ret.push("value");
-            }
+            if (valueInputs.update === true) ret.push("value");
         }
+
+        for (const valueInputs of Object.values(props.sub.inpValue)) {
+            sum -= valueInputs.val;
+            props.value.value = sum;
+            if (valueInputs.update === true) ret.push("value");
+        }
+
+        if (ret.includes("value")) props.value.outValue = props.value.value;
 
         return ret;
     }
@@ -35,13 +41,6 @@ export default class MathAddCore extends Node {
         prop.value.value = 0;
     }
 
-    onDrawForeground(ctx) {
-        ctx.fillStyle = "#AAA";
-        ctx.font = "24px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(this.properties.in1.value + "+" + this.properties.in2.value, this.size[0] * 0.5, this.size[1] * 0.5);
-    }
-
 }
 
-NodeWork.registerNodeType(MathAddCore)
+NodeWork.registerNodeType(MathAdd)

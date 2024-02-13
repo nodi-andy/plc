@@ -33,12 +33,15 @@ Math.clamp = function (v, a, b) {
  * @return {Float32Array[4]} the total size
  */
 Math.getBounding = (node) => {
-  let out = [];
-  out[0] = node.pos[0] - 4;
-  out[1] = node.pos[1] - 4;
-  out[2] = node.size[0] + 4;
-  out[3] = node.size[1] + 4;
-
+  let out = [0, 0, 0, 0];
+  if (node.pos) {
+    out[0] = node.pos[0] - 4;
+    out[1] = node.pos[1] - 4;
+  }
+  if (node.size) {
+    out[2] = node.size[0] + 4;
+    out[3] = node.size[1] + 4;
+  }
   return out;
 }
 

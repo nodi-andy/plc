@@ -78,6 +78,29 @@ export default class LGraphCanvas {
     this.startRendering();
     this.setGraph(graph);
     this.autoresize = options.autoresize;
+
+    // Reference positions for the start of the transformation.
+    this.referencePair = null;
+
+    // Object of callbacks this function provides.
+    this.callbacks = {
+      rotate: null,
+      scale: null,
+    };
+
+    // Define gesture states.
+    this.Gestures = {
+      NONE: 0,
+      ROTATE: 1,
+      SCALE: 2,
+    };
+    // Define thresholds for gestures.
+    this.Thresholds = {
+      SCALE: 0.02, // percentage difference.
+      ROTATION: 5, // degrees.
+    };
+    // The current gesture of this transformation.
+    this.currentGesture = this.Gestures.NONE;
   }
 
   static getFileExtension(url) {
@@ -261,18 +284,6 @@ export default class LGraphCanvas {
     canvas.addEventListener("drop", this._ondrop_callback, false);
     canvas.addEventListener("dragenter", this._doReturnTrue, false);
 
-    var touchManager = new TransformRecognizer(canvas);
-    touchManager.ds = this.ds;
-    touchManager.graph = this.graph;
-    touchManager.onScale(function (data) {
-      console.log("Scale gesture:", data);
-      let scale = window.scale * data.scale;
-      window.canvas.ds.changeScale(scale);
-
-      window.canvas.graph.change();
-    });
-    touchManager.onRotate(function () {});
-
     this._events_binded = true;
   }
 
@@ -325,6 +336,12 @@ export default class LGraphCanvas {
   processMouseDown(e) {
     if (!this.graph) return;
     if (e.which > 1) return;
+    if (e.touches?.length == 2) {
+      window.scale = window.canvas.ds.scale;
+      // Save these two points as the reference.
+      this.referencePair = new TouchPair(e.touches);
+      return;
+    }
     this.adjustMouseEvent(e);
 
     //console.log("pointerevents: processMouseDown pointerId:"+e.pointerId+" which:"+e.which+" isPrimary:"+e.isPrimary+" :: x y "+x+" "+y);
@@ -403,6 +420,33 @@ export default class LGraphCanvas {
    * @method processMouseMove
    */
   processMouseMove(e) {
+    if (e.touches?.length == 2) {
+      e.preventDefault();
+
+      var touches = e.touches;
+
+      // Get the current touches as a TouchPair.
+      var currentPair = new TouchPair(touches);
+      // Compute angle and scale differences WRT reference position.
+      var scale = window.scale * currentPair.scaleSince(this.referencePair);
+
+      // Check if we're already in a gesture locked state.
+      if (this.currentGesture == this.Gestures.NONE) {
+        if (scale > 1 + this.Thresholds.SCALE || scale < 1 - this.Thresholds.SCALE) {
+          // Otherwise if scaled enough, start a scaling gesture.
+          this.currentGesture = this.Gestures.SCALE;
+          
+        }
+      }
+      var center = currentPair.center();
+      window.showSnackbar("G: " + scale);
+      if (this.currentGesture == this.Gestures.SCALE) {
+        // If already scaling, callback with scale amount.
+        this.setZoom(scale, center);
+      }
+      return;
+    }
+
     if (this.autoresize) {
       this.resize();
     }
@@ -534,6 +578,10 @@ export default class LGraphCanvas {
    * @method processMouseUp
    */
   processMouseUp(e) {
+    if (e.touches?.length < 2) {
+      this.currentGesture = this.Gestures.NONE;
+    }
+
     //console.log("pointerevents: processMouseUp "+e.pointerId+" "+e.isPrimary+" :: "+e.clientX+" "+e.clientY);
     if (!this.graph) return;
 
@@ -1159,8 +1207,8 @@ export default class LGraphCanvas {
     ctx.beginPath(); // Start a new path
     //ctx.setLineDash([5, 10]);
     for (var x = l; x <= r; x += s) {
-        ctx.moveTo(x, t);
-        ctx.lineTo(x, d);
+      ctx.moveTo(x, t);
+      ctx.lineTo(x, d);
     }
     for (var y = t; y <= d; y += s) {
       ctx.moveTo(l, y);
@@ -1237,11 +1285,14 @@ export default class LGraphCanvas {
       ctx.save();
       this.ds.toCanvasContext(ctx);
       ctx.fillStyle = "rgb(0.2,0,0,0.25)";
-      ctx.fillRect(this.grid_pressed[0] * NodiEnums.CANVAS_GRID_SIZE - 4, this.grid_pressed[1] * NodiEnums.CANVAS_GRID_SIZE - 4, NodiEnums.CANVAS_GRID_SIZE + 8, NodiEnums.CANVAS_GRID_SIZE + 8);
+      ctx.fillRect(
+        this.grid_pressed[0] * NodiEnums.CANVAS_GRID_SIZE - 4,
+        this.grid_pressed[1] * NodiEnums.CANVAS_GRID_SIZE - 4,
+        NodiEnums.CANVAS_GRID_SIZE + 8,
+        NodiEnums.CANVAS_GRID_SIZE + 8
+      );
       ctx.restore();
     }
-
-    
   }
 
   /**
@@ -1341,130 +1392,6 @@ export default class LGraphCanvas {
 }
 
 /**
- * Gesture recognizer for compound multi-touch transformations.
- *
- * 1. pinch/zoom/scale gesture.
- * 2. rotate gesture.
- */
-
-function TransformRecognizer(element) {
-  // Reference positions for the start of the transformation.
-  this.referencePair = null;
-
-  // Bind touch event handlers to this element.
-  element.addEventListener("touchstart", this.touchStartHandler.bind(this));
-  element.addEventListener("touchmove", this.touchMoveHandler.bind(this));
-  element.addEventListener("touchend", this.touchEndHandler.bind(this));
-  this.element = element;
-
-  // Object of callbacks this function provides.
-  this.callbacks = {
-    rotate: null,
-    scale: null,
-  };
-
-  // Define gesture states.
-  this.Gestures = {
-    NONE: 0,
-    ROTATE: 1,
-    SCALE: 2,
-  };
-  // Define thresholds for gestures.
-  this.Thresholds = {
-    SCALE: 0.02, // percentage difference.
-    ROTATION: 5, // degrees.
-  };
-  // The current gesture of this transformation.
-  this.currentGesture = this.Gestures.NONE;
-}
-
-/**
- * Touch event handlers.
- */
-TransformRecognizer.prototype.touchStartHandler = function (e) {
-  var touches = e.touches;
-  for (var i = 0; i < touches.length; i++) {
-    this.log("identifier: " + touches[i].identifier);
-  }
-  window.scale = window.canvas.ds.scale;
-  // If there are now exactly 2 touches, this is the initial position.
-  if (touches.length == 2) {
-    // Save these two points as the reference.
-    this.referencePair = new TouchPair(touches);
-  }
-};
-
-TransformRecognizer.prototype.touchMoveHandler = function (e) {
-  // Prevent default behavior of scrolling.
-  e.preventDefault();
-  console.log("current gesture", this.currentGesture);
-  var touches = e.touches;
-  // Check if there are exactly 2 fingers touching this element.
-  if (touches.length == 2) {
-    // Get the current touches as a TouchPair.
-    var currentPair = new TouchPair(touches);
-    // Compute angle and scale differences WRT reference position.
-    var angle = currentPair.angleSince(this.referencePair);
-    var scale = currentPair.scaleSince(this.referencePair);
-
-    // Check if we're already in a gesture locked state.
-    if (this.currentGesture == this.Gestures.NONE) {
-      if (angle > this.Thresholds.ROTATION || -angle > this.Thresholds.ROTATION) {
-        // If rotated enough, start a rotation.
-        this.currentGesture = this.Gestures.ROTATE;
-      } else if (scale > 1 + this.Thresholds.SCALE || scale < 1 - this.Thresholds.SCALE) {
-        // Otherwise if scaled enough, start a scaling gesture.
-        this.currentGesture = this.Gestures.SCALE;
-      }
-    }
-    var center = currentPair.center();
-    // Handle known gestures.
-    if (this.currentGesture == this.Gestures.ROTATE) {
-      // If we're already rotating, callback with the rotation amount.
-      this.callbacks.rotate({
-        rotation: angle,
-        x: center.x,
-        y: center.y,
-      });
-    }
-    if (this.currentGesture == this.Gestures.SCALE) {
-      // If already scaling, callback with scale amount.
-      this.callbacks.scale({
-        scale: scale,
-        x: center.x,
-        y: center.y,
-      });
-    }
-  }
-};
-
-TransformRecognizer.prototype.touchEndHandler = function (e) {
-  var touches = e.touches;
-  // If there are less than 2 fingers, reset current gesture.
-  if (touches.length < 2) {
-    this.currentGesture = this.Gestures.NONE;
-  }
-};
-
-/**
- * Registers a callback to fire when a pinch occurs.
- */
-TransformRecognizer.prototype.onScale = function (callback) {
-  this.callbacks.scale = callback;
-};
-
-/**
- * Registers a callback to fire when a rotate occurs.
- */
-TransformRecognizer.prototype.onRotate = function (callback) {
-  this.callbacks.rotate = callback;
-};
-
-TransformRecognizer.prototype.log = function (msg) {
-  this.element.innerHTML += msg + "<br/>";
-};
-
-/**
  * Represents a pair of fingers touching the screen.
  */
 function TouchPair(touchList) {
@@ -1472,15 +1399,6 @@ function TouchPair(touchList) {
   this.t1 = new Touch(touchList[0].pageX, touchList[0].pageY);
   this.t2 = new Touch(touchList[1].pageX, touchList[1].pageY);
 }
-
-/**
- * Given a reference position, calculate how much rotation happened.
- */
-TouchPair.prototype.angleSince = function (referencePair) {
-  // TODO: handle the edge case of going between 0 and 360.
-  // eg. the difference between 355 and 0 is 5.
-  return this.angle() - referencePair.angle();
-};
 
 /**
  * Given a reference position, calculate the scale multiplier.
