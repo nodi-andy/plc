@@ -1,4 +1,3 @@
-import { NodiEnums } from "./enums.mjs";
 import NodeWork from "./nodework.mjs";
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
@@ -12,54 +11,34 @@ import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
 
+// Connect to IoT
 var uri = window.location.hostname;
 if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") uri += ":8080";
+
+// Connect to the socketIO server on cloud
 if (io) window.socketIO = io(uri);
+
 
 window.order = {};
 
-function mergeObjects(objA, objB) {
-  for (let key in objB) {
-    if (objA[key]) {
-      for (let subKey in objB[key]) {
-        objA[key][subKey] = objB[key][subKey];
-      }
-    } else {
-      // Add the new key-value pair to objB
-      objB[key] = objA[key];
-    }
-  }
-  return objA;
+if (window.socketIO) {
+  // Event handler for when the connection is established
+  window.socketIO.on("connect", () => {
+    console.log("Connected to the socketIO server!");
+    window.socket = window.socketIO;
+    window.socket.type = "cloud";
+    window.sendToNodework("id");
+    window.sendToNodework("getNodework");
+  });
+
+  window.socketIO.on("setNodework", (message) => {
+    window.nodeWork.setNodework(message, false);
+  });
+
+  window.socketIO.on("id", () => {
+    window.sendToNodework("id", { id: "browser" });
+  });
 }
-
-window.sendToServer = (msg, obj) => {
-  // send to server
-  if (window.socket?.emit && window.socket.connected == true) {
-    window.socket.emit(msg, obj);
-  } // send to IoT
-  else if (websocket.send && websocket.readyState == 1) {
-    websocket.send(JSON.stringify([msg, obj]));
-  } // send back to browser
-
-  console.log(msg);
-};
-
-// Event handler for when the connection is established
-window.socketIO.on("connect", () => {
-  console.log("Connected to the socketIO server!");
-  window.socket = window.socketIO;
-  window.socket.type = "cloud";
-  window.sendToServer("id");
-  window.sendToServer("getNodework");
-});
-
-window.socketIO.on("setNodework", (message) => {
-  window.nodeWork.setNodework(message, false);
-});
-
-window.socketIO.on("id", () => {
-  window.sendToServer("id", { id: "browser" });
-});
 
 window.order.id = (message) => {
   if (message.id == "nodi.box") {
@@ -114,7 +93,6 @@ window.order.propUpdated = (message) => {
   window.updateEditDialog();
 };
 
-
 window.order.disconnect = () => {
   console.log("Disconnected from the server!");
 };
@@ -130,7 +108,7 @@ window.order.connectionSettings = (msg) => {
   window.setWiFiEnabled(msg.connectionSettings.STA_Enabled);
 };
 
-NodeWork.events.forEach((event) => {
+Object.keys(window.nodeWork.events).forEach((event) => {
   if (window.socketIO) {
     window.socketIO.on(event, (message) => {
       if (window.nodeWork[event]) window.nodeWork[event](message);
@@ -145,8 +123,8 @@ window.addEventListener("load", () => {
     window.socket = websocket;
     window.socketIO.disconnect();
     window.socket.type = "iot";
-    window.sendToServer("id");
-    window.sendToServer("getNodework");
+    window.sendToNodework("id");
+    window.sendToNodework("getNodework");
   };
 
   websocket.onclose = () => {
@@ -162,3 +140,7 @@ window.addEventListener("load", () => {
     if (window.order[cmdName]) window.order[cmdName](args);
   };
 });
+
+window.serialline = (msg) => {
+  console.log("Received serial msg:", msg);
+}

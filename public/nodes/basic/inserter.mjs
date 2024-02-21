@@ -37,7 +37,7 @@ class Inserter extends Node {
             if (toProps) {
                 toProps.inpValue[node.nodeID] = {val: props.value.value, update: true};
                 props.value.value = null;
-                ret.push(node.toNode.nodeID);
+                //ret.push(node.toNode.nodeID);
             }
         }
         let out = node.fromNode?.properties[props.from.value]?.outValue;

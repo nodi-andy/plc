@@ -17,8 +17,9 @@ SocketIOclient socketIO;
 #define DEVICE_NAME "esp32mcu" //nodi.box , esp32mcu
 
 #include <FS.h>
-#define SPIFFS LITTLEFS
-#include <LITTLEFS.h> 
+//#define SPIFFS LITTLEFS
+//#include <LITTLEFS.h> 
+#include <SPIFFS.h> 
 
 #include "map/map.h"
 
@@ -32,8 +33,9 @@ TaskHandle_t noditronTaskHandle;
 const uint8_t DEBOUNCE_DELAY = 10; // in milliseconds
 #define defaultFileName  "/map.json"
 
-static uint8_t wsInput[MAX_MESSAGE_SIZE];
-static uint8_t mapFile[MAX_MESSAGE_SIZE];
+static uint8_t wsInput[MAX_MESSAGE_SIZE] = {0};
+static uint8_t mapFile[MAX_MESSAGE_SIZE] = {0};
+unsigned long messageTimestamp = 0;
 
 Map nodemap;
 Preferences preferences;
@@ -160,26 +162,7 @@ void socketIOEvent(socketIOmessageType_t type, uint8_t * payload, size_t length)
             break;
     }
 }
-// ----------------------------------------------------------------------------
-// Definition of the LED component
-// ----------------------------------------------------------------------------
 
-struct Led {
-    // state variables
-    uint8_t pin;
-    bool    on;
-
-    // methods
-    void update() {
-        digitalWrite(pin, on ? HIGH : LOW);
-    }
-};
-
-// ----------------------------------------------------------------------------
-// Definition of global variables
-// ----------------------------------------------------------------------------
-
-Led    onboard_led = { BUILTIN_LED, false };
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket websocket("/ws");
@@ -191,10 +174,6 @@ AsyncWebSocket websocket("/ws");
 void initSPIFFS() {
   if (!SPIFFS.begin(true)) {
     Serial.println("Cannot mount SPIFFS volume...");
-    while (1) {
-        onboard_led.on = millis() % 200 < 50;
-        onboard_led.update();
-    }
   }
 }
 
@@ -419,13 +398,14 @@ void noditronTask( void * pvParameters ) {
                 USE_SERIAL.printf("[updateSlot.found] id: %d\n", id);
                 nodemap.nodes[id]->setInput(djsondoc[1]["newData"]["prop"].as<string>(), djsondoc[1]["newData"]["value"].as<int>());
             }
-        } else if (eventName == "addNode") {
-            USE_SERIAL.printf("[event::addNode] id: %d\n", djsondoc[1].as<int>());
+        } else if (eventName == "createNode") {
+            //USE_SERIAL.printf("[event::createNode] id: %d\n", djsondoc[1].as<int>());
             Node *newNode = nodemap.addNode(djsondoc[1]);
             if (newNode) {
               djsondoc[1]["nodeID"] = newNode->id;
             }
-            sendToSocket("nodeAdded", djsondoc[1]);
+            USE_SERIAL.printf("[event::createNode] id: %d\n", djsondoc[1].as<int>());
+            //sendToSocket("createNode", djsondoc[1]);
         } else if (eventName == "moveNodeOnGrid") {
             nodemap.nodes[id]->pos[0] = eventData["moveTo"][0].as<int>();
             nodemap.nodes[id]->pos[1] = eventData["moveTo"][1].as<int>();
@@ -607,15 +587,13 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 // ----------------------------------------------------------------------------
 
 void setup() {
-    memset(wsInput, 0, MAX_MESSAGE_SIZE);  // Fill the array with zeros
-    memset(mapFile, 0, MAX_MESSAGE_SIZE);  // Fill the array with zeros
-
     Serial.begin(115200);
+    Serial.println("noditron:loaded");
+
     preferences.begin("noditron", false); 
     initSPIFFS();
     initWiFi();
     initWebServer();
-
     preferences.end();
 
     xTaskCreatePinnedToCore(noditronTask, "noditron task", 20000, NULL, 10, &noditronTaskHandle, 1);
@@ -643,10 +621,6 @@ void setup() {
     Serial.write("SocketIO: init");
 }
 
-// ----------------------------------------------------------------------------
-// Main control loop
-// ----------------------------------------------------------------------------
-unsigned long messageTimestamp = 0;
 
 void loop() {
     websocket.cleanupClients();
@@ -654,9 +628,18 @@ void loop() {
     socketIO.loop();
     uint64_t now = millis();
 
+    if (Serial.available() > 0) {
+        // read the incoming string:
+        String incomingString = Serial.readStringUntil('\n');
+        nodemap.orders.push(incomingString.c_str());
+        // prints the received data
+        Serial.print("I received: ");
+        Serial.println(incomingString);
+    }
 
-    if(now - messageTimestamp > 5000) {
+    if(now - messageTimestamp > 2000) {
         messageTimestamp = now;
+        USE_SERIAL.printf("#Node @%d: %d\n", now, nodemap.nodes.size());
 /*
         // creat JSON message for Socket.IO (event)
         DynamicJsonDocument doc(1024);
@@ -675,12 +658,11 @@ void loop() {
         serializeJson(doc, output);
 
         // Send event
-        //socketIO.sendEVENT(output);*/
-        USE_SERIAL.printf("Nodes: %d\n", nodemap.nodes.size());
+        //socketIO.sendEVENT(output);
 
         // Print JSON for debugging
         //USE_SERIAL.println(output);
-        //USE_SERIAL.println(nodemap.nodes.size());
+        //USE_SERIAL.println(nodemap.nodes.size());*/
     }
 }
 

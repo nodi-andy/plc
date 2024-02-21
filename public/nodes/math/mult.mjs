@@ -9,6 +9,8 @@ export default class MathMult extends Node {
 
     static setup(node) {
         let props = node.properties;
+        Node.setProperty(props, "mult");
+        Node.setProperty(props, "div");
         Node.setProperty(props, "value");
         MathMult.reset(props);
     }
@@ -17,10 +19,16 @@ export default class MathMult extends Node {
         let props = node.properties;
         let ret = [];
 
-        let sum = 1;
-        for (const valueInputs of Object.values(props.value.inpValue)) {
-            sum *= valueInputs.val;
-            props.value.value = sum;
+        let res = 1;
+        for (const valueInputs of Object.values(props.mult.inpValue)) {
+            res *= valueInputs.val;
+            props.value.value = res;
+            if (valueInputs.update === true) ret.push("value");
+        }
+
+        for (const valueInputs of Object.values(props.div.inpValue)) {
+            res /= valueInputs.val;
+            props.value.value = res;
             if (valueInputs.update === true) ret.push("value");
         }
 

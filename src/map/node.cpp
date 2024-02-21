@@ -75,7 +75,7 @@ int Node::getProp(string key, string name) {
 void Node::setProps(JsonObject newProps) {
     jsonString.clear();
     serializeJson(newProps, jsonString);
-    //Serial.printf("setProp: string = %s\n", jsonString.c_str() );
+    Serial.printf("setProp: string = %s\n", jsonString.c_str() );
 
     deserializeJson(jsondoc, jsonString);
     props = jsondoc.as<JsonObject>();

@@ -1,13 +1,13 @@
 import express from "express";
 import http from "http";
 import { Server as socketIOServer } from "socket.io";
-import { NodiEnums } from "./public/enums.mjs";
 
 import NodeWork from "./public/nodework.mjs";
 import "./public/nodes/basic/button.mjs";
 import "./public/nodes/basic/toggle.mjs";
 import "./public/nodes/basic/led.mjs";
 import "./public/nodes/basic/number.mjs";
+import "./public/nodes/basic/serial_port.mjs";
 import "./public/nodes/logic/and.mjs";
 import "./public/nodes/logic/or.mjs";
 import "./public/nodes/logic/xor.mjs";
@@ -19,7 +19,7 @@ import "./public/nodes/math/isless.mjs";
 import "./public/nodes/math/isgreater.mjs";
 import "./public/nodes/time/interval.mjs";
 import "./public/nodes/basic/inserter.mjs";
-import Vector2 from "./public/vector2.mjs";
+
 
 const app = express();
 const server = http.createServer(app);
@@ -34,70 +34,8 @@ global.iot = null;
 var settings = { ownerShip: false };
 
 setInterval(() => {
-  try {
-    nodeWorkJSON.nodes.forEach((node) => {
-      if (!node) return;
-      let curType = NodeWork.getNodeType(node.type);
-      if (node.movingTo) {
-        let curPos = new Vector2(node.pos[0], node.pos[1]);
-        let target = new Vector2(node.movingTo[0], node.movingTo[1]);
-        let moveVector = new Vector2(node.movingTo[0] - node.pos[0], node.movingTo[1] - node.pos[1])
-          .normalize()
-          .multiplyScalar(5);
-        //console.log("Dist: ", curPos.distanceTo(target));
-        if (curPos.distanceTo(target) > 5) {
-          node.pos[0] += moveVector.x;
-          node.pos[1] += moveVector.y;
-        } else {
-          node.pos[0] = target.x;
-          node.pos[1] = target.y;
-          delete node.movingTo;
-        }
-
-        io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
-        //console.log("JA", moveVector);
-      }
-
-      if (node.cmds?.length) {
-        let command = node.cmds.shift();
-
-        if (command.cmd == "updateNode") {
-          let updateData = command.what.properties;
-          for(let newProp of Object.keys(updateData)) {
-              for(let newVal of Object.keys(updateData[newProp])) {
-                node.properties[newProp][newVal]["user"] = {val: updateData[newProp][newVal], update: true};
-              }
-          }
-        }
-
-        if (node.device == "nodi.box") {
-          if (node.cmds[0].who != "nodi.box") {
-            iot.emit("updateNode", { nodeID: node.nodeID, properties: node.properties });
-          } else {
-            io.emit("updateNode", { nodeID: node.nodeID, properties: node.properties });
-          }
-        }
-      }
-      if (node.device == "server") {
-        //console.log(c)
-        let runResults = curType?.run && curType.run(node, nodeWorkJSON);
-        if (runResults.length) {
-          runResults.forEach((propName) => {
-            io.emit("updateNode", { nodeID: node.nodeID, prop: propName, properties: nodeWorkJSON.nodes[node.nodeID].properties[propName] });
-          });
-        }
-      }
-    });
-    nodeWorkJSON.cleanUpOutputs.forEach((cleanUp) => {
-      let node = nodeWorkJSON.nodes[cleanUp[0]];
-      if (!node) return;
-      let prop = node.properties[cleanUp[1]];
-      if (!prop) return;
-      prop.outValue = null;
-      nodeWorkJSON.cleanUpOutputs = [];
-    });
-  } catch (e) {
-    console.log(e);
+  if (nodeWorkJSON) {
+    nodeWorkJSON.runStep();
   }
 }, 20);
 
@@ -116,7 +54,7 @@ Object.mergeObjects = (objA, objB) => {
 
 io.on("connection", (socket) => {
 
-  NodeWork.events.forEach((event) => {
+  Object.keys(nodeWorkJSON.events).forEach((event) => {
     socket.on(event, (message) => {
       if (nodeWorkJSON[event]) nodeWorkJSON[event](message, socket);
     });
@@ -195,6 +133,8 @@ io.on("connection", (socket) => {
     io.to(socket.id).emit("setNodework", nodeWorkJSON);
     //console.log("[updateNewClient]");
   });
+  nodeWorkJSON.setSocketOut(io.emit.bind(io));
+
   io.to(socket.id).emit("id", "");
   io.to(socket.id).emit("setSettings", settings);
   console.log("[newClient] ", socket.id);

@@ -80,6 +80,7 @@
     await loadJS("./nodes/basic/toggle.mjs", false);
     await loadJS("./nodes/basic/led.mjs", false);
     await loadJS("./nodes/basic/number.mjs", false);
+    await loadJS("./nodes/basic/serial_port.mjs", false);
     await loadJS("./nodes/logic/and.mjs", false);
     await loadJS("./nodes/logic/or.mjs", false);
     await loadJS("./nodes/logic/xor.mjs", false);
@@ -100,24 +101,64 @@
     await loadJS("./nodes/nodi.box/stepper.js", false);
     await loadJS("./nodes/esp32mcu/b1.js", false);
     await loadJS("./nodes/esp32mcu/led.js", false);
-    await loadJS("./websocket.js", false);
-
+    
     import Node from "./node.mjs";
     import NodeWork from "./nodework.mjs";
-    import LGraphCanvas from "./canvas.js";
+    import Canvas from "./canvas.js";
+    import { NodiEnums } from "./enums.mjs";
 
+    
     window.nodeWork = new NodeWork();
-    window.canvas = new LGraphCanvas("#mycanvas", window.nodeWork);
+    window.nodeWork.engine = {name: "server", send: (order) => {
+      console.log("forwardCMD: ", order);
+      if (window.socket?.emit && window.socket.connected == true) { // send to server
+        window.socket.emit(order.cmd, order.data);
+      } 
+      
+      // if (websocket.send && websocket.readyState == 1) { // send to IoT
+        //  websocket.send(JSON.stringify([cmd, obj]));
+        // } 
+    }};
+
+    await loadJS("./websocket.js", false);
+      
+    window.canvas = new Canvas("#mycanvas", window.nodeWork);
     window.nodeworkID = window.location.search.slice(1);
+    window.sendToNodework = (cmd, obj) => {
+      window.nodeWork.cmd({cmd: cmd, data: obj});
+    };
     window.nodes = {};
+
+    window.createNewNode = (type) => {
+        var msg = {};
+        msg.type = type;
+        msg.type = msg.type.toLowerCase();
+        msg.pos = window.canvas.gridPos;
+        var base_class = NodeWork.getNodeType(msg.type);
+        if (!base_class) {
+          if (NodeWork.debug) console.log('GraphNode type "' + msg.type + '" not registered.');
+          return null;
+        }
+
+        msg.node = { type: msg.type, type2: msg.type, properties: {} };
+        msg.node.plattform = (typeof window !== 'undefined') ? "browser" : "server" ;
+        msg.node.orders = [];
+
+        base_class.setup(msg.node);
+        msg.node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
+        
+        for (var i in msg.options) {
+          msg.node.properties[i] = msg.options[i];
+        }
+        msg.node.nodeID = NodeWork.getFirstNullIndex(window.nodeWork.nodes);
+        return msg;
+    };
 
     window.nodes.copyNode = () => {
       if (window.canvas.copyNode == null && window.canvas.current_node)
         window.canvas.copyNode = window.canvas.current_node.nodeID;
       else window.canvas.copyNode = null;
     };
-
-
 
     window.nodes.editNode = () => {
       window.canvas.processContextMenu();
@@ -130,7 +171,7 @@
       window.showSnackbar("Saved nodework: " + localStorage.selected)*/
 
       window.showSnackbar("Nodework saved in IoT");
-      window.sendToServer("save", {});
+      window.sendToNodework("save", {});
     };
 
     window.nodes.upload = () => {
@@ -140,28 +181,20 @@
         for (let n in storeGraph.nodes) {
           let node = storeGraph.nodes[n];
         }
-        window.sendToServer("setNodework", storeGraph);
+        window.sendToNodework("setNodework", storeGraph);
         window.showSnackbar("nodework sent to nodi.box!");
       }
     };
 
-    window.nodes.move = (id, changedNodeData) => {
-      window.sendToServer("moveNode", {
+    window.nodes.updateInputs = (id, changedNodeData) => {
+      window.nodeWork.cmd({cmd: "updateInputs", data: {
         nodeID: id,
-        moveTo: changedNodeData.pos,
-      });
-    };
-
-    window.nodes.moveNodeOnGrid = (id, from, to) => {
-      window.sendToServer("moveNodeOnGrid", {
-        id: id,
-        from: from,
-        to: to,
-      });
+        properties: changedNodeData,
+      }});
     };
 
     window.nodes.update = (id, changedNodeData) => {
-      window.sendToServer("updateNode", {
+      window.sendToNodework("updateNode", {
         nodeID: id,
         properties: changedNodeData,
       });
@@ -208,5 +241,11 @@
       }
     };
     updateNodeList();
+
+    setInterval(() => {
+      if (window.nodeWork) {
+        window.nodeWork.runStep();
+      }
+    }, 20);
   </script>
 </html>

@@ -23,7 +23,7 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
   };
 
   const cleanNodework = () => {
-    window.sendToServer("clear", {});
+    window.sendToNodework("clear", {});
   };
 
 
@@ -54,6 +54,64 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
           <ListItemButton onClick={() => window.nodes.saveNodework()}>
             <ListItemIcon> <SaveOutlinedIcon /> </ListItemIcon>
             <ListItemText primary={'Save'} />
+          </ListItemButton>
+        </ListItem>
+        <ListItem key='requestSerialPort' disablePadding>
+          <ListItemButton onClick={async () => {
+              // Prompt user to select any serial port.
+              await navigator.serial.requestPort().then((port) => {
+                window.serialport = port;
+                  window.serialbuffer = "";
+                  window.serialport.open({ baudRate: 115200 }).then(() => {
+                    console.log('Port is opened!');
+                    window.reader = window.serialport.readable.getReader();
+                    window.serialwriter = window.serialport.writable.getWriter();
+                    window.nodeWork.engine = {name: "serialport", send: (order) => {
+                      console.log("Forward:Serial : ", order);
+                      if (window.serialwriter) { // send to server
+                        const encoder = new TextEncoder();
+
+                        window.serialwriter.write(encoder.encode(JSON.stringify([order.cmd, order.data])));
+                      } 
+                      
+                      // if (websocket.send && websocket.readyState == 1) { // send to IoT
+                        //  websocket.send(JSON.stringify([cmd, obj]));
+                        // } 
+                    }};
+                    const readLoop = () => {
+                      window.reader.read().then(({ value, done }) => {
+                            if (done) {
+                                console.log('Stream closed or reader released.');
+                                return;
+                            }
+                            const receivedData = new TextDecoder().decode(value);
+                            //console.log('Data received:', receivedData);
+                            window.serialbuffer += receivedData;
+                            let newlineIndex = window.serialbuffer.indexOf('\n');
+                            while (newlineIndex !== -1) {
+                                // Extract the line including the newline character
+                                let line = window.serialbuffer.substring(0, newlineIndex + 1);
+                                // Call the function with the extracted line
+                                if (window.serialline) window.serialline(line);
+
+                                // Remove the processed line from the buffer
+                                window.serialbuffer = window.serialbuffer.substring(newlineIndex + 1);
+
+                                // Check for another newline character in the remaining buffer
+                                newlineIndex = window.serialbuffer.indexOf('\n');
+                            }
+                            // Continue reading
+                            readLoop();
+                        }).catch(error => {
+                            console.error('Error reading from serial port:', error);
+                        });
+                    };
+                    readLoop();
+                });
+              })
+            }}>
+            <ListItemIcon> <SaveOutlinedIcon /> </ListItemIcon>
+            <ListItemText primary={'Serial Port'} />
           </ListItemButton>
         </ListItem>
         {/*

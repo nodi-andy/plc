@@ -11,7 +11,7 @@ export default class LGraphCanvas {
     if (canvas && canvas.constructor === String) {
       canvas = document.querySelector(canvas);
     }
-    this.nodework = new NodeWork();
+    this.nodework = window.nodeWork;
     this.ds = new View();
     this.cursorMode = 0;
     this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
@@ -464,7 +464,7 @@ export default class LGraphCanvas {
     //get node over
     var cursor_node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
 
-    console.log("processMouseMove " + this.last_mouse_down);
+    //console.log("processMouseMove " + this.last_mouse_down);
 
     e.dragging = this.last_mouse_dragging;
     if (this.gripped == "node" && this.node_pressed) {
@@ -640,7 +640,7 @@ export default class LGraphCanvas {
     } else if (this.resizing_node) {
       this.resizing_node = null;
     } else if (this.node_dragging) {
-      window.nodes.moveNodeOnGrid(this.node_dragging.nodeID, this.grid_pressed, e.gridPos);
+      window.sendToNodework("moveNodeOnGrid", {id: this.node_dragging.nodeID, from: this.grid_pressed, to: e.gridPos});
       this.node_dragging = null;
     } else {
       //no node being dragged
@@ -1368,12 +1368,6 @@ export default class LGraphCanvas {
     }
   }
 
-  adjustNodesSize() {
-    var nodes = this.graph.nodes;
-    for (var i = 0; i < nodes.length; ++i) {
-      nodes[i].setSize(nodes[i].computeSize());
-    }
-  }
   /**
    * resizes the canvas to a given size, if no size is passed, then it tries to fill the parentNode
    * @method resize

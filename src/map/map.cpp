@@ -22,18 +22,18 @@ void Map::addNode(int id, Node* newNode)
 Node* Map::addNode(JsonObject json)
 {
     string type = json["type"].as<std::string>();
-    Serial.printf("[Map::addNode]: %s\n", type.c_str());
+    Serial.printf("[Map::addNode:json]: %s\n", type.c_str());
 
     Node* newNode = RegistryManager::getInstance().createNode(type);
     if (newNode != nullptr) {
-        newNode->setProps(json["properties"]);
+        newNode->setProps(json["node"]["properties"]);
         if (json.containsKey(JSON_NODE_ID)) {
             newNode->id = json[JSON_NODE_ID].as<int>();
         } else {
             newNode->id = this->nodes.size();
         }
-        newNode->pos[0] = json["widget"]["pos"][0].as<int>();
-        newNode->pos[1] = json["widget"]["pos"][1].as<int>();
+        newNode->pos[0] = json["pos"][0].as<int>();
+        newNode->pos[1] = json["pos"][1].as<int>();
         newNode->type = json["type"].as<string>();
         addNode(newNode->id, newNode);
         Serial.printf("[Map:addNode:done] id: %d,  desc: %s, type: %s\n", newNode->id, newNode->desc.c_str(), newNode->getType().c_str());

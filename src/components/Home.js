@@ -79,7 +79,8 @@ function SelectNodeDialog({ openND, setOpenND }) {
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        window.nodeWork.createNode({type:`${category}/${label}`, pos: window.canvas.gridPos});
+                        let msg = window.createNewNode(`${category}/${label}`);
+                        window.sendToNodework('createNode', msg);
                         setOpenND(false);
                       }}
                     >
@@ -167,7 +168,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
           color="info"
           disabled={!rotateClickable}
           onClick={() => {
-            window.nodeWork.rotateNode({x: window.canvas.grid_pressed[0], y: window.canvas.grid_pressed[1]});
+            window.sendToNodework("rotateNode", {x: window.canvas.grid_pressed[0], y: window.canvas.grid_pressed[1]});
           }}
         >
           <Rotate90DegreesCcwIcon />

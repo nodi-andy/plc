@@ -1,42 +1,48 @@
 import { NodiEnums } from "./enums.mjs";
 import Node from "./node.mjs";
-
-function getFirstNullIndex(arr) {
-  for (let i = 0; i < arr.length; i++) {
-    if (arr[i] == null) {
-      return i;
-    }
-  }
-  return arr.length; // If no null item is found
-}
+import Vector2 from "./vector2.mjs";
 
 export default class NodeWork {
   static debug = false;
   static registered_node_types = {}; //nodetypes by string
   static Nodes = {}; //node types by classname
 
-  static events =  [
-    "moveNodeOnGrid",
-    "addExistingNode",
-    "rotateNode",
-    "nodePicked",
-    "updateNode",
-    "updatePos",
-    "createNode",
-    "nodeMoved",
-    "propUpdated",
-    "removeNode",
-    "clear"
-  ]
 
   constructor(o) {
-    if (NodeWork.debug) {
-      console.log("Graph created");
-    }
+    if (NodeWork.debug) console.log("Graph created");
     this.clear();
-    if (o) {
-      this.setNodework(o);
+    if (o) this.setNodework(o);
+
+    this.orders = [];
+    this.nodes = [];
+    this.socketOut = null;
+    this.engine = {name: "local", send: (order)=> {
+      if(this[order.cmd]) this[order.cmd](order.data);
+    }};
+    this.plattform = (typeof window !== 'undefined') ? "browser" : "server" ;
+    this.events =  {
+      moveNodeOnGrid : null,
+      addExistingNode : null,
+      rotateNode : this.rotateNode,
+      nodePicked : null,
+      updateNode : null,
+      updatePos : null,
+      createNode : this.createNode,
+      updateInputs : this.updateInputs,
+      nodeMoved : null,
+      propUpdated : null,
+      removeNode : null,
+      clear : null
     }
+  }
+
+  static getFirstNullIndex(arr) {
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] == null) {
+        return i;
+      }
+    }
+    return arr.length; // If no null item is found
   }
   /**
    * Register a node class so it can be listed when the user wants to create a new one
@@ -114,68 +120,36 @@ export default class NodeWork {
     this.Nodes = {};
   }
 
+  cmd(msg) {
+    this.orders.push(msg);
+  }
+
+  publish(event, data) {
+    if (this.socketOut) this.socketOut(event, data);
+  }
+
+  setSocketOut(socket) {
+    this.socketOut = socket;
+  }
+
   createNode(msg, socket) {
-    if (typeof window !== "undefined") {
-      if (msg.node) {
-        this.nodes[msg.node.nodeID] = msg.node;
-        msg.nodeID = msg.node.nodeID;
-        this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
-      } else {
-        msg.type = msg.type.toLowerCase();
-        var base_class = NodeWork.getNodeType(msg.type);
-        if (!base_class) {
-          if (NodeWork.debug) console.log('GraphNode type "' + msg.type + '" not registered.');
-          return null;
-        }
-
-        var node = { type: base_class.type, type2: base_class.type, properties: {} };
-
-        base_class.setup(node);
-
-        node.size = Node.computeSize(node.properties);
-
-        for (var i in msg.options) {
-          node.properties[i] = msg.options[i];
-        }
-        node.device = "server";
-        msg.node = node;
-        window.sendToServer("createNode", msg);
-      }
-    } else {
-      msg.node.nodeID = getFirstNullIndex(this.nodes);
-      msg.node.owner = socket.id;
-      msg.node.moving = false;
-      this.nodes[msg.node.nodeID] = msg.node;
-      msg.nodeID = msg.node.nodeID;
-      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
-      if (msg.node.device == "nodi.box" && global.iot) {
-        global.iot.emit("createNode", msg);
-      } else {
-        global.io.emit("createNode", msg);
-      }
-    }
-    return node;
+    this.nodes[msg.node.nodeID] = msg.node;
+    msg.node.engine = this.engine;
+    msg.node.owner = socket?.id;
+    msg.node.moving = false;
+    msg.nodeID = msg.node.nodeID;
+    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+    this.publish("createNode", msg);
+    return msg.node;
   }
 
   rotateNode(msg) {
-    if (typeof window !== "undefined" && msg.done == true) {
-      let node = this.getNodeOnGrid(msg.x, msg.y);
-      if (node) {
-        node.direction = (node.direction + 1) % 4;
-        this.updateNBs(msg.x, msg.y);
-      }
-    } else if (typeof window !== "undefined" && msg.done == undefined) {
-      window.sendToServer("rotateNode", msg);
-    } else {
-      let node = this.getNodeOnGrid(msg.x, msg.y);
-      if (node) {
-        node.direction = (node.direction + 1) % 4;
-        this.updateNBs(msg.x, msg.y);
-        msg.done = true;
-        global.io.emit("rotateNode", msg);
-      }
+    let node = this.getNodeOnGrid(msg.x, msg.y);
+    if (node) {
+      node.direction = (node.direction + 1) % 4;
+      this.updateNBs(msg.x, msg.y);
     }
-
+    this.publish("rotateNode", msg);
   }
 
   /**
@@ -247,7 +221,7 @@ export default class NodeWork {
     if (typeof window !== "undefined" && msg.done == true) {
       this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
     } else if (typeof window !== "undefined" && msg.done == undefined) {
-      window.sendToServer("addExistingNode", msg);
+      window.sendToNodework("addExistingNode", msg);
     } else {
       this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
       msg.done = true;
@@ -258,42 +232,37 @@ export default class NodeWork {
   moveNodeOnGrid(msg) {
     if (!msg) return;
 
-    if (msg.done == true || typeof window == "undefined") {
-      let node = this.nodes[msg.id];
-      node.moving = false;
+    let node = this.nodes[msg.id];
+    node.moving = false;
 
-      let next_gridPos = msg.to;
-      if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
-        if (msg.from) {
-          this.setNodeOnGrid(msg.from[0], msg.from[1], null);
-        }
-        this.setNodeOnGrid(msg.to[0], msg.to[1], node);
+    let next_gridPos = msg.to;
+    if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
+      if (msg.from) {
+        this.setNodeOnGrid(msg.from[0], msg.from[1], null);
       }
+      this.setNodeOnGrid(msg.to[0], msg.to[1], node);
     }
 
-    if (typeof window == "undefined") {
-      msg.done = true;
-      global.io.emit("moveNodeOnGrid", msg);
-    }
+    this.publish("moveNodeOnGrid", msg);
   }
-
-
 
   removeNode(msg) {
-    if (typeof window !== "undefined" && msg.done == true) {
-      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
-    } else if (typeof window !== "undefined" && msg.done == undefined) {
-      window.sendToServer("removeNode", msg);
-    } else {
-      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
-      msg.done = true;
-      global.io.emit("removeNode", msg);
-    }
+    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
+    this.publish("removeNode", msg);
   }
 
-  updateProp(nodeID, prop) {
-    Node.updateProp(this.nodes[nodeID], prop);
+  updateNode(msg) {
+    Object.keys(msg.properties).forEach((key) => {
+      Node.updateProp(this.nodes[msg.nodeID], msg.prop, key, msg.properties[key]);
+    })
   }
+
+  updateInputs(msg) {
+    Object.keys(msg.properties).forEach((key) => {
+      Node.updateInputs(this.nodes[msg.nodeID], key, msg.properties[key]);
+    })
+  }
+  
   /**
    * Returns a node by its id.
    * @method getNodeById
@@ -371,4 +340,69 @@ export default class NodeWork {
     this.nodesByPos = data.nodesByPos;
     return false;
   }
+
+  runStep() {
+    try {
+      let order = this.orders.shift();
+      if (order) {
+        if(order.data?.nodeID != null) {
+          this.nodes[order.data.nodeID].orders.push(order);
+        } else {
+          this.engine.send(order);
+        }
+      }
+
+      this.nodes.forEach((node) => {
+        if (!node) return;
+        let curType = NodeWork.getNodeType(node.type);
+        if (node.movingTo) {
+          let curPos = new Vector2(node.pos[0], node.pos[1]);
+          let target = new Vector2(node.movingTo[0], node.movingTo[1]);
+          let moveVector = new Vector2(node.movingTo[0] - node.pos[0], node.movingTo[1] - node.pos[1])
+            .normalize()
+            .multiplyScalar(5);
+          //console.log("Dist: ", curPos.distanceTo(target));
+          if (curPos.distanceTo(target) > 5) {
+            node.pos[0] += moveVector.x;
+            node.pos[1] += moveVector.y;
+          } else {
+            node.pos[0] = target.x;
+            node.pos[1] = target.y;
+            delete node.movingTo;
+          }
+  
+          io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
+          //console.log("JA", moveVector);
+        }
+  
+        let order = node.orders.shift();
+        if (order) {
+          node.engine.send(order);
+        }
+
+        if (node.plattform == this.plattform) {
+          let results = curType?.run && curType.run(node, this);
+          if (this.socketOut && results?.length) {
+            //console.log(c)
+            results.forEach((propName) => {
+                  this.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
+              });
+          }
+        }
+      });
+
+      this.cleanUpOutputs.forEach((cleanUp) => {
+        let node = this.nodes[cleanUp[0]];
+        if (!node) return;
+        let prop = node.properties[cleanUp[1]];
+        if (!prop) return;
+        prop.outValue = null;
+        this.cleanUpOutputs = [];
+      });
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  
 }

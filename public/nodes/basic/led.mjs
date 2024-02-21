@@ -45,15 +45,16 @@ export default class WidgetLed extends Node {
             ret.push("value");
         }
 
-        if (props.toggle?.inpValue == 1) {
-            if ( props.value.value == 1) {
-                props.value.value = 0;
-            } else {
-                props.value.value = 1;
+
+        Object.values(props.toggle.inpValue).forEach((toggleInputs) => {
+            if (toggleInputs.update === true) {
+                props.value.value = props.value.value == 1 ? 0 : 1;
+                toggleInputs.update = false;
+                ret.push("value");
             }
-            props.toggle.inpValue = null;
-            ret = true;
-        }
+        });
+
+        
         
         if (props.set?.inpValue == 1) {
             props.value.value = 1;
@@ -87,17 +88,13 @@ export default class WidgetLed extends Node {
         }
     }
 
-    static updateProp(node, key, name, val) {
-        node.properties[key][name] = val;
-        window.nodes.update(node.nodeID, node.properties);
-    }
-
     static onMouseDown(node, e, local_pos) {
         if (local_pos[0] > node.size[0] * 0.25 &&
             local_pos[1] >  node.size[0] * 0.25 &&
             local_pos[0] < node.size[0] * 0.75 &&
             local_pos[1] < node.size[1] * 0.75) {
-            WidgetLed.updateProp(node, "state", "inpValue", node.properties.value.value ? 0 : 1)
+            window.nodes.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
+
             node.update = true;
 
             return true;

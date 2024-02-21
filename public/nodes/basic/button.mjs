@@ -44,7 +44,7 @@ export default class Button extends Node {
     ) {
       //this.properties.state.value = this.properties.press.value;
       //this.properties.state.outValue = this.properties.state.value;
-      window.nodes.update(node.nodeID, { state: { inpValue: 1 } });
+      window.nodes.updateInputs(node.nodeID, { state: { inpValue: 1 } });
       return true;
     }
 
@@ -52,8 +52,7 @@ export default class Button extends Node {
   }
 
   static onMouseUp(node, e) {
-    Button.reset(node.properties);
-    window.nodes.update(node.nodeID, { state: { inpValue: 0 } });
+    window.nodes.updateInputs(node.nodeID, { state: { inpValue: 0 } });
     return true;
   }
 
@@ -64,7 +63,7 @@ export default class Button extends Node {
     Node.setProperty(props, "release", { value: 0, autoInput: true });
     Node.setProperty(props, "value", { value: null });
     Node.setProperty(props, "label", { value: "", autoInput: true });
-    Node.setProperty(props, "port", { value: null, input: false });
+    Node.setProperty(props, "port", { value: 0, input: false });
     Node.setProperty(props, "color", { value: "gray", input: false, autoInput: true });
     Button.reset(props);
   }

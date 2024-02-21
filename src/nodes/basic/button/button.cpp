@@ -10,14 +10,13 @@ void Button::setup() {
     desc = "Read input";
 
     port = getProp("port", "value");
+    state = 0;
     if (port >= 0) {
       pinMode(port, INPUT);
       pinMode(port, INPUT_PULLUP);
       Serial.printf("[Button] port: %d\n", port);
+      state = digitalRead(port);
     }
-
-    state = digitalRead(port);
-
 }
 
 int Button::onExecute() {
