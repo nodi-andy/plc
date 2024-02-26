@@ -2,6 +2,7 @@
   "name": "noditron",
   "description": "Noditron is a platform for creating IoT function block diagrams with a web interface. This platform utilizes the PLC (programmable logic controller) concept to create a user-friendly interface for building IoT projects.",
   "version": "0.2",
+  "main" : "server.mjs",
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
@@ -31,7 +32,7 @@
     "http-proxy": "^1.18.1"
   },
   "scripts": {
-    "start": "node index.mjs",
+    "start": "node server.mjs",
     "deploy": "gcloud app deploy",
     "debug": "set PORT=8080 &&  react-scripts start",
     "build": "set \"GENERATE_SOURCEMAP=false\" &&  react-scripts build",
