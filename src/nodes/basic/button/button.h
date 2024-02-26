@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../../../map/node.h"
+#include "../../../nodework/node.h"
 
 // Button digital input
 class Button : public Node
@@ -14,7 +14,7 @@ class Button : public Node
         return new Button(*this); // Create a new instance of the Button object
     }
     void setup();
-    int onExecute();
+    vector<string> run();
 
     private:
     int defaultPressVal;

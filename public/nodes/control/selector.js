@@ -12,7 +12,7 @@ class Selector extends Node{
         this.setProperty("out", "out", {output: true});
     }
 
-    onExecute(update) {
+    run(update) {
         if (update && isNaN(this.properties.SelIn) == false && this.properties.SelIn > 0) {
 
             var v = this.properties.SelIn.value;

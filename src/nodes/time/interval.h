@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 class Interval : public Node
 {
@@ -13,7 +13,7 @@ class Interval : public Node
         return new Interval(*this); // Create a new instance of the Button object
     }
     void setup();
-    int onExecute();
+    vector<string> run();
 
     private:
     int defaultPressed;

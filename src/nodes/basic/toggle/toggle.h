@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../../../map/node.h"
+#include "../../../nodework/node.h"
 
 
 //Toggle a bit
@@ -15,7 +15,7 @@ class Toggle : public Node
         return new Toggle(*this); // Create a new instance of the Toggle object
     }
     void setup();
-    int onExecute();
+    vector<string> run();
 };
 
 static bool toogleRegistered = []() {

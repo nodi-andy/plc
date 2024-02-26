@@ -143,4 +143,11 @@ window.addEventListener("load", () => {
 
 window.serialline = (msg) => {
   console.log("Received serial msg:", msg);
+  msg = msg.trim();
+  try {
+    let [cmd, data] = JSON.parse(msg);
+    if (window.nodeWork[cmd]) window.nodeWork[cmd](data);
+  } catch (e) {
+    //console.log("msg parsing error: ", e);
+  }
 }

@@ -46,20 +46,18 @@ void Number::setup() {
     newvalue = value;
 }
 
-int Number::onExecute() {
-    int ret = 0;
+vector<string> Number::run() {
+    vector<string> ret;
     bool update = false;
     if (getInput("set")) {
         newvalue = getInput("set");
-        setInput("set", INT_MAX);
         update = true;
     }
     if (getInput("read")) {
-        setInput("read", INT_MAX);
         update = true;
     }
 
-    ret = (value != newvalue);
+    //ret = (value != newvalue);
     value = newvalue;
     if (update) {
         Serial.print("Number changed: ");

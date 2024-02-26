@@ -109,16 +109,19 @@
 
     
     window.nodeWork = new NodeWork();
-    window.nodeWork.engine = {name: "server", send: (order) => {
+    /*window.nodeWork.engine = {name: "server", send: (order) => {
       console.log("forwardCMD: ", order);
       if (window.socket?.emit && window.socket.connected == true) { // send to server
         window.socket.emit(order.cmd, order.data);
       } 
-      
+    }};*/
+
+    //window.nodeWork.engine = {name: "server", send: (order) => {
+    //  console.log("forwardCMD: ", order);
       // if (websocket.send && websocket.readyState == 1) { // send to IoT
         //  websocket.send(JSON.stringify([cmd, obj]));
         // } 
-    }};
+    //}};
 
     await loadJS("./websocket.js", false);
       
@@ -244,7 +247,7 @@
 
     setInterval(() => {
       if (window.nodeWork) {
-        window.nodeWork.runStep();
+        window.nodeWork.run();
       }
     }, 20);
   </script>

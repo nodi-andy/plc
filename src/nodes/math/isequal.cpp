@@ -9,28 +9,25 @@ void IsEqual::setup() {
     desc = "Is Equal";
     name = "math/isequal";
 
-    addInput("a");
-    addInput("b");
-    addOutput("v");
-
-    A = this->getProp("a", "value");
-    B = this->getProp("b", "value");
+    A = getValue("a");
+    B = getValue("b");
     value = 1;
     state = 0;
 }
 
-int IsEqual::onExecute() {
+vector<string> IsEqual::run() {
+    vector<string> ret;
     bool update = false;
     if (getInput("a")) {
         A = getInput("a");
-        setInput("a", INT_MAX);
+        //setInput("a", INT_MAX);
         Serial.print("A gate:");
         Serial.println(A);
         update = true;
     }
     if (getInput("b")) {
         B = getInput("b");
-        setInput("b", INT_MAX);
+        //setInput("b", INT_MAX);
         Serial.print("B gate:");
         Serial.println(B);
         update = true;
@@ -42,5 +39,5 @@ int IsEqual::onExecute() {
         Serial.print("IsEqual output ");
         Serial.println(value);
     }
-    return 0;
+    return ret;
 }

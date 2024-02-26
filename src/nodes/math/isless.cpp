@@ -9,20 +9,17 @@ void IsLess::setup() {
     desc = "Is less";
     name = "math/isless";
 
-
-    addInput("a");
-    addInput("b");
-    addOutput("v");
     value = 1;
     state = 0;
 }
 
-int IsLess::onExecute() {
+vector<string> IsLess::run() {
+    vector<string> ret;
     bool update = false;
     output = 0;
     if (getInput("a")) {
         A = getInput("a");
-        setInput("a", INT_MAX);
+        //setInput("a", INT_MAX);
         Serial.print("A gate:");
         Serial.println(A);
         update = true;
@@ -30,7 +27,7 @@ int IsLess::onExecute() {
     
     if (getInput("b")) {
         B = getInput("b");
-        setInput("b", INT_MAX);
+        //setInput("b", INT_MAX);
         output = value;
         Serial.print("B gate:");
         Serial.println(B);
@@ -43,5 +40,5 @@ int IsLess::onExecute() {
         setOutput("v", output);
         Serial.println("IsEqual output ");
     }
-    return 0;
+    return ret;
 }

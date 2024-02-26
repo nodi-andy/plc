@@ -8,7 +8,7 @@ import {ListItemButton, ListSubheader } from '@mui/material';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 //import GroupIcon from '@mui/icons-material/Group';
-// import SaveAsOutlinedIcon from '@mui/icons-material/SaveAsOutlined';
+import SaveAsOutlinedIcon from '@mui/icons-material/SaveAsOutlined';
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 
@@ -20,6 +20,22 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
     }
 
     setOpenDrawer( open );
+  };
+
+  const downloadFirmware = () => {
+    // Create a new anchor element dynamically
+    const element = document.createElement('a');
+    
+    // Set the href to the file location; adjust the path as necessary
+    element.href = '/noditron.bin';
+    
+    // Set the download attribute to the desired file name
+    element.download = 'noditron.bin';
+    
+    // Append the anchor to the body, click it, and then remove it to start the download
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   const cleanNodework = () => {
@@ -114,14 +130,14 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
             <ListItemText primary={'Serial Port'} />
           </ListItemButton>
         </ListItem>
-        {/*
-        <ListItem key='myrepairs3' disablePadding>
-          <ListItemButton onClick={showSaveAsFiles}>
+        {
+        <ListItem key='download_fw' disablePadding>
+          <ListItemButton onClick={downloadFirmware}>
             <ListItemIcon><SaveAsOutlinedIcon /></ListItemIcon>
-            <ListItemText primary={'Save As'} />
+            <ListItemText primary={'Download Firmware'} />
           </ListItemButton>
         </ListItem>
-      
+      /*
         <ListSubheader>IoT</ListSubheader>
         <ListItem key='myoffers' disablePadding>
           <ListItemButton onClick={showConnection}>

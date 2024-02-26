@@ -25,7 +25,7 @@ export default class NodeWork {
       addExistingNode : null,
       rotateNode : this.rotateNode,
       nodePicked : null,
-      updateNode : null,
+      updateNode : this.updateNode,
       updatePos : null,
       createNode : this.createNode,
       updateInputs : this.updateInputs,
@@ -195,38 +195,10 @@ export default class NodeWork {
     this.starttime = 0;
   }
 
-  /**
-   * Returns the amount of time the graph has been running in milliseconds
-   * @method getTime
-   * @return {number} number of milliseconds the graph has been running
-   */
-  getTime() {
-    return this.globaltime;
-  }
-
-  /**
-   * Returns the amount of time it took to compute the latest iteration. Take into account that this number could be not correct
-   * if the nodes are using graphical actions
-   * @method getElapsedTime
-   * @return {number} number of milliseconds it took the last cycle
-   */
-  getElapsedTime() {
-    return this.elapsed_time;
-  }
-
 
   addExistingNode(msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
-
-    if (typeof window !== "undefined" && msg.done == true) {
-      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
-    } else if (typeof window !== "undefined" && msg.done == undefined) {
-      window.sendToNodework("addExistingNode", msg);
-    } else {
-      this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
-      msg.done = true;
-      global.io.emit("addExistingNode", msg);
-    }
+    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
   }
 
   moveNodeOnGrid(msg) {
@@ -252,9 +224,13 @@ export default class NodeWork {
   }
 
   updateNode(msg) {
-    Object.keys(msg.properties).forEach((key) => {
-      Node.updateProp(this.nodes[msg.nodeID], msg.prop, key, msg.properties[key]);
-    })
+    if (typeof msg.properties == "object") {
+      Object.keys(msg.properties).forEach((key) => {
+        Node.updateProp(this.nodes[msg.nodeID], msg.prop, key, msg.properties[key]);
+      })
+    } else {
+      Node.updateProp(this.nodes[msg.nodeID], msg.prop, "value", msg.properties);
+    }
   }
 
   updateInputs(msg) {
@@ -341,7 +317,7 @@ export default class NodeWork {
     return false;
   }
 
-  runStep() {
+  run() {
     try {
       let order = this.orders.shift();
       if (order) {

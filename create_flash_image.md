@@ -1,1 +1,0 @@
-esptool.py --chip esp32 --port COMx read_flash 0x00000 0x400000 flash_content.bin

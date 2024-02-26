@@ -6,6 +6,8 @@ With Conucon PLC, you can create complex IoT projects with ease. The platform is
 
 ## Installation
 To get started with Conucon PLC, follow these steps:
+Download esptools: https://github.com/espressif/esptool/releases/download/v4.7.0/esptool-v4.7.0-win64.zip
+
 1. Download 3 binary files from [/bins](https://github.com/nodi-andy/plc/tree/master/bins). Those are partitions.bin, firmware.bin and littlefs.bin
 1. Go to the Adafruits online ESPTools: https://adafruit.github.io/Adafruit_WebSerial_ESPTool/
 1. Click on "Choose a file.." and select partitions.bin. Do not change the Offset

@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 // Inc/dec/reset an integer
 class Router : public Node
@@ -15,7 +15,7 @@ class Router : public Node
     }
 
     void setup();
-    int onExecute();
+    vector<string> run();
 };
 
 static bool routerRegistered = []() {

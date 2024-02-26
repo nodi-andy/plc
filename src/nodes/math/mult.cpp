@@ -25,7 +25,8 @@ void MathMult::setup() {
     value = 1;
 }
 
-int MathMult::onExecute() {
+vector<string> MathMult::run() {
+    vector<string> ret;
     bool update = false;
     /*for (auto& input : inputs) {
       if (input.second) {
@@ -47,5 +48,5 @@ int MathMult::onExecute() {
         Serial.print("Mult output: ");
         Serial.println(value);
     }
-    return 0;
+    return ret;
 }

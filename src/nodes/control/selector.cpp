@@ -21,7 +21,8 @@ void Selector::setup() {
 */
 }
 
-int Selector::onExecute() {
+vector<string> Selector::run() {
+    vector<string> ret;
     bool update = false;
     /*for (auto& input : inputs) {
       if (input.second) {
@@ -31,14 +32,14 @@ int Selector::onExecute() {
       input.second = nullptr;
     }*/
 
-    int inpSelect = vals["SelIn"][0];
+    int inpSelect = getValue("SelIn");
     if (inpSelect && update) {
         std::string inpString;
         inpString.push_back(inpSelect + 96);
-        value = getProp(inpString, "inpValue");
+        value = getInput(inpString);
         setOutput("out", value);
         Serial.print("Select: ");
         Serial.print(inpString.c_str());
     }
-    return 0;
+    return ret;
 }

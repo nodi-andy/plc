@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 // Inc/dec/reset an nteger
 class Operation : public Node
@@ -14,7 +14,7 @@ class Operation : public Node
         return new Operation(*this); // Create a new instance of the MathOp object
     }
     void setup();
-    int onExecute();
+    vector<string> run();
 
     private:
     std::string myVariant;

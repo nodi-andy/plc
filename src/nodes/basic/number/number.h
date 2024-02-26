@@ -1,22 +1,18 @@
 #include <Arduino.h>
-#include "../../../map/node.h"
+#include "../../../nodework/node.h"
 
-
-//Toggle a bit
 class Number : public Node
 {
     public:
     Number();
     virtual std::string getType() const override {
-        return "data/number";
+        return "basic/number";
     }
     virtual Number* createInstance() const override {
         return new Number(*this); // Create a new instance of the Toggle object
     }
     void setup();
-    int onExecute();
-
-    bool isConst = false;
+    vector<string> run();
 };
 
 static bool NumberRegistered = []() {

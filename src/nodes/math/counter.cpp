@@ -11,7 +11,8 @@ void Counter::setup() {
     name = "events/counter";
 }
 
-int Counter::onExecute() {
+vector<string> Counter::run() {
+    vector<string> ret;
     bool update = false;
     if (getInput("inc") != INT_MAX) {
         setValue("value", getValue("value") + getInput("inc"));
@@ -19,7 +20,7 @@ int Counter::onExecute() {
 
         Serial.print("Increment: ");
         update = true;
-        setInput("inc", INT_MAX);
+        //setInput("inc", INT_MAX);
     }
 
     if (getInput("dec") != INT_MAX) {
@@ -28,17 +29,17 @@ int Counter::onExecute() {
 
         Serial.print("Decrement: ");
         update = true;
-        setInput("dec", INT_MAX);
+        //setInput("dec", INT_MAX);
     }
 
     if (getInput("set") != INT_MAX) {
         update = true;
         //Serial.print("Reset");
-        setInput("set", INT_MAX);
+        //setInput("set", INT_MAX);
     }
     
     if (update) {
         Serial.printf("counter value: %d", getValue("value"));
     }
-    return update;
+    return ret;
 }

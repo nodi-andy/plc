@@ -54,7 +54,7 @@ void Stepper::setup() {
     }
     */
 
-    My_timer = NULL;
+    //My_timer = NULL;
 
     // initialize the control pins for the A4988 driver
     pinMode(stepPort, OUTPUT);
@@ -63,17 +63,18 @@ void Stepper::setup() {
     pinMode(enablePort, OUTPUT);
     digitalWrite(enablePort, 0);
     digitalWrite(dirPort, 1);
-    
-    My_timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(My_timer, &Stepper::onTimer, true);
     speed = 2000;
     targetSpeed = speed;
     setSpeed(targetSpeed); // default speed, if only pos is controlled
+    /*
+    My_timer = timerBegin(0, 80, true);
+    timerAttachInterrupt(My_timer, &Stepper::onTimer, true);
     timerAlarmWrite(My_timer, speed, true);
-    timerAlarmEnable(My_timer);
+    timerAlarmEnable(My_timer);*/
 }
 
-int Stepper::onExecute() {
+vector<string> Stepper::run() {
+    vector<string> ret;
     bool update = false;
     //posGiven = 0;
     //speedGiven = 0;
@@ -85,7 +86,7 @@ int Stepper::onExecute() {
       Serial.print(targetPos);
       Serial.print("speed is: ");
       Serial.println(speed);
-      setInput("pos", INT_MAX);
+      //setInput("pos", INT_MAX);
     }
 
 
@@ -98,17 +99,17 @@ int Stepper::onExecute() {
       Serial.print(posGiven);
       Serial.print("  speedGiven: ");
       Serial.println(speedGiven);
-      setInput("speed", INT_MAX);
+      //setInput("speed", INT_MAX);
     }
 
     if (1 != getInput("reset") && getInput("reset") != INT_MAX) {
       Serial.println("Stepper.resetted ");
       pos = 0;
       targetPos = 0;
-      vals["reset"][0] = INT_MAX;
+      /*vals["reset"][0] = INT_MAX;
       vals["pos"][0] = INT_MAX;
-      vals["speed"][0] = INT_MAX;
-      setInput("reset", INT_MAX);
+      vals["speed"][0] = INT_MAX;*/
+      //setInput("reset", INT_MAX);
     }
 
     setOutput("pos", pos);
@@ -123,11 +124,11 @@ int Stepper::onExecute() {
         //Serial.println(speed);
     }
 
-    return 0;
+    return ret;
 }
 
 void Stepper::setSpeed(int newSpeed) {
-  if (!My_timer) return;
+  /*if (!My_timer) return;
   newSpeed = abs(newSpeed);
   if (newSpeed == speed) return;
   if (newSpeed == 0) {
@@ -147,7 +148,7 @@ void Stepper::setSpeed(int newSpeed) {
       timerAlarmWrite(My_timer, newSpeed, true);
     }
     speed = newSpeed;
-  }
+  }*/
 }
 
 void Stepper::onTimer() {

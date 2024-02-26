@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 // Inc/dec/reset an integer
 class Stepper : public Node
@@ -16,7 +16,7 @@ class Stepper : public Node
     }
 
     void setup();
-    int onExecute();
+    vector<string> run();
 
     private:
     int targetSpeed;
@@ -30,10 +30,10 @@ class Stepper : public Node
     static int pos;
     int lastPos;
     static int updatePos;
-    hw_timer_t *My_timer;
+    //hw_timer_t *My_timer;
     int posGiven = 0, speedGiven = 0;
 
-    static void IRAM_ATTR onTimer();
+    static void /*IRAM_ATTR*/ onTimer();
     void setSpeed(int newSpeed);
     int timerState = 0;
 };

@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 class Comparator : public Node
 {
@@ -14,7 +14,7 @@ class Comparator : public Node
     }
 
     void setup();
-    int onExecute();
+    vector<string> run();
 
 };
 

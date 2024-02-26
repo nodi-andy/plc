@@ -15,24 +15,21 @@ void Interval::setup() {
     ton = 500;
     toff = 500;
     Serial.print("[Interval] Setup");
-    addInput("ton");
-    addInput("toff");
-    addOutput("state");
     lastTick = micros();
 }
 
-int Interval::onExecute() {
+vector<string> Interval::run() {
   int now = micros();
 
   bool update = false;
   if (hasInput("ton")) {
       ton = getInput("ton");
-      setInput("ton", INT_MAX);
+      //setInput("ton", INT_MAX);
   }
 
   if (hasInput("toff")) {
       toff = getInput("toff");
-      setInput("toff", INT_MAX);
+      //setInput("toff", INT_MAX);
   }
 
   //Serial.printf("[Interval] state: %d,  diff: %d, ton %d\n", state, now - lastTick, ton * rtFactor);
@@ -56,5 +53,5 @@ int Interval::onExecute() {
     setOutput("state", value);
     //Serial.printf("Interval output: %d\n", value);
   }
-  return 0;
+  return {};
 }

@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../../../map/node.h"
+#include "../../../nodework/node.h"
 
 
 //Toggle a bit
@@ -17,7 +17,7 @@ class LED : public Node
 
     
     void setup();
-    int onExecute();
+    vector<string> run();
 };
 
 static bool toogleRegistered = []() {

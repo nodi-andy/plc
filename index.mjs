@@ -23,6 +23,7 @@ import "./public/nodes/basic/inserter.mjs";
 
 const app = express();
 const server = http.createServer(app);
+
 global.io = new socketIOServer(server, {
   cors: {
     origin: "*",
@@ -35,7 +36,7 @@ var settings = { ownerShip: false };
 
 setInterval(() => {
   if (nodeWorkJSON) {
-    nodeWorkJSON.runStep();
+    nodeWorkJSON.run();
   }
 }, 20);
 

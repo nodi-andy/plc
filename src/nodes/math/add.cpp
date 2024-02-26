@@ -25,7 +25,8 @@ void LogicAdd::setup() {
     value = 1;
 }
 
-int LogicAdd::onExecute() {
+vector<string> LogicAdd::run() {
+    vector<string> ret;
     bool update = false;
     value = 0;
     /*for (auto& input : inputs) {
@@ -47,5 +48,5 @@ int LogicAdd::onExecute() {
         setOutput("v", value);
         Serial.println("ADD gate output ");
     }
-    return 0;
+    return ret;
 }

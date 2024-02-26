@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 
 //Toggle a bit
@@ -14,7 +14,7 @@ class Bit : public Node
         return new Bit(*this); // Create a new instance of the Toggle object
     }
     void setup();
-    int onExecute();
+    vector<string> run();
 };
 
 static bool bitRegistered = []() {

@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 // Inc/dec/reset an integer
 class Counter : public Node
@@ -15,7 +15,7 @@ class Counter : public Node
     }
 
     void setup();
-    int onExecute();
+    vector<string> run();
 
     private:
     int lastIncInput;

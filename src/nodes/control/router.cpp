@@ -42,22 +42,23 @@ void Router::setup() {
 
 }
 
-int Router::onExecute() {
+vector<string> Router::run() {
+    vector<string> ret;
+
     bool update = false;
 
     if (getInput("in") != INT_MAX) {
         Serial.print("Router c: ");
         Serial.print(getInput("in"));
         Serial.print(" : ");
-        Serial.println(getProp("pass", "value"));
+        Serial.println(getValue("pass"));
 
-        if (getInput("in") == getProp("pass", "value")) {
+        if (getInput("in") == getValue("pass")) {
             value = getInput("in");
             setOutput("out", value);
             Serial.print("Router: output ");
             Serial.println(value);
         }
-        setInput("in", INT_MAX);
     }
-    return 0;
+    return ret;
 }

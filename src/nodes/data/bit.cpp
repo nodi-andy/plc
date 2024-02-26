@@ -8,47 +8,35 @@ void Bit::setup() {
     title = "Bit";
     name = "Toggle";
     desc = "Show value of input";
-
-    /*if (props["properties"].containsKey("port")) {
-      port = props["properties"]["port"].as<int>();
-      if (port >= 0) pinMode(port, OUTPUT);
-    }
-    if (props["properties"].containsKey("value")) {
-      value = props["properties"]["value"].as<int>();
-    }
-    addInput("set");
-    addInput("clear");
-    addInput("toggle");
-    addOutput("v");*/
 }
 
-int Bit::onExecute() {
-    int ret = 0;
+vector<string> Bit::run() {
+    vector<string> ret;
     int inputSet = getInput("set");
     if (inputSet != INT_MAX) {
         newvalue = 1;
-        setInput("set", INT_MAX);
+        //setInput("set", INT_MAX);
     }
 
     int inputClear = getInput("clear");
     if (inputClear != INT_MAX) {
         newvalue = 0;
-        setInput("clear", INT_MAX);
+        //setInput("clear", INT_MAX);
     }
 
     int inputToggle = getInput("toggle");
     if (inputToggle != INT_MAX) {
         newvalue = !value;
-        setInput("toggle", INT_MAX);
+        //setInput("toggle", INT_MAX);
     }
     
     if (port) {
       digitalWrite(port, value ? HIGH : LOW);
     }
-    ret = (value != newvalue);
+    //ret = (value != newvalue);
     value = newvalue;
-    if (ret) {
+    /*if (ret) {
         setOutput("v", value);
-    }
-    return 0;
+    }*/
+    return ret;
 }

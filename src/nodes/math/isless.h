@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../../map/node.h"
+#include "../../nodework/node.h"
 
 // Inc/dec/reset an integer
 class IsLess : public Node
@@ -17,7 +17,7 @@ class IsLess : public Node
     }
 
     void setup();
-    int onExecute();
+    vector<string> run();
 
     private:
     int value;

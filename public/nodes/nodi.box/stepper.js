@@ -39,7 +39,7 @@ export default class Stepper extends Node{
         } */
     }
 
-    onExecute() {
+    run() {
         this.setOutputData(1, this.num);
     }
 }

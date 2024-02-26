@@ -14,7 +14,7 @@ export default class WidgetLed extends Node {
         Node.setProperty(props, "toggle");
         Node.setProperty(props, "in");
         Node.setProperty(props, "label");
-        Node.setProperty(props, "port");
+        Node.setProperty(props, "port", {value: 2});
         Node.setProperty(props, "color", {value: "FF3333"});
     }
 

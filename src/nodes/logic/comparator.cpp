@@ -8,14 +8,11 @@ void Comparator::setup() {
     title = "IsEq";
     desc = "Read input";
     name = "logic/and";
-
-    addInput("a");
-    addInput("b");
-    addOutput("v");
 }
 
-int Comparator::onExecute() {
+vector<string> Comparator::run() {
+    vector<string> ret;
     value = (getInput("A") == getInput("B"));
     this->setOutput(0, value);
-    return 0;
+    return ret;
 }

@@ -15,7 +15,7 @@ class Filter extends Node{
         this.type = Filter.type;
     }
 
-    onExecute(update) {
+    run(update) {
         if (update && this.properties.in.inpValue == this.properties.pass.value) {
             this.properties.out.outValue = this.properties.in.inpValue;
             this.properties.in.inpValue = null;

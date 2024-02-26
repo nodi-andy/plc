@@ -17,19 +17,18 @@ void Toggle::setup() {
       value = props["properties"]["value"].as<int>();
     }*/
     state = newstate = value;
-    addInput("a");
 }
 
-int Toggle::onExecute() {
-    int ret = 0;
+vector<string> Toggle::run() {
+    vector<string> ret;
     int newstate = getInput("a");
 
     digitalWrite(port, newstate);
-    ret = (newstate != state);
-    if (ret) {
+    //ret = (newstate != state);
+    /*if (ret) {
       Serial.print("Toggle: ");
       Serial.println(newstate);
-    }
+    }*/
     state = newstate;
     return ret;
 }

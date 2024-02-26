@@ -23,7 +23,8 @@ void Operation::setup() {
     addOutput("result");*/
 }
 
-int Operation::onExecute() {
+vector<string> Operation::run() {
+    vector<string> ret;
     value = 0;
     int inpA = getInput("A");
     int inpB = getInput("B");
@@ -63,5 +64,5 @@ int Operation::onExecute() {
         value = std::min(inpA, inpB);
     }
     setOutput(0, value);
-    return 0;
+    return ret;
 }

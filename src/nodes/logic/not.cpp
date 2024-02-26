@@ -8,18 +8,16 @@ void LogicNot::setup() {
     title = "LogicNot";
     desc = "Read input";
     name = "logic/or";
-
-    addInput("a");
-    addOutput("v");
 }
 
-int LogicNot::onExecute() {
+vector<string> LogicNot::run() {
+    vector<string> ret;
     bool update = false;
     output = 0;
     int inpA = getInput("a");
     if (inpA != INT_MAX) {
         value = !(inpA);
-        setInput("a", INT_MAX);
+        //setInput("a", INT_MAX);
         Serial.print("A gate:");
         Serial.println(value);
         update = true;
@@ -30,5 +28,5 @@ int LogicNot::onExecute() {
         setOutput("v", output);
         Serial.println("NOT gate output ");
     }
-    return 0;
+    return ret;
 }

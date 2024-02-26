@@ -8,10 +8,10 @@ void IsGreater::setup() {
     title = "is less";
     desc = "Is less";
     name = "math/isgreater";
-    setupVals();
 }
 
-int IsGreater::onExecute() {
+vector<string> IsGreater::run() {
+    vector<string> ret;
     bool update = false;
     output = NULL;
     if (getInput("in1") != INT_MAX) {
@@ -19,7 +19,7 @@ int IsGreater::onExecute() {
         Serial.print("A gate:");
         Serial.println(A);
         update = true;
-        setInput("in1", INT_MAX);
+        //setInput("in1", INT_MAX);
     }
 
     if (getInput("in2") != INT_MAX) {
@@ -27,13 +27,13 @@ int IsGreater::onExecute() {
         Serial.print("B gate:");
         Serial.println(B);
         update = true;
-        setInput("in1", INT_MAX);
+        //setInput("in1", INT_MAX);
     }
  
     if (update) {
-        vals["value"][1] = (A > B);
-        setOutput("v", vals["value"][1]);
+        //vals["value"][1] = (A > B);
+        //setOutput("v", vals["value"][1]);
         Serial.println("IsEqual output ");
     }
-    return 0;
+    return ret;
 }

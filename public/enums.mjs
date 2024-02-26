@@ -22,11 +22,6 @@ export const NodiEnums = {
 
   DEFAULT_POSITION: [32, 32], //default node position
 
-  //enums
-  INPUT: 1,
-  OUTPUT: 2,
-  EVENT: -1, //for outputs
-
   UP: 1,
   DOWN: 2,
   LEFT: 3,
