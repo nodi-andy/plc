@@ -16,12 +16,10 @@ class Interval : public Node
     vector<string> run();
 
     private:
-    int defaultPressed;
-    int defaultReleased;
+    int state;
+    int value;
     int ton;
     int toff;
-    int *input;
-    int *output;
     int lastTick;
     const int rtFactor = 1000;
 };

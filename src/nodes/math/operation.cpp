@@ -8,7 +8,6 @@ Operation::Operation() {
 void Operation::setup() {
     Serial.println("Setup Math/Operation");
     title = "Math Operation";
-    desc = "Read input";
 
     /*if (props["properties"].containsKey("A")) {
       defaultA = props["properties"]["A"].as<int>();
@@ -25,7 +24,6 @@ void Operation::setup() {
 
 vector<string> Operation::run() {
     vector<string> ret;
-    value = 0;
     int inpA = getInput("A");
     int inpB = getInput("B");
 

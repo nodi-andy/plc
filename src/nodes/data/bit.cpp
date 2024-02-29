@@ -7,7 +7,6 @@ Bit::Bit() {
 void Bit::setup() {
     title = "Bit";
     name = "Toggle";
-    desc = "Show value of input";
 }
 
 vector<string> Bit::run() {

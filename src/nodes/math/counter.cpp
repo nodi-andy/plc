@@ -7,7 +7,6 @@ Counter::Counter() {
 // init the node
 void Counter::setup() {
     title = "Counter";
-    desc = "Read input";
     name = "events/counter";
 }
 

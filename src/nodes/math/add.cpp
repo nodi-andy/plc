@@ -6,7 +6,6 @@ LogicAdd::LogicAdd() {
 // init the node
 void LogicAdd::setup() {
     title = "LogicAdd";
-    desc = "Read input";
     name = "logic/add";
 
     //Serial.print(" Add inputs:");

@@ -10,7 +10,6 @@ Stepper::~Stepper() {
 // init the node
 void Stepper::setup() {
     title = "Stepper";
-    desc = "Read input";
     name = "nodi.box/stepper";
     stepPort = 27;
     dirPort = 14;

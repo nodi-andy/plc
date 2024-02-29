@@ -1,15 +1,15 @@
 #include "nodework/nodework.h"
 #include <Arduino.h>
 #include <Preferences.h>
-
+#include <SPIFFS.h> 
+#include <FS.h>
 //#define CONFIG_LITTLEFS_SPIFFS_COMPAT 1
-//#include <FS.h>
+
 //#define SPIFFS LITTLEFS
 //#include <LITTLEFS.h> 
-//#include <SPIFFS.h> 
 
 #define MAX_MESSAGE_SIZE 8192
-#define defaultFileName  "/map.json"
+uint8_t mapFile[1024];
 unsigned long messageTimestamp = 0;
 
 // TaskHandle_t noditronTaskHandle;
@@ -17,7 +17,7 @@ Map nodemap;
 Preferences preferences;
 //JsonObject root;
 
-/*
+
 void loadNoditronFile() {
     if (SPIFFS.exists(defaultFileName)) {
         Serial.println("Default File found");
@@ -26,25 +26,25 @@ void loadNoditronFile() {
             Serial.println("There was an error opening the file for reading");
         } else {
             file.read((uint8_t *)mapFile, file.size());  
-            mapFile[file.size()] = 0;
-            Serial.printf("[Load Nodework] DONE: %d\r\n", file.size());
+            //mapFile[(uint8_t)file.size()] = 0;
             file.close();
-            nodemap.cmd("[\"upload\", {}]");
+            string nodeWorkJson = "[\"upload\", ";
+            nodeWorkJson += (char*)mapFile;
+            nodeWorkJson += "]";
+            Serial.printf("[loadNoditronFile] : %s\r\n", nodeWorkJson);
+
+            nodemap.cmd(nodeWorkJson);
         }	
     } else {
         Serial.println("Default File not found");
     }
 }
 
-*/
-/*
 void initSPIFFS() {
   if (!SPIFFS.begin(true)) {
     Serial.println("Cannot mount SPIFFS volume...");
   }
 }
-*/
-
 
 void noditronTask( void * pvParameters ) {
   Serial.print("noditron task is running on core: ");
@@ -54,46 +54,8 @@ void noditronTask( void * pvParameters ) {
     //nodemap.run();
     //Serial.println(nodemap.state);
     /*
-    if (eventName == "upload") {
-            clear();
-
-            //    jsonData.getBytes(mapFile, jsonData.length() + 1);
-            //    file = SPIFFS.open(defaultFileName.c_str(), FILE_WRITE);
-            //    file.write(mapFile, jsonData.length()+1);
-            //    file.close();
-            //    loadNoditronFile();
-
-            //memcpy(wsInput, mapFile, strlen((char *)mapFile));
-
-            char mapFileStr[sizeof(mapFile) + 1];  // +1 for the null terminator
-            memcpy(mapFileStr, mapFile, sizeof(mapFile));
-            mapFileStr[sizeof(mapFile)] = '\0';  // Null-terminate the string
-
-            SERIAL.printf("[Event::upload] mapFile: %s\n", mapFileStr);
-
-            deserializeJson(djsondoc, mapFile);
-            JsonObject root = djsondoc.as<JsonObject>();
-
-            JsonArray nodes = root["nodes"];
-            for (JsonVariant kv : nodes) {
-                JsonObject node = kv.as<JsonObject>();
-                addNode(node);
-            }
-
-            report();
-        } else
-    if (eventName == "save") {
-            String mapJSON = toJSON().as<String>();
-
-            File file = SPIFFS.open(defaultFileName, FILE_WRITE);
-            int size = file.print(mapJSON);
-
-            if (size != mapJSON.length()) {
-                SERIAL.println("Error writing to file");
-            }
-            file.close();
-            SERIAL.printf("[Event:save] %d: %d,  %s\n", size, mapJSON.length(), mapJSON.c_str());
-        }
+  else
+    
     if (eventName == "listWiFi") {
             int n = WiFi.scanNetworks();
             Serial.println("scan done");
@@ -168,7 +130,7 @@ void setup() {
     Serial.println("noditron:loaded");
 
     //preferences.begin("noditron", false); 
-    //initSPIFFS();
+    initSPIFFS();
     /*
     #ifdef WIFI_ENABLED
         initWiFi();
@@ -188,7 +150,7 @@ void setup() {
     //xTaskCreate(noditronTask, "noditron task", 20000, NULL, 10, &noditronTaskHandle);
     delay(100);
 
-    //loadNoditronFile();
+    loadNoditronFile();
     
     // server address, port and URL
     //socketIO.begin("192.168.1.22", 8080, "/socket.io/?EIO=4");

@@ -14,11 +14,10 @@ class NodiEnums
 public:
     enum Direction
     {
+        RIGHT = 0,
         UP = 1,
-        DOWN = 2,
-        LEFT = 3,
-        RIGHT = 4,
-        CENTER = 5
+        LEFT = 2,
+        DOWN = 3,
     };
 
     struct Vector2

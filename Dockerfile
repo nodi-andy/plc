@@ -11,4 +11,4 @@ RUN npm ci --omit=dev
 # Bundle app source
 COPY . .
 EXPOSE 8080
-CMD [ "node", "index.js" ]
+CMD [ "node", "server.mjs" ]

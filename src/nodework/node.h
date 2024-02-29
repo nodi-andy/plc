@@ -25,43 +25,39 @@ class Node
         string type;
         string name;
         string title;
-        string desc;
+        string defaultInput = "value", defaultOutput = "value";
         int id;
-        int port = -1;
-        int value = 0;
-        int newvalue = 0;
-        int state = 0;
-        int newstate = 0;
         int pos[2];
         int size[2];
         virtual void setup();
         virtual vector<string> run();
 
-        void setupVals();
+        // INPUT
         unordered_map<string, std::map<int, tuple<int, bool>>> inputs;
-        unordered_map<string, int> vals;
-        unordered_map<string, tuple<int, bool>> outputs;
-        unordered_map<string, string> props;
-
         int  hasInput(string name);
         int  getInput(string name, int who = -1);
         void setInput(string inputName, int who, int val);
         void clearInput(string name = "");
         void clearInputsByNodeID(int nodeID);
 
+        // VALUES
+        void setupVals();
+        unordered_map<string, int> vals;
+        unordered_map<string, string> strVals;
         int  getValue(string name);
+        string getStrValue(string name);
         void setValue(string name, int val);
+        void setValue(string name, string val);
+        void setValues(JsonObject props);
 
+        // OUTPUT
+        unordered_map<string, tuple<int, bool>> outputs;
         int  hasOutput(string name);
         int  getOutput(string name);
         void setOutput(string name, int val);
         void clearOutput(string name);
 
-
-        void setProps(JsonObject props);
-        JsonObject getProps();
 };
-
 
 class RegistryManager {
     public:

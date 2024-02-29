@@ -16,6 +16,7 @@ class Toggle : public Node
     }
     void setup();
     vector<string> run();
+    int state;
 };
 
 static bool toogleRegistered = []() {

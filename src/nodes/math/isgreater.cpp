@@ -6,7 +6,6 @@ IsGreater::IsGreater() {
 // init the node
 void IsGreater::setup() {
     title = "is less";
-    desc = "Is less";
     name = "math/isgreater";
 }
 

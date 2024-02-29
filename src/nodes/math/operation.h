@@ -18,6 +18,7 @@ class Operation : public Node
 
     private:
     std::string myVariant;
+    int value;
     int defaultA;
     int defaultB;
 };

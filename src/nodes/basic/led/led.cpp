@@ -4,19 +4,6 @@ LED::LED() {
 }
 
 void LED::setup() {
-    title = "LED";
-    name = "LED";
-    desc = "Show value of input";
-
-    port = getValue("port");
-
-    if (port >= 0) {
-      pinMode(getValue("port"), OUTPUT);
-      digitalWrite(getValue("port"), getValue("state"));
-      clearInput("state");
-      clearInput("port");
-      Serial.printf("[LED:setup] : %d\n", getValue("port"));
-    }
 }
 
 vector<string> LED::run() {
@@ -31,12 +18,14 @@ vector<string> LED::run() {
   if (hasInput("value")) {
     setValue("value", getInput("value"));
     setOutput("value", getInput("value"));
-    clearInput("value");
 
-    if (getValue("port")) digitalWrite(getValue("port"), getValue("value"));
     Serial.printf("LED value: %d\n", getValue("value"));
+    if (getValue("port")) digitalWrite(getValue("port"), getValue("value"));
+    clearInput("value");
     ret.push_back("value");
   }
+  if (getValue("port") > -1) pinMode(getValue("port"), OUTPUT);
+
 
   if (hasInput("toggle")) {
     int nextValue = getValue("value") == 1 ? 0 : 1;

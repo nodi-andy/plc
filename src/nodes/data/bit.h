@@ -15,6 +15,9 @@ class Bit : public Node
     }
     void setup();
     vector<string> run();
+    int newvalue;
+    int value;
+    int port;
 };
 
 static bool bitRegistered = []() {

@@ -2,13 +2,13 @@ import { NodiEnums } from "./enums.mjs";
 import Node from "./node.mjs";
 import Vector2 from "./vector2.mjs";
 
-export default class NodeWork {
+export default class NodeWork extends Node {
   static debug = false;
   static registered_node_types = {}; //nodetypes by string
   static Nodes = {}; //node types by classname
 
-
   constructor(o) {
+    super();
     if (NodeWork.debug) console.log("Graph created");
     this.clear();
     if (o) this.setNodework(o);
@@ -44,12 +44,6 @@ export default class NodeWork {
     }
     return arr.length; // If no null item is found
   }
-  /**
-   * Register a node class so it can be listed when the user wants to create a new one
-   * @method registerNodeType
-   * @param {String} type name of the node and path
-   * @param {Class} base_class class containing the structure of a node
-   */
 
   static registerNodeType(base_class) {
     if (!base_class.prototype) {
@@ -100,24 +94,11 @@ export default class NodeWork {
     }
   }
 
-  /**
-   * removes a node type from the system
-   * @method unregisterNodeType
-   * @param {String|Object} type name of the node or the node constructor itself
-   */
   static unregisterNodeType(type) {
     var base_class = type.constructor === String ? this.registered_node_types[type] : type;
     if (!base_class) throw "node type not found: " + type;
     delete this.registered_node_types[base_class.type];
     if (base_class.constructor.name) delete this.Nodes[base_class.constructor.name];
-  }
-
-  /**
-   * Removes all previously registered node's types
-   */
-  static clearRegisteredTypes() {
-    this.registered_node_types = {};
-    this.Nodes = {};
   }
 
   cmd(msg) {
@@ -152,40 +133,16 @@ export default class NodeWork {
     this.publish("rotateNode", msg);
   }
 
-  /**
-   * Returns a registered node type with a given name
-   * @method getNodeType
-   * @param {String} type full name of the node class. p.e. "math/sin"
-   * @return {Class} the node class
-   */
   static getNodeType(type) {
     return this.registered_node_types[type];
   }
 
-  //separated just to improve if it doesn't work
-  static cloneObject(obj, target) {
-    if (obj == null) {
-      return null;
-    }
-    var r = JSON.parse(JSON.stringify(obj));
-    if (!target) {
-      return r;
-    }
-
-    for (var i in r) {
-      target[i] = r[i];
-    }
-    return target;
-  }
-
   /**
-   * Removes all nodes from this graph
-   * @method clear
+   * Removes all child nodes
    */
   clear() {
     this.nodes = [];
     this.nodesByPos = {};
-    this.cleanUpOutputs = [];
 
     //timing
     this.globaltime = 0;
@@ -194,7 +151,6 @@ export default class NodeWork {
     this.last_update_time = 0;
     this.starttime = 0;
   }
-
 
   addExistingNode(msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
@@ -239,11 +195,6 @@ export default class NodeWork {
     })
   }
   
-  /**
-   * Returns a node by its id.
-   * @method getNodeById
-   * @param {Number} id
-   */
   getNodeById(id) {
     if (id == null) return null;
     return this.nodes[id];
@@ -302,12 +253,6 @@ export default class NodeWork {
     return data;
   }
 
-  /**
-   * Configure a graph from a JSON string
-   * @method configure
-   * @param {String} str configure a graph from a JSON string
-   * @param {Boolean} returns if there was any error parsing
-   */
   setNodework(data) {
     if (!data) return;
 
@@ -361,24 +306,14 @@ export default class NodeWork {
           if (this.socketOut && results?.length) {
             //console.log(c)
             results.forEach((propName) => {
-                  this.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
-              });
+                this.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
+            });
           }
         }
       });
 
-      this.cleanUpOutputs.forEach((cleanUp) => {
-        let node = this.nodes[cleanUp[0]];
-        if (!node) return;
-        let prop = node.properties[cleanUp[1]];
-        if (!prop) return;
-        prop.outValue = null;
-        this.cleanUpOutputs = [];
-      });
     } catch (e) {
       console.log(e);
     }
   }
-
-  
 }

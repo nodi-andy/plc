@@ -6,11 +6,9 @@ IsLess::IsLess() {
 // init the node
 void IsLess::setup() {
     title = "is less";
-    desc = "Is less";
     name = "math/isless";
 
     value = 1;
-    state = 0;
 }
 
 vector<string> IsLess::run() {

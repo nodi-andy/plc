@@ -54,7 +54,6 @@ Object.mergeObjects = (objA, objB) => {
 };
 
 io.on("connection", (socket) => {
-
   Object.keys(nodeWorkJSON.events).forEach((event) => {
     socket.on(event, (message) => {
       if (nodeWorkJSON[event]) nodeWorkJSON[event](message, socket);
@@ -140,5 +139,6 @@ io.on("connection", (socket) => {
   io.to(socket.id).emit("setSettings", settings);
   console.log("[newClient] ", socket.id);
 });
+
 app.use(express.static("data"));
 server.listen(8080);

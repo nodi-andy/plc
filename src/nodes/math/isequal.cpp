@@ -6,13 +6,11 @@ IsEqual::IsEqual() {
 // init the node
 void IsEqual::setup() {
     title = "IsEqual";
-    desc = "Is Equal";
     name = "math/isequal";
 
     A = getValue("a");
     B = getValue("b");
     value = 1;
-    state = 0;
 }
 
 vector<string> IsEqual::run() {

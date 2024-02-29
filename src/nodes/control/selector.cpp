@@ -7,7 +7,6 @@ Selector::Selector() {
 // init the node
 void Selector::setup() {
     title = "Selector";
-    desc = "Read input";
     name = "control/selector";
 
 /*
@@ -36,8 +35,8 @@ vector<string> Selector::run() {
     if (inpSelect && update) {
         std::string inpString;
         inpString.push_back(inpSelect + 96);
-        value = getInput(inpString);
-        setOutput("out", value);
+        //value = getInput(inpString);
+        //setOutput("out", value);
         Serial.print("Select: ");
         Serial.print(inpString.c_str());
     }

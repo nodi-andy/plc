@@ -7,7 +7,6 @@ Number::Number() {
 void Number::setup() {
     title = "Number";
     name = "Toggle";
-    desc = "Show value of input";
 
     // Iterate through the properties object
     /*for (JsonPair property : props["properties"].as<JsonObject>()) {
@@ -43,26 +42,23 @@ void Number::setup() {
       value = props["properties"]["value"]["value"].as<int>();
     }*/
 
-    newvalue = value;
+    //newvalue = value;
 }
 
 vector<string> Number::run() {
     vector<string> ret;
     bool update = false;
     if (getInput("set")) {
-        newvalue = getInput("set");
+        setValue("value", getInput("set"));
         update = true;
+        ret.push_back("value");
+        Serial.print("Number changed: ");
+        Serial.println(getValue("value"));
     }
+
     if (getInput("read")) {
         update = true;
     }
 
-    //ret = (value != newvalue);
-    value = newvalue;
-    if (update) {
-        Serial.print("Number changed: ");
-        Serial.println(value);
-        setOutput("get", value);
-    }
     return ret;
 }

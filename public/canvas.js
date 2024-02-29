@@ -547,24 +547,12 @@ export default class LGraphCanvas {
       } //end
 
       //send event to node if capturing input (used with widgets that allow drag outside of the area of the node)
-      if (this.node_capturing_input && this.node_capturing_input != node && this.node_capturing_input.onMouseMove) {
+      if (this.node_capturing_input && this.node_capturing_input.onMouseMove) {
         this.node_capturing_input.onMouseMove(
           e,
           [e.canvasX - this.node_capturing_input.pos[0], e.canvasY - this.node_capturing_input.pos[1]],
           this
         );
-      }
-
-      if (this.resizing_node) {
-        //convert mouse to node space
-        var desired_size = [e.canvasX - this.resizing_node.pos[0], e.canvasY - this.resizing_node.pos[1]];
-        var min_size = Node.computeSize(this.resizing_node);
-        desired_size[0] = Math.max(min_size[0], desired_size[0]);
-        desired_size[1] = Math.max(min_size[1], desired_size[1]);
-        Node.setSize(this.resizing_node, desired_size);
-
-        this.canvas.style.cursor = "se-resize";
-        this.dirty_bgcanvas = true;
       }
     }
     this.last_mouse_down[0] = e.clientX;

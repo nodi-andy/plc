@@ -11,7 +11,7 @@ class Inserter extends Node {
     static setup(node) {
         node.fromNode = null;
         node.toNode = null;
-        node.direction = 0;
+        node.direction = NodiEnums.RIGHT;
         let props = node.properties;
         Node.setProperty(props, "from");
         Node.setProperty(props, "to",);
@@ -43,7 +43,6 @@ class Inserter extends Node {
         let out = node.fromNode?.properties[props.from.value]?.outValue;
         if ( props.from.value && out != null) {
             props.value.value = out;
-            nodework.cleanUpOutputs.push([node.fromNode.nodeID, node.properties.from.value]);
         }
         return ret;
     }

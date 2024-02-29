@@ -19,17 +19,22 @@ int Node::getInput(string name, int who)
 {
     if (who < 0)
     {
-        return std::get<1>(inputs[name].begin()->second);
+        return std::get<0>(inputs[name].begin()->second);
     }
     else
     {
-        return std::get<1>(inputs[name][who]);
+        return std::get<0>(inputs[name][who]);
     }
 };
 
 int Node::getValue(string name)
 {
     return vals[name];
+};
+
+string Node::getStrValue(string name)
+{
+    return strVals[name];
 };
 
 void Node::clearInputsByNodeID(int nodeID){
@@ -62,24 +67,34 @@ void Node::setValue(string name, int val)
     vals[name] = val;
 };
 
+void Node::setValue(string name, string val)
+{
+    strVals[name] = val;
+};
+
 void Node::setOutput(string name, int val)
 {
-    get<0>(outputs[name]) = val;
+    outputs[name] = make_pair(val, true);
 };
 
 int Node::hasOutput(string name)
 {
-    return get<1>(outputs[name]);
+    if(outputs.count(name))
+      return get<1>(outputs[name]);
+    else
+      return 0;
 };
+
 void Node::clearOutput(string name){
     get<1>(outputs[name]) = false;
 }
+
 int Node::getOutput(string name)
 {
     return get<0>(outputs[name]);
 };
 
-void Node::setProps(JsonObject newProps)
+void Node::setValues(JsonObject newProps)
 {
     //jsonString.clear();
     //serializeJson(newProps, jsonString);
@@ -94,26 +109,17 @@ void Node::setProps(JsonObject newProps)
         Serial.print("Adding property: ");
         Serial.println(propertyName);
         // addProp(propertyName);
-        setValue(propertyName, property.value()["value"]);
+        if (property.value()["value"].is<int>()) {
+          int v = property.value()["value"].as<int>();
+          setValue(propertyName, v);
+        } else {
+          string v = property.value()["value"].as<string>();
+          setValue(propertyName, v);
+        }
     }
 }
 
-JsonObject Node::getProps()
-{
-    // Estimate the size needed for the JSON document.
-    // This depends on the content and size of your properties.
-    const size_t capacity = JSON_OBJECT_SIZE(vals.size()) + vals.size() * 10; // Adjust the multiplier as needed.
-    DynamicJsonDocument doc(capacity);
 
-    // Iterate over the unordered_map and add each property to the JsonObject.
-    for (const auto& val : vals)
-    {
-        // Use val.first as the key, and the result of getValue(val.first) as the value.
-        doc[val.first] = getValue(val.first);
-    }
-
-    return doc.as<JsonObject>();
-}
 
 void Node::setup()
 {

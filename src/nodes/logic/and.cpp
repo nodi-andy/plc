@@ -8,7 +8,6 @@ LogicAnd::LogicAnd()
 void LogicAnd::setup()
 {
   title = "LogicAnd";
-  desc = "Read input";
   name = "logic/and";
 
   // Serial.print(" And inputs:");

@@ -6,7 +6,6 @@ MathMult::MathMult() {
 // init the node
 void MathMult::setup() {
     title = "MathMult";
-    desc = "Read input";
     name = "math/mult";
 
     //Serial.print(" Add inputs:");

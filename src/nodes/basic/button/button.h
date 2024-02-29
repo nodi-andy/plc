@@ -6,7 +6,7 @@ class Button : public Node
 {
     public:
     ~Button(){};
-    Button(int portNr = -1);
+    Button();
     virtual std::string getType() const override {
         return "basic/button";
     }
@@ -17,12 +17,8 @@ class Button : public Node
     vector<string> run();
 
     private:
-    int defaultPressVal;
-    int defaultReleaseVal;
-    int *defaultPress;
-    int *defaultRelease;
-    int *input;
-    int *output;
+    int port;
+    int state;
 };
 
 static bool buttonRegistered = []() {

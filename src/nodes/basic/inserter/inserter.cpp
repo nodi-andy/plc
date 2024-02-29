@@ -1,63 +1,87 @@
 #include "inserter.h"
+#include "../../../nodework/enums.h"
 
-Inserter::Inserter() {
+Inserter::Inserter()
+{
 }
 
 // init the node
-void Inserter::setup() {
-    title = "Number";
-    name = "Toggle";
-    desc = "Show value of input";
-    newvalue = value;
+void Inserter::setup()
+{
 }
 
-vector<string> Inserter::run() {
+vector<string> Inserter::run()
+{
     vector<string> ret;
-    
-    if (source && source->hasOutput(sourcePortName)) {
-        setValue("value", source->getOutput(sourcePortName));
-        source->clearOutput(sourcePortName);
+
+    if (source && source->hasOutput(getStrValue("from"))) {
+        Serial.printf("[inserter::pickValue] id: %d\n", source->getOutput("value"));
+
+        setValue("value", source->getOutput(getStrValue("to")));
+        source->clearOutput("value");
     }
-    if (target) {
-        target->setInput(targetPortName, id, getValue("value"));
+    if (target && vals.count("value")) {
+        Serial.printf("[inserter::placeValue] id: %d\n", source->getOutput("value"));
+        target->setInput("value", id, getValue("value"));
+        vals.erase("value");
     }
     return ret;
 }
 
-void Inserter::reconnect() {
-   /* Map *nodework = this->parent;
-    const auto &dirVec = NodiEnums::dirToVec[this->dir];
-    Node *nextSource = nodework->getNodeOnGrid(pos[0] - dirVec.x, pos[1] - dirVec.y);
-    Node *nextTarget = nodework->getNodeOnGrid(pos[0] + dirVec.x, pos[1] + dirVec.y);
+void Inserter::reconnect()
+{
+    Serial.printf("[inserter::reconnect]\n");
+    if (!parent) return;
+
+    const auto &dirVec = NodiEnums::dirToVec[dir];
+    Node *nextSource = parent->getNodeOnGrid(pos[0] - dirVec.x, pos[1] - dirVec.y);
+    Node *nextTarget = parent->getNodeOnGrid(pos[0] + dirVec.x, pos[1] + dirVec.y);
+
+    Serial.printf("[inserter::disconnect] id: %d\n", id);
 
     // Disconnect
-    if (this->target != nextTarget) {
-        if (this->target) this->target->clearInputsByNodeID(this->id);
+    if (target != nextTarget)
+    {
+        if (target)
+            target->clearInputsByNodeID(id);
     }
-    if (this->source != nextSource) {
-        this->sourcePortName = "";
+    if (source != nextSource)
+    {
+        setValue("from", "");
     }
 
-    if (nextSource == NULL && this->source) {
-        this->clearInput();
+    if (nextSource == nullptr && source)
+    {
+        clearInput();
     }
+
+    Serial.printf("[inserter::connect] id: %d\n", id);
 
     // Connect
-    if (nextSource != NULL && (this->source == NULL  || this->source != nextSource)) {
-        props.from.value = NodeWork.getNodeType(nextFromNode.type).defaultOutput;
+    if (nextSource != nullptr && (source == nullptr || source != nextSource))
+    {
+        setValue("from", nextSource->defaultOutput);
     }
-    this->source = nextSource;
-    if (this->source == NULL) {
-        props.value.value = undefined;
-    } else {
-        props.value.value = this->source.properties[props.from.value].value;
+    source = nextSource;
+
+    if (source == nullptr)
+    {
+        vals.erase("value");
     }
-    
-    if (nextTarget != NULL && (this->toNode == NULL || this->toNode != nextTarget)) {
-        if (props.to.value == null) 
-            props.to.value = NodeWork.getNodeType(nextTarget->type).defaultInput;
-        else 
-            nextTarget->properties[props.to.value].inpValue[this->nodeID] = {val: undefined, update: true};
+    else
+    {
+        Serial.printf("[inserter::source] id: %d\n", source->id);
+        setValue("value", source->getOutput(getStrValue("from")));
     }
-    this->toNode = nextTarget;*/
+
+    if (nextTarget != nullptr && (target == nullptr || target != nextTarget))
+    {
+        targetPortName = "value";
+
+        if (vals.count("to") == 0)
+            setValue("to", nextSource->defaultInput);
+        else
+            target->setInput(getStrValue("to"), id, 0); //{val: undefined, update: true}
+    }
+    target = nextTarget;
 }

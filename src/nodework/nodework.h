@@ -7,6 +7,8 @@
 #include "enums.h"
 
 #define JSON_NODE_ID "nodeID"
+#define defaultFileName  "/map.json"
+
 using namespace std;
 
 class Map
@@ -17,7 +19,7 @@ public:
     unordered_map<int, Node *> nodes;
     std::map<pair<int, int>, Node *> nodesByPos;
 
-    void addNode(int id, Node *newNode);
+    void addNode(Node *newNode);
     Node *addNode(JsonObject json);
     void removeNode(int idToRemove);
 

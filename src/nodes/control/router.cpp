@@ -7,7 +7,6 @@ Router::Router() {
 // init the node
 void Router::setup() {
     title = "Selector";
-    desc = "Read input";
     name = "control/filter";
 
     // Iterate through the properties object
@@ -54,10 +53,10 @@ vector<string> Router::run() {
         Serial.println(getValue("pass"));
 
         if (getInput("in") == getValue("pass")) {
-            value = getInput("in");
-            setOutput("out", value);
+            //value = getInput("in");
+            setOutput("out", getValue("value"));
             Serial.print("Router: output ");
-            Serial.println(value);
+            Serial.println(getValue("value"));
         }
     }
     return ret;

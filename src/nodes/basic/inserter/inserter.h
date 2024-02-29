@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "../../../nodework/node.h"
+#include "../../../nodework/nodework.h"
 
 class Inserter : public Node
 {
@@ -15,11 +16,10 @@ class Inserter : public Node
     vector<string> run();
 
     void reconnect();
-    NodiEnums::Direction dir;
-    Node *target;
-    Node *source;
-    string targetPortName;
-    string sourcePortName;
+    NodiEnums::Direction dir = NodiEnums::Direction::RIGHT;
+    Node *target = nullptr;
+    Node *source = nullptr;
+    string targetPortName = "value";
 };
 
 static bool InserterRegistered = []() {

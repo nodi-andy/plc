@@ -7,7 +7,6 @@ LogicOr::LogicOr() {
 // init the node
 void LogicOr::setup() {
     title = "LogicOr";
-    desc = "Read input";
     name = "logic/or";
 }
 
