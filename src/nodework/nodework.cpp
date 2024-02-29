@@ -33,7 +33,9 @@ void Map::addNode(Node *newNode)
 // use json to create a node
 Node *Map::addNode(JsonObject json)
 {
+    if (json.containsKey("type") == false) return nullptr;
     string type = json["type"].as<std::string>();
+    Serial.printf("[Map:createNode:type] : %s\n", type.c_str());
 
     Node *newNode = RegistryManager::getInstance().createNode(type);
     if (newNode != nullptr)
@@ -74,11 +76,11 @@ JsonDocument Map::toJSON()
             nodeObject["node"] = jsNodes.add<JsonObject>();
             nodeObject["node"]["nodeID"] = n.second->id;
             nodeObject["type"] = n.second->type;
-            nodeObject["properties"] = jsNodes.add<JsonObject>();
+            nodeObject["node"]["properties"] = jsNodes.add<JsonObject>();
             for (const auto& val : n.second->vals)
             {
                 // Use val.first as the key, and the result of getValue(val.first) as the value.
-                nodeObject["properties"][val.first] = n.second->getValue(val.first);
+                nodeObject["node"]["properties"][val.first] = n.second->getValue(val.first);
             }
             JsonArray posArray = nodeObject["pos"].to<JsonArray>();
             posArray[0] = n.second->pos[0];

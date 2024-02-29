@@ -106,16 +106,18 @@ void Node::setValues(JsonObject newProps)
         const char *propertyName = property.key().c_str();
 
         // Call your addInput function with propertyName
-        Serial.print("Adding property: ");
-        Serial.println(propertyName);
+        Serial.printf("Adding property: %s", propertyName);
         // addProp(propertyName);
-        if (property.value()["value"].is<int>()) {
-          int v = property.value()["value"].as<int>();
+        if (property.value().is<int>()) {
+          int v = property.value().as<int>();
           setValue(propertyName, v);
-        } else {
-          string v = property.value()["value"].as<string>();
+            Serial.printf("int: %d", v);
+        } else if (property.value().is<const char*>()) {
+          string v = property.value().as<const char*>();
+            Serial.printf("string: %s", v.c_str());
           setValue(propertyName, v);
         }
+        Serial.printf("\n");
     }
 }
 

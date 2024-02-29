@@ -14,17 +14,17 @@ vector<string> LED::run() {
     clearInput("port");
     Serial.printf("[LED:port_changed] : %d\n", getValue("port"));
   }
+  if (getValue("port") > -1) pinMode(getValue("port"), OUTPUT);
 
   if (hasInput("value")) {
     setValue("value", getInput("value"));
     setOutput("value", getInput("value"));
 
-    Serial.printf("LED value: %d\n", getValue("value"));
-    if (getValue("port")) digitalWrite(getValue("port"), getValue("value"));
+    Serial.printf("LED (%d) value: %d\n", getValue("port"), getValue("value"));
+    if (getValue("port") > -1) digitalWrite(getValue("port"), getValue("value"));
     clearInput("value");
     ret.push_back("value");
   }
-  if (getValue("port") > -1) pinMode(getValue("port"), OUTPUT);
 
 
   if (hasInput("toggle")) {
