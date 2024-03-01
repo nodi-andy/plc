@@ -80,7 +80,7 @@
     await loadJS("./nodes/basic/toggle.mjs", false);
     await loadJS("./nodes/basic/led.mjs", false);
     await loadJS("./nodes/basic/number.mjs", false);
-    await loadJS("./nodes/basic/serial_port.mjs", false);
+    await loadJS("./nodes/basic/subnode.mjs", false);
     await loadJS("./nodes/logic/and.mjs", false);
     await loadJS("./nodes/logic/or.mjs", false);
     await loadJS("./nodes/logic/xor.mjs", false);
@@ -101,6 +101,7 @@
     await loadJS("./nodes/nodi.box/stepper.js", false);
     await loadJS("./nodes/esp32mcu/b1.js", false);
     await loadJS("./nodes/esp32mcu/led.js", false);
+    await loadJS("./nodes/remote/serial.mjs", false);
     
     import Node from "./node.mjs";
     import NodeWork from "./nodework.mjs";
@@ -133,6 +134,50 @@
     window.nodes = {};
 
     window.createNewNode = (type) => {
+      let allowNode = true;
+      if (type == "remote/serial" && window.serialport) {
+        window.serialbuffer = "";
+        window.serialport.open({ baudRate: 115200 }).then(() => {
+          console.log('Port is opened!');
+          window.reader = window.serialport.readable.getReader();
+          window.serialwriter = window.serialport.writable.getWriter();
+
+          const readLoop = () => {
+            window.reader.read().then(({ value, done }) => {
+                  if (done) {
+                      console.log('Stream closed or reader released.');
+                      return;
+                  }
+                  const receivedData = new TextDecoder().decode(value);
+                  //console.log('Data received:', receivedData);
+                  window.serialbuffer += receivedData;
+                  let newlineIndex = window.serialbuffer.indexOf('\n');
+                  while (newlineIndex !== -1) {
+                      // Extract the line including the newline character
+                      let line = window.serialbuffer.substring(0, newlineIndex + 1);
+                      // Call the function with the extracted line
+                      if (window.serialline) window.serialline(line);
+
+                      // Remove the processed line from the buffer
+                      window.serialbuffer = window.serialbuffer.substring(newlineIndex + 1);
+
+                      // Check for another newline character in the remaining buffer
+                      newlineIndex = window.serialbuffer.indexOf('\n');
+                  }
+                  // Continue reading
+                  readLoop();
+              }).catch(error => {
+                  console.error('Error reading from serial port:', error);
+              });
+          };
+          readLoop();
+        });
+      } 
+      if (type == "remote/serial" && window.serialport == null) {
+        allowNode = false
+      }
+
+      if (allowNode) {
         var msg = {};
         msg.type = type;
         msg.type = msg.type.toLowerCase();
@@ -155,8 +200,16 @@
         }
         msg.node.nodeID = NodeWork.getFirstNullIndex(window.nodeWork.nodes);
         return msg;
+      }
     };
-
+    window.toParent = () => {
+      window.showParent(false);
+      if (window.nodeWork.parent) {
+        window.nodeWork = window.nodeWork.parent;
+        window.canvas.setGraph(window.nodeWork);
+        window.showParent(true);
+      }
+    }
     window.nodes.copyNode = () => {
       if (window.canvas.copyNode == null && window.canvas.current_node)
         window.canvas.copyNode = window.canvas.current_node.nodeID;

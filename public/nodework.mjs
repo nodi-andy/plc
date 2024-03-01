@@ -14,8 +14,13 @@ export default class NodeWork extends Node {
     if (o) this.setNodework(o);
 
     this.orders = [];
+    this.parent = null;
     this.nodes = [];
+    this.nodesByPos = [];
     this.socketOut = null;
+    this.type = "basic/subnode";
+    this.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
+
     this.engine = {name: "local", send: (order)=> {
       if(this[order.cmd]) this[order.cmd](order.data);
     }};
@@ -101,6 +106,10 @@ export default class NodeWork extends Node {
     if (base_class.constructor.name) delete this.Nodes[base_class.constructor.name];
   }
 
+  static getNodeType(type) {
+    return this.registered_node_types[type];
+  }
+
   cmd(msg) {
     this.orders.push(msg);
   }
@@ -114,7 +123,27 @@ export default class NodeWork extends Node {
   }
 
   createNode(msg, socket) {
-    this.nodes[msg.node.nodeID] = msg.node;
+    if (msg.node.type == "basic/subnode") {
+      this.nodes[msg.node.nodeID] = new NodeWork();
+      this.nodes[msg.node.nodeID].parent = this;
+    } else if (msg.node.type == "remote/serial") {
+      this.nodes[msg.node.nodeID] = new NodeWork();
+      this.nodes[msg.node.nodeID].parent = this;
+      this.nodes[msg.node.nodeID].engine = {name: "serialport", send: (order) => {
+        console.log("Forward:Serial : ", order);
+        if (window.serialwriter) { // send to server
+          const encoder = new TextEncoder();
+    
+          window.serialwriter.write(encoder.encode(JSON.stringify([order.cmd, order.data])));
+        } 
+        
+        // if (websocket.send && websocket.readyState == 1) { // send to IoT
+          //  websocket.send(JSON.stringify([cmd, obj]));
+          // } 
+      }};
+    } else {
+      this.nodes[msg.node.nodeID] = msg.node;
+    }
     msg.node.engine = this.engine;
     msg.node.owner = socket?.id;
     msg.node.moving = false;
@@ -131,10 +160,6 @@ export default class NodeWork extends Node {
       this.updateNBs(msg.x, msg.y);
     }
     this.publish("rotateNode", msg);
-  }
-
-  static getNodeType(type) {
-    return this.registered_node_types[type];
   }
 
   /**
@@ -315,5 +340,28 @@ export default class NodeWork extends Node {
     } catch (e) {
       console.log(e);
     }
+  }
+
+  static onDrawForeground(node, ctx) {
+    var x = node.size[0] * 0.5;
+    var h = node.size[1];
+
+
+    ctx.textAlign = "center";
+    ctx.font = (h * 0.6).toFixed(1) + "px Arial";
+    ctx.fillStyle = "#EEE";
+    //ctx.fillText(node.properties.value.value, x, h * 0.65);
+  }
+
+  static updateProp(node, name, val) {
+      node.properties[name].inpValue = val;
+      window.nodes.update(node.nodeID, node.properties);
+  }
+
+  static onMouseUp(node, e) {
+      window.nodeWork = node;
+      window.canvas.setGraph(node);
+      window.showParent(true);
+      return true;
   }
 }

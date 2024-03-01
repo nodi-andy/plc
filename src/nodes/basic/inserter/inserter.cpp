@@ -16,14 +16,13 @@ vector<string> Inserter::run()
 
     if (source && source->hasOutput(getStrValue("from")))
     {
-        Serial.printf("[inserter::pickValue] id: %d\n", source->getOutput("value"));
-
+        //Serial.printf("[inserter::pickValue] id: %d\n", source->getOutput("value"));
         setValue("value", source->getOutput(getStrValue("to")));
         source->clearOutput("value");
     }
     if (target && vals.count("value"))
     {
-        Serial.printf("[inserter::placeValue] id: %d\n", source->getOutput("value"));
+        //Serial.printf("[inserter::placeValue] id: %d\n", source->getOutput("value"));
         target->setInput("value", id, getValue("value"));
         vals.erase("value");
     }

@@ -10,12 +10,13 @@ import {
   Button,
   Tab,
   Tabs,
-  Grid,
+  Grid
 } from "@mui/material";
 
 import Rotate90DegreesCcwIcon from "@mui/icons-material/Rotate90DegreesCcw";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import OutputIcon from "@mui/icons-material/Output";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 function a11yProps(index) {
@@ -120,6 +121,7 @@ function SimpleSnackbar({ openSB, setopenSB, sbMessage }) {
 function RightActionButtons({ showNodes, setShowEditMenu }) {
   const [addClickable, setAddClickable] = useState(false);
   const [rotateClickable, setRotateClickable] = useState(false);
+  const [parentClickable, setParentClickable] = useState(false);
   const [editClickable, setEditClickable] = useState(false);
   const [removeClickable, setRemoveClickable] = useState(false);
 
@@ -131,6 +133,9 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
     setEditClickable(v);
   };
 
+  window.showParent = (v) => {
+    setParentClickable(v);
+  };
   window.showAdd = (v) => {
     setAddClickable(v);
   };
@@ -164,6 +169,15 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
             flexGrow: 2,
           }}
         ></Box>
+          <Fab
+          color="info"
+          disabled={!parentClickable}
+          onClick={() => {
+            window.toParent();
+          }}
+        >
+          <OutputIcon />
+        </Fab>
         <Fab
           color="info"
           disabled={!rotateClickable}

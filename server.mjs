@@ -7,7 +7,7 @@ import "./public/nodes/basic/button.mjs";
 import "./public/nodes/basic/toggle.mjs";
 import "./public/nodes/basic/led.mjs";
 import "./public/nodes/basic/number.mjs";
-import "./public/nodes/basic/serial_port.mjs";
+import "./public/nodes/basic/subnode.mjs";
 import "./public/nodes/logic/and.mjs";
 import "./public/nodes/logic/or.mjs";
 import "./public/nodes/logic/xor.mjs";

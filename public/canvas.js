@@ -179,16 +179,12 @@ export default class LGraphCanvas {
    * @method setGraph
    * @param {LGraph} graph
    */
-  setGraph(graph, skip_clear) {
+  setGraph(graph) {
     if (this.graph == graph) {
       return;
     }
 
     this.graph = graph;
-
-    if (!skip_clear) {
-      this.clear();
-    }
 
     graph.canvas = this;
 
