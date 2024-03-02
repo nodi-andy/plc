@@ -245,7 +245,7 @@
       //if (isNaN(changedNodeData.inpValue) == false) changedNodeData.inpValue = parseInt(changedNodeData.inpValue);
       window.nodeWork.cmd({cmd: "updateInputs", data: {
         nodeID: id,
-        properties: parseInt(changedNodeData),
+        properties: changedNodeData,
       }});
     };
 

@@ -22,4 +22,4 @@ You should now see the home screen with the toolbox:
 ## Get flash content
 
 C:\Users\user\.platformio\packages\tool-esptoolpy
-esptool.py --chip esp32 --port COMx read_flash 0x00000 0x400000 flash_content.bin
+esptool.py --chip esp32 --port COMx read_flash 0x00000 0x400000 noditron.bin

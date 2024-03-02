@@ -20,7 +20,7 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
 
   const handlePropertyChange = (event, key) => {
     let { value } = event.target;
-    if (isNaN(value) == false) value = parseInt(value);
+    //if (isNaN(value) == false) value = parseInt(value);
     let msg = {nodeID: window.canvas.current_node.nodeID};
     msg.properties = Object();
     msg.properties[key] = Object()
