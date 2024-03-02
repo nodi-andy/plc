@@ -1201,7 +1201,7 @@ export default class LGraphCanvas {
     ctx.stroke(); // Render the path
     ctx.restore();
 
-    if (this.graph) {
+    if (this.graph?.nodesByPos) {
       //apply transformations
       ctx.save();
       this.ds.toCanvasContext(ctx);

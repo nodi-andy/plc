@@ -125,7 +125,10 @@
     //}};
 
     await loadJS("./websocket.js", false);
-      
+    navigator.serial.getPorts().then((ports) => {
+      if (ports.length) window.serialport = ports[0];
+    });
+
     window.canvas = new Canvas("#mycanvas", window.nodeWork);
     window.nodeworkID = window.location.search.slice(1);
     window.sendToNodework = (cmd, obj) => {
@@ -135,43 +138,44 @@
 
     window.createNewNode = (type) => {
       let allowNode = true;
+
       if (type == "remote/serial" && window.serialport) {
-        window.serialbuffer = "";
-        window.serialport.open({ baudRate: 115200 }).then(() => {
-          console.log('Port is opened!');
-          window.reader = window.serialport.readable.getReader();
-          window.serialwriter = window.serialport.writable.getWriter();
+          window.serialbuffer = "";
+          window.serialport.open({ baudRate: 115200 }).then(() => {
+            console.log('Port is opened!');
+            window.reader = window.serialport.readable.getReader();
+            window.serialwriter = window.serialport.writable.getWriter();
 
-          const readLoop = () => {
-            window.reader.read().then(({ value, done }) => {
-                  if (done) {
-                      console.log('Stream closed or reader released.');
-                      return;
-                  }
-                  const receivedData = new TextDecoder().decode(value);
-                  //console.log('Data received:', receivedData);
-                  window.serialbuffer += receivedData;
-                  let newlineIndex = window.serialbuffer.indexOf('\n');
-                  while (newlineIndex !== -1) {
-                      // Extract the line including the newline character
-                      let line = window.serialbuffer.substring(0, newlineIndex + 1);
-                      // Call the function with the extracted line
-                      if (window.serialline) window.serialline(line);
+            const readLoop = () => {
+              window.reader.read().then(({ value, done }) => {
+                    if (done) {
+                        console.log('Stream closed or reader released.');
+                        return;
+                    }
+                    const receivedData = new TextDecoder().decode(value);
+                    //console.log('Data received:', receivedData);
+                    window.serialbuffer += receivedData;
+                    let newlineIndex = window.serialbuffer.indexOf('\n');
+                    while (newlineIndex !== -1) {
+                        // Extract the line including the newline character
+                        let line = window.serialbuffer.substring(0, newlineIndex + 1);
+                        // Call the function with the extracted line
+                        if (window.serialline) window.serialline(line);
 
-                      // Remove the processed line from the buffer
-                      window.serialbuffer = window.serialbuffer.substring(newlineIndex + 1);
+                        // Remove the processed line from the buffer
+                        window.serialbuffer = window.serialbuffer.substring(newlineIndex + 1);
 
-                      // Check for another newline character in the remaining buffer
-                      newlineIndex = window.serialbuffer.indexOf('\n');
-                  }
-                  // Continue reading
-                  readLoop();
-              }).catch(error => {
-                  console.error('Error reading from serial port:', error);
-              });
-          };
-          readLoop();
-        });
+                        // Check for another newline character in the remaining buffer
+                        newlineIndex = window.serialbuffer.indexOf('\n');
+                    }
+                    // Continue reading
+                    readLoop();
+                }).catch(error => {
+                    console.error('Error reading from serial port:', error);
+                });
+            };
+            readLoop();
+          });
       } 
       if (type == "remote/serial" && window.serialport == null) {
         allowNode = false
@@ -188,8 +192,9 @@
           return null;
         }
 
-        msg.node = { type: msg.type, type2: msg.type, properties: {} };
-        msg.node.plattform = (typeof window !== 'undefined') ? "browser" : "server" ;
+        msg.node = {};
+        msg.node.type = msg.type;
+        msg.node.properties = {};
         msg.node.orders = [];
 
         base_class.setup(msg.node);
@@ -221,12 +226,6 @@
     };
 
     window.nodes.saveNodework = () => {
-      /*let localFiles = JSON.parse(localStorage.files)
-      localFiles[localStorage.selected] =  graph.serialize(); 
-      localStorage.files = JSON.stringify(localFiles)
-      window.showSnackbar("Saved nodework: " + localStorage.selected)*/
-
-      window.showSnackbar("Nodework saved in IoT");
       window.sendToNodework("save", {});
     };
 
@@ -243,9 +242,10 @@
     };
 
     window.nodes.updateInputs = (id, changedNodeData) => {
+      //if (isNaN(changedNodeData.inpValue) == false) changedNodeData.inpValue = parseInt(changedNodeData.inpValue);
       window.nodeWork.cmd({cmd: "updateInputs", data: {
         nodeID: id,
-        properties: changedNodeData,
+        properties: parseInt(changedNodeData),
       }});
     };
 
@@ -257,11 +257,11 @@
     };
 
     window.load = (filename) => {
-      window.nodeWork.setNodework(JSON.parse(localStorage.files)[filename]);
+      window.nodeWork.setNodework(JSON.parse(localStorage[filename]));
       window.showSnackbar("Loaded nodework: " + filename);
     };
 
-    localStorage.version = "0.1";
+    localStorage.version = "0.2";
     if (localStorage.files == null) localStorage.files = JSON.stringify({});
 
     window.canvas.onSelectionChange = (nodes) => {
@@ -280,9 +280,6 @@
         console.log("enable");
       }
     };
-
-    if (localStorage.selected == null) localStorage.selected = "nodework_0";
-    window.nodeWork.setNodework(JSON.parse(localStorage.files)[localStorage.selected]);
 
     window.addEventListener("resize", function () {
       canvas.resize();
@@ -303,5 +300,6 @@
         window.nodeWork.run();
       }
     }, 20);
+    window.load("nodework");
   </script>
 </html>

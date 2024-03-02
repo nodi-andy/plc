@@ -65,6 +65,7 @@ void Node::clearInput(string name){
 void Node::setValue(string name, int val)
 {
     vals[name] = val;
+    //Serial.printf("[Node::setValue] %s = %d\n", name.c_str(), val);
 };
 
 void Node::setValue(string name, string val)
@@ -106,16 +107,18 @@ void Node::setValues(JsonObject newProps)
         const char *propertyName = property.key().c_str();
 
         // Call your addInput function with propertyName
-        Serial.printf("Adding property: %s", propertyName);
+
+        Serial.printf("Adding property: %s ", propertyName);
+        JsonVariant prop = property.value()["value"];
         // addProp(propertyName);
-        if (property.value().is<int>()) {
-          int v = property.value().as<int>();
-          setValue(propertyName, v);
-            Serial.printf("int: %d", v);
-        } else if (property.value().is<const char*>()) {
-          string v = property.value().as<const char*>();
+        if (prop.is<int>()) {
+            int v = prop.as<int>();
+            setValue(propertyName, v);
+            Serial.printf("int: %d : %d", v, getValue(propertyName));
+        } else if (prop.is<const char*>()) {
+            string v = prop.as<const char*>();
             Serial.printf("string: %s", v.c_str());
-          setValue(propertyName, v);
+            setValue(propertyName, v);
         }
         Serial.printf("\n");
     }

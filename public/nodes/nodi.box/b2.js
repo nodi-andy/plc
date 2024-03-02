@@ -1,7 +1,6 @@
 import WidgetButton from "../basic/button.mjs";
 
 export default class NodiBoxB2 extends WidgetButton {
-    static type2 = "nodi.box/b2";
 
     static setup(props) {
         WidgetButton.setup(props);

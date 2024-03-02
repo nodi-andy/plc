@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 
 import Rotate90DegreesCcwIcon from "@mui/icons-material/Rotate90DegreesCcw";
-import AddIcon from "@mui/icons-material/Add";
+import ContentCopyIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import OutputIcon from "@mui/icons-material/Output";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -204,7 +204,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
         <Fab color="primary" variant="extended" aria-label="add" onClick={() => window.nodes.copyNode()}
           disabled={!addClickable}
           >
-          <AddIcon />
+          <ContentCopyIcon />
         </Fab>
       </Box>
     </>

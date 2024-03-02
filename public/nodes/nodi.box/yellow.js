@@ -1,7 +1,6 @@
 import WidgetLed from "../basic/led.mjs";
 
 export default class NodiBoxYellow extends WidgetLed {
-    static type2 = "nodi.box/yellow_led";
 
     static setup(props) {
         WidgetLed.setup(props);

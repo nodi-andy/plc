@@ -24,7 +24,6 @@ export default class NodeWork extends Node {
     this.engine = {name: "local", send: (order)=> {
       if(this[order.cmd]) this[order.cmd](order.data);
     }};
-    this.plattform = (typeof window !== 'undefined') ? "browser" : "server" ;
     this.events =  {
       moveNodeOnGrid : null,
       addExistingNode : null,
@@ -60,7 +59,6 @@ export default class NodeWork extends Node {
     }
 
     let classType = base_class.type;
-    if (base_class.type2) classType = base_class.type2;
     var categories = classType.split("/");
     var classname = base_class.name;
 
@@ -108,6 +106,17 @@ export default class NodeWork extends Node {
 
   static getNodeType(type) {
     return this.registered_node_types[type];
+  }
+
+  save() {
+      localStorage["nodework"] = JSON.stringify({nodes: this.nodes, nodesByPos: this.nodesByPos}); 
+      
+      window.showSnackbar("Nodework saved in browser");
+  }
+
+  load() {
+      this.setNodework(JSON.parse(localStorage["nodework"]));
+      window.showSnackbar("Loaded nodework" );
   }
 
   cmd(msg) {
@@ -258,13 +267,17 @@ export default class NodeWork extends Node {
     this.updateNBs(x, y);
   }
 
+  reconnectByPos(x, y){
+    let nbNode = this.getNodeOnGrid(x, y);
+    if (nbNode) {
+      let nodeClass = NodeWork.getNodeType(nbNode.type);
+      if (nodeClass.reconnect) nodeClass.reconnect(nbNode, this, [x, y]);
+    }
+  }
+
   updateNBs(x, y) {
     NodiEnums.allVec.forEach((nb) => {
-      let nbNode = this.getNodeOnGrid(x + nb.x, y + nb.y);
-      if (nbNode) {
-        let nodeClass = NodeWork.getNodeType(nbNode.type);
-        if (nodeClass.reconnect) nodeClass.reconnect(nbNode, this, [x + nb.x, y + nb.y]);
-      }
+      this.reconnectByPos(x + nb.x, y + nb.y)
     });
   }
 
@@ -280,10 +293,25 @@ export default class NodeWork extends Node {
 
   setNodework(data) {
     if (!data) return;
-
-    this.clear();
-    this.nodes = data.nodes;
-    this.nodesByPos = data.nodesByPos;
+    try {
+      this.clear();
+      this.nodes = data.nodes;
+      for(let node in this.nodes) {
+        this.nodes[node].parent = this;
+        this.nodes[node].engine = this.engine;
+      }
+      if (data.nodesByPos) {
+        this.nodesByPos = data.nodesByPos;
+        for(let nodePos in this.nodesByPos) {
+          let [x , y] = nodePos.split(NodiEnums.POS_SEP);
+          x = parseInt(x);
+          y = parseInt(y);
+          this.reconnectByPos(x, y);
+        }
+      }
+    } catch (e) {
+      e;
+    }
     return false;
   }
 
@@ -326,14 +354,12 @@ export default class NodeWork extends Node {
           node.engine.send(order);
         }
 
-        if (node.plattform == this.plattform) {
-          let results = curType?.run && curType.run(node, this);
-          if (this.socketOut && results?.length) {
-            //console.log(c)
-            results.forEach((propName) => {
-                this.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
-            });
-          }
+        let results = curType?.run && curType.run(node, this);
+        if (this.socketOut && results?.length) {
+          //console.log(c)
+          results.forEach((propName) => {
+              this.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
+          });
         }
       });
 

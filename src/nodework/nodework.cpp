@@ -80,7 +80,7 @@ JsonDocument Map::toJSON()
             for (const auto& val : n.second->vals)
             {
                 // Use val.first as the key, and the result of getValue(val.first) as the value.
-                nodeObject["node"]["properties"][val.first] = n.second->getValue(val.first);
+                nodeObject["node"]["properties"][val.first]["value"] = n.second->getValue(val.first);
             }
             JsonArray posArray = nodeObject["pos"].to<JsonArray>();
             posArray[0] = n.second->pos[0];

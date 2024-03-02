@@ -1,7 +1,6 @@
 import WidgetLed from "../basic/led.mjs";
 
 export default class esp32mcuLED extends WidgetLed {
-    static type2 = "esp32mcu/led";
 
     static setup(node) {
         WidgetLed.setup(node);

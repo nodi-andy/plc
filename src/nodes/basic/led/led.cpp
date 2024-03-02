@@ -15,6 +15,7 @@ vector<string> LED::run() {
     Serial.printf("[LED:port_changed] : %d\n", getValue("port"));
   }
   if (getValue("port") > -1) pinMode(getValue("port"), OUTPUT);
+  //Serial.printf("LED port %d\n", getValue("port"));
 
   if (hasInput("value")) {
     setValue("value", getInput("value"));
