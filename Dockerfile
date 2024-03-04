@@ -1,4 +1,6 @@
-FROM node:18
+FROM node:20
+RUN npm install -g npm@10.5.0
+
 # Create app directory
 WORKDIR /usr/src/app
 # Install app dependencies
