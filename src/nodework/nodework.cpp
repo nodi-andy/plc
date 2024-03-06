@@ -87,6 +87,15 @@ JsonDocument Map::toJSON()
             posArray[1] = n.second->pos[1];
         }
     }
+    JsonObject jsNodesByPos = map["nodesByPos"].to<JsonObject>();
+    for (auto n : nodesByPos) {
+        if (!n.second) continue;
+        auto pos = n.first;
+        int x = pos.first;
+        int y = pos.second;
+        string s = to_string(x) + STR_SEP + to_string(y);
+        jsNodesByPos[s] = n.second->id;
+    }
     return doc;
 }
 
@@ -209,11 +218,14 @@ vector<string> Map::run()
         if (eventName == "getNodework")
         {
             // SERIAL.printf("[getMap] : %s\n", mapJSON.c_str());
-            sendToSocket("setNodework", toJSON().as<JsonObject>());
+            //sendToSocket("setNodework", toJSON().as<JsonObject>());
+            Serial.printf("[\"setNodework\", %s]\n", toJSON().as<string>().c_str());
+
         }
         else if (eventName == "clear")
         {
             clear();
+            Serial.printf("[\"clear\", \"\"]\n");
         } else if (eventName == "save") {
             String mapJSON = toJSON().as<String>();
 
@@ -255,10 +267,10 @@ vector<string> Map::run()
             report();
         } else if (eventName == "id")
         {
-            StaticJsonDocument<200> data;
+            /*StaticJsonDocument<200> data;
             data["id"] = DEVICE_NAME;
             Serial.printf("[id.response] : %s\n", data.as<string>());
-            sendToSocket("id", data.as<JsonObject>());
+            sendToSocket("id", data.as<JsonObject>());*/
         }
         else if (eventName == "updateNode")
         {

@@ -1,6 +1,7 @@
 import NodeWork from "../../nodework.mjs";
 
 export default class SubNode extends NodeWork {
+    static title = "SUB";
     static type = "basic/subnode";
     static pixels_threshold = 10;
     static old_y = -1;

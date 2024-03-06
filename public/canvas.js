@@ -1265,7 +1265,7 @@ export default class LGraphCanvas {
       ctx.fillRect(this.grid_mouse[0], this.grid_mouse[1], NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE);
       ctx.restore();
     }
-    if (this.grid_pressed) {
+    /*if (this.grid_pressed) {
       ctx.save();
       this.ds.toCanvasContext(ctx);
       ctx.fillStyle = "rgb(0.2,0,0,0.25)";
@@ -1276,7 +1276,7 @@ export default class LGraphCanvas {
         NodiEnums.CANVAS_GRID_SIZE + 8
       );
       ctx.restore();
-    }
+    }*/
   }
 
   /**

@@ -28,7 +28,7 @@ export default class NodeWork extends Node {
       moveNodeOnGrid : null,
       addExistingNode : null,
       rotateNode : this.rotateNode,
-      nodePicked : null,
+      setNodework : this.setNodework,
       updateNode : this.updateNode,
       updatePos : null,
       createNode : this.createNode,
@@ -138,6 +138,7 @@ export default class NodeWork extends Node {
     } else if (msg.node.type == "remote/serial") {
       this.nodes[msg.node.nodeID] = new NodeWork();
       this.nodes[msg.node.nodeID].parent = this;
+      window.serialNodeWork = this.nodes[msg.node.nodeID];
       this.nodes[msg.node.nodeID].engine = {name: "serialport", send: (order) => {
         console.log("Forward:Serial : ", order);
         if (window.serialwriter) { // send to server
@@ -295,11 +296,26 @@ export default class NodeWork extends Node {
     if (!data) return;
     try {
       this.clear();
-      this.nodes = data.nodes;
-      for(let node in this.nodes) {
-        this.nodes[node].parent = this;
-        this.nodes[node].engine = this.engine;
+      for(let nodeID in data.nodes) {
+        // TBD: decide the node structure
+        let node = data.nodes[nodeID];
+        
+        if (data.nodes[nodeID].node) {
+          node = data.nodes[nodeID].node;
+          node.type = data.nodes[nodeID].type;
+        }
+        if (Object.keys(node).length === 0 || node.type == null) continue;
+
+        let curType = NodeWork.getNodeType(node.type);
+        curType.setup(node);
+
+        node.parent = this;
+        node.orders = [];
+        node.engine = this.engine;
+        node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
+        this.nodes[node.nodeID] = node;
       }
+      
       if (data.nodesByPos) {
         this.nodesByPos = data.nodesByPos;
         for(let nodePos in this.nodesByPos) {
@@ -326,7 +342,7 @@ export default class NodeWork extends Node {
         }
       }
 
-      this.nodes.forEach((node) => {
+      this.nodes?.forEach((node) => {
         if (!node) return;
         let curType = NodeWork.getNodeType(node.type);
         if (node.movingTo) {

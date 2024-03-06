@@ -8,6 +8,7 @@
 
 using namespace std;
 #define DEVICE_NAME "esp32mcu" // nodi.box , esp32mcu
+#define STR_SEP "x"
 
 class NodiEnums
 {

@@ -145,7 +145,8 @@
             console.log('Port is opened!');
             window.reader = window.serialport.readable.getReader();
             window.serialwriter = window.serialport.writable.getWriter();
-
+            const encoder = new TextEncoder();
+            window.serialwriter.write(encoder.encode(JSON.stringify(["getNodework", ""])));
             const readLoop = () => {
               window.reader.read().then(({ value, done }) => {
                     if (done) {

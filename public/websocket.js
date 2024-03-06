@@ -14,7 +14,7 @@ window.serialline = (msg) => {
   msg = msg.trim();
   try {
     let [cmd, data] = JSON.parse(msg);
-    if (window.nodeWork[cmd]) window.nodeWork[cmd](data);
+    if (window.serialNodeWork[cmd]) window.serialNodeWork[cmd](data);
   } catch (e) {
     //console.log("msg parsing error: ", e);
   }
