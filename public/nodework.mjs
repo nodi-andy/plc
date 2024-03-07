@@ -175,13 +175,6 @@ export default class NodeWork extends Node {
   clear() {
     this.nodes = [];
     this.nodesByPos = {};
-
-    //timing
-    this.globaltime = 0;
-    this.runningtime = 0;
-    this.elapsed_time = 0.01;
-    this.last_update_time = 0;
-    this.starttime = 0;
   }
 
   setNodeOnGrid(msg) {

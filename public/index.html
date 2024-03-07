@@ -123,6 +123,8 @@
         //  websocket.send(JSON.stringify([cmd, obj]));
         // } 
     //}};
+    localStorage.version = "0.2";
+    if (localStorage.files == null) localStorage.files = JSON.stringify({});
 
     await loadJS("./websocket.js", false);
     navigator.serial?.getPorts().then((ports) => {
@@ -135,8 +137,6 @@
       window.nodeWork.cmd({cmd: cmd, data: obj});
     };
     window.nodes = {};
-    window.nodeJSON = {};
-    window.nodeJSON[0] = window.nodeWork;
 
     window.createNewNode = (type) => {
       let allowNode = true;
@@ -201,7 +201,7 @@
     window.toParent = () => {
       window.showParent(false);
       if (window.nodeWork.parent != null) {
-        window.nodeWork = window.nodeJSON[window.nodeWork.parent];
+        window.nodeWork = window.nodeWork.parent;
         window.canvas.setGraph(window.nodeWork);
         window.showParent(true);
       }
@@ -251,9 +251,6 @@
       window.nodeWork.setNodework(JSON.parse(localStorage[filename]));
       window.showSnackbar("Loaded nodework: " + filename);
     };
-
-    localStorage.version = "0.2";
-    if (localStorage.files == null) localStorage.files = JSON.stringify({});
 
     window.canvas.onSelectionChange = (nodes) => {
       if (Object.keys(nodes).length == 1) {
