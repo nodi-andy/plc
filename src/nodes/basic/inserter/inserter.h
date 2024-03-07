@@ -15,8 +15,7 @@ class Inserter : public Node
     void setup();
     vector<string> run();
 
-    void reconnect();
-    NodiEnums::Direction dir = NodiEnums::Direction::RIGHT;
+    void reconnect(int x, int y);
     Node *target = nullptr;
     Node *source = nullptr;
     string targetPortName = "value";

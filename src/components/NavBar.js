@@ -38,7 +38,7 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
     document.body.removeChild(element);
   };
 
-  const cleanNodework = () => {
+  const clearNodework = () => {
     window.sendToNodework("clear", {});
   };
 
@@ -52,10 +52,10 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
     >
       <List>
         <ListSubheader>Nodework</ListSubheader>
-        <ListItem key='cleanNodework' disablePadding>
-          <ListItemButton onClick={cleanNodework}>
+        <ListItem key='clearNodework' disablePadding>
+          <ListItemButton onClick={clearNodework}>
             <ListItemIcon> <FileOpenOutlinedIcon /> </ListItemIcon>
-            <ListItemText primary={'Clean'} />
+            <ListItemText primary={'Clear'} />
           </ListItemButton>
         </ListItem>
         {/*

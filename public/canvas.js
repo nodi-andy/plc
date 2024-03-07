@@ -373,32 +373,35 @@ export default class LGraphCanvas {
       }
     } else if (node_mouse != null) {
       // select first node
+      this.grid_selected = e.gridPos;
       var gridCorner = NodiEnums.toCanvas(e.gridPos);
       var pos = [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]];
 
       // Capture mouse by node gui
       if (node_type.onMouseDown == null || node_type.onMouseDown(node_mouse, e, pos, this) == false) {
-        this.grid_pressed = e.gridPos;
         this.node_pressed = node_mouse;
         this.gripped = "node";
         if (!this.selected_nodes[node_mouse.nodeID]) {
           this.processNodeSelected(node_mouse, e);
         }
       }
-    } else if (node_mouse == null && this.current_node && window.canvas.copyNode == null) {
+    } else if (window.canvas.copyNode == null && this.grid_selected && (this.grid_selected[0] == e.gridPos[0] && this.grid_selected[1] == e.gridPos[1])) {
       // unselect
-      this.gripped = "none";
-      this.current_node.selected = false;
+      this.grid_selected = e.gridPos;
+      if(this.current_node) this.current_node.selected = false;
       this.current_node = null;
       this.deselectAllNodes();
-    } else if (node_mouse == null && this.current_node == null) {
-      // move canvas
-      // add node
+      this.gripped = "cell";
+    } else if (node_mouse == null && (this.grid_selected == undefined || (this.grid_selected && (this.grid_selected[0] != e.gridPos[0] || this.grid_selected[1] != e.gridPos[1])))) {
+      this.grid_selected = e.gridPos;
+      if(this.current_node) this.current_node.selected = false;
+      this.current_node = null;
+      this.deselectAllNodes();
       this.gripped = "canvas";
     } else if (node_mouse == null && window.canvas.copyNode != null) {
       // add existing node
       this.gripped = "copyNode";
-      this.nodework.addExistingNode({ nodeID: this.copyNode, pos: e.gridPos });
+      this.nodework.setNodeOnGrid({ nodeID: this.copyNode, pos: e.gridPos });
     }
 
     this.last_mouse_down = [e.clientX, e.clientY];
@@ -435,7 +438,6 @@ export default class LGraphCanvas {
         }
       }
       var center = currentPair.center();
-      window.showSnackbar("G: " + scale);
       if (this.currentGesture == this.Gestures.SCALE) {
         // If already scaling, callback with scale amount.
         this.setZoom(scale, center);
@@ -464,7 +466,7 @@ export default class LGraphCanvas {
 
     e.dragging = this.last_mouse_dragging;
     if (this.gripped == "node" && this.node_pressed) {
-      this.graph.setNodeIDOnGrid(this.grid_pressed.x, this.grid_pressed.y, null);
+      this.graph.setNodeIDOnGrid(this.grid_selected.x, this.grid_selected.y, null);
       this.canvas.style.cursor = "move";
       this.node_dragging = this.node_pressed;
       this.node_pressed = null;
@@ -476,7 +478,7 @@ export default class LGraphCanvas {
       this.ds.offset[0] += delta[0] / this.ds.scale;
       this.ds.offset[1] += delta[1] / this.ds.scale;
     } else if (this.gripped == "copyNode" && cursor_node == null) {
-      this.nodework.addExistingNode({ nodeID: this.copyNode, pos: e.gridPos });
+      this.nodework.setNodeOnGrid({ nodeID: this.copyNode, pos: e.gridPos });
     } else if (this.gripped == "node" && this.node_dragging) {
       //node being dragged
       if (window.settings?.ownerShip == false || this.node_dragging.owner == window.socketIO.id) {
@@ -624,7 +626,7 @@ export default class LGraphCanvas {
     } else if (this.resizing_node) {
       this.resizing_node = null;
     } else if (this.node_dragging) {
-      window.sendToNodework("moveNodeOnGrid", {id: this.node_dragging.nodeID, from: this.grid_pressed, to: e.gridPos});
+      window.sendToNodework("moveNodeOnGrid", {nodeID: this.node_dragging.nodeID, from: this.grid_selected, to: e.gridPos});
       this.node_dragging = null;
     } else {
       //no node being dragged
@@ -669,9 +671,8 @@ export default class LGraphCanvas {
   }
 
   processMouseClick(e) {
-    if (this.gripped == "canvas") {
-      window.setShowNodes(true);
-    }
+    if (this.gripped == "canvas" || this.gripped == "node") this.grid_selected = e.gridPos;
+    if (this.gripped == "cell") window.setShowNodes(true);
   }
 
   zoom(e) {
@@ -699,7 +700,7 @@ export default class LGraphCanvas {
     }
 
     //this.setZoom( scale, [ e.clientX, e.clientY ] );
-    this.ds.changeScale(Math.clamp(scale, 0.2, 4), [e.clientX, e.clientY]);
+    this.ds.changeScale(Math.clamp(scale, 0.2, 4), {x: e.clientX, y: e.clientY});
 
     e.preventDefault();
   }
@@ -1202,7 +1203,18 @@ export default class LGraphCanvas {
     ctx.restore();
 
     if (this.graph?.nodesByPos) {
-      //apply transformations
+      if (this.grid_selected) {
+        ctx.save();
+        this.ds.toCanvasContext(ctx);
+        ctx.fillStyle = "rgb(0.2,0,0,0.25)";
+        ctx.fillRect(
+          this.grid_selected[0] * NodiEnums.CANVAS_GRID_SIZE - 4,
+          this.grid_selected[1] * NodiEnums.CANVAS_GRID_SIZE - 4,
+          NodiEnums.CANVAS_GRID_SIZE + 8,
+          NodiEnums.CANVAS_GRID_SIZE + 8
+        );
+        ctx.restore();
+      }
       ctx.save();
       this.ds.toCanvasContext(ctx);
 
@@ -1265,18 +1277,7 @@ export default class LGraphCanvas {
       ctx.fillRect(this.grid_mouse[0], this.grid_mouse[1], NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE);
       ctx.restore();
     }
-    /*if (this.grid_pressed) {
-      ctx.save();
-      this.ds.toCanvasContext(ctx);
-      ctx.fillStyle = "rgb(0.2,0,0,0.25)";
-      ctx.fillRect(
-        this.grid_pressed[0] * NodiEnums.CANVAS_GRID_SIZE - 4,
-        this.grid_pressed[1] * NodiEnums.CANVAS_GRID_SIZE - 4,
-        NodiEnums.CANVAS_GRID_SIZE + 8,
-        NodiEnums.CANVAS_GRID_SIZE + 8
-      );
-      ctx.restore();
-    }*/
+
   }
 
   /**
@@ -1320,7 +1321,7 @@ export default class LGraphCanvas {
    * @method drawNodeShape
    */
 
-  drawNodeShape(node, ctx, size, fgcolor, bgcolor, selected) {
+  drawNodeShape(node, ctx, size, fgcolor, bgcolor) {
     //bg rect
     ctx.strokeStyle = fgcolor;
     ctx.fillStyle = bgcolor;

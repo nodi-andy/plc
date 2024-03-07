@@ -29,15 +29,15 @@ vector<string> Inserter::run()
     return ret;
 }
 
-void Inserter::reconnect()
+void Inserter::reconnect(int x, int y)
 {
     Serial.printf("[inserter::reconnect]\n");
     if (!parent)
         return;
 
     const auto &dirVec = NodiEnums::dirToVec[dir];
-    Node *nextSource = parent->getNodeOnGrid(pos[0] - dirVec.x, pos[1] - dirVec.y);
-    Node *nextTarget = parent->getNodeOnGrid(pos[0] + dirVec.x, pos[1] + dirVec.y);
+    Node *nextSource = parent->getNodeOnGrid(x - dirVec.x, y - dirVec.y);
+    Node *nextTarget = parent->getNodeOnGrid(x + dirVec.x, y + dirVec.y);
     if (nextSource != nullptr) Serial.printf("[inserter::source_exists] \n");
     if (nextTarget != nullptr) Serial.printf("[inserter::target_exists] \n");
 

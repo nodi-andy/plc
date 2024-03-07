@@ -20,14 +20,15 @@ class Node
         virtual ~Node() {}
         virtual string getType() const = 0;
         virtual Node* createInstance() const = 0;
-        virtual void reconnect() {};
+        virtual void reconnect(int x, int y) {};
+    
         Map *parent;
         string type;
         string name;
         string title;
         string defaultInput = "value", defaultOutput = "value";
+        NodiEnums::Direction dir = NodiEnums::Direction::RIGHT;
         int id;
-        int pos[2];
         int size[2];
         virtual void setup();
         virtual vector<string> run();

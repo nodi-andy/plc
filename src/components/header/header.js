@@ -42,7 +42,7 @@ export default function Header({ setOpenDrawer } ) {
   };
 
   const handleHamburgerMenuOpen = () => {
-    console.log("hamburger");
+    //console.log("hamburger");
     setOpenDrawer(true);
   };
 

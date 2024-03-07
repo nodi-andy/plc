@@ -19,7 +19,7 @@ public:
     unordered_map<int, Node *> nodes;
     std::map<pair<int, int>, Node *> nodesByPos;
 
-    void addNode(Node *newNode);
+    void addNode(int x, int y, Node *newNode);
     Node *addNode(JsonObject json);
     void removeNode(int idToRemove);
 
@@ -41,6 +41,7 @@ public:
     Node* getNodeOnGrid(int x, int y);
     void setNodeOnGrid(int x, int y, Node*);
     void removeNodeOnGrid(int x, int y);
+    void rotateNode(int x, int y);
     void updateNBs(int x, int y);
 
     private:

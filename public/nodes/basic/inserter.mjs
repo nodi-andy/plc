@@ -18,7 +18,7 @@ class Inserter extends Node {
         Node.setProperty(props, "value");
     }
 
-    static run(node, nodework) {
+    static run(node) {
         let props = node.properties;
         let ret = [];
         for(let prop of Object.values(props)) {

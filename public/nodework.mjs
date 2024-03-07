@@ -7,11 +7,11 @@ export default class NodeWork extends Node {
   static registered_node_types = {}; //nodetypes by string
   static Nodes = {}; //node types by classname
 
-  constructor(o) {
+  constructor(id) {
     super();
     if (NodeWork.debug) console.log("Graph created");
     this.clear();
-    if (o) this.setNodework(o);
+    if (id) this.nodeID = id;
 
     this.orders = [];
     this.parent = null;
@@ -25,18 +25,15 @@ export default class NodeWork extends Node {
       if(this[order.cmd]) this[order.cmd](order.data);
     }};
     this.events =  {
-      moveNodeOnGrid : null,
-      addExistingNode : null,
+      moveNodeOnGrid : this.moveNodeOnGrid,
+      setNodeOnGrid : this.setNodeOnGrid,
       rotateNode : this.rotateNode,
       setNodework : this.setNodework,
       updateNode : this.updateNode,
-      updatePos : null,
       createNode : this.createNode,
       updateInputs : this.updateInputs,
-      nodeMoved : null,
-      propUpdated : null,
-      removeNode : null,
-      clear : null
+      removeNode : this.removeNode,
+      clear : this.clear
     }
   }
 
@@ -78,7 +75,7 @@ export default class NodeWork extends Node {
       }
     }
 
-    var prev = this.registered_node_types[classType];
+    prev = this.registered_node_types[classType];
     if (prev) console.log("replacing node type: " + classType);
     else {
       //warnings
@@ -133,10 +130,10 @@ export default class NodeWork extends Node {
 
   createNode(msg, socket) {
     if (msg.node.type == "basic/subnode") {
-      this.nodes[msg.node.nodeID] = new NodeWork();
+      this.nodes[msg.node.nodeID] = new NodeWork(msg.node.nodeID);
       this.nodes[msg.node.nodeID].parent = this;
     } else if (msg.node.type == "remote/serial") {
-      this.nodes[msg.node.nodeID] = new NodeWork();
+      this.nodes[msg.node.nodeID] = new NodeWork(msg.node.nodeID);
       this.nodes[msg.node.nodeID].parent = this;
       window.serialNodeWork = this.nodes[msg.node.nodeID];
       this.nodes[msg.node.nodeID].engine = {name: "serialport", send: (order) => {
@@ -164,10 +161,10 @@ export default class NodeWork extends Node {
   }
 
   rotateNode(msg) {
-    let node = this.getNodeOnGrid(msg.x, msg.y);
+    let node = this.getNodeOnGrid(msg.pos[0], msg.pos[1]);
     if (node) {
       node.direction = (node.direction + 1) % 4;
-      this.updateNBs(msg.x, msg.y);
+      this.updateNBs(msg.pos[0], msg.pos[1]);
     }
     this.publish("rotateNode", msg);
   }
@@ -187,7 +184,7 @@ export default class NodeWork extends Node {
     this.starttime = 0;
   }
 
-  addExistingNode(msg) {
+  setNodeOnGrid(msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
     this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
   }
@@ -195,8 +192,8 @@ export default class NodeWork extends Node {
   moveNodeOnGrid(msg) {
     if (!msg) return;
 
-    let node = this.nodes[msg.id];
-    node.moving = false;
+    let node = this.nodes[msg.nodeID];
+    if (node.moving) node.moving = false;
 
     let next_gridPos = msg.to;
     if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
@@ -249,10 +246,6 @@ export default class NodeWork extends Node {
     } else {
       return null;
     }
-  }
-
-  setNodeOnGrid(x, y, node) {
-    this.setNodeIDOnGrid(x, y, node?.nodeID);
   }
 
   getNodeIDOnGrid(x, y) {
@@ -361,7 +354,7 @@ export default class NodeWork extends Node {
             delete node.movingTo;
           }
   
-          io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
+          //io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
           //console.log("JA", moveVector);
         }
   
@@ -384,23 +377,13 @@ export default class NodeWork extends Node {
     }
   }
 
-  static onDrawForeground(node, ctx) {
-    var x = node.size[0] * 0.5;
-    var h = node.size[1];
-
-
-    ctx.textAlign = "center";
-    ctx.font = (h * 0.6).toFixed(1) + "px Arial";
-    ctx.fillStyle = "#EEE";
-    //ctx.fillText(node.properties.value.value, x, h * 0.65);
-  }
 
   static updateProp(node, name, val) {
       node.properties[name].inpValue = val;
       window.nodes.update(node.nodeID, node.properties);
   }
 
-  static onMouseUp(node, e) {
+  static onMouseUp(node) {
       window.nodeWork = node;
       window.canvas.setGraph(node);
       window.showParent(true);

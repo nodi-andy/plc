@@ -182,7 +182,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
           color="info"
           disabled={!rotateClickable}
           onClick={() => {
-            window.sendToNodework("rotateNode", {x: window.canvas.grid_pressed[0], y: window.canvas.grid_pressed[1]});
+            window.sendToNodework("rotateNode", {pos: window.canvas.grid_selected});
           }}
         >
           <Rotate90DegreesCcwIcon />
@@ -195,7 +195,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
           aria-label="remove"
           disabled={!removeClickable}
           onClick={() => {
-            window.nodeWork.removeNode({pos: window.canvas.grid_pressed});
+            window.sendToNodework("removeNode", {pos: window.canvas.grid_selected});
             setShowEditMenu(false);
           }}
         >

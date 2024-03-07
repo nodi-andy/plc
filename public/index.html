@@ -125,7 +125,7 @@
     //}};
 
     await loadJS("./websocket.js", false);
-    navigator.serial.getPorts().then((ports) => {
+    navigator.serial?.getPorts().then((ports) => {
       if (ports.length) window.serialport = ports[0];
     });
 
@@ -135,6 +135,8 @@
       window.nodeWork.cmd({cmd: cmd, data: obj});
     };
     window.nodes = {};
+    window.nodeJSON = {};
+    window.nodeJSON[0] = window.nodeWork;
 
     window.createNewNode = (type) => {
       let allowNode = true;
@@ -183,35 +185,23 @@
       }
 
       if (allowNode) {
-        var msg = {};
-        msg.type = type;
-        msg.type = msg.type.toLowerCase();
-        msg.pos = window.canvas.gridPos;
-        var base_class = NodeWork.getNodeType(msg.type);
-        if (!base_class) {
-          if (NodeWork.debug) console.log('GraphNode type "' + msg.type + '" not registered.');
-          return null;
-        }
-
-        msg.node = {};
+        var msg = {node : {}};
+        msg.type = type.toLowerCase();
+        msg.pos = window.canvas.grid_selected;
         msg.node.type = msg.type;
         msg.node.properties = {};
         msg.node.orders = [];
-
-        base_class.setup(msg.node);
-        msg.node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
         
-        for (var i in msg.options) {
-          msg.node.properties[i] = msg.options[i];
-        }
+        NodeWork.getNodeType(msg.type).setup(msg.node);
+        msg.node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
         msg.node.nodeID = NodeWork.getFirstNullIndex(window.nodeWork.nodes);
         return msg;
       }
     };
     window.toParent = () => {
       window.showParent(false);
-      if (window.nodeWork.parent) {
-        window.nodeWork = window.nodeWork.parent;
+      if (window.nodeWork.parent != null) {
+        window.nodeWork = window.nodeJSON[window.nodeWork.parent];
         window.canvas.setGraph(window.nodeWork);
         window.showParent(true);
       }

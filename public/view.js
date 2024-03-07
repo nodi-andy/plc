@@ -5,7 +5,7 @@ export default class View {
   static pointerevents_method = "mouse"; // "mouse"|"pointer" use mouse for retrocompatibility issues? (none found @ now)
 
   constructor(element, skip_events) {
-    this.offset = new Float32Array([0, 0]);
+    this.offset = [0, 0];
     this.scale = 3;
     this.max_scale = 10;
     this.min_scale = 0.1;
@@ -177,13 +177,13 @@ export default class View {
 
   convertOffsetToCanvas(pos) {
     //return [pos[0] / this.scale - this.offset[0], pos[1] / this.scale - this.offset[1]];
-    return [(pos[0] + this.offset[0]) * this.scale, (pos[1] + this.offset[1]) * this.scale];
+    return [(pos.x + this.offset[0]) * this.scale, (pos.y + this.offset[1]) * this.scale];
   }
 
   convertCanvasToOffset(pos, out) {
     out = out || [0, 0];
-    out[0] = pos[0] / this.scale - this.offset[0];
-    out[1] = pos[1] / this.scale - this.offset[1];
+    out[0] = pos.x / this.scale - this.offset[0];
+    out[1] = pos.y / this.scale - this.offset[1];
     return out;
   }
 

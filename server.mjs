@@ -24,14 +24,14 @@ import "./public/nodes/basic/inserter.mjs";
 const app = express();
 const server = http.createServer(app);
 
-global.io = new socketIOServer(server, {
+var io = new socketIOServer(server, {
   cors: {
     origin: "*",
   },
 });
 
 var nodeWorkJSON = new NodeWork();
-global.iot = null;
+var iot = null;
 var settings = { ownerShip: false };
 
 setInterval(() => {
@@ -128,7 +128,7 @@ io.on("connection", (socket) => {
   socket.on("getNodework", (msg) => {
     //if (cmds == null) cmds = [];
     if (iot) {
-      //iot.emit("getNodework", "");
+      iot.emit("getNodework", msg);
     }
     io.to(socket.id).emit("setNodework", nodeWorkJSON);
     //console.log("[updateNewClient]");

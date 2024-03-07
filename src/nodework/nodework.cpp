@@ -1,6 +1,6 @@
 #include <unordered_map>
 #include "nodework.h"
-#include <SPIFFS.h> 
+#include <SPIFFS.h>
 #include <FS.h>
 
 Map::Map()
@@ -19,13 +19,13 @@ void Map::cmd(string msg)
 }
 
 // add the node in nodelist
-void Map::addNode(Node *newNode)
+void Map::addNode(int x, int y, Node *newNode)
 {
     if (newNode && nodes.count(newNode->id) == 0)
     {
         nodes[newNode->id] = newNode;
         Serial.printf("[Map::addNode] ID= %d type= %s n= %d\n", newNode->id, newNode->getType().c_str(), nodes.size());
-        setNodeOnGrid(newNode->pos[0], newNode->pos[1], newNode);
+        setNodeOnGrid(x, y, newNode);
         newNode->setup();
     }
 }
@@ -33,7 +33,8 @@ void Map::addNode(Node *newNode)
 // use json to create a node
 Node *Map::addNode(JsonObject json)
 {
-    if (json.containsKey("type") == false) return nullptr;
+    if (json.containsKey("type") == false)
+        return nullptr;
     string type = json["type"].as<std::string>();
     Serial.printf("[Map:createNode:type] : %s\n", type.c_str());
 
@@ -43,11 +44,9 @@ Node *Map::addNode(JsonObject json)
         newNode->parent = this;
         newNode->setValues(json["node"]["properties"]);
         newNode->id = json["node"][JSON_NODE_ID].as<int>();
-        newNode->pos[0] = json["pos"][0].as<int>();
-        newNode->pos[1] = json["pos"][1].as<int>();
         newNode->type = type;
         Serial.printf("[Map:createNode:done] id: %d, type: %s\n", newNode->id, newNode->getType().c_str());
-        addNode(newNode);
+        addNode(json["pos"][0].as<int>(), json["pos"][1].as<int>(), newNode);
     }
     return newNode;
 }
@@ -69,7 +68,8 @@ JsonDocument Map::toJSON()
     Serial.println("[Map::toJSON]:");
     for (auto n : nodes)
     {
-        if (n.second) {
+        if (n.second)
+        {
             Serial.printf("[nodes: %d]\n", n.second->id);
 
             JsonObject nodeObject = jsNodes.add<JsonObject>();
@@ -77,19 +77,18 @@ JsonDocument Map::toJSON()
             nodeObject["node"]["nodeID"] = n.second->id;
             nodeObject["type"] = n.second->type;
             nodeObject["node"]["properties"] = jsNodes.add<JsonObject>();
-            for (const auto& val : n.second->vals)
+            for (const auto &val : n.second->vals)
             {
                 // Use val.first as the key, and the result of getValue(val.first) as the value.
                 nodeObject["node"]["properties"][val.first]["value"] = n.second->getValue(val.first);
             }
-            JsonArray posArray = nodeObject["pos"].to<JsonArray>();
-            posArray[0] = n.second->pos[0];
-            posArray[1] = n.second->pos[1];
         }
     }
     JsonObject jsNodesByPos = map["nodesByPos"].to<JsonObject>();
-    for (auto n : nodesByPos) {
-        if (!n.second) continue;
+    for (auto n : nodesByPos)
+    {
+        if (!n.second)
+            continue;
         auto pos = n.first;
         int x = pos.first;
         int y = pos.second;
@@ -163,8 +162,14 @@ Node *Map::getNodeOnGrid(int x, int y)
 void Map::removeNodeOnGrid(int x, int y)
 {
     nodesByPos.erase(make_pair(x, y));
+    updateNBs(x, y);
 }
 
+void Map::rotateNode(int x, int y)
+{
+    Node *n = getNodeOnGrid(x, y);
+    n->dir = static_cast<NodiEnums::Direction>((n->dir + 1) % 4);;
+}
 void Map::setNodeOnGrid(int x, int y, Node *node)
 {
     nodesByPos[make_pair(x, y)] = node;
@@ -178,14 +183,14 @@ void Map::updateNBs(int x, int y)
         Node *nbNode = getNodeOnGrid(x + nb.x, y + nb.y);
         if (nbNode)
         {
-            nbNode->reconnect();
+            nbNode->reconnect(x + nb.x, y + nb.y);
         }
     }
 }
 
 void Map::sendToSocket(string key, const JsonObject &msg)
 {
-    StaticJsonDocument<8000> sjsondoc;
+    JsonDocument sjsondoc;
     JsonArray arr = sjsondoc.to<JsonArray>();
     arr.add(key);
     arr.add(msg);
@@ -204,7 +209,7 @@ vector<string> Map::run()
 {
     if (orders.size())
     {
-        DynamicJsonDocument djsondoc(4048);
+        JsonDocument djsondoc;
         string order = orders.front();
         orders.pop();
         Serial.printf("[nodework:new_order] : %s\n", order.c_str());
@@ -218,26 +223,30 @@ vector<string> Map::run()
         if (eventName == "getNodework")
         {
             // SERIAL.printf("[getMap] : %s\n", mapJSON.c_str());
-            //sendToSocket("setNodework", toJSON().as<JsonObject>());
+            // sendToSocket("setNodework", toJSON().as<JsonObject>());
             Serial.printf("[\"setNodework\", %s]\n", toJSON().as<string>().c_str());
-
         }
         else if (eventName == "clear")
         {
             clear();
             Serial.printf("[\"clear\", \"\"]\n");
-        } else if (eventName == "save") {
+        }
+        else if (eventName == "save")
+        {
             String mapJSON = toJSON().as<String>();
 
             File file = SPIFFS.open(defaultFileName, FILE_WRITE);
             int size = file.print(mapJSON);
 
-            if (size != mapJSON.length()) {
+            if (size != mapJSON.length())
+            {
                 Serial.println("Error writing to file");
             }
             file.close();
             Serial.printf("[Event:save] %d: %d,  %s\n", size, mapJSON.length(), mapJSON.c_str());
-        } else if (eventName == "upload") {
+        }
+        else if (eventName == "upload")
+        {
             clear();
 
             //    jsonData.getBytes(mapFile, jsonData.length() + 1);
@@ -246,26 +255,28 @@ vector<string> Map::run()
             //    file.close();
             //    loadNoditronFile();
 
-            //memcpy(wsInput, mapFile, strlen((char *)mapFile));
-/*
-            char mapFileStr[sizeof(mapFile) + 1];  // +1 for the null terminator
-            memcpy(mapFileStr, mapFile, sizeof(mapFile));
-            mapFileStr[sizeof(mapFile)] = '\0';  // Null-terminate the string
+            // memcpy(wsInput, mapFile, strlen((char *)mapFile));
+            /*
+                        char mapFileStr[sizeof(mapFile) + 1];  // +1 for the null terminator
+                        memcpy(mapFileStr, mapFile, sizeof(mapFile));
+                        mapFileStr[sizeof(mapFile)] = '\0';  // Null-terminate the string
 
-            SERIAL.printf("[Event::upload] mapFile: %s\n", mapFileStr);
+                        SERIAL.printf("[Event::upload] mapFile: %s\n", mapFileStr);
 
-            deserializeJson(djsondoc, mapFile);
-            JsonObject root = djsondoc.as<JsonObject>();*/
+                        deserializeJson(djsondoc, mapFile);
+                        JsonObject root = djsondoc.as<JsonObject>();*/
             Serial.printf("[Upload::node] Order: %s\n", order.c_str());
 
             JsonArray nodes = eventData["nodes"];
-            for (JsonVariant n : nodes) {
+            for (JsonVariant n : nodes)
+            {
                 JsonObject node = n.as<JsonObject>();
                 addNode(node);
             }
 
             report();
-        } else if (eventName == "id")
+        }
+        else if (eventName == "id")
         {
             /*StaticJsonDocument<200> data;
             data["id"] = DEVICE_NAME;
@@ -301,30 +312,36 @@ vector<string> Map::run()
             {
                 eventData["nodeID"] = newNode->id;
                 Serial.printf("[\"createNode\", %s]\n", djsondoc[1].as<string>().c_str());
-            } else {
+            }
+            else
+            {
                 Serial.printf("[event::createNode:error] id: %d\n", djsondoc[1].as<int>());
             }
             // sendToSocket("createNode", djsondoc[1]);
         }
         else if (eventName == "moveNodeOnGrid")
         {
-            nodes[id]->pos[0] = eventData["moveTo"][0].as<int>();
-            nodes[id]->pos[1] = eventData["moveTo"][1].as<int>();
-
-            Serial.printf("[nodework:dropped] name: %s\n", eventName.c_str());
-            sendToSocket("nodeMoved", eventData);
+            removeNodeOnGrid(eventData["from"][0].as<int>(), eventData["from"][1].as<int>());
+            setNodeOnGrid(eventData["to"][0].as<int>(), eventData["to"][1].as<int>(), getNodeById(id));
+            Serial.printf("[\"moveNodeOnGrid\", %s]\n", djsondoc[1].as<string>().c_str());
+        }
+        else if (eventName == "rotateNode")
+        {
+            int x = eventData["pos"][0].as<int>();
+            int y = eventData["pos"][1].as<int>();
+            rotateNode(x, y);
+            Serial.printf("[\"rotateNode\", %s]\n", djsondoc[1].as<string>().c_str());
         }
         else if (eventName == "removeNode")
         {
-            Serial.printf("[removeNode] id: %d\n", id);
-            removeNode(id);
-            StaticJsonDocument<16> data;
-            data["id"] = id;
-            sendToSocket("nodeRemoved", data.as<JsonObject>());
+            int x = eventData["pos"][0].as<int>();
+            int y = eventData["pos"][1].as<int>();
+            removeNodeOnGrid(x, y);
+            Serial.printf("[\"removeNode\", %s]\n", djsondoc[1].as<string>().c_str());
         }
     }
 
-    //Serial.printf("[nodework:nodes] : %d\n", nodes.size());
+    // Serial.printf("[nodework:nodes] : %d\n", nodes.size());
     for (auto n : nodes)
     {
         if (n.second == nullptr)
@@ -333,9 +350,9 @@ vector<string> Map::run()
         vector<string> changedProps = n.second->run();
         for (string prop : changedProps)
         {
-            StaticJsonDocument<512> jsonDoc;
+            JsonDocument jsonDoc;
             jsonDoc.add("updateNode");
-            JsonObject data = jsonDoc.createNestedObject();
+            JsonObject data = jsonDoc.add<JsonObject>();
 
             data["nodeID"] = n.second->id;
             data["prop"] = prop;
