@@ -107,9 +107,10 @@
     import NodeWork from "./nodework.mjs";
     import Canvas from "./canvas.js";
     import { NodiEnums } from "./enums.mjs";
-
+    window.NodeWork = NodeWork;
     
-    window.nodeWork = new NodeWork();
+    window.nodeWork = {};
+    NodeWork.clear(window.nodeWork);
     /*window.nodeWork.engine = {name: "server", send: (order) => {
       console.log("forwardCMD: ", order);
       if (window.socket?.emit && window.socket.connected == true) { // send to server
@@ -134,7 +135,7 @@
     window.canvas = new Canvas("#mycanvas", window.nodeWork);
     window.nodeworkID = window.location.search.slice(1);
     window.sendToNodework = (cmd, obj) => {
-      window.nodeWork.cmd({cmd: cmd, data: obj});
+      NodeWork.cmd(window.nodeWork, {cmd: cmd, data: obj});
     };
     window.nodes = {};
 
@@ -206,7 +207,7 @@
         window.showParent(true);
       }
     }
-    window.nodes.copyNode = () => {
+    window.copyNode = () => {
       if (window.canvas.copyNode == null && window.canvas.current_node)
         window.canvas.copyNode = window.canvas.current_node.nodeID;
       else window.canvas.copyNode = null;
@@ -234,7 +235,7 @@
 
     window.nodes.updateInputs = (id, changedNodeData) => {
       //if (isNaN(changedNodeData.inpValue) == false) changedNodeData.inpValue = parseInt(changedNodeData.inpValue);
-      window.nodeWork.cmd({cmd: "updateInputs", data: {
+      NodeWork.cmd(window.nodeWork, {cmd: "updateInputs", data: {
         nodeID: id,
         properties: changedNodeData,
       }});
@@ -248,7 +249,10 @@
     };
 
     window.load = (filename) => {
-      window.nodeWork.setNodework(JSON.parse(localStorage[filename]));
+      if (localStorage[filename]) {
+        window.nodeWork = NodeWork.load();
+        window.canvas.setGraph(window.nodeWork);
+      }
       window.showSnackbar("Loaded nodework: " + filename);
     };
 
@@ -285,7 +289,7 @@
 
     setInterval(() => {
       if (window.nodeWork) {
-        window.nodeWork.run();
+        NodeWork.run(window.nodeWork);
       }
     }, 20);
     window.load("nodework");

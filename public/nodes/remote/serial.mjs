@@ -2,7 +2,7 @@ import NodeWork from "../../nodework.mjs";
 
 export default class SerialPort extends NodeWork {
   static type = "remote/serial";
-  static title = " ";
+  static title = "COM";
 
   static onDrawForeground(node, ctx) {
     let props = node.properties;

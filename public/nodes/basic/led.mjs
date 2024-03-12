@@ -93,7 +93,21 @@ export default class WidgetLed extends Node {
             local_pos[1] >  node.size[0] * 0.25 &&
             local_pos[0] < node.size[0] * 0.75 &&
             local_pos[1] < node.size[1] * 0.75) {
-            window.nodes.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
+            window.nodes.updateInputs(node.nodeID, { value: { inpValue: 1 } });
+
+            node.update = true;
+
+            return true;
+        }
+        return false;
+    }
+
+    static onMouseUp(node, e, local_pos) {
+        if (local_pos[0] > node.size[0] * 0.25 &&
+            local_pos[1] >  node.size[0] * 0.25 &&
+            local_pos[0] < node.size[0] * 0.75 &&
+            local_pos[1] < node.size[1] * 0.75) {
+            window.nodes.updateInputs(node.nodeID, { value: { inpValue: 0 } });
 
             node.update = true;
 

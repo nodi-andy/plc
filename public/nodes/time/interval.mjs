@@ -54,6 +54,7 @@ class TimeInterval extends Node {
       props.state.outValue = 1;
       props.value.value = props.release.value;
       props.value.outValue = props.release.value;
+      props.value.update = true;
       console.log("ton");
       ret = true;
     } else if (props.state.value == 1 && dON > props.ton.value && props.enable.value) {
@@ -62,6 +63,7 @@ class TimeInterval extends Node {
       props.state.outValue = 0;
       props.value.value = props.press.value;
       props.value.outValue = props.press.value;
+      props.value.update = true;
       console.log("toff");
       ret = true;
     }

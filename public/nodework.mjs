@@ -6,35 +6,45 @@ export default class NodeWork extends Node {
   static debug = false;
   static registered_node_types = {}; //nodetypes by string
   static Nodes = {}; //node types by classname
+  static events =  {
+    moveNodeOnGrid : NodeWork.moveNodeOnGrid,
+    setNodeOnGrid : NodeWork.setNodeOnGrid,
+    rotateNode : NodeWork.rotateNode,
+    setNodework : this.setNodework,
+    updateNode : this.updateNode,
+    createNode : NodeWork.createNode,
+    updateInputs : this.updateInputs,
+    removeNode : NodeWork.removeNode,
+    clear : NodeWork.clear
+  }
+
+  static engines =  {
+    "browser": (node, order)=> {
+                      if(NodeWork[order.cmd]) NodeWork[order.cmd](node, order.data);
+                    },
+    "serial": (node, order) => {
+                      console.log("Forward:Serial : ", order);
+                      if (window.serialwriter) { // send to server
+                        const encoder = new TextEncoder();
+                  
+                        window.serialwriter.write(encoder.encode(JSON.stringify([order.cmd, order.data])));
+                      } 
+                      
+                      // if (websocket.send && websocket.readyState == 1) { // send to IoT
+                        //  websocket.send(JSON.stringify([cmd, obj]));
+                        // } 
+                    }
+  }
 
   constructor(id) {
     super();
     if (NodeWork.debug) console.log("Graph created");
-    this.clear();
+    NodeWork.clear(this);
     if (id) this.nodeID = id;
 
-    this.orders = [];
-    this.parent = null;
-    this.nodes = [];
-    this.nodesByPos = [];
     this.socketOut = null;
     this.type = "basic/subnode";
     this.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
-
-    this.engine = {name: "local", send: (order)=> {
-      if(this[order.cmd]) this[order.cmd](order.data);
-    }};
-    this.events =  {
-      moveNodeOnGrid : this.moveNodeOnGrid,
-      setNodeOnGrid : this.setNodeOnGrid,
-      rotateNode : this.rotateNode,
-      setNodework : this.setNodework,
-      updateNode : this.updateNode,
-      createNode : this.createNode,
-      updateInputs : this.updateInputs,
-      removeNode : this.removeNode,
-      clear : this.clear
-    }
   }
 
   static getFirstNullIndex(arr) {
@@ -105,135 +115,151 @@ export default class NodeWork extends Node {
     return this.registered_node_types[type];
   }
 
-  save() {
-      localStorage["nodework"] = JSON.stringify({nodes: this.nodes, nodesByPos: this.nodesByPos}); 
+  static processMethodsAndObjects(obj, parent, type) {
+    // Loop through each property of the object
+    for (const key of Object.keys(obj)) {
+      const value = obj[key];
+      if (key == "parent") continue;
+      
+      // Check if the property is an object
+      if (typeof value === 'object' && value !== null) {
+        // If it's an object, recursively process this object
+        if (type == "unlink") {
+          delete value.parent;
+        } else {
+          if (value.type != null) value.parent = parent
+        }
+        NodeWork.processMethodsAndObjects(value, obj, type);
+      }
+    }
+  }
+
+  static save(nw) {
+    let saveNW = structuredClone(nw);
+    NodeWork.processMethodsAndObjects(saveNW, null, "unlink");
+      localStorage["nodework"] = JSON.stringify(saveNW); 
       
       window.showSnackbar("Nodework saved in browser");
   }
 
-  load() {
-      this.setNodework(JSON.parse(localStorage["nodework"]));
-      window.showSnackbar("Loaded nodework" );
+  static load() {
+    window.showSnackbar("Loaded nodework" );
+    let storedNW = JSON.parse(localStorage["nodework"]);
+    NodeWork.processMethodsAndObjects(storedNW, null, "link");
+
+    return storedNW;
   }
 
-  cmd(msg) {
-    this.orders.push(msg);
+  static cmd(nw, msg) {
+    nw.orders.push(msg);
   }
 
-  publish(event, data) {
-    if (this.socketOut) this.socketOut(event, data);
+  static publish(nw, event, data) {
+    if (nw.socketOut) nw.socketOut(event, data);
   }
 
   setSocketOut(socket) {
     this.socketOut = socket;
   }
 
-  createNode(msg, socket) {
-    if (msg.node.type == "basic/subnode") {
-      this.nodes[msg.node.nodeID] = new NodeWork(msg.node.nodeID);
-      this.nodes[msg.node.nodeID].parent = this;
-    } else if (msg.node.type == "remote/serial") {
-      this.nodes[msg.node.nodeID] = new NodeWork(msg.node.nodeID);
-      this.nodes[msg.node.nodeID].parent = this;
-      window.serialNodeWork = this.nodes[msg.node.nodeID];
-      this.nodes[msg.node.nodeID].engine = {name: "serialport", send: (order) => {
-        console.log("Forward:Serial : ", order);
-        if (window.serialwriter) { // send to server
-          const encoder = new TextEncoder();
-    
-          window.serialwriter.write(encoder.encode(JSON.stringify([order.cmd, order.data])));
-        } 
-        
-        // if (websocket.send && websocket.readyState == 1) { // send to IoT
-          //  websocket.send(JSON.stringify([cmd, obj]));
-          // } 
-      }};
-    } else {
-      this.nodes[msg.node.nodeID] = msg.node;
-    }
-    msg.node.engine = this.engine;
+  static createNode(node, msg, socket) {
+    NodeWork.clear(msg.node);
+    node.nodes[msg.node.nodeID] = msg.node;
+    msg.node.engine = node.engine;
+    if (msg.node.type == "remote/serial") {
+      node.nodes[msg.node.nodeID] = msg.node;
+      window.serialNodeWork = node.nodes[msg.node.nodeID];
+      node.nodes[msg.node.nodeID].engine = {name: "serial"};
+    } 
+    node.nodes[msg.node.nodeID].parent = node;
     msg.node.owner = socket?.id;
     msg.node.moving = false;
     msg.nodeID = msg.node.nodeID;
-    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
-    this.publish("createNode", msg);
+    NodeWork.setNodeIDOnGrid(node, msg.pos[0], msg.pos[1], msg.nodeID);
+    NodeWork.publish("createNode", msg);
     return msg.node;
   }
 
-  rotateNode(msg) {
-    let node = this.getNodeOnGrid(msg.pos[0], msg.pos[1]);
+  static sendToEngine(engine, node, data) {
+    NodeWork.engines[engine.name](node, data);
+  }
+
+  static rotateNode(nw, msg) {
+    let node = NodeWork.getNodeOnGrid(nw, msg.pos[0], msg.pos[1]);
     if (node) {
       node.direction = (node.direction + 1) % 4;
-      this.updateNBs(msg.pos[0], msg.pos[1]);
+      NodeWork.updateNBs(nw, msg.pos[0], msg.pos[1]);
     }
-    this.publish("rotateNode", msg);
+    //this.publish("rotateNode", msg);
   }
 
   /**
    * Removes all child nodes
    */
-  clear() {
-    this.nodes = [];
-    this.nodesByPos = {};
+  static clear(node) {
+    node.nodes = [];
+    node.nodesByPos = {};
+    node.orders = [];
+    node.engine = {name: "browser"};
   }
 
-  setNodeOnGrid(msg) {
+  static setNodeOnGrid(node, msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
-    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+    node.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
   }
 
-  moveNodeOnGrid(msg) {
+  static moveNodeOnGrid(nw, msg) {
     if (!msg) return;
 
-    let node = this.nodes[msg.nodeID];
+    let node = nw.nodes[msg.nodeID];
     if (node.moving) node.moving = false;
 
     let next_gridPos = msg.to;
-    if (this.getNodeOnGrid(next_gridPos[0], next_gridPos[1]) == null) {
+    if (NodeWork.getNodeOnGrid(nw, next_gridPos[0], next_gridPos[1]) == null) {
       if (msg.from) {
-        this.setNodeOnGrid(msg.from[0], msg.from[1], null);
+        NodeWork.setNodeIDOnGrid(nw, msg.from[0], msg.from[1], null);
       }
-      this.setNodeOnGrid(msg.to[0], msg.to[1], node);
+      NodeWork.setNodeIDOnGrid(nw, msg.to[0], msg.to[1], node.nodeID);
     }
 
-    this.publish("moveNodeOnGrid", msg);
+    //this.publish("moveNodeOnGrid", msg);
   }
 
-  removeNode(msg) {
-    this.setNodeIDOnGrid(msg.pos[0], msg.pos[1], null);
-    this.publish("removeNode", msg);
+  static removeNode(nw, msg) {
+    NodeWork.setNodeIDOnGrid(nw, msg.pos[0], msg.pos[1], null);
+    //this.publish("removeNode", msg);
   }
 
-  updateNode(msg) {
+  static updateNode(nw, msg) {
     if (typeof msg.properties == "object") {
       Object.keys(msg.properties).forEach((key) => {
-        Node.updateProp(this.nodes[msg.nodeID], msg.prop, key, msg.properties[key]);
+        Node.updateProp(nw.nodes[msg.nodeID], msg.prop, key, msg.properties[key]);
       })
     } else {
-      Node.updateProp(this.nodes[msg.nodeID], msg.prop, "value", msg.properties);
+      Node.updateProp(nw.nodes[msg.nodeID], msg.prop, "value", msg.properties);
     }
   }
 
-  updateInputs(msg) {
+  static updateInputs(nw, msg) {
     Object.keys(msg.properties).forEach((key) => {
-      Node.updateInputs(this.nodes[msg.nodeID], key, msg.properties[key]);
+      Node.updateInputs(nw.nodes[msg.nodeID], key, msg.properties[key]);
     })
   }
   
-  getNodeById(id) {
+  static getNodeById(nw, id) {
     if (id == null) return null;
-    return this.nodes[id];
+    return nw.nodes[id];
   }
 
-  getNodeOnPos(x, y) {
+  static getNodeOnPos(node, x, y) {
     let gridPos = [];
     gridPos[0] = Math.floor(x / NodiEnums.CANVAS_GRID_SIZE);
     gridPos[1] = Math.floor(y / NodiEnums.CANVAS_GRID_SIZE);
-    return this.getNodeOnGrid(gridPos[0], gridPos[1]);
+    return NodeWork.getNodeOnGrid(node, gridPos[0], gridPos[1]);
   }
 
-  getNodeOnGrid(x, y) {
-    let node = this.getNodeById(this.getNodeIDOnGrid(x, y));
+  static getNodeOnGrid(nw, x, y) {
+    let node = NodeWork.getNodeById(nw, NodeWork.getNodeIDOnGrid(nw, x, y));
     if (node) {
       return node;
     } else {
@@ -241,30 +267,30 @@ export default class NodeWork extends Node {
     }
   }
 
-  getNodeIDOnGrid(x, y) {
-    return this.nodesByPos[x + NodiEnums.POS_SEP + y];
+  static getNodeIDOnGrid(nw, x, y) {
+    return nw.nodesByPos[x + NodiEnums.POS_SEP + y];
   }
 
-  setNodeIDOnGrid(x, y, id) {
+  static setNodeIDOnGrid(node, x, y, id) {
     if (id == null) {
-      delete this.nodesByPos[x + NodiEnums.POS_SEP + y];
+      delete node.nodesByPos[x + NodiEnums.POS_SEP + y];
     } else {
-      this.nodesByPos[x + NodiEnums.POS_SEP + y] = id;
+      node.nodesByPos[x + NodiEnums.POS_SEP + y] = id;
     }
-    this.updateNBs(x, y);
+    NodeWork.updateNBs(node, x, y);
   }
 
-  reconnectByPos(x, y){
-    let nbNode = this.getNodeOnGrid(x, y);
+  static reconnectByPos(nw, x, y){
+    let nbNode = NodeWork.getNodeOnGrid(nw, x, y);
     if (nbNode) {
       let nodeClass = NodeWork.getNodeType(nbNode.type);
-      if (nodeClass.reconnect) nodeClass.reconnect(nbNode, this, [x, y]);
+      if (nodeClass.reconnect) nodeClass.reconnect(nbNode, nw, [x, y]);
     }
   }
 
-  updateNBs(x, y) {
+  static updateNBs(node, x, y) {
     NodiEnums.allVec.forEach((nb) => {
-      this.reconnectByPos(x + nb.x, y + nb.y)
+      NodeWork.reconnectByPos(node, x + nb.x, y + nb.y)
     });
   }
 
@@ -281,7 +307,7 @@ export default class NodeWork extends Node {
   setNodework(data) {
     if (!data) return;
     try {
-      this.clear();
+      NodeWork.clear(this);
       for(let nodeID in data.nodes) {
         // TBD: decide the node structure
         let node = data.nodes[nodeID];
@@ -317,18 +343,18 @@ export default class NodeWork extends Node {
     return false;
   }
 
-  run() {
+  static run(nw) {
     try {
-      let order = this.orders.shift();
+      let order = nw.orders.shift();
       if (order) {
         if(order.data?.nodeID != null) {
-          this.nodes[order.data.nodeID].orders.push(order);
+          nw.nodes[order.data.nodeID].orders.push(order);
         } else {
-          this.engine.send(order);
+          NodeWork.sendToEngine(nw.engine, nw, order);
         }
       }
 
-      this.nodes?.forEach((node) => {
+      nw.nodes?.forEach((node) => {
         if (!node) return;
         let curType = NodeWork.getNodeType(node.type);
         if (node.movingTo) {
@@ -353,14 +379,14 @@ export default class NodeWork extends Node {
   
         let order = node.orders.shift();
         if (order) {
-          node.engine.send(order);
+          NodeWork.sendToEngine(nw.engine, nw, order);
         }
 
-        let results = curType?.run && curType.run(node, this);
-        if (this.socketOut && results?.length) {
+        let results = curType?.run && curType.run(node, nw);
+        if (nw.socketOut && results?.length) {
           //console.log(c)
           results.forEach((propName) => {
-              this.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
+            nw.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
           });
         }
       });

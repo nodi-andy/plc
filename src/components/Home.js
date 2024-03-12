@@ -201,7 +201,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
         >
           <DeleteOutlineIcon />
         </Fab>
-        <Fab color="primary" variant="extended" aria-label="add" onClick={() => window.nodes.copyNode()}
+        <Fab color="primary" variant="extended" aria-label="add" onClick={() => window.copyNode()}
           disabled={!addClickable}
           >
           <ContentCopyIcon />

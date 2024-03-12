@@ -14,7 +14,7 @@ window.serialline = (msg) => {
   msg = msg.trim();
   try {
     let [cmd, data] = JSON.parse(msg);
-    if (window.serialNodeWork[cmd]) window.serialNodeWork[cmd](data);
+    if (NodeWork[cmd]) NodeWork[cmd](window.serialNodeWork, data);
   } catch (e) {
     //console.log("msg parsing error: ", e);
   }
@@ -22,7 +22,9 @@ window.serialline = (msg) => {
 
 
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
-
+websocket.addEventListener("error", (event) => {
+  console.log("WebSocket error: ", event);
+});
 // Connect to IoT
 var uri = window.location.hostname;
 if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") uri += ":8080";
@@ -120,10 +122,10 @@ window.order.connectionSettings = (msg) => {
   window.setWiFiEnabled(msg.connectionSettings.STA_Enabled);
 };
 
-Object.keys(window.nodeWork.events).forEach((event) => {
+Object.keys(NodeWork.events).forEach((event) => {
   if (window.socketIO) {
     window.socketIO.on(event, (message) => {
-      if (window.nodeWork[event]) window.nodeWork[event](message);
+      if (NodeWork[event]) NodeWork[event](message);
       else window.order[event](message);
     });
   }

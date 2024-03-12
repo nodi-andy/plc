@@ -107,10 +107,12 @@ export default class Button extends Node {
         if (newState == 0 && props.state.value == 1) {
           props.value.value = props.release.value;
           props.value.outValue = props.value.value;
+          props.value.update = true;
         }
         if (newState == 1 && props.state.value == 0) {
           props.value.value = props.press.value;
           props.value.outValue = props.value.value;
+          props.value.update = true;
         }
         props.state.value = newState;
         props.state.inpValue = {};

@@ -71,8 +71,6 @@ export default class LGraphCanvas {
 
     this.viewport = options.viewport || null; //to constraint render area to a portion of the canvas
 
-    graph.canvas = this;
-
     this.setCanvas(canvas, options.skip_events);
     this.clear();
     this.startRendering();
@@ -185,8 +183,6 @@ export default class LGraphCanvas {
     }
 
     this.graph = graph;
-
-    graph.canvas = this;
 
     //remove the graph stack in case a subgraph was open
     if (this._graph_stack) this._graph_stack = null;
@@ -346,7 +342,7 @@ export default class LGraphCanvas {
     this.graph_mouse = [e.canvasX, e.canvasY];
     this.last_click_position = [e.clientX, e.clientY];
 
-    var node_mouse = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
+    var node_mouse = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
     var node_type = NodeWork.getNodeType(node_mouse?.type);
 
     this.canvas.focus();
@@ -460,13 +456,13 @@ export default class LGraphCanvas {
     this.gridPos = NodiEnums.toGrid([e.canvasX, e.canvasY]);
     this.grid_mouse = NodiEnums.toCanvas(this.gridPos);
     //get node over
-    var cursor_node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
+    var cursor_node = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
 
     //console.log("processMouseMove " + this.last_mouse_down);
 
     e.dragging = this.last_mouse_dragging;
     if (this.gripped == "node" && this.node_pressed) {
-      this.graph.setNodeIDOnGrid(this.grid_selected.x, this.grid_selected.y, null);
+      NodeWork.setNodeIDOnGrid(this.graph, this.grid_selected.x, this.grid_selected.y, null);
       this.canvas.style.cursor = "move";
       this.node_dragging = this.node_pressed;
       this.node_pressed = null;
@@ -478,7 +474,7 @@ export default class LGraphCanvas {
       this.ds.offset[0] += delta[0] / this.ds.scale;
       this.ds.offset[1] += delta[1] / this.ds.scale;
     } else if (this.gripped == "copyNode" && cursor_node == null) {
-      this.nodework.setNodeOnGrid({ nodeID: this.copyNode, pos: e.gridPos });
+      NodeWork.setNodeOnGrid(this.graph, { nodeID: this.copyNode, pos: e.gridPos });
     } else if (this.gripped == "node" && this.node_dragging) {
       //node being dragged
       if (window.settings?.ownerShip == false || this.node_dragging.owner == window.socketIO.id) {
@@ -585,7 +581,7 @@ export default class LGraphCanvas {
     //left button
     this.node_widget = null;
 
-    var node = this.graph.getNodeOnPos(e.canvasX, e.canvasY);
+    var node = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
     if (this.gripped == "canvas") {
       this.dragging_canvas = false;
     } else if (this.dragging_rectangle) {
@@ -894,7 +890,7 @@ export default class LGraphCanvas {
 
     var pos = [e.canvasX, e.canvasY];
 
-    var node = this.graph ? this.graph.getNodeOnPos(pos[0], pos[1]) : null;
+    var node = this.graph ? NodeWork.getNodeOnPos(this.graph, pos[0], pos[1]) : null;
 
     if (!node) {
       var r = null;

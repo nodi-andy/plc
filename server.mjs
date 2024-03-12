@@ -36,7 +36,7 @@ var settings = { ownerShip: false };
 
 setInterval(() => {
   if (nodeWorkJSON) {
-    nodeWorkJSON.run();
+    //nodeWorkJSON.run();
   }
 }, 20);
 
@@ -54,11 +54,11 @@ Object.mergeObjects = (objA, objB) => {
 };
 
 io.on("connection", (socket) => {
-  Object.keys(nodeWorkJSON.events).forEach((event) => {
+  /*Object.keys(nodeWorkJSON.events).forEach((event) => {
     socket.on(event, (message) => {
       if (nodeWorkJSON[event]) nodeWorkJSON[event](message, socket);
     });
-  });
+  });*/
 
   socket.on("connected", (msg) => {
     console.log("[connected]", msg);
