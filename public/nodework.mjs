@@ -10,7 +10,7 @@ export default class NodeWork extends Node {
     moveNodeOnGrid : NodeWork.moveNodeOnGrid,
     setNodeOnGrid : NodeWork.setNodeOnGrid,
     rotateNode : NodeWork.rotateNode,
-    setNodework : this.setNodework,
+    setNodework : NodeWork.setNodework,
     updateNode : this.updateNode,
     createNode : NodeWork.createNode,
     updateInputs : this.updateInputs,
@@ -126,9 +126,20 @@ export default class NodeWork extends Node {
         // If it's an object, recursively process this object
         if (type == "unlink") {
           delete value.parent;
+          if (value?.engine?.name == "serial") {
+            value.nodes = [];
+            value.nodesByPos = {};
+            value.orders = [];
+            continue;
+          } 
         } else {
           if (value.type != null) value.parent = parent
+          if (value.type == "remote/serial") {
+            NodeWork.Nodes["ComPort"].openSerial();
+            window.serialNodeWork = value;
+          }
         }
+
         NodeWork.processMethodsAndObjects(value, obj, type);
       }
     }
@@ -158,18 +169,17 @@ export default class NodeWork extends Node {
     if (nw.socketOut) nw.socketOut(event, data);
   }
 
-  setSocketOut(socket) {
-    this.socketOut = socket;
-  }
-
   static createNode(node, msg, socket) {
-    NodeWork.clear(msg.node);
+    //NodeWork.clear(msg.node);
     node.nodes[msg.node.nodeID] = msg.node;
     msg.node.engine = node.engine;
     if (msg.node.type == "remote/serial") {
+      window.serialNodeWork = msg.node;
+      msg.node.engine = {name: "serial"};
+      msg.node.nodesByPos = {};
+      msg.node.orders = [];
+      msg.node.nodes = [];
       node.nodes[msg.node.nodeID] = msg.node;
-      window.serialNodeWork = node.nodes[msg.node.nodeID];
-      node.nodes[msg.node.nodeID].engine = {name: "serial"};
     } 
     node.nodes[msg.node.nodeID].parent = node;
     msg.node.owner = socket?.id;
@@ -200,7 +210,7 @@ export default class NodeWork extends Node {
     node.nodes = [];
     node.nodesByPos = {};
     node.orders = [];
-    node.engine = {name: "browser"};
+    if (node.engine == null) node.engine = {name: "browser"};
   }
 
   static setNodeOnGrid(node, msg) {
@@ -304,10 +314,10 @@ export default class NodeWork extends Node {
     return data;
   }
 
-  setNodework(data) {
+  static setNodework(nw, data) {
     if (!data) return;
     try {
-      NodeWork.clear(this);
+      //NodeWork.clear(this);
       for(let nodeID in data.nodes) {
         // TBD: decide the node structure
         let node = data.nodes[nodeID];
@@ -321,20 +331,20 @@ export default class NodeWork extends Node {
         let curType = NodeWork.getNodeType(node.type);
         curType.setup(node);
 
-        node.parent = this;
+        node.parent = nw;
         node.orders = [];
-        node.engine = this.engine;
+        node.engine = nw.engine;
         node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
-        this.nodes[node.nodeID] = node;
+        nw.nodes[node.nodeID] = node;
       }
       
       if (data.nodesByPos) {
-        this.nodesByPos = data.nodesByPos;
-        for(let nodePos in this.nodesByPos) {
+        nw.nodesByPos = data.nodesByPos;
+        for(let nodePos in nw.nodesByPos) {
           let [x , y] = nodePos.split(NodiEnums.POS_SEP);
           x = parseInt(x);
           y = parseInt(y);
-          this.reconnectByPos(x, y);
+          nw.reconnectByPos(x, y);
         }
       }
     } catch (e) {
@@ -353,7 +363,7 @@ export default class NodeWork extends Node {
           NodeWork.sendToEngine(nw.engine, nw, order);
         }
       }
-
+      if (nw.engine.name != "browser") return;
       nw.nodes?.forEach((node) => {
         if (!node) return;
         let curType = NodeWork.getNodeType(node.type);

@@ -133,7 +133,7 @@ io.on("connection", (socket) => {
     io.to(socket.id).emit("setNodework", nodeWorkJSON);
     //console.log("[updateNewClient]");
   });
-  nodeWorkJSON.setSocketOut(io.emit.bind(io));
+  nodeWorkJSON.socketOut = io.emit.bind(io);
 
   io.to(socket.id).emit("id", "");
   io.to(socket.id).emit("setSettings", settings);

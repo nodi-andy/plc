@@ -2,6 +2,7 @@
 #include "nodework.h"
 #include <SPIFFS.h>
 #include <FS.h>
+#include <sstream>
 
 Map::Map()
 {
@@ -25,7 +26,18 @@ void Map::addNode(int x, int y, Node *newNode)
     {
         nodes[newNode->id] = newNode;
         Serial.printf("[Map::addNode] ID= %d type= %s n= %d\n", newNode->id, newNode->getType().c_str(), nodes.size());
-        setNodeOnGrid(x, y, newNode);
+        setNodeOnGrid(x, y, newNode->id);
+        newNode->setup();
+    }
+}
+
+// add the node in nodelist
+void Map::addNode(Node *newNode)
+{
+    if (newNode && nodes.count(newNode->id) == 0)
+    {
+        nodes[newNode->id] = newNode;
+        Serial.printf("[Map::addNode] ID= %d type= %s n= %d\n", newNode->id, newNode->getType().c_str(), nodes.size());
         newNode->setup();
     }
 }
@@ -46,7 +58,11 @@ Node *Map::addNode(JsonObject json)
         newNode->id = json["node"][JSON_NODE_ID].as<int>();
         newNode->type = type;
         Serial.printf("[Map:createNode:done] id: %d, type: %s\n", newNode->id, newNode->getType().c_str());
-        addNode(json["pos"][0].as<int>(), json["pos"][1].as<int>(), newNode);
+        if (json.containsKey("pos")) {
+            addNode(json["pos"][0].as<int>(), json["pos"][1].as<int>(), newNode);
+        } else {
+            addNode(newNode);
+        }
     }
     return newNode;
 }
@@ -54,6 +70,7 @@ Node *Map::addNode(JsonObject json)
 void Map::clear()
 {
     nodes.clear();
+    nodesByPos.clear();
     usedIDs.clear();
     nextID = 0;
     Serial.println("[Map::clear]");
@@ -87,14 +104,14 @@ JsonDocument Map::toJSON()
     JsonObject jsNodesByPos = map["nodesByPos"].to<JsonObject>();
     for (auto n : nodesByPos)
     {
-        if (!n.second)
-            continue;
         auto pos = n.first;
         int x = pos.first;
         int y = pos.second;
         string s = to_string(x) + STR_SEP + to_string(y);
-        jsNodesByPos[s] = n.second->id;
+        jsNodesByPos[s] = n.second;
+        Serial.printf("[nodesByPos: %s]", s.c_str());
     }
+    Serial.printf("\n");
     return doc;
 }
 
@@ -156,7 +173,14 @@ Node *Map::getNodeById(int id)
 
 Node *Map::getNodeOnGrid(int x, int y)
 {
-    return nodesByPos[make_pair(x, y)];
+    auto it = nodesByPos.find(std::make_pair(x, y));
+    if (it != nodesByPos.end()) {
+        // Found the node, return a pointer to it
+        return nodes[it->second];
+    } else {
+        // Node doesn't exist, return nullptr
+        return nullptr;
+    }
 }
 
 void Map::removeNodeOnGrid(int x, int y)
@@ -170,9 +194,10 @@ void Map::rotateNode(int x, int y)
     Node *n = getNodeOnGrid(x, y);
     n->dir = static_cast<NodiEnums::Direction>((n->dir + 1) % 4);;
 }
-void Map::setNodeOnGrid(int x, int y, Node *node)
+
+void Map::setNodeOnGrid(int x, int y, int id)
 {
-    nodesByPos[make_pair(x, y)] = node;
+    nodesByPos[make_pair(x, y)] = id;
     updateNBs(x, y);
 }
 
@@ -273,7 +298,24 @@ vector<string> Map::run()
                 JsonObject node = n.as<JsonObject>();
                 addNode(node);
             }
+            JsonObject jsNodesByPos = eventData["nodesByPos"];
+            // Iterate through each element in the JsonArray
+            for(auto var : jsNodesByPos) {
+                std::string key = var.key().c_str(); // Assuming key is the string e.g., "2x5"
+                Serial.printf("[KEY] : %s\n", key.c_str());
+                int value = var.value().as<int>(); // Assuming value is the integer following the string
 
+                // Split the key on 'x' to separate x and y
+                std::istringstream iss(key);
+                std::string part;
+                std::getline(iss, part, 'x');
+                int x = std::stoi(part);
+                std::getline(iss, part);
+                int y = std::stoi(part);
+
+                // Insert into your map
+                setNodeOnGrid(x, y, value);
+            }
             report();
         }
         else if (eventName == "id")
@@ -322,7 +364,7 @@ vector<string> Map::run()
         else if (eventName == "moveNodeOnGrid")
         {
             removeNodeOnGrid(eventData["from"][0].as<int>(), eventData["from"][1].as<int>());
-            setNodeOnGrid(eventData["to"][0].as<int>(), eventData["to"][1].as<int>(), getNodeById(id));
+            setNodeOnGrid(eventData["to"][0].as<int>(), eventData["to"][1].as<int>(), id);
             Serial.printf("[\"moveNodeOnGrid\", %s]\n", djsondoc[1].as<string>().c_str());
         }
         else if (eventName == "rotateNode")
