@@ -34,7 +34,7 @@ class Inserter extends Node {
         let fromNode = NodeWork.getNodeById(nw, node.fromNodeID);
 
         let incoming = fromNode?.properties[props.from.value];
-        if (incoming.outValue != null && incoming.update == true) {
+        if (incoming?.outValue != null && incoming.update == true) {
             props.value.value = incoming.outValue;
             props.value.update = true;
             incoming.update = false;

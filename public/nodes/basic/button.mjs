@@ -6,6 +6,7 @@ export default class Button extends Node {
   static title = " ";
   static margin = 12;
   static defaultOutput = "value";
+  static defaultInput = "press";
 
   static onDrawForeground(node, ctx) {
     let props = node.properties;
@@ -59,7 +60,7 @@ export default class Button extends Node {
   static setup(node) {
     let props = node.properties;
     Node.setProperty(props, "state");
-    Node.setProperty(props, "press", { value: 1, autoInput: true });
+    Node.setProperty(props, "press", { value: 1 });
     Node.setProperty(props, "release", { value: 0, autoInput: true });
     Node.setProperty(props, "value", { value: null });
     Node.setProperty(props, "label", { value: "", autoInput: true });
@@ -80,43 +81,47 @@ export default class Button extends Node {
       }
     }
 
-    if (Object.keys(props.value?.inpValue).length) {
-      if (props.state?.value == 1) {
-        for (let prop of Object.values(props)) {
-          if (prop.inpValue !== null) {
-            for (const valueInputs of Object.values(prop.inpValue)) {
-              prop.value = valueInputs.val;
-            }
+    if (Object.keys(props.state.inpValue).length !== 0) {
+      let newState = Object.values(props.state.inpValue).reduce(
+        (a, b) => {
+          b.val = Number(b.val);
+          if (typeof b.val === "number" && !isNaN(b.val)) {
+            return Math.max(a.val, b.val);
           }
-        }
-        props.value.outValue = props.value.inpValue;
-        ret.push("value");
+          return a.val;
+        },
+        { val: 0, update: false }
+      );
+      if (newState == 0 && props.state.value == 1) {
+        props.value.value = props.release.value;
+        props.value.outValue = props.value.value;
+        props.value.update = true;
       }
-    } else {
-      if (Object.keys(props.state.inpValue).length !== 0) {
-        let newState = Object.values(props.state.inpValue).reduce(
-          (a, b) => {
-            b.val = Number(b.val);
-            if (typeof b.val === "number" && !isNaN(b.val)) {
-              return Math.max(a.val, b.val);
-            }
-            return a.val;
-          },
-          { val: 0, update: false }
-        );
-        if (newState == 0 && props.state.value == 1) {
-          props.value.value = props.release.value;
-          props.value.outValue = props.value.value;
-          props.value.update = true;
-        }
-        if (newState == 1 && props.state.value == 0) {
-          props.value.value = props.press.value;
-          props.value.outValue = props.value.value;
-          props.value.update = true;
-        }
-        props.state.value = newState;
-        props.state.inpValue = {};
-        ret.push("state");
+      if (newState == 1 && props.state.value == 0) {
+        props.value.value = props.press.value;
+        props.value.outValue = props.value.value;
+        props.value.update = true;
+      }
+      props.state.value = newState;
+      props.state.inpValue = {};
+      ret.push("state");
+    }
+
+    if (Object.keys(props.press.inpValue).length !== 0) {
+      let newPress = Object.values(props.press.inpValue).reduce(
+        (a, b) => {
+          b.val = Number(b.val);
+          if (typeof b.val === "number" && !isNaN(b.val)) {
+            return Math.max(a.val, b.val);
+          }
+          return a.val;
+        },
+        { val: 0, update: false }
+      );
+      if (props.state.value == 1) {
+        props.value.value = newPress;
+        props.value.outValue = newPress;
+        props.value.update = true;
       }
     }
 
