@@ -20,7 +20,7 @@ export default class ComPort extends NodeWork {
 
   static openSerial() {
     window.serialbuffer = "";
-    window.serialport.open({ baudRate: 115200 }).then(() => {
+    window.serialport?.open({ baudRate: 115200 }).then(() => {
       console.log('Port is opened!');
       window.reader = window.serialport.readable.getReader();
       window.serialwriter = window.serialport.writable.getWriter();

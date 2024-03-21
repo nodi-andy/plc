@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 
 import Rotate90DegreesCcwIcon from "@mui/icons-material/Rotate90DegreesCcw";
-import ContentCopyIcon from "@mui/icons-material/Add";
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import EditIcon from "@mui/icons-material/Edit";
 import OutputIcon from "@mui/icons-material/Output";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";

@@ -367,7 +367,7 @@ export default class LGraphCanvas {
           this.processNodeSelected(node_mouse, e);
         }
       }
-    } else if (node_mouse != null) {
+    } else if (node_mouse != null && window.canvas.copyNode == null) {
       // select first node
       this.grid_selected = e.gridPos;
       var gridCorner = NodiEnums.toCanvas(e.gridPos);
@@ -388,7 +388,7 @@ export default class LGraphCanvas {
       this.current_node = null;
       this.deselectAllNodes();
       this.gripped = "cell";
-    } else if (node_mouse == null && (this.grid_selected == undefined || (this.grid_selected && (this.grid_selected[0] != e.gridPos[0] || this.grid_selected[1] != e.gridPos[1])))) {
+    } else if (window.canvas.copyNode == null && node_mouse == null && (this.grid_selected == undefined || (this.grid_selected && (this.grid_selected[0] != e.gridPos[0] || this.grid_selected[1] != e.gridPos[1])))) {
       this.grid_selected = e.gridPos;
       if(this.current_node) this.current_node.selected = false;
       this.current_node = null;
@@ -397,7 +397,7 @@ export default class LGraphCanvas {
     } else if (node_mouse == null && window.canvas.copyNode != null) {
       // add existing node
       this.gripped = "copyNode";
-      this.nodework.setNodeOnGrid({ nodeID: this.copyNode, pos: e.gridPos });
+      NodeWork.setNodeOnGrid(this.nodework, { nodeID: this.copyNode, pos: e.gridPos });
     }
 
     this.last_mouse_down = [e.clientX, e.clientY];
@@ -456,7 +456,7 @@ export default class LGraphCanvas {
     this.gridPos = NodiEnums.toGrid([e.canvasX, e.canvasY]);
     this.grid_mouse = NodiEnums.toCanvas(this.gridPos);
     //get node over
-    var cursor_node = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
+    this.node_over = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
 
     //console.log("processMouseMove " + this.last_mouse_down);
 
@@ -473,7 +473,7 @@ export default class LGraphCanvas {
       ////console.log("pointerevents: processMouseMove is dragging_canvas");
       this.ds.offset[0] += delta[0] / this.ds.scale;
       this.ds.offset[1] += delta[1] / this.ds.scale;
-    } else if (this.gripped == "copyNode" && cursor_node == null) {
+    } else if (this.gripped == "copyNode" && this.node_over == null) {
       NodeWork.setNodeOnGrid(this.graph, { nodeID: this.copyNode, pos: e.gridPos });
     } else if (this.gripped == "node" && this.node_dragging) {
       //node being dragged
@@ -485,60 +485,12 @@ export default class LGraphCanvas {
         }
       }
     } else {
-      //remove mouseover flag
-      this.graph.nodes.forEach((cursor_node) => {
-        if (!cursor_node) return;
-        if (cursor_node.mouseOver) {
-          //mouse leave
-          cursor_node.mouseOver = false;
-          if (this.node_over && this.node_over.onMouseLeave) {
-            this.node_over.onMouseLeave(e);
-          }
-          this.node_over = null;
-        }
-      });
-
       //mouse over a node
-      if (cursor_node) {
-        if (!cursor_node.mouseOver) {
-          //mouse enter
-          cursor_node.mouseOver = true;
-          this.node_over = cursor_node;
+      //not over a node
 
-          if (cursor_node.onMouseEnter) {
-            cursor_node.onMouseEnter(e);
-          }
-        }
-        /*
-        //in case the node wants to do something
-        if (node.onMouseMove) {
-          node.onMouseMove(e, [e.canvasX - node.pos[0], e.canvasY - node.pos[1]], this);
-        }
-
-        //Search for corner
-        if (this.canvas) {
-          if (
-            Math.isInsideRectangle(
-              e.canvasX,
-              e.canvasY,
-              node.pos[0] + node.size[0] - 5,
-              node.pos[1] + node.size[1] - 5,
-              5,
-              5
-            )
-          ) {
-            this.canvas.style.cursor = "se-resize";
-          } else {
-            this.canvas.style.cursor = "crosshair";
-          }
-        }*/
-      } else {
-        //not over a node
-
-        if (this.canvas) {
-          this.canvas.style.cursor = "";
-        }
-      } //end
+      if (this.canvas) {
+        this.canvas.style.cursor = "";
+      }
 
       //send event to node if capturing input (used with widgets that allow drag outside of the area of the node)
       if (this.node_capturing_input && this.node_capturing_input.onMouseMove) {
@@ -626,7 +578,7 @@ export default class LGraphCanvas {
       this.node_dragging = null;
     } else {
       //no node being dragged
-      if (!node && this.selectedLink == null) {
+      if (!node && this.selectedLink == null && window.canvas.copyNode == null) {
         this.deselectAllNodes();
       }
 

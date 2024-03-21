@@ -213,9 +213,9 @@ export default class NodeWork extends Node {
     if (node.engine == null) node.engine = {name: "browser"};
   }
 
-  static setNodeOnGrid(node, msg) {
+  static setNodeOnGrid(nw, msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
-    node.setNodeIDOnGrid(msg.pos[0], msg.pos[1], msg.nodeID);
+    NodeWork.setNodeIDOnGrid(nw, msg.pos[0], msg.pos[1], msg.nodeID);
   }
 
   static moveNodeOnGrid(nw, msg) {
@@ -354,56 +354,56 @@ export default class NodeWork extends Node {
   }
 
   static run(nw) {
-    try {
-      let order = nw.orders.shift();
-      if (order) {
-        if(order.data?.nodeID != null) {
-          nw.nodes[order.data.nodeID].orders.push(order);
-        } else {
-          NodeWork.sendToEngine(nw.engine, nw, order);
-        }
+    let order = nw.orders.shift();
+    if (order) {
+      if(order.data?.nodeID != null) {
+        nw.nodes[order.data.nodeID].orders.push(order);
+      } else {
+        NodeWork.sendToEngine(nw.engine, nw, order);
       }
-      if (nw.engine.name != "browser") return;
-      nw.nodes?.forEach((node) => {
-        if (!node) return;
-        let curType = NodeWork.getNodeType(node.type);
-        if (node.movingTo) {
-          let curPos = new Vector2(node.pos[0], node.pos[1]);
-          let target = new Vector2(node.movingTo[0], node.movingTo[1]);
-          let moveVector = new Vector2(node.movingTo[0] - node.pos[0], node.movingTo[1] - node.pos[1])
-            .normalize()
-            .multiplyScalar(5);
-          //console.log("Dist: ", curPos.distanceTo(target));
-          if (curPos.distanceTo(target) > 5) {
-            node.pos[0] += moveVector.x;
-            node.pos[1] += moveVector.y;
-          } else {
-            node.pos[0] = target.x;
-            node.pos[1] = target.y;
-            delete node.movingTo;
-          }
-  
-          //io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
-          //console.log("JA", moveVector);
-        }
-  
-        let order = node.orders.shift();
-        if (order) {
-          NodeWork.sendToEngine(nw.engine, nw, order);
-        }
-
-        let results = curType?.run && curType.run(node, nw);
-        if (nw.socketOut && results?.length) {
-          //console.log(c)
-          results.forEach((propName) => {
-            nw.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
-          });
-        }
-      });
-
-    } catch (e) {
-      console.log(e);
     }
+    if (nw.engine.name != "browser") return;
+    nw.nodes?.forEach((node) => {
+      if (!node) return;
+      let curType = NodeWork.getNodeType(node.type);
+      if (node.movingTo) {
+        let curPos = new Vector2(node.pos[0], node.pos[1]);
+        let target = new Vector2(node.movingTo[0], node.movingTo[1]);
+        let moveVector = new Vector2(node.movingTo[0] - node.pos[0], node.movingTo[1] - node.pos[1])
+          .normalize()
+          .multiplyScalar(5);
+        //console.log("Dist: ", curPos.distanceTo(target));
+        if (curPos.distanceTo(target) > 5) {
+          node.pos[0] += moveVector.x;
+          node.pos[1] += moveVector.y;
+        } else {
+          node.pos[0] = target.x;
+          node.pos[1] = target.y;
+          delete node.movingTo;
+        }
+
+        //io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
+        //console.log("JA", moveVector);
+      }
+
+      let order = node.orders.shift();
+      if (order) {
+        NodeWork.sendToEngine(nw.engine, nw, order);
+      }
+
+      let results = curType?.run && curType.run(node, nw);
+      if (nw.socketOut && results?.length) {
+        //console.log(c)
+        results.forEach((propName) => {
+          nw.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
+        });
+      }
+    });
+    nw.nodes?.forEach((node) => {
+      for (const prop of Object.values(node.properties)) {
+        if (prop.outValue) prop.outValue.update = false;
+    }
+    })
   }
 
 

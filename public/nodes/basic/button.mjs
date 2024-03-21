@@ -61,11 +61,11 @@ export default class Button extends Node {
     let props = node.properties;
     Node.setProperty(props, "state");
     Node.setProperty(props, "press", { value: 1 });
-    Node.setProperty(props, "release", { value: 0, autoInput: true });
+    Node.setProperty(props, "release", { value: 0 });
     Node.setProperty(props, "value", { value: null });
-    Node.setProperty(props, "label", { value: "", autoInput: true });
-    Node.setProperty(props, "port", { value: 0, input: false });
-    Node.setProperty(props, "color", { value: "gray", input: false, autoInput: true });
+    Node.setProperty(props, "label", { value: ""});
+    Node.setProperty(props, "port", { value: 0, input: false , autoInput: true});
+    Node.setProperty(props, "color", { value: "#222", input: false, autoInput: true });
     Button.reset(props);
   }
 
@@ -94,12 +94,12 @@ export default class Button extends Node {
       );
       if (newState == 0 && props.state.value == 1) {
         props.value.value = props.release.value;
-        props.value.outValue = props.value.value;
+        props.value.outValue = {val : props.value.value, update : true};
         props.value.update = true;
       }
       if (newState == 1 && props.state.value == 0) {
         props.value.value = props.press.value;
-        props.value.outValue = props.value.value;
+        props.value.outValue = {val : props.value.value, update : true};
         props.value.update = true;
       }
       props.state.value = newState;
@@ -112,15 +112,33 @@ export default class Button extends Node {
         (a, b) => {
           b.val = Number(b.val);
           if (typeof b.val === "number" && !isNaN(b.val)) {
-            return Math.max(a.val, b.val);
+            return {val: Math.max(a.val,b.val), update: true};
           }
           return a.val;
         },
         { val: 0, update: false }
       );
       if (props.state.value == 1) {
-        props.value.value = newPress;
-        props.value.outValue = newPress;
+        props.value.value = newPress.val;
+        props.value.outValue = {val: newPress.val, update: true};
+        props.value.update = true;
+      }
+    }
+
+    if (Object.keys(props.release.inpValue).length !== 0) {
+      let newRelease = Object.values(props.release.inpValue).reduce(
+        (a, b) => {
+          b.val = Number(b.val);
+          if (typeof b.val === "number" && !isNaN(b.val)) {
+            return {val: Math.max(a.val,b.val), update: true};
+          }
+          return a.val;
+        },
+        { val: 0, update: false }
+      );
+      if (props.state.value == 0) {
+        props.value.value = newRelease.val;
+        props.value.outValue = {val: newRelease.val, update: true};
         props.value.update = true;
       }
     }
@@ -130,7 +148,7 @@ export default class Button extends Node {
 
   static reset(props) {
     props.state.value = props.release.value;
-    props.state.outValue = props.state.value;
+    props.state.outValue = {val: props.state.val, update: true};
   }
 
   static reconnect(node, nw, pos) {

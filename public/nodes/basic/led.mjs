@@ -12,7 +12,6 @@ export default class WidgetLed extends Node {
         Node.setProperty(props, "set");
         Node.setProperty(props, "clear");
         Node.setProperty(props, "toggle");
-        Node.setProperty(props, "in");
         Node.setProperty(props, "label");
         Node.setProperty(props, "port", {value: 2});
         Node.setProperty(props, "color", {value: "FF3333"});
@@ -41,7 +40,7 @@ export default class WidgetLed extends Node {
                 b.update = false;
                 return {val: a.val, update: true};
             }, {val: 0, update: false}).val;
-            props.value.outValue = props.value.value;
+            props.value.outValue = {val: props.value.value, update: true};
             ret.push("value");
         }
 
@@ -59,13 +58,13 @@ export default class WidgetLed extends Node {
         if (props.set?.inpValue == 1) {
             props.value.value = 1;
             props.set.inpValue = null;
-            props.value.outValue = props.value.value;
+            props.value.outValue = {val: props.value.value, update: true};
         }
 
         if (props.clear?.inpValue == 1) {
             props.value.value = 0;
             props.clear.inpValue = null;
-            props.value.outValue = props.value.value;
+            props.value.outValue = {val: props.value.value, update: true};
         }
         return ret;
     }

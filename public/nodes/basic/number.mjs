@@ -39,7 +39,7 @@ export default class WidgetNumber extends Node {
 
         if (valueUpdate) {
             props.value.value = maxVal;
-            props.value.outValue = props.value.value;
+            props.value.outValue = {val: props.value.value, update: true};
             ret.push("value");
         }
 
@@ -47,7 +47,7 @@ export default class WidgetNumber extends Node {
             if (valueInputs.update === true) {
                 props.value.value += valueInputs.val;
                 valueInputs.update = false;
-                props.value.outValue = props.value.value;
+                props.value.outValue = {val: props.value.value, update: true};
                 ret.push("value");
             }
         }
@@ -55,8 +55,8 @@ export default class WidgetNumber extends Node {
 
         let readUpdate = Object.values(props.read.inpValue).length > 0;
         if (readUpdate) {
-            props.read.outValue = props.value.value;
-            props.value.outValue = props.value.value;
+            props.read.outValue = {val: props.value.value, update: true};
+            props.value.outValue = {val: props.value.value, update: true};
             props.read.inpValue = {}
             ret.push("read");
         }
@@ -65,7 +65,7 @@ export default class WidgetNumber extends Node {
                 props.value.value -= valueInputs.val;
                 valueInputs.update = false;
             }
-            props.value.outValue = props.value.value;
+            props.value.outValue = {val: props.value.value, update: true};
             ret.push("value");
         }
 /*
@@ -77,7 +77,7 @@ export default class WidgetNumber extends Node {
             } else {
                 props.value.value = props.value.inpValue;
             }
-            props.value.outValue = props.value.value;
+            props.value.outValue = {val: props.value.value, update: true};
             props.value.inpValue = null;
             return true;
         }*/

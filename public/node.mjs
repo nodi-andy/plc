@@ -21,7 +21,7 @@ export default class Node {
     prop.name = name;
     prop.inpValue = {};
     prop.value = null;
-    prop.outValue = null;
+    prop.outValue = {};
     for (let i in info) {
       prop[i] = info[i];
     }

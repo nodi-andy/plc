@@ -18,15 +18,12 @@ class TimeInterval extends Node {
 
   static setup(node) {
     let props = node.properties;
-    Node.setProperty(props, "state");
     Node.setProperty(props, "enable", {value: 1, autoInput: true});
-    Node.setProperty(props, "press", { value: 1 });
-    Node.setProperty(props, "release", { value: 0 });
-    Node.setProperty(props, "ton", { value: 500 });
-    Node.setProperty(props, "toff", { value: 500 });
+    Node.setProperty(props, "ton", { value: 500 , autoInput: true});
+    Node.setProperty(props, "toff", { value: 500 , autoInput: true});
     Node.setProperty(props, "value");
-    Node.setProperty(props, "lastOn");
-    Node.setProperty(props, "lastOff");
+    Node.setProperty(props, "lastOn", { visible: false});
+    Node.setProperty(props, "lastOff", { visible: false});
     this.type = Node.type;
     TimeInterval.reset(props);
   }
@@ -35,36 +32,32 @@ class TimeInterval extends Node {
     let props = node.properties;
     var now = NodiEnums.getTime();
     let ret = false;
-    for(let propKey in props) {
-      let prop = props[propKey];
-      if (prop.autoInput && prop.inpValue != null) {
-          prop.value = prop.inpValue;
-          prop.inpValue = null;
-          ret = true;
+    for (let prop of Object.values(props)) {
+      if (prop.autoInput && prop.inpValue !== null) {
+        for (const inputKeys of Object.keys(prop.inpValue)) {
+          prop.value = prop.inpValue[inputKeys].val;
+          delete prop.inpValue[inputKeys];
+        }
       }
     }
 
-    if (props.state.value == null) props.state.value = 0;
+    if (props.value.value == null) props.value.value = 0;
 
     var dON = now - props.lastOn.value;
     var dOFF = now - props.lastOff.value;
-    if (props.state.value == 0 && dOFF > props.toff.value && props.enable.value) {
+    if (props.value.value == 0 && dOFF > props.toff.value && props.enable.value) {
       props.lastOn.value = now;
-      props.state.value = 1;
-      props.state.outValue = 1;
-      props.value.value = props.release.value;
-      props.value.outValue = props.release.value;
+      props.value.value = 1;
+      props.value.outValue = {val:1, update: true};
       props.value.update = true;
-      console.log("ton");
+      //console.log("ton");
       ret = true;
-    } else if (props.state.value == 1 && dON > props.ton.value && props.enable.value) {
+    } else if (props.value.value == 1 && dON > props.ton.value && props.enable.value) {
       props.lastOff.value = now;
-      props.state.value = 0;
-      props.state.outValue = 0;
-      props.value.value = props.press.value;
-      props.value.outValue = props.press.value;
+      props.value.value = 0;
+      props.value.outValue = {val:0, update: true};
       props.value.update = true;
-      console.log("toff");
+      //console.log("toff");
       ret = true;
     }
 
@@ -72,7 +65,7 @@ class TimeInterval extends Node {
   }
 
   static reset(props) {
-    props.state.value = 0;
+    props.value.value = 0;
   }
 
   onDrawBackground() {
