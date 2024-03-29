@@ -574,7 +574,7 @@ export default class LGraphCanvas {
     } else if (this.resizing_node) {
       this.resizing_node = null;
     } else if (this.node_dragging) {
-      window.sendToNodework("moveNodeOnGrid", {nodeID: this.node_dragging.nodeID, from: this.grid_selected, to: e.gridPos});
+      window.sendToNodework("moveNodeOnGrid", {id: this.node_dragging.nodeID, from: this.grid_selected, to: e.gridPos});
       this.node_dragging = null;
     } else {
       //no node being dragged

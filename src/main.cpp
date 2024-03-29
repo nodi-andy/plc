@@ -178,7 +178,7 @@ void loop() {
 
     nodemap.run();
 
-    if(now - messageTimestamp > 2000) {
+    if(now - messageTimestamp > 5000) {
         messageTimestamp = now;
         Serial.printf("nodemap:");
         for (auto n : nodemap.nodesByPos) {

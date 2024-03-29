@@ -35,9 +35,14 @@ class Node
 
         // INPUT
         unordered_map<string, std::map<int, tuple<int, bool>>> inputs;
-        int  hasInput(string name);
+        unordered_map<string, std::map<int, tuple<string, bool>>> inputStrs;
+        int hasInput(string name);
+        bool hasStrInput(string name);
+        bool hasIntInput(string name);
         int  getInput(string name, int who = -1);
+        string getStrInput(string name, int who = -1);
         void setInput(string inputName, int who, int val);
+        void setInput(string inputName, int who, string val);
         void clearInput(string name = "");
         void clearInputsByNodeID(int nodeID);
 
@@ -45,6 +50,8 @@ class Node
         void setupVals();
         unordered_map<string, int> vals;
         unordered_map<string, string> strVals;
+        bool hasValue(string name);
+
         int  getValue(string name);
         string getStrValue(string name);
         void setValue(string name, int val);

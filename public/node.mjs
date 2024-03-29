@@ -18,10 +18,10 @@ export default class Node {
     if (!properties[name]) properties[name] = {};
 
     var prop = properties[name];
-    prop.name = name;
-    prop.inpValue = {};
-    prop.value = null;
-    prop.outValue = {};
+    if (!prop.name) prop.name = name;
+    if (!prop.inpValue) prop.inpValue = {};
+    if (!prop.value) prop.value = null;
+    if (!prop.outValue) prop.outValue = {};
     for (let i in info) {
       prop[i] = info[i];
     }

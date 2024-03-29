@@ -14,7 +14,7 @@ vector<string> Button::run() {
     clearInput("port");
     Serial.printf("[Button:port_changed] : %d\n", getValue("port"));
   }
-  port = getValue("port");
+    port = getValue("port");
   pinMode(port, INPUT);
   pinMode(port, INPUT_PULLUP);
 

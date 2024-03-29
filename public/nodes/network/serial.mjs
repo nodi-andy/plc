@@ -1,12 +1,18 @@
 import NodeWork from "../../nodework.mjs";
 
 export default class ComPort extends NodeWork {
-  static type = "remote/serial";
+  static type = "network/serial";
   static title = "COM";
 
   static onDrawForeground(node, ctx) {
-    let props = node.properties;
-    
+    var size = Math.min(node.size[0] * 0.2, node.size[1] * 0.2);
+    ctx.beginPath();
+    ctx.arc(size, size, size * 0.5, 0, 2 * Math.PI, false);
+    ctx.fillStyle = window.serialport.status == "open" ? "green" : "red";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#000';
+    ctx.stroke();
   }
 
   static setup(node) {
@@ -20,8 +26,11 @@ export default class ComPort extends NodeWork {
 
   static openSerial() {
     window.serialbuffer = "";
+
     window.serialport?.open({ baudRate: 115200 }).then(() => {
       console.log('Port is opened!');
+      window.serialport.status = "open";
+
       window.reader = window.serialport.readable.getReader();
       window.serialwriter = window.serialport.writable.getWriter();
       const encoder = new TextEncoder();
@@ -52,6 +61,7 @@ export default class ComPort extends NodeWork {
               readLoop();
           }).catch(error => {
               console.error('Error reading from serial port:', error);
+            window.serialport.status = "closed";
           });
       };
       readLoop();

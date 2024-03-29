@@ -77,7 +77,7 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
               // Prompt user to select any serial port.
               await navigator.serial.requestPort().then((port) => {
                 window.serialport = port;
-
+                window.serialport.status = "closed";
               })
             }}>
             <ListItemIcon> <SaveOutlinedIcon /> </ListItemIcon>

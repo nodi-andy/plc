@@ -82,22 +82,31 @@ JsonDocument Map::toJSON()
     JsonObject map = doc.to<JsonObject>();
 
     JsonArray jsNodes = map["nodes"].to<JsonArray>();
-    Serial.println("[Map::toJSON]:");
-    for (auto n : nodes)
+    Serial.printf("[Map::toJSON]: %d\n", nodes.size());
+    for (auto np : nodes)
     {
-        if (n.second)
+        Node *n = np.second;
+        if (n)
         {
-            Serial.printf("[nodes: %d]\n", n.second->id);
+            Serial.printf("[nodes: %d]\n", n->id);
 
-            JsonObject nodeObject = jsNodes.add<JsonObject>();
-            nodeObject["node"] = jsNodes.add<JsonObject>();
-            nodeObject["node"]["nodeID"] = n.second->id;
-            nodeObject["type"] = n.second->type;
-            nodeObject["node"]["properties"] = jsNodes.add<JsonObject>();
-            for (const auto &val : n.second->vals)
+            JsonObject nodeObject = jsNodes.createNestedObject();
+            nodeObject["type"] = n->type;
+
+            JsonObject node = nodeObject.createNestedObject("node");
+            node["nodeID"] = n->id;
+            node["properties"] = jsNodes.add<JsonObject>();
+            for (const auto &val : n->vals)
             {
                 // Use val.first as the key, and the result of getValue(val.first) as the value.
-                nodeObject["node"]["properties"][val.first]["value"] = n.second->getValue(val.first);
+                node["properties"][val.first]["value"] = n->getValue(val.first);
+                Serial.printf("[Map::toJSON::getIntValue] : %s: %d\n", val.first.c_str(), n->getValue(val.first));
+            }
+            for (const auto &val : n->strVals)
+            {
+                // Use val.first as the key, and the result of getValue(val.first) as the value.
+                node["properties"][val.first]["value"] = n->getStrValue(val.first);
+                Serial.printf("[Map::toJSONgetStrValue] : %s: %s\n", val.first.c_str(), n->getStrValue(val.first).c_str());
             }
         }
     }
@@ -109,9 +118,8 @@ JsonDocument Map::toJSON()
         int y = pos.second;
         string s = to_string(x) + STR_SEP + to_string(y);
         jsNodesByPos[s] = n.second;
-        Serial.printf("[nodesByPos: %s]", s.c_str());
+        Serial.printf("[Map::toJSON:nodesByPos] : %s\n", s.c_str());
     }
-    Serial.printf("\n");
     return doc;
 }
 
@@ -171,22 +179,48 @@ Node *Map::getNodeById(int id)
     return NULL;
 }
 
-Node *Map::getNodeOnGrid(int x, int y)
+int *Map::getNodeIDOnGrid(int x, int y)
 {
     auto it = nodesByPos.find(std::make_pair(x, y));
     if (it != nodesByPos.end()) {
         // Found the node, return a pointer to it
-        return nodes[it->second];
+        return &(it->second);
     } else {
         // Node doesn't exist, return nullptr
         return nullptr;
     }
 }
 
+Node *Map::getNodeOnGrid(int x, int y)
+{
+    int *id = getNodeIDOnGrid(x, y);
+    if (id)  return nodes[*id];
+    return nullptr;
+}
+
 void Map::removeNodeOnGrid(int x, int y)
 {
+    int *id = getNodeIDOnGrid(x, y);
+    if (!id) return;
+    if (getNumberOfNodes(*id) == 0) {
+        Node *n = getNodeById(*id);
+        if (n) {
+            Serial.printf("[removeNodeOnGrid: %d]\n", n->id);
+            delete n;
+        }
+        nodes.erase(*id);
+    }
     nodesByPos.erase(make_pair(x, y));
     updateNBs(x, y);
+
+}
+
+int Map::getNumberOfNodes(int id)
+{
+    int count = std::count_if(nodesByPos.begin(), nodesByPos.end(), [id](std::pair<const std::pair<int, int>, int>& pair) {
+        return pair.second == id;
+    });
+    return 0;
 }
 
 void Map::rotateNode(int x, int y)
@@ -342,8 +376,26 @@ vector<string> Map::run()
             {
                 for (JsonPair p : eventData["properties"].as<JsonObject>())
                 {
-                    Serial.printf("[updateInputs.found] id: %d, key: %s\n", id, p.key().c_str());
-                    nodes[id]->setInput(p.key().c_str(), 0, p.value()["inpValue"].as<int>());
+                    JsonVariant prop = p.value()["inpValue"];
+                    if (prop.is<int>()) {
+                        Serial.printf("[updateInputs.INT.found] id: %d, key: %s\n", id, p.key().c_str());
+                        nodes[id]->setInput(p.key().c_str(), 0, prop.as<int>());
+                    } else {
+                        // If the value is a string, try to parse it as an integer
+                        String stringValue = prop.as<String>();
+                        char* endPtr;
+                        long intValue = strtol(stringValue.c_str(), &endPtr, 10);
+                        
+                        // Check if the entire string was successfully converted to an integer (endPtr would point to '\0' in this case)
+                        if (*endPtr == '\0') {
+                            Serial.printf("[updateInputs.STR-INT.found] id: %d,  %s: %d\n", id, p.key().c_str(), intValue);
+                            nodes[id]->setInput(p.key().c_str(), 0, static_cast<int>(intValue)); 
+                        } else {
+                            // If conversion wasn't successful, process it as a string
+                            Serial.printf("[updateInputs.STR.found] id: %d, key: %s\n", id, p.key().c_str());
+                            nodes[id]->setInput(p.key().c_str(), 0, stringValue.c_str());
+                        }
+                    }
                 }
             }
         }
@@ -363,6 +415,7 @@ vector<string> Map::run()
         }
         else if (eventName == "moveNodeOnGrid")
         {
+            int id = eventData["id"].as<int>();
             removeNodeOnGrid(eventData["from"][0].as<int>(), eventData["from"][1].as<int>());
             setNodeOnGrid(eventData["to"][0].as<int>(), eventData["to"][1].as<int>(), id);
             Serial.printf("[\"moveNodeOnGrid\", %s]\n", djsondoc[1].as<string>().c_str());

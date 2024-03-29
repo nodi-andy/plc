@@ -18,7 +18,6 @@ class Inserter : public Node
     void reconnect(int x, int y);
     Node *target = nullptr;
     Node *source = nullptr;
-    string targetPortName = "value";
 };
 
 static bool InserterRegistered = []() {

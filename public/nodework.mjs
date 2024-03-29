@@ -134,7 +134,7 @@ export default class NodeWork extends Node {
           } 
         } else {
           if (value.type != null) value.parent = parent
-          if (value.type == "remote/serial") {
+          if (value.type == "network/serial") {
             NodeWork.Nodes["ComPort"].openSerial();
             window.serialNodeWork = value;
           }
@@ -173,7 +173,7 @@ export default class NodeWork extends Node {
     //NodeWork.clear(msg.node);
     node.nodes[msg.node.nodeID] = msg.node;
     msg.node.engine = node.engine;
-    if (msg.node.type == "remote/serial") {
+    if (msg.node.type == "network/serial") {
       window.serialNodeWork = msg.node;
       msg.node.engine = {name: "serial"};
       msg.node.nodesByPos = {};
@@ -188,10 +188,6 @@ export default class NodeWork extends Node {
     NodeWork.setNodeIDOnGrid(node, msg.pos[0], msg.pos[1], msg.nodeID);
     NodeWork.publish("createNode", msg);
     return msg.node;
-  }
-
-  static sendToEngine(engine, node, data) {
-    NodeWork.engines[engine.name](node, data);
   }
 
   static rotateNode(nw, msg) {
@@ -221,7 +217,7 @@ export default class NodeWork extends Node {
   static moveNodeOnGrid(nw, msg) {
     if (!msg) return;
 
-    let node = nw.nodes[msg.nodeID];
+    let node = nw.nodes[msg.id];
     if (node.moving) node.moving = false;
 
     let next_gridPos = msg.to;
@@ -229,7 +225,7 @@ export default class NodeWork extends Node {
       if (msg.from) {
         NodeWork.setNodeIDOnGrid(nw, msg.from[0], msg.from[1], null);
       }
-      NodeWork.setNodeIDOnGrid(nw, msg.to[0], msg.to[1], node.nodeID);
+      NodeWork.setNodeIDOnGrid(nw, msg.to[0], msg.to[1], msg.id);
     }
 
     //this.publish("moveNodeOnGrid", msg);
@@ -344,7 +340,7 @@ export default class NodeWork extends Node {
           let [x , y] = nodePos.split(NodiEnums.POS_SEP);
           x = parseInt(x);
           y = parseInt(y);
-          nw.reconnectByPos(x, y);
+          NodeWork.reconnectByPos(nw, x, y);
         }
       }
     } catch (e) {
@@ -356,11 +352,7 @@ export default class NodeWork extends Node {
   static run(nw) {
     let order = nw.orders.shift();
     if (order) {
-      if(order.data?.nodeID != null) {
-        nw.nodes[order.data.nodeID].orders.push(order);
-      } else {
-        NodeWork.sendToEngine(nw.engine, nw, order);
-      }
+       NodeWork.engines[nw.engine.name](nw, order);
     }
     if (nw.engine.name != "browser") return;
     nw.nodes?.forEach((node) => {
@@ -388,7 +380,7 @@ export default class NodeWork extends Node {
 
       let order = node.orders.shift();
       if (order) {
-        NodeWork.sendToEngine(nw.engine, nw, order);
+        NodeWork.engines[nw.engine.name](nw, order);
       }
 
       let results = curType?.run && curType.run(node, nw);

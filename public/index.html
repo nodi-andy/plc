@@ -101,7 +101,7 @@
     await loadJS("./nodes/nodi.box/stepper.js", false);
     await loadJS("./nodes/esp32mcu/b1.js", false);
     await loadJS("./nodes/esp32mcu/led.js", false);
-    await loadJS("./nodes/remote/serial.mjs", false);
+    await loadJS("./nodes/network/serial.mjs", false);
     
     import Node from "./node.mjs";
     import NodeWork from "./nodework.mjs";
@@ -129,7 +129,10 @@
 
     await loadJS("./websocket.js", false);
     navigator.serial?.getPorts().then((ports) => {
-      if (ports.length) window.serialport = ports[0];
+      if (ports.length) {
+        window.serialport = ports[0];
+        window.serialport.status = "closed";
+      }
       window.load("nodework");
     });
 
@@ -143,10 +146,10 @@
     window.createNewNode = (type) => {
       let allowNode = true;
 
-      if (type == "remote/serial" && window.serialport) {
+      if (type == "network/serial" && window.serialport) {
         NodeWork.Nodes["ComPort"].openSerial();
       } 
-      if (type == "remote/serial" && window.serialport == null) {
+      if (type == "network/serial" && window.serialport == null) {
         allowNode = false
       }
 

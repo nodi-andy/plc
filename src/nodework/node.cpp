@@ -7,12 +7,30 @@ void Node::setInput(string inputName, int who, int val)
     inputs[inputName][who] = std::make_tuple(val, true);
 };
 
-int Node::hasInput(string name)
+void Node::setInput(string inputName, int who, string val)
+{
+    inputStrs[inputName][who] = std::make_tuple(val, true);
+};
+
+bool Node::hasStrInput(string name)
+{
+    for (auto& pair : inputStrs[name]) {
+        if (get<1>(pair.second)) return true;
+    }
+    return false;
+};
+
+bool Node::hasIntInput(string name)
 {
     for (auto& pair : inputs[name]) {
         if (get<1>(pair.second)) return true;
     }
     return false;
+};
+
+int Node::hasInput(string name)
+{
+    return hasStrInput(name) || hasIntInput(name);
 };
 
 int Node::getInput(string name, int who)
@@ -24,6 +42,18 @@ int Node::getInput(string name, int who)
     else
     {
         return std::get<0>(inputs[name][who]);
+    }
+};
+
+string Node::getStrInput(string name, int who)
+{
+    if (who < 0)
+    {
+        return std::get<0>(inputStrs[name].begin()->second);
+    }
+    else
+    {
+        return std::get<0>(inputStrs[name][who]);
     }
 };
 
@@ -56,8 +86,12 @@ void Node::clearInput(string name){
     if (name == "") {
         // clear all
         inputs.clear();
+        inputStrs.clear();
     }
     for (auto& pair : inputs[name]) {
+        get<1>(pair.second) = false;
+    }
+    for (auto& pair : inputStrs[name]) {
         get<1>(pair.second) = false;
     }
 };
@@ -68,9 +102,14 @@ void Node::setValue(string name, int val)
     //Serial.printf("[Node::setValue] %s = %d\n", name.c_str(), val);
 };
 
+bool Node::hasValue(string name) {
+    return vals.count(name) != 0 || strVals.count(name) != 0;
+};
+
 void Node::setValue(string name, string val)
 {
     strVals[name] = val;
+    Serial.printf("[Node::setValue] %s = %s\n", name.c_str(), val.c_str());
 };
 
 void Node::setOutput(string name, int val)

@@ -10,7 +10,7 @@ import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/led.js";
 
 window.serialline = (msg) => {
-  console.log("Received serial msg:", msg);
+  console.log("uC:", msg);
   msg = msg.trim();
   try {
     let [cmd, data] = JSON.parse(msg);

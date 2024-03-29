@@ -13,17 +13,25 @@ void Inserter::setup()
 vector<string> Inserter::run()
 {
     vector<string> ret;
-
-    if (source && source->hasOutput(getStrValue("from")))
-    {
-        //Serial.printf("[inserter::pickValue] id: %d\n", source->getOutput("value"));
-        setValue("value", source->getOutput(getStrValue("to")));
+    if (hasStrInput("from")) {
+        setValue("from", getStrInput("from"));
+        clearInput("from");
+        ret.push_back("from");
+    }
+    if (hasStrInput("to")) {
+        setValue("to", getStrInput("to"));
+        Serial.printf("[inserter::hasStrInput] id: %s\n", getStrInput("to"));
+        clearInput("to");
+        ret.push_back("to");
+    }
+    if (source && source->hasOutput(getStrValue("from"))) {
+        Serial.printf("[inserter::pickValue] id: %d\n", source->getOutput("value"));
+        setValue("value", source->getOutput(getStrValue("from")));
         source->clearOutput("value");
     }
-    if (target && vals.count("value"))
-    {
-        //Serial.printf("[inserter::placeValue] id: %d\n", source->getOutput("value"));
-        target->setInput("value", id, getValue("value"));
+    if (target && vals.count("value")) {
+        Serial.printf("[inserter::placeValue] to: %s, value: %d\n", getStrValue("to").c_str(), source->getOutput("value"));
+        target->setInput(getStrValue("to"), id, getValue("value"));
         vals.erase("value");
     }
     return ret;
@@ -79,14 +87,10 @@ void Inserter::reconnect(int x, int y)
 
     if (nextTarget != nullptr && (target == nullptr || target != nextTarget))
     {
-        targetPortName = "value";
-
-        if (vals.count("to") == 0)
-        {
-            setValue("to", nextTarget->defaultInput);
-        }
-        else {
+        if (hasValue("to")) {
             if (target != nullptr) target->setInput(getStrValue("to"), id, 0); //{val: undefined, update: true}
+        } else {
+            setValue("to", nextTarget->defaultInput);
         }
     }
     target = nextTarget;

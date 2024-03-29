@@ -17,9 +17,8 @@ class Interval : public Node
 
     private:
     int state;
+    int enable = true;
     int value;
-    int ton;
-    int toff;
     int lastTick;
     const int rtFactor = 1000;
 };

@@ -40,8 +40,10 @@ public:
     void updateInputs(JsonObject msg);
     Node* getNodeById(int id);
     Node* getNodeOnGrid(int x, int y);
+    int* getNodeIDOnGrid(int x, int y);
     void setNodeOnGrid(int x, int y, int id);
     void removeNodeOnGrid(int x, int y);
+    int getNumberOfNodes(int id);
     void rotateNode(int x, int y);
     void updateNBs(int x, int y);
 
