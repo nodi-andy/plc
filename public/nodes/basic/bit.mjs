@@ -1,8 +1,8 @@
 import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
-export default class WidgetLed extends Node {
-    static type = "basic/led";
+export default class WidgetBit extends Node {
+    static type = "basic/bit";
     static defaultInput = "value";
     static defaultOutput = "value";
 
@@ -53,8 +53,6 @@ export default class WidgetLed extends Node {
             }
         });
 
-        
-        
         if (props.set?.inpValue == 1) {
             props.value.value = 1;
             props.set.inpValue = null;
@@ -92,21 +90,7 @@ export default class WidgetLed extends Node {
             local_pos[1] >  node.size[0] * 0.25 &&
             local_pos[0] < node.size[0] * 0.75 &&
             local_pos[1] < node.size[1] * 0.75) {
-            window.nodes.updateInputs(node.nodeID, { value: { inpValue: 1 } });
-
-            node.update = true;
-
-            return true;
-        }
-        return false;
-    }
-
-    static onMouseUp(node, e, local_pos) {
-        if (local_pos[0] > node.size[0] * 0.25 &&
-            local_pos[1] >  node.size[0] * 0.25 &&
-            local_pos[0] < node.size[0] * 0.75 &&
-            local_pos[1] < node.size[1] * 0.75) {
-            window.nodes.updateInputs(node.nodeID, { value: { inpValue: 0 } });
+            window.nodes.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
 
             node.update = true;
 
@@ -116,4 +100,4 @@ export default class WidgetLed extends Node {
     }
 }
 
-NodeWork.registerNodeType(WidgetLed);
+NodeWork.registerNodeType(WidgetBit);

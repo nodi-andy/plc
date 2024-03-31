@@ -1,26 +1,21 @@
 #include <Arduino.h>
-#include "../../nodework/node.h"
+#include "../../../nodework/node.h"
 
-
-//Toggle a bit
 class Bit : public Node
 {
     public:
     Bit();
+    bool isNotConnected = false;
     virtual std::string getType() const override {
-        return "data/bit";
+        return "basic/bit";
     }
     virtual Bit* createInstance() const override {
         return new Bit(*this); // Create a new instance of the Toggle object
     }
-    void setup();
     vector<string> run();
-    int newvalue;
-    int value;
-    int port;
 };
 
-static bool bitRegistered = []() {
+static bool toogleRegistered = []() {
     RegistryManager::getInstance().registerNode(new Bit());
     return true;
 }();

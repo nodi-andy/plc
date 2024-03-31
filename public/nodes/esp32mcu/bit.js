@@ -1,9 +1,9 @@
-import WidgetLed from "../basic/led.mjs";
+import WidgetBit from "../basic/bit.mjs";
 
-export default class esp32mcuLED extends WidgetLed {
+export default class esp32mcuBit extends WidgetBit {
 
     static setup(node) {
-        WidgetLed.setup(node);
+        WidgetBit.setup(node);
         let props = node.properties;
         props.port.value = 2;
         props.label.value = " ";

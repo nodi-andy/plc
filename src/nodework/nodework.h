@@ -42,7 +42,8 @@ public:
     Node* getNodeOnGrid(int x, int y);
     int* getNodeIDOnGrid(int x, int y);
     void setNodeOnGrid(int x, int y, int id);
-    void removeNodeOnGrid(int x, int y);
+    void removeFromMemory(int x, int y);
+    bool removeNodeOnGrid(int x, int y, bool update = false);
     int getNumberOfNodes(int id);
     void rotateNode(int x, int y);
     void updateNBs(int x, int y);

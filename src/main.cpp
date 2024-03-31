@@ -180,13 +180,13 @@ void loop() {
 
     if(now - messageTimestamp > 5000) {
         messageTimestamp = now;
+        Serial.printf("[\"ping\", {\"ts\": %d, \"n\": %d}]: ", now, nodemap.nodes.size());
         Serial.printf("nodemap:");
         for (auto n : nodemap.nodesByPos) {
             Serial.printf("[%d, %d]: %d , ", n.first.first, n.first.second, n.second);
         }
         Serial.printf("\n");
 
-        Serial.printf("[\"ping\", {\"ts\": %d, \"n\": %d}]\n", now, nodemap.nodes.size());
 /*
         // creat JSON message for Socket.IO (event)
         DynamicJsonDocument doc(1024);

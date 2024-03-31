@@ -7,7 +7,7 @@ import NodiBoxGreen from "./nodes/nodi.box/green.js";
 import NodiBoxYellow from "./nodes/nodi.box/yellow.js";
 import Stepper from "./nodes/nodi.box/stepper.js";
 import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
-import esp32mcuLED from "./nodes/esp32mcu/led.js";
+import esp32mcuLED from "./nodes/esp32mcu/bit.js";
 
 window.serialline = (msg) => {
   console.log("uC:", msg);

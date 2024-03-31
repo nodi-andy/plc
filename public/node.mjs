@@ -14,8 +14,9 @@ export default class Node {
 
   static setProperty(properties, name, info) {
     if (!properties) return;
-
-    if (!properties[name]) properties[name] = {};
+    if (properties[name]) return;
+    
+    properties[name] = {};
 
     var prop = properties[name];
     if (!prop.name) prop.name = name;

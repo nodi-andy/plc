@@ -198,10 +198,10 @@ Node *Map::getNodeOnGrid(int x, int y)
     return nullptr;
 }
 
-void Map::removeNodeOnGrid(int x, int y)
+void Map::removeFromMemory(int x, int y)
 {
+    if (removeNodeOnGrid(x , y, true) == false) return;
     int *id = getNodeIDOnGrid(x, y);
-    if (!id) return;
     if (getNumberOfNodes(*id) == 0) {
         Node *n = getNodeById(*id);
         if (n) {
@@ -212,7 +212,15 @@ void Map::removeNodeOnGrid(int x, int y)
     }
     nodesByPos.erase(make_pair(x, y));
     updateNBs(x, y);
+}
 
+bool Map::removeNodeOnGrid(int x, int y, bool update)
+{
+    int *id = getNodeIDOnGrid(x, y);
+    if (!id) return false;
+    nodesByPos.erase(make_pair(x, y));
+    if (update) updateNBs(x, y);
+    return true;
 }
 
 int Map::getNumberOfNodes(int id)
@@ -431,7 +439,7 @@ vector<string> Map::run()
         {
             int x = eventData["pos"][0].as<int>();
             int y = eventData["pos"][1].as<int>();
-            removeNodeOnGrid(x, y);
+            removeFromMemory(x, y);
             Serial.printf("[\"removeNode\", %s]\n", djsondoc[1].as<string>().c_str());
         }
     }

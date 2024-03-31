@@ -1,9 +1,9 @@
-import WidgetLed from "../basic/led.mjs";
+import WidgetBit from "../basic/bit.mjs";
 
-export default class NodiBoxGreen extends WidgetLed {
+export default class NodiBoxGreen extends WidgetBit {
 
     static setup(props) {
-        WidgetLed.setup(props);
+        WidgetBit.setup(props);
         props.port.value = 23;
         props.label.value = "green";
         props.color.value = "#00ff00";

@@ -6,7 +6,7 @@ Interval::Interval() {
 // init the node
 void Interval::setup() {
     state = 0;
-    Serial.print("[Interval] Setup");
+    Serial.print("[Interval] Setup\n");
     lastTick = micros();
 }
 
@@ -18,17 +18,20 @@ vector<string> Interval::run() {
   if (hasInput("enable")) {
     enable = getInput("enable");
     clearInput("enable");
-    Serial.printf("enable: %d\n", enable);
+    ret.push_back("enable");
+    //Serial.printf("enable: %d\n", enable);
   }
   if (hasInput("ton")) {
     setValue("ton", getInput("ton"));
     Serial.printf("[Interval::ton] : %d\n", getValue("ton"));
     clearInput("ton");
+    ret.push_back("ton");
   }
 
   if (hasInput("toff")) {
     setValue("toff", getInput("toff"));
     clearInput("toff");
+    ret.push_back("toff");
   }
 
   //Serial.printf("[Interval] state: %d,  diff: %d, ton %d\n", state, now - lastTick, ton * rtFactor);
