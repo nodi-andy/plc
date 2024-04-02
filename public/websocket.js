@@ -145,6 +145,10 @@ window.addEventListener("load", () => {
     console.log("WebSocket closed");
   };
 
+  websocket.onerror = () => {
+    console.log("No websocket");
+  };
+
   websocket.onmessage = (event) => {
     console.log("Received message from the server:", event);
 

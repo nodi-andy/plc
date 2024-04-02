@@ -12,7 +12,6 @@ export default class MathMult extends Node {
         Node.setProperty(props, "mult");
         Node.setProperty(props, "div");
         Node.setProperty(props, "value");
-        MathMult.reset(props);
     }
 
     static run(node) {
@@ -23,22 +22,18 @@ export default class MathMult extends Node {
         for (const valueInputs of Object.values(props.mult.inpValue)) {
             res *= valueInputs.val;
             props.value.value = res;
-            if (valueInputs.update === true) ret.push("value");
+            if (valueInputs.update == 1) ret.push("value");
         }
 
         for (const valueInputs of Object.values(props.div.inpValue)) {
             res /= valueInputs.val;
             props.value.value = res;
-            if (valueInputs.update === true) ret.push("value");
+            if (valueInputs.update == 1) ret.push("value");
         }
 
         if (ret.includes("value")) props.value.outValue = props.value.value;
 
         return ret;
-    }
-
-    static reset(prop) {
-        prop.value.value = 0;
     }
 
 }

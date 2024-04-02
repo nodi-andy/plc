@@ -25,7 +25,7 @@ class TimeInterval extends Node {
     Node.setProperty(props, "lastOn", { visible: false});
     Node.setProperty(props, "lastOff", { visible: false});
     this.type = Node.type;
-    TimeInterval.reset(props);
+    TimeInterval.reset(node);
   }
 
   static run(node) {
@@ -48,24 +48,28 @@ class TimeInterval extends Node {
     if (props.value.value == 0 && dOFF > props.toff.value && props.enable.value) {
       props.lastOn.value = now;
       props.value.value = 1;
-      props.value.outValue = {val:1, update: true};
-      props.value.update = true;
+      props.value.outValue = {val:1, update: 1};
+      props.value.update = 1;
       //console.log("ton");
       ret = true;
     } else if (props.value.value == 1 && dON > props.ton.value && props.enable.value) {
       props.lastOff.value = now;
       props.value.value = 0;
-      props.value.outValue = {val:0, update: true};
-      props.value.update = true;
+      props.value.outValue = {val:0, update: 1};
+      props.value.update = 1;
       //console.log("toff");
       ret = true;
     }
-
+    for (const prop of Object.values(node.properties)) {
+      if (prop.outValue?.update > 1) prop.outValue.update = 0;
+  }
     return ret;
   }
 
-  static reset(props) {
-    props.value.value = 0;
+  static reset(node) {
+    node.properties.value.value = 0;
+    node.properties.lastOn.value = 0;
+    node.properties.lastOff.value = 0;
   }
 
   onDrawBackground() {

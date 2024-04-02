@@ -24,30 +24,27 @@ export default class WidgetBit extends Node {
         let valueUpdate = false;
         
         for (const valueInputs of Object.values(props.value.inpValue)) {
-            if (valueInputs.update === true) {
+            if (valueInputs.update == 1) {
                 valueUpdate = true;
                 break;
             }
         }
+        
+        Object.values(props.value.inpValue).forEach((valInputs) => {
+            if (valInputs.update == 1) {
+                props.value.value = valInputs.val;
+                valInputs.update = false;
+                props.value.outValue = {val: props.value.value, update: 1};
 
-        if (valueUpdate) {
-            props.value.value = Object.values(props.value.inpValue).reduce((a, b) => {
-                b.val = Number(b.val);
-                if (b.update == true && typeof b.val === 'number' && !isNaN(b.val)) {
-                    b.update = false;
-                    return {val: Math.max(a.val,b.val), update: true};
-                }
-                b.update = false;
-                return {val: a.val, update: true};
-            }, {val: 0, update: false}).val;
-            props.value.outValue = {val: props.value.value, update: true};
-            ret.push("value");
-        }
-
+                ret.push("value");
+            }
+        });
 
         Object.values(props.toggle.inpValue).forEach((toggleInputs) => {
-            if (toggleInputs.update === true) {
+            if (toggleInputs.update == 1) {
                 props.value.value = props.value.value == 1 ? 0 : 1;
+                props.value.outValue = {val: props.value.value, update: 1};
+
                 toggleInputs.update = false;
                 ret.push("value");
             }
@@ -56,13 +53,17 @@ export default class WidgetBit extends Node {
         if (props.set?.inpValue == 1) {
             props.value.value = 1;
             props.set.inpValue = null;
-            props.value.outValue = {val: props.value.value, update: true};
+            props.value.outValue = {val: props.value.value, update: 1};
         }
 
         if (props.clear?.inpValue == 1) {
             props.value.value = 0;
             props.clear.inpValue = null;
-            props.value.outValue = {val: props.value.value, update: true};
+            props.value.outValue = {val: props.value.value, update: 1};
+        }
+
+        for (const prop of Object.values(node.properties)) {
+            if (prop.outValue?.update > 1) prop.outValue.update = 0;
         }
         return ret;
     }

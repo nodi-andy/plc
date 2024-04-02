@@ -11,7 +11,6 @@ export default class LGraphCanvas {
     if (canvas && canvas.constructor === String) {
       canvas = document.querySelector(canvas);
     }
-    this.nodework = window.nodeWork;
     this.ds = new View();
     this.cursorMode = 0;
     this.zoom_modify_alpha = true; //otherwise it generates ugly patterns when scaling down too much
@@ -397,7 +396,7 @@ export default class LGraphCanvas {
     } else if (node_mouse == null && window.canvas.copyNode != null) {
       // add existing node
       this.gripped = "copyNode";
-      NodeWork.setNodeOnGrid(this.nodework, { nodeID: this.copyNode, pos: e.gridPos });
+      NodeWork.setNodeOnGrid(window.nodeWork, { nodeID: this.copyNode, pos: e.gridPos });
     }
 
     this.last_mouse_down = [e.clientX, e.clientY];
@@ -603,7 +602,7 @@ export default class LGraphCanvas {
 
     this.draw();
 
-    if (
+    if (this.last_click_position &&
       Math.abs(this.last_click_position[0] - e.clientX) < 5 &&
       Math.abs(this.last_click_position[1] - e.clientY) < 5
     ) {
@@ -1196,6 +1195,21 @@ export default class LGraphCanvas {
         } else {
           let nodeDrawFunction = NodeWork.getNodeType(this.node_dragging.type).onDrawForeground;
           if (nodeDrawFunction) nodeDrawFunction(this.node_dragging, ctx);
+        }
+        ctx.restore();
+      }
+
+      //draw cloning
+      if (this.copyNode != null) {
+        this.copyNodeObj = NodeWork.getNodeById(window.nodeWork,this.copyNode);
+        ctx.save();
+        ctx.translate(this.graph_mouse[0], this.graph_mouse[1]);
+        //Draw
+        if (NodeWork.getNodeType(this.copyNodeObj.type).drawBase !== false) {
+          this.drawNode(this.copyNodeObj, ctx);
+        } else {
+          let nodeDrawFunction = NodeWork.getNodeType(this.copyNodeObj.type).onDrawForeground;
+          if (nodeDrawFunction) nodeDrawFunction(this.copyNodeObj, ctx);
         }
         ctx.restore();
       }

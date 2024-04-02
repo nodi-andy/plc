@@ -22,7 +22,6 @@ export default class WidgetNumber extends Node {
         Node.setProperty(props, "dec");
         Node.setProperty(props, "value", {value : 0, label:" "});
         Node.setProperty(props, "read");
-        WidgetNumber.reset(props);
     }
 
     static run(node) {
@@ -32,22 +31,24 @@ export default class WidgetNumber extends Node {
         let maxVal = -Infinity
         
         for (const valueInputs of Object.values(props.value.inpValue)) {
-            if (valueInputs.update === true) valueUpdate = true;
-            maxVal = Math.max(maxVal, valueInputs.val);
-            valueInputs.update = false;
+            if (valueInputs.update == 1) {
+                valueUpdate = true;
+                maxVal = Math.max(maxVal, valueInputs.val);
+                valueInputs.update = false;
+            }
         }
 
         if (valueUpdate) {
             props.value.value = maxVal;
-            props.value.outValue = {val: props.value.value, update: true};
+            props.value.outValue = {val: props.value.value, update: 1};
             ret.push("value");
         }
 
         for (const valueInputs of Object.values(props.inc.inpValue)) {
-            if (valueInputs.update === true) {
+            if (valueInputs.update == 1) {
                 props.value.value += valueInputs.val;
                 valueInputs.update = false;
-                props.value.outValue = {val: props.value.value, update: true};
+                props.value.outValue = {val: props.value.value, update: 1};
                 ret.push("value");
             }
         }
@@ -55,38 +56,25 @@ export default class WidgetNumber extends Node {
 
         let readUpdate = Object.values(props.read.inpValue).length > 0;
         if (readUpdate) {
-            props.read.outValue = {val: props.value.value, update: true};
-            props.value.outValue = {val: props.value.value, update: true};
+            props.read.outValue = {val: props.value.value, update: 1};
+            props.value.outValue = {val: props.value.value, update: 1};
             props.read.inpValue = {}
             ret.push("read");
         }
         for (const valueInputs of Object.values(props.dec.inpValue)) {
-            if (valueInputs.update === true) {
+            if (valueInputs.update == 1) {
                 props.value.value -= valueInputs.val;
                 valueInputs.update = false;
             }
-            props.value.outValue = {val: props.value.value, update: true};
+            props.value.outValue = {val: props.value.value, update: 1};
             ret.push("value");
         }
-/*
 
-
-        if (node.inpUpdate.includes("value") && Object.keys(props.value.inpValue).length) {
-            if (props.value.inpValue?.constructor === Object) {
-                props.value.value = Math.max(...Object.values(props.value.inpValue));
-            } else {
-                props.value.value = props.value.inpValue;
-            }
-            props.value.outValue = {val: props.value.value, update: true};
-            props.value.inpValue = null;
-            return true;
-        }*/
+        for (const prop of Object.values(node.properties)) {
+            if (prop.outValue?.update > 1) prop.outValue.update = 0;
+        }
 
         return ret;
-    }
-
-    static reset(prop) {
-        prop.value.value = 0;
     }
 
     static onDrawForeground(node, ctx) {

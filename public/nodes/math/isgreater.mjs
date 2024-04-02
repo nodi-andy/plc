@@ -1,9 +1,9 @@
+import { NodiEnums } from "../../enums.mjs";
 import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
 export default class MathIsGreater extends Node {
     static type = "math/isgreater";
-    static title = "?=";
     static defaultInput = "value";
     static defaultOutput = "value";
 
@@ -12,7 +12,6 @@ export default class MathIsGreater extends Node {
         Node.setProperty(props, "value");
         Node.setProperty(props, "yes");
         Node.setProperty(props, "no");
-        MathIsGreater.reset(props);
     }
 
     static run(node) {
@@ -26,7 +25,7 @@ export default class MathIsGreater extends Node {
                 res = 0;
             }
             
-            if (valueInputs.update === true) {
+            if (valueInputs.update == 1) {
                 ret.push("value");
             }
             valueInputs.update = false;
@@ -43,15 +42,11 @@ export default class MathIsGreater extends Node {
         return ret;
     }
 
-    static reset(prop) {
-        prop.value.value = 0;
-    }
-
-    onDrawForeground(ctx) {
+    static onDrawForeground(node, ctx) {
         ctx.fillStyle = "#AAA";
         ctx.font = "12px Arial";
         ctx.textAlign = "center";
-        ctx.fillText(this.properties.in1.value + "==" + this.properties.in2.value, this.size[0] * 0.5, this.size[1] * 0.5);
+        ctx.fillText(">?", NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE * 0.5);
     }
 }
 

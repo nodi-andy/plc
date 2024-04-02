@@ -157,6 +157,10 @@ export default class NodeWork extends Node {
     window.showSnackbar("Loaded nodework" );
     let storedNW = JSON.parse(localStorage["nodework"]);
     NodeWork.processMethodsAndObjects(storedNW, null, "link");
+    storedNW.nodes.forEach(n => {
+      let nodeClass = NodeWork.getNodeType(n.type);
+      if (nodeClass.reset) nodeClass.reset(n);
+    })
 
     return storedNW;
   }
@@ -391,11 +395,7 @@ export default class NodeWork extends Node {
         });
       }
     });
-    nw.nodes?.forEach((node) => {
-      for (const prop of Object.values(node.properties)) {
-        if (prop.outValue) prop.outValue.update = false;
-    }
-    })
+
   }
 
 

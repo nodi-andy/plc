@@ -1,0 +1,23 @@
+@startuml
+Fingers -right[#red]-> Whiteboard : Too slow
+Whiteboard -right[#red]-> Paper : Too slow
+Paper -right[#red]-> Calculator : Too slow
+Calculator -right[#red]-> Excel : Too slow
+Excel -down[#red]-> VBA : Too slow
+VBA -left[#red]-> JavaScript : Too slow
+JavaScript -left[#red]-> Python : Too slow
+Python -left[#red]-> Cython : Too slow
+state "C#" as CS
+state "C++" as CPP
+state "Inline Assembler" as InlineAssembler
+state "Machine Code" as MachineCode
+Cython -left[#red]-> CS : Too slow
+CS -down[#red]-> CPP : Too slow
+CPP -right[#red]-> C : Too slow
+C -right[#red]-> InlineAssembler : Too slow
+InlineAssembler -right[#red]-> Assembly : Too slow
+Assembly -down[#red]-> MachineCode : Too slow
+MachineCode -left[#red]-> CUDA : Too slow
+CUDA -left[#red]-> VHDL : Too slow
+VHDL -left[#red]-> ASIC : Too slow
+@enduml

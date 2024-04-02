@@ -24,9 +24,9 @@ class Inserter extends Node {
         for(let prop of Object.values(props)) {
             if (prop.inpValue !== null) {
                 for (const valueInputs of Object.values(prop.inpValue)) {
-                    if (valueInputs.update) {
+                    if (valueInputs.update == 1) {
                         prop.value = valueInputs.val;
-                        valueInputs.update = false;
+                        valueInputs.update = 0;
                     }
                 }
             }
@@ -34,9 +34,10 @@ class Inserter extends Node {
         let fromNode = NodeWork.getNodeById(nw, node.fromNodeID);
 
         let incoming = fromNode?.properties[props.from.value];
-        if (incoming?.outValue?.update) {
+        if (incoming?.outValue?.update > 0) {
             props.value.value = incoming.outValue.val;
             props.value.update = true;
+            incoming.outValue.update++;
         }
 
         let toNode = NodeWork.getNodeById(nw, node.toNodeID);
@@ -44,7 +45,7 @@ class Inserter extends Node {
         if (toNode && props.value.value !== null && props.value.update) {
             let toProps = toNode.properties[props.to.value];
             if (toProps) {
-                toProps.inpValue[node.nodeID] = {val: props.value.value, update: true};
+                toProps.inpValue[node.nodeID] = {val: props.value.value, update: 1};
                 props.value.value = null;
                 //ret.push(node.toNode.nodeID);
             }
@@ -90,7 +91,7 @@ class Inserter extends Node {
             if (props.to.value == null) 
                 props.to.value = NodeWork.getNodeType(nextToNode.type).defaultInput;
             else 
-                nextToNode.properties[props.to.value].inpValue[inserter.nodeID] = {val: undefined, update: true};
+                nextToNode.properties[props.to.value].inpValue[inserter.nodeID] = {val: undefined, update: 1};
         }
         inserter.toNodeID = nextToNode?.nodeID;
     }

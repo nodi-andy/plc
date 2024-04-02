@@ -44,15 +44,15 @@ export default class Node {
   }
 
   static updateInputs(node, key, prop) {
-      node.properties[key]["inpValue"]["user"] = {val: prop["inpValue"], update: true};
+      node.properties[key]["inpValue"]["user"] = {val: prop["inpValue"], update: 1};
   }
 
   static updateValues(node, key, prop) {
-    node.properties[key]["value"] = {val: prop["value"], update: true};
+    node.properties[key]["value"] = {val: prop["value"], update: 1};
   }
 
   static updateOutputs(node, key, prop) {
-    node.properties[key]["outValue"] = {val: prop["outValue"], update: true};
+    node.properties[key]["outValue"] = {val: prop["outValue"], update: 1};
   }
 
 }

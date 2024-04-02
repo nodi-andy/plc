@@ -11,37 +11,33 @@ export default class LogicXor extends Node {
         let props = node.properties;
         Node.setProperty(props, "value");
         this.type = LogicXor.type
-        LogicXor.reset(props);
     }
 
     static run(node) {
         let props = node.properties;
         let ret = [];
+        let res = 1;
+        let update = false;
+
+        for (const valueInputs of Object.values(props.value.inpValue)) {
+            if (valueInputs.update) update = true;
+        }
+
+        if (!update) return ret;
 
         props.value.value = undefined;
         let firstVal = undefined;
         for (const valueInputs of Object.values(props.value.inpValue)) {
             if (firstVal == undefined) firstVal = valueInputs.val;
             if (firstVal != null && valueInputs.val != firstVal) {
-                props.value.value = 1;
-            } else {
-                props.value.value = 0;
-            }
-            
-            if (valueInputs.update === true) ret.push("value");
-            valueInputs.update = false;
+                res = 0;
+                break;
+            } 
         }
 
-        if (ret.includes("value")) {
-            props.value.outValue = props.value.value;
-        }
-        return true;
+        props.value.outValue = {val: res, update: 1};
+        return ret;
     }
-
-    static reset(prop) {
-        prop.value.value = 0;
-    }
-
 }
 
 NodeWork.registerNodeType(LogicXor)

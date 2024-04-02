@@ -88,7 +88,7 @@ void Inserter::reconnect(int x, int y)
     if (nextTarget != nullptr && (target == nullptr || target != nextTarget))
     {
         if (hasValue("to")) {
-            if (target != nullptr) target->setInput(getStrValue("to"), id, 0); //{val: undefined, update: true}
+            if (target != nullptr) target->setInput(getStrValue("to"), id, 0); //{val: undefined, update: 1}
         } else {
             setValue("to", nextTarget->defaultInput);
         }

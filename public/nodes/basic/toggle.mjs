@@ -16,7 +16,7 @@ export default class WidgetToggle extends Node {
     Node.setProperty(props, "label", { value: "", autoInput: true });
     Node.setProperty(props, "port", {  input: false });
     Node.setProperty(props, "color", { value: "red", input: false, autoInput: true });
-    WidgetToggle.reset(props);
+    WidgetToggle.reset(node);
   }
 
   static run(node) {
@@ -36,7 +36,7 @@ export default class WidgetToggle extends Node {
     let maxVal = -Infinity;
 
     for (const valueInputs of Object.values(props.toggle.inpValue)) {
-      if (valueInputs.update === true) valueUpdate = true;
+      if (valueInputs.update == 1) valueUpdate = true;
       maxVal = Math.max(maxVal, valueInputs.val);
       valueInputs.update = false;
     }
@@ -82,11 +82,6 @@ export default class WidgetToggle extends Node {
     }
 
     return ret;
-  }
-
-  static reset(prop) {
-    prop.value.value = prop.release.value;
-    prop.value.outValue = prop.value.value;
   }
 
   static onDrawForeground(node, ctx) {

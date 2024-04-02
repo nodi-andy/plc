@@ -12,7 +12,6 @@ export default class MathAdd extends Node {
         Node.setProperty(props, "add");
         Node.setProperty(props, "sub");
         Node.setProperty(props, "value");
-        MathAdd.reset(props);
     }
 
     static run(node) {
@@ -23,24 +22,19 @@ export default class MathAdd extends Node {
         for (const valueInputs of Object.values(props.add.inpValue)) {
             sum += valueInputs.val;
             props.value.value = sum;
-            if (valueInputs.update === true) ret.push("value");
+            if (valueInputs.update == 1) ret.push("value");
         }
 
         for (const valueInputs of Object.values(props.sub.inpValue)) {
             sum -= valueInputs.val;
             props.value.value = sum;
-            if (valueInputs.update === true) ret.push("value");
+            if (valueInputs.update == 1) ret.push("value");
         }
 
         if (ret.includes("value")) props.value.outValue = props.value.value;
 
         return ret;
     }
-
-    static reset(prop) {
-        prop.value.value = 0;
-    }
-
 }
 
 NodeWork.registerNodeType(MathAdd)

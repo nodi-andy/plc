@@ -66,7 +66,6 @@ export default class Button extends Node {
     Node.setProperty(props, "label", { value: ""});
     Node.setProperty(props, "port", { value: 0, input: false , autoInput: true});
     Node.setProperty(props, "color", { value: "#222", input: false, autoInput: true });
-    Button.reset(props);
   }
 
   static run(node) {
@@ -90,17 +89,17 @@ export default class Button extends Node {
           }
           return a.val;
         },
-        { val: 0, update: false }
+        { val: 0, update: 0 }
       );
       if (newState == 0 && props.state.value == 1) {
         props.value.value = props.release.value;
         props.value.outValue = {val : props.value.value, update : true};
-        props.value.update = true;
+        props.value.update = 1;
       }
       if (newState == 1 && props.state.value == 0) {
         props.value.value = props.press.value;
         props.value.outValue = {val : props.value.value, update : true};
-        props.value.update = true;
+        props.value.update = 1;
       }
       props.state.value = newState;
       props.state.inpValue = {};
@@ -112,16 +111,16 @@ export default class Button extends Node {
         (a, b) => {
           b.val = Number(b.val);
           if (typeof b.val === "number" && !isNaN(b.val)) {
-            return {val: Math.max(a.val,b.val), update: true};
+            return {val: Math.max(a.val,b.val), update: 1};
           }
           return a.val;
         },
-        { val: 0, update: false }
+        { val: 0, update: 0 }
       );
       if (props.state.value == 1) {
         props.value.value = newPress.val;
-        props.value.outValue = {val: newPress.val, update: true};
-        props.value.update = true;
+        props.value.outValue = {val: newPress.val, update: 1};
+        props.value.update = 1;
       }
     }
 
@@ -130,25 +129,20 @@ export default class Button extends Node {
         (a, b) => {
           b.val = Number(b.val);
           if (typeof b.val === "number" && !isNaN(b.val)) {
-            return {val: Math.max(a.val,b.val), update: true};
+            return {val: Math.max(a.val,b.val), update: 1};
           }
           return a.val;
         },
-        { val: 0, update: false }
+        { val: 0, update: 0 }
       );
       if (props.state.value == 0) {
         props.value.value = newRelease.val;
-        props.value.outValue = {val: newRelease.val, update: true};
-        props.value.update = true;
+        props.value.outValue = {val: newRelease.val, update: 1};
+        props.value.update = 1;
       }
     }
 
     return ret;
-  }
-
-  static reset(props) {
-    props.state.value = props.release.value;
-    props.state.outValue = {val: props.state.val, update: true};
   }
 
   static reconnect(node, nw, pos) {
