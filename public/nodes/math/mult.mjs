@@ -18,20 +18,36 @@ export default class MathMult extends Node {
         let props = node.properties;
         let ret = [];
 
-        let res = 1;
+        let valueUpdate = false;
+
+        Object.values(props.mult.inpValue).forEach((valInputs) => {
+            if (valInputs.update == 1) {
+                valueUpdate = true;
+            }
+        });
+        Object.values(props.div.inpValue).forEach((valInputs) => {
+            if (valInputs.update == 1) {
+                valueUpdate = true;
+            }
+        });
+
+        if (!valueUpdate) return ret;
+
+        let sum = 1;
         for (const valueInputs of Object.values(props.mult.inpValue)) {
-            res *= valueInputs.val;
-            props.value.value = res;
-            if (valueInputs.update == 1) ret.push("value");
+            if (typeof valueInputs.val === 'number') {
+                sum *= valueInputs.val;
+            }
         }
 
         for (const valueInputs of Object.values(props.div.inpValue)) {
-            res /= valueInputs.val;
-            props.value.value = res;
-            if (valueInputs.update == 1) ret.push("value");
+            if (typeof valueInputs.val === 'number' && valueInputs.val != 0) {
+                sum /= valueInputs.val;
+            }
         }
 
-        if (ret.includes("value")) props.value.outValue = props.value.value;
+        ret.push("value");
+        props.value.outValue = {val : sum, update : true};
 
         return ret;
     }

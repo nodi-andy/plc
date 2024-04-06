@@ -34,7 +34,7 @@ export default class WidgetNumber extends Node {
             if (valueInputs.update == 1) {
                 valueUpdate = true;
                 maxVal = Math.max(maxVal, valueInputs.val);
-                valueInputs.update = false;
+                valueInputs.update = 0;
             }
         }
 
@@ -47,7 +47,7 @@ export default class WidgetNumber extends Node {
         for (const valueInputs of Object.values(props.inc.inpValue)) {
             if (valueInputs.update == 1) {
                 props.value.value += valueInputs.val;
-                valueInputs.update = false;
+                valueInputs.update = 0;
                 props.value.outValue = {val: props.value.value, update: 1};
                 ret.push("value");
             }
@@ -64,14 +64,10 @@ export default class WidgetNumber extends Node {
         for (const valueInputs of Object.values(props.dec.inpValue)) {
             if (valueInputs.update == 1) {
                 props.value.value -= valueInputs.val;
-                valueInputs.update = false;
+                valueInputs.update = 0;
             }
             props.value.outValue = {val: props.value.value, update: 1};
             ret.push("value");
-        }
-
-        for (const prop of Object.values(node.properties)) {
-            if (prop.outValue?.update > 1) prop.outValue.update = 0;
         }
 
         return ret;

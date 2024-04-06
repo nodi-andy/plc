@@ -142,6 +142,9 @@ export default class Button extends Node {
       }
     }
 
+    for (const prop of Object.values(node.properties)) {
+      if (prop.outValue?.update > 1) prop.outValue.update = 0;
+    }
     return ret;
   }
 

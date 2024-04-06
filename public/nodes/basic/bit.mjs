@@ -23,22 +23,17 @@ export default class WidgetBit extends Node {
 
         let valueUpdate = false;
         
-        for (const valueInputs of Object.values(props.value.inpValue)) {
-            if (valueInputs.update == 1) {
-                valueUpdate = true;
-                break;
-            }
-        }
-        
         Object.values(props.value.inpValue).forEach((valInputs) => {
             if (valInputs.update == 1) {
                 props.value.value = valInputs.val;
                 valInputs.update = false;
                 props.value.outValue = {val: props.value.value, update: 1};
-
+                valueUpdate = true;
                 ret.push("value");
             }
         });
+
+        if (!valueUpdate) return ret;
 
         Object.values(props.toggle.inpValue).forEach((toggleInputs) => {
             if (toggleInputs.update == 1) {

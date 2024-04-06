@@ -18,20 +18,36 @@ export default class MathAdd extends Node {
         let props = node.properties;
         let ret = [];
 
+        let valueUpdate = false;
+
+        Object.values(props.add.inpValue).forEach((valInputs) => {
+            if (valInputs.update == 1) {
+                valueUpdate = true;
+            }
+        });
+        Object.values(props.sub.inpValue).forEach((valInputs) => {
+            if (valInputs.update == 1) {
+                valueUpdate = true;
+            }
+        });
+
+        if (!valueUpdate) return ret;
+
         let sum = 0;
         for (const valueInputs of Object.values(props.add.inpValue)) {
-            sum += valueInputs.val;
-            props.value.value = sum;
-            if (valueInputs.update == 1) ret.push("value");
+            if (typeof valueInputs.val === 'number') {
+                sum += valueInputs.val;
+            }
         }
 
         for (const valueInputs of Object.values(props.sub.inpValue)) {
-            sum -= valueInputs.val;
-            props.value.value = sum;
-            if (valueInputs.update == 1) ret.push("value");
+            if (typeof valueInputs.val === 'number') {
+                sum -= valueInputs.val;
+            }
         }
 
-        if (ret.includes("value")) props.value.outValue = props.value.value;
+        ret.push("value");
+        props.value.outValue = {val : sum, update : true};
 
         return ret;
     }

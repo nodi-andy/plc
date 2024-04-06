@@ -21,17 +21,21 @@ class Inserter extends Node {
     static run(node, nw) {
         let props = node.properties;
         let ret = [];
+        let fromNode = NodeWork.getNodeById(nw, node.fromNodeID);
+        let toNode = NodeWork.getNodeById(nw, node.toNodeID);
         for(let prop of Object.values(props)) {
             if (prop.inpValue !== null) {
                 for (const valueInputs of Object.values(prop.inpValue)) {
                     if (valueInputs.update == 1) {
+                        if (toNode) {
+                            delete toNode.properties[props.to.value].inpValue[node.nodeID];
+                        }
                         prop.value = valueInputs.val;
                         valueInputs.update = 0;
                     }
                 }
             }
         }
-        let fromNode = NodeWork.getNodeById(nw, node.fromNodeID);
 
         let incoming = fromNode?.properties[props.from.value];
         if (incoming?.outValue?.update > 0) {
@@ -40,7 +44,6 @@ class Inserter extends Node {
             incoming.outValue.update++;
         }
 
-        let toNode = NodeWork.getNodeById(nw, node.toNodeID);
         
         if (toNode && props.value.value !== null && props.value.update) {
             let toProps = toNode.properties[props.to.value];
