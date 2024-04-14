@@ -124,30 +124,30 @@ class Inserter extends Node {
         ctx.fillStyle = "black";
         if (node.direction == NodiEnums.RIGHT) {
             ctx.textBaseline = 'top';
-            ctx.fillText(props.from.value, 0, 0);
+            if (props.from.value != "value") ctx.fillText(props.from.value, 0, 0);
             ctx.textAlign = 'right';
-            ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE, 0);
+            if (props.to.value != "value") ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE, 0);
         }
         if (node.direction == NodiEnums.LEFT) {
             ctx.textBaseline = 'top';
             ctx.textAlign = 'right';
-            ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE, 0);
+            if (props.from.value != "value") ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE, 0);
             ctx.textAlign = 'left';
-            ctx.fillText(props.to.value, 0, 0);
+            if (props.to.value != "value") ctx.fillText(props.to.value, 0, 0);
         }
         if (node.direction == NodiEnums.DOWN) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
+            if (props.to.value != "value") ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
             ctx.textBaseline = 'bottom';
-            ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
+            if (props.from.value != "value") ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
         }
         if (node.direction == NodiEnums.UP) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
+            if (props.from.value != "value") ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
             ctx.textBaseline = 'bottom';
-            ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
+            if (props.to.value != "value") ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
         }
 
         //ctx.drawImage(Inserter.platform, 0, 0, NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE, 0, 0, NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE)
