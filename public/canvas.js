@@ -370,7 +370,7 @@ export default class LGraphCanvas {
       // select first node
       this.grid_selected = e.gridPos;
       var gridCorner = NodiEnums.toCanvas(e.gridPos);
-      var pos = [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]];
+      this.nodeDragGripPos = [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]];
 
       // Capture mouse by node gui
       if (node_type.onMouseDown == null || node_type.onMouseDown(node_mouse, e, pos, this) == false) {
@@ -1188,7 +1188,7 @@ export default class LGraphCanvas {
       //draw dragged on grid
       if (this.node_dragging != null) {
         ctx.save();
-        ctx.translate(this.graph_mouse[0], this.graph_mouse[1]);
+        ctx.translate(this.graph_mouse[0] - this.nodeDragGripPos[0], this.graph_mouse[1] - this.nodeDragGripPos[1]);
         //Draw
         if (NodeWork.getNodeType(this.node_dragging.type).drawBase !== false) {
           this.drawNode(this.node_dragging, ctx);
