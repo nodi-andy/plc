@@ -78,7 +78,7 @@ class RegistryManager {
             nodes_[node->getType()] = node;
         }
 
-        Node* createNode(const string& type) {
+        Node* addNode(const string& type) {
             auto it = nodes_.find(type);
             if (it != nodes_.end()) {
                 return it->second->createInstance();

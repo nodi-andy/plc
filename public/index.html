@@ -8,6 +8,8 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="noditron" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <script src="https://apis.google.com/js/api.js"></script>
+    
     <title>noditron</title>
     <style>
       html,
@@ -38,12 +40,12 @@
         only screen and (min-resolution: 2dppx) {
       }
     </style>
+
   </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-  </body>
-  <script type="module">
+  <script>
+
+   
+
     const loadJS = (FILE_URL, async = true, type = "module") => {
       return new Promise((resolve, reject) => {
         try {
@@ -59,7 +61,7 @@
           scriptEle.addEventListener("error", (ev) => {
             reject({
               status: false,
-              message: `Failed to load the script ＄{FILE_URL}`,
+              message: `Failed to load the script ${FILE_URL}`,
             });
           });
 
@@ -69,127 +71,42 @@
         }
       });
     };
+  </script>
+  <script type="module">
+    import NodeWork from "./nodework.mjs";
+    window.sendToNodework = (cmd, obj) => NodeWork.cmd(window.currentNodeWork, {cmd: cmd, data: obj});
+    
     // why loading the scripts one by one?
     // Because the IoT device can not keep more than 10 TCP connections open
     await loadJS("./socket.io.min.js", false);
     await loadJS("./math.js", false);
     await loadJS("./nodework.mjs", false);
     await loadJS("./node.mjs", false);
-    await loadJS("./view.js", false);
-    await loadJS("./nodes/basic/bit.mjs", false);
-    await loadJS("./nodes/basic/number.mjs", false);
-    await loadJS("./nodes/basic/button.mjs", false);
-    //await loadJS("./nodes/basic/toggle.mjs", false);
-    await loadJS("./nodes/basic/subnode.mjs", false);
-    await loadJS("./nodes/logic/and.mjs", false);
-    await loadJS("./nodes/logic/or.mjs", false);
-    await loadJS("./nodes/logic/xor.mjs", false);
-    await loadJS("./nodes/logic/not.mjs", false);
-    await loadJS("./nodes/math/add.mjs", false);
-    await loadJS("./nodes/math/mult.mjs", false);
-    await loadJS("./nodes/math/isequal.mjs", false);
-    await loadJS("./nodes/math/isless.mjs", false);
-    await loadJS("./nodes/math/isgreater.mjs", false);
-    await loadJS("./nodes/time/interval.mjs", false);
-    await loadJS("./nodes/basic/inserter.mjs", false);
-    await loadJS("./nodes/nodi.box/b1.js", false);
-    await loadJS("./nodes/nodi.box/b2.js", false);
-    await loadJS("./nodes/nodi.box/b3.js", false);
-    await loadJS("./nodes/nodi.box/b4.js", false);
-    await loadJS("./nodes/nodi.box/yellow.js", false);
-    await loadJS("./nodes/nodi.box/green.js", false);
-    await loadJS("./nodes/nodi.box/stepper.js", false);
-    await loadJS("./nodes/esp32mcu/b1.js", false);
-    await loadJS("./nodes/esp32mcu/bit.js", false);
-    await loadJS("./nodes/network/serial.mjs", false);
+    
+    // load all nodes
+    import { nodeList } from './node_list.js'
+    for (const file of nodeList) {
+        await loadJS(file, false);
+    }
     
     import Node from "./node.mjs";
-    import NodeWork from "./nodework.mjs";
     import Canvas from "./canvas.js";
     import { NodiEnums } from "./enums.mjs";
-    window.NodeWork = NodeWork;
     
-    window.nodeWork = {};
-    NodeWork.clear(window.nodeWork);
-    /*window.nodeWork.engine = {name: "server", send: (order) => {
-      console.log("forwardCMD: ", order);
-      if (window.socket?.emit && window.socket.connected == true) { // send to server
-        window.socket.emit(order.cmd, order.data);
-      } 
-    }};*/
-
-    //window.nodeWork.engine = {name: "server", send: (order) => {
-    //  console.log("forwardCMD: ", order);
-      // if (websocket.send && websocket.readyState == 1) { // send to IoT
-        //  websocket.send(JSON.stringify([cmd, obj]));
-        // } 
-    //}};
-    localStorage.version = "0.2";
+    // save & load
+    localStorage.version = "0.1";
     if (localStorage.files == null) localStorage.files = JSON.stringify({});
-
-    await loadJS("./websocket.js", false);
-    navigator.serial?.getPorts().then((ports) => {
-      if (ports.length) {
-        window.serialport = ports[0];
-        window.serialport.status = "closed";
+    window.time = {tick: 0};
+    window.load = (filename) => {
+      if (localStorage[filename]) {
+        window.rootNode = NodeWork.load();
+        window.currentNodeWork = window.rootNode;
       }
-      window.load("nodework");
-    });
-
-    window.canvas = new Canvas("#mycanvas", window.nodeWork);
-    window.nodeworkID = window.location.search.slice(1);
-    window.sendToNodework = (cmd, obj) => {
-      NodeWork.cmd(window.nodeWork, {cmd: cmd, data: obj});
-    };
-    window.nodes = {};
-
-    window.createNewNode = (type) => {
-      let allowNode = true;
-
-      if (type == "network/serial" && window.serialport) {
-        NodeWork.Nodes["ComPort"].openSerial();
-      } 
-      if (type == "network/serial" && window.serialport == null) {
-        allowNode = false
-      }
-
-      if (allowNode) {
-        var msg = {node : {}};
-        msg.type = type.toLowerCase();
-        msg.pos = window.canvas.grid_selected;
-        msg.node.type = msg.type;
-        msg.node.properties = {};
-        msg.node.orders = [];
-        
-        NodeWork.getNodeType(msg.type).setup(msg.node);
-        msg.node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
-        msg.node.nodeID = NodeWork.getFirstNullIndex(window.nodeWork.nodes);
-        return msg;
-      }
-    };
-    window.toParent = () => {
-      window.showParent(false);
-      if (window.nodeWork.parent != null) {
-        window.nodeWork = window.nodeWork.parent;
-        window.canvas.setGraph(window.nodeWork);
-        window.showParent(true);
-      }
-    }
-    window.copyNode = () => {
-      if (window.canvas.copyNode == null && window.canvas.current_node)
-        window.canvas.copyNode = window.canvas.current_node.nodeID;
-      else window.canvas.copyNode = null;
+      window.showSnackbar("Loaded nodework: " + filename);
     };
 
-    window.nodes.editNode = () => {
-      window.canvas.processContextMenu();
-    };
-
-    window.nodes.saveNodework = () => {
-      window.sendToNodework("save", {});
-    };
-
-    window.nodes.upload = () => {
+    window.saveNodework = () => window.sendToNodework("save", {});
+    window.upload = () => {
       if (window.socket) {
         let storeGraph = JSON.parse(JSON.stringify(window.nodeWork.serialize()));
         delete storeGraph.config;
@@ -200,65 +117,59 @@
         window.showSnackbar("nodework sent to nodi.box!");
       }
     };
-
-    window.nodes.updateInputs = (id, changedNodeData) => {
+    
+    // init
+    window.canvas = new Canvas("#mycanvas", window.currentNodeWork);
+    window.nodeworkID = window.location.search.slice(1);
+    window.toParent = () => {
+      window.showParent(false);
+      if (window.currentNodeWork.parent != null) {
+        window.currentNodeWork = window.currentNodeWork.parent;
+        window.showParent(true);
+      }
+    }
+    window.copyNode = () => {
+      if (window.canvas.copyNode == null && window.current_node)
+      window.canvas.copyNode = window.current_node.nodeID;
+    else window.canvas.copyNode = null;
+  };
+  
+  window.updateInputs = (id, changedNodeData) => {
       //if (isNaN(changedNodeData.inpValue) == false) changedNodeData.inpValue = parseInt(changedNodeData.inpValue);
-      NodeWork.cmd(window.nodeWork, {cmd: "updateInputs", data: {
+      NodeWork.cmd(window.currentNodeWork, {cmd: "updateInputs", data: {
         nodeID: id,
         properties: changedNodeData,
       }});
     };
-
-    window.nodes.update = (id, changedNodeData) => {
-      window.sendToNodework("updateNode", {
-        nodeID: id,
-        properties: changedNodeData,
-      });
-    };
-
-    window.load = (filename) => {
-      if (localStorage[filename]) {
-        window.nodeWork = NodeWork.load();
-        window.canvas.setGraph(window.nodeWork);
-      }
-      window.showSnackbar("Loaded nodework: " + filename);
-    };
-
-    window.canvas.onSelectionChange = (nodes) => {
-      if (Object.keys(nodes).length == 1) {
-        let node = nodes[Object.keys(nodes)[0]]; // selected nodes are not indexed correctly
-        window.showRemove(true);
-        window.showEdit(true);
-        window.showRotate(NodeWork.getNodeType(node.type).rotatable);
-        window.showAdd(!Boolean(NodeWork.getNodeType(node.type).singleton));
-        console.log("disable");
-      } else {
-        window.showAdd(false);
-        window.showRotate(false);
-        window.showRemove(false);
-        window.showEdit(false);
-        console.log("enable");
-      }
-    };
-
+    window.update = (id, changedNodeData) => window.sendToNodework("updateNode", {nodeID: id, properties: changedNodeData});
+    
+    window.showEdit(true);
+    
     window.addEventListener("resize", function () {
       canvas.resize();
     });
-
-    window.updateNodeList = () => {
-      window.nodes.list = {};
-      for (let nodeClassName in NodeWork.registered_node_types) {
-        let nodeClass = NodeWork.registered_node_types[nodeClassName];
-        if (window.nodes.list[nodeClass.category] == null) window.nodes.list[nodeClass.category] = [];
-        window.nodes.list[nodeClass.category].push(nodeClass.elementName);
-      }
-    };
-    updateNodeList();
-
-    setInterval(() => {
-      if (window.nodeWork) {
-        NodeWork.run(window.nodeWork);
-      }
-    }, 20);
-  </script>
+    
+    window.NodeWork = NodeWork; //make the static class available for reactjs
+    NodeWork.updateNodeList();
+    window.rootNode = {};
+    NodeWork.clear(window.rootNode);
+    window.currentNodeWork = window.rootNode; //window.NodeWork.addNode(window.rootNode, {type: "basic/country", pos: [0, 0]}); // {}
+    
+    // start the loop
+    setInterval(() => { 
+      NodeWork.run(window.rootNode);  
+      window.time.tick++;
+    }, 100);
+    await loadJS("./websocket.js", false);
+    </script>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    
+    <!--
+      <script async defer src="https://apis.google.com/js/api.js" onload="window.gapiLoaded()"></script>
+      <script async defer src="https://accounts.google.com/gsi/client" onload="window.gisLoaded()"></script>
+      -->
+    </body>
+    
 </html>

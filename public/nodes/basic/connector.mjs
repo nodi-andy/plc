@@ -2,8 +2,8 @@ import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 import { NodiEnums } from "../../enums.mjs";
 
-class Inserter extends Node {
-    static type = "basic/inserter";
+class Connector extends Node {
+    static type = "basic/connector";
     static rotatable = true;
     static singleton = true;
     static drawBase = false;
@@ -87,14 +87,16 @@ class Inserter extends Node {
         if (inserter.fromNodeID == null) {
             props.value.value = undefined;
         } else {
-            props.value.value = fromNode.properties[props.from.value].value;
+            if (props.from?.value) props.value.value = fromNode.properties[props.from.value].value;
         }
         
         if (nextToNode != null && (toNode == null || toNode != nextToNode)) {
+            if (nextToNode.properties[props.to.value] == null) props.to.value = null;
             if (props.to.value == null) 
                 props.to.value = NodeWork.getNodeType(nextToNode.type).defaultInput;
-            else 
+            else {
                 nextToNode.properties[props.to.value].inpValue[inserter.nodeID] = {val: undefined, update: 1};
+            }
         }
         inserter.toNodeID = nextToNode?.nodeID;
     }
@@ -104,8 +106,7 @@ class Inserter extends Node {
         let good = node.fromNodeID != null && node.toNodeID != null;
         ctx.save();
         ctx.strokeStyle = "black";
-        ctx.fillStyle = "gray";
-        ctx.fillStyle = good ? "darkgreen" : "red";
+        ctx.fillStyle = good ? "darkgreen" : "gray";
         
         ctx.translate(NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE * 0.5);
         ctx.rotate(NodiEnums.dirToRad[node.direction]);
@@ -124,30 +125,30 @@ class Inserter extends Node {
         ctx.fillStyle = "black";
         if (node.direction == NodiEnums.RIGHT) {
             ctx.textBaseline = 'top';
-            if (props.from.value != "value") ctx.fillText(props.from.value, 0, 0);
+            if (props.from.value != "value" && props.from.value != null) ctx.fillText(props.from.value, 0, 0);
             ctx.textAlign = 'right';
-            if (props.to.value != "value") ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE, 0);
+            if (props.to.value != "value" && props.from.value != null) ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE, 0);
         }
         if (node.direction == NodiEnums.LEFT) {
             ctx.textBaseline = 'top';
             ctx.textAlign = 'right';
-            if (props.from.value != "value") ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE, 0);
+            if (props.from.value != "value" && props.from.value != null) ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE, 0);
             ctx.textAlign = 'left';
-            if (props.to.value != "value") ctx.fillText(props.to.value, 0, 0);
+            if (props.to.value != "value" && props.from.value != null) ctx.fillText(props.to.value, 0, 0);
         }
         if (node.direction == NodiEnums.DOWN) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            if (props.to.value != "value") ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
+            if (props.to.value != "value" && props.from.value != null) ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
             ctx.textBaseline = 'bottom';
-            if (props.from.value != "value") ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
+            if (props.from.value != "value" && props.from.value != null) ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
         }
         if (node.direction == NodiEnums.UP) {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            if (props.from.value != "value") ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
+            if (props.from.value != "value" && props.from.value != null) ctx.fillText(props.from.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, 0);
             ctx.textBaseline = 'bottom';
-            if (props.to.value != "value") ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
+            if (props.to.value != "value" && props.from.value != null) ctx.fillText(props.to.value, NodiEnums.CANVAS_GRID_SIZE * 0.5, NodiEnums.CANVAS_GRID_SIZE);
         }
 
         //ctx.drawImage(Inserter.platform, 0, 0, NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE, 0, 0, NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE)
@@ -160,4 +161,4 @@ if (typeof window !== 'undefined') {
     Inserter.platform.src = 'nodes/basic/inserter_platform.png'
 }*/
 
-NodeWork.registerNodeType(Inserter);
+NodeWork.registerNodeType(Connector);

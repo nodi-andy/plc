@@ -1,4 +1,5 @@
 .pio
+.keys
 src/custom.h
 node_modules
 .vscode/.browse.c_cpp.db*

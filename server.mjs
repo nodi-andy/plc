@@ -7,7 +7,7 @@ import "./public/nodes/basic/button.mjs";
 import "./public/nodes/basic/toggle.mjs";
 import "./public/nodes/basic/bit.mjs";
 import "./public/nodes/basic/number.mjs";
-import "./public/nodes/basic/subnode.mjs";
+import "./public/nodes/basic/province.mjs";
 import "./public/nodes/logic/and.mjs";
 import "./public/nodes/logic/or.mjs";
 import "./public/nodes/logic/xor.mjs";
@@ -18,7 +18,7 @@ import "./public/nodes/math/isequal.mjs";
 import "./public/nodes/math/isless.mjs";
 import "./public/nodes/math/isgreater.mjs";
 import "./public/nodes/time/interval.mjs";
-import "./public/nodes/basic/inserter.mjs";
+import "./public/nodes/basic/connector.mjs";
 
 
 const app = express();

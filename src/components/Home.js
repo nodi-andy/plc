@@ -66,22 +66,22 @@ function SelectNodeDialog({ openND, setOpenND }) {
           aria-label="basic tabs example"
           TabIndicatorProps={{ style: { backgroundColor: "red" } }}
         >
-          {window.nodes?.list &&
-            Object.keys(window.nodes.list).map((category, index) => (
+          {window.list &&
+            Object.keys(window.list).map((category, index) => (
               <Tab key={category} label={category} {...a11yProps(index)} />
             ))}
         </Tabs>
-        {window.nodes?.list &&
-          Object.keys(window.nodes.list).map((category, tabIndex) => (
+        {window.list &&
+          Object.keys(window.list).map((category, tabIndex) => (
             <TabPanel key={category} value={value} index={tabIndex}>
               <Grid container spacing={2}>
-                {window.nodes.list[category].map((label) => (
+                {window.list[category].map((label) => (
                   <Grid key={label} item>
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        let msg = window.createNewNode(`${category}/${label}`);
-                        window.sendToNodework('createNode', msg);
+                        let msg = window.NodeWork.addNode(window.currentNodeWork, {type:`${category}/${label}`, pos: window.canvas.grid_selected});
+                        window.sendToNodework('addNode', msg);
                         setOpenND(false);
                       }}
                     >

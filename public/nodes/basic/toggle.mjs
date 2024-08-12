@@ -105,7 +105,7 @@ export default class WidgetToggle extends Node {
 
   static updateProp(node, name, val) {
     node.properties[name].value = val;
-    window.nodes.update(node.nodeID, node.properties);
+    window.update(node.nodeID, node.properties);
   }
 
   static onMouseDown(node, e, local_pos) {
@@ -115,7 +115,7 @@ export default class WidgetToggle extends Node {
       local_pos[0] < node.size[0] * 0.75 &&
       local_pos[1] < node.size[1] * 0.75
     ) {
-      window.nodes.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
+      window.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
       return true;
     }
     return false;

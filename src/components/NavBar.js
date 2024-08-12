@@ -67,7 +67,7 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
         </ListItem>
       */}
         <ListItem key='saveNodework' disablePadding>
-          <ListItemButton onClick={() => window.nodes.saveNodework()}>
+          <ListItemButton onClick={() => window.saveNodework()}>
             <ListItemIcon> <SaveOutlinedIcon /> </ListItemIcon>
             <ListItemText primary={'Save'} />
           </ListItemButton>

@@ -3,8 +3,10 @@ import Node from "../../node.mjs";
 
 export default class WidgetBit extends Node {
     static type = "basic/bit";
+    static drawBase = false;
     static defaultInput = "value";
     static defaultOutput = "value";
+    static primitive = true;
 
     static setup(node) {
         let props = node.properties;
@@ -80,7 +82,7 @@ export default class WidgetBit extends Node {
             local_pos[1] >  node.size[0] * 0.25 &&
             local_pos[0] < node.size[0] * 0.75 &&
             local_pos[1] < node.size[1] * 0.75) {
-            window.nodes.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
+            window.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
 
             node.update = true;
 

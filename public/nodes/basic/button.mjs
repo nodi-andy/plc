@@ -5,6 +5,7 @@ export default class Button extends Node {
   static type = "basic/button";
   static title = " ";
   static margin = 12;
+  static drawBase = false;
   static defaultOutput = "value";
   static defaultInput = "press";
 
@@ -14,13 +15,6 @@ export default class Button extends Node {
       Button.margin = 16;
     } else {
       Button.margin = 14;
-      ctx.fillStyle = "black";
-      ctx.fillRect(
-        Button.margin + 2,
-        Button.margin + 2,
-        node.size[0] - Button.margin * 2,
-        node.size[1] - Button.margin * 2
-      );
     }
 
     ctx.fillStyle = props.color.value;
@@ -45,7 +39,7 @@ export default class Button extends Node {
     ) {
       //this.properties.state.value = this.properties.press.value;
       //this.properties.state.outValue = this.properties.state.value;
-      window.nodes.updateInputs(node.nodeID, { state: { inpValue: 1 } });
+      window.updateInputs(node.nodeID, { state: { inpValue: 1 } });
       return true;
     }
 
@@ -53,7 +47,7 @@ export default class Button extends Node {
   }
 
   static onMouseUp(node, e) {
-    window.nodes.updateInputs(node.nodeID, { state: { inpValue: 0 } });
+    window.updateInputs(node.nodeID, { state: { inpValue: 0 } });
     return true;
   }
 

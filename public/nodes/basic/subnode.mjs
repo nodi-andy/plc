@@ -17,7 +17,7 @@ export default class SubNode extends NodeWork {
     }
 
     static setup(node) {
-        //SubNode.reset(node);
+        NodeWork.clear(node);
     }
 
     static run(node) {

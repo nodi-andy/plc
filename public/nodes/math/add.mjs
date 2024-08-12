@@ -18,21 +18,6 @@ export default class MathAdd extends Node {
         let props = node.properties;
         let ret = [];
 
-        let valueUpdate = false;
-
-        Object.values(props.add.inpValue).forEach((valInputs) => {
-            if (valInputs.update == 1) {
-                valueUpdate = true;
-            }
-        });
-        Object.values(props.sub.inpValue).forEach((valInputs) => {
-            if (valInputs.update == 1) {
-                valueUpdate = true;
-            }
-        });
-
-        if (!valueUpdate) return ret;
-
         let sum = 0;
         for (const valueInputs of Object.values(props.add.inpValue)) {
             if (typeof valueInputs.val === 'number') {

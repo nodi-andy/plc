@@ -12,7 +12,7 @@ export default class NodeWork extends Node {
     rotateNode : NodeWork.rotateNode,
     setNodework : NodeWork.setNodework,
     updateNode : this.updateNode,
-    createNode : NodeWork.createNode,
+    addNode : NodeWork.addNode,
     updateInputs : this.updateInputs,
     removeNode : NodeWork.removeNode,
     clear : NodeWork.clear
@@ -48,6 +48,7 @@ export default class NodeWork extends Node {
   }
 
   static getFirstNullIndex(arr) {
+    if (!arr || arr.length == null) return 0;
     for (let i = 0; i < arr.length; i++) {
       if (arr[i] == null) {
         return i;
@@ -112,7 +113,15 @@ export default class NodeWork extends Node {
   }
 
   static getNodeType(type) {
-    return this.registered_node_types[type];
+    return !type || this.registered_node_types[type];
+  }
+  static updateNodeList() {
+    window.list = {};
+    for (let nodeClassName in NodeWork.registered_node_types) {
+      let nodeClass = NodeWork.registered_node_types[nodeClassName];
+      if (window.list[nodeClass.category] == null) window.list[nodeClass.category] = [];
+      window.list[nodeClass.category].push(nodeClass.elementName);
+    }
   }
 
   static processMethodsAndObjects(obj, parent, type) {
@@ -166,31 +175,51 @@ export default class NodeWork extends Node {
   }
 
   static cmd(nw, msg) {
-    nw.orders.push(msg);
+    if (nw?.orders) nw.orders.push(msg);
   }
 
   static publish(nw, event, data) {
     if (nw.socketOut) nw.socketOut(event, data);
   }
 
-  static createNode(node, msg, socket) {
+  static addNode(parentNode, msg, socket) {
+    let allowNode = true;
+    msg.type = msg.type.toLowerCase();
+    if (msg.type == "network/serial" && window.serialport) {
+      NodeWork.Nodes["ComPort"].openSerial();
+    } 
+    if (msg.type == "network/serial" && window.serialport == null) {
+      allowNode = false
+    }
+    if (allowNode == false) return;
+
     //NodeWork.clear(msg.node);
-    node.nodes[msg.node.nodeID] = msg.node;
-    msg.node.engine = node.engine;
-    if (msg.node.type == "network/serial") {
+    if (msg.nodeID == null) msg.nodeID = NodeWork.getFirstNullIndex(parentNode.nodes);
+    if (msg.type == "network/serial") {
       window.serialNodeWork = msg.node;
       msg.node.engine = {name: "serial"};
+    } 
+
+    if (msg.node == null) {
+      msg.node = {};
+      msg.node.engine = {name:"browser"};
       msg.node.nodesByPos = {};
       msg.node.orders = [];
       msg.node.nodes = [];
-      node.nodes[msg.node.nodeID] = msg.node;
-    } 
-    node.nodes[msg.node.nodeID].parent = node;
-    msg.node.owner = socket?.id;
-    msg.node.moving = false;
-    msg.nodeID = msg.node.nodeID;
-    NodeWork.setNodeIDOnGrid(node, msg.pos[0], msg.pos[1], msg.nodeID);
-    NodeWork.publish("createNode", msg);
+      msg.node.properties = {};
+      msg.node.type = msg.type;
+      msg.node.pos = msg.pos;
+      msg.node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
+      msg.node.parent = parentNode;
+      msg.node.owner = socket?.id;
+      msg.node.moving = false;
+      msg.node.nodeID = msg.nodeID;
+      NodeWork.getNodeType(msg.type).setup(msg.node);
+      parentNode.nodes[msg.nodeID] = msg.node;
+    }
+    
+    NodeWork.setNodeIDOnGrid(parentNode, msg.pos[0], msg.pos[1], msg.node.nodeID);
+    NodeWork.publish("addNode", msg);
     return msg.node;
   }
 
@@ -210,6 +239,7 @@ export default class NodeWork extends Node {
     node.nodes = [];
     node.nodesByPos = {};
     node.orders = [];
+    node.properties = {};
     if (node.engine == null) node.engine = {name: "browser"};
   }
 
@@ -222,8 +252,18 @@ export default class NodeWork extends Node {
     if (!msg) return;
 
     let node = nw.nodes[msg.id];
-    if (node.moving) node.moving = false;
+    if (!node) return;
 
+    NodeWork.replaceNodeOnGrid(nw, msg)
+
+    if (NodeWork.getNodeType(node.type).moveable) {
+      node.comingFrom = [msg.from[0], msg.from[1]];
+      node.pos = [msg.to[0], msg.to[1]];
+    }
+    //this.publish("moveNodeOnGrid", msg);
+  }
+
+  static replaceNodeOnGrid(nw, msg) {
     let next_gridPos = msg.to;
     if (NodeWork.getNodeOnGrid(nw, next_gridPos[0], next_gridPos[1]) == null) {
       if (msg.from) {
@@ -231,8 +271,6 @@ export default class NodeWork extends Node {
       }
       NodeWork.setNodeIDOnGrid(nw, msg.to[0], msg.to[1], msg.id);
     }
-
-    //this.publish("moveNodeOnGrid", msg);
   }
 
   static removeNode(nw, msg) {
@@ -278,7 +316,9 @@ export default class NodeWork extends Node {
   }
 
   static getNodeIDOnGrid(nw, x, y) {
-    return nw.nodesByPos[x + NodiEnums.POS_SEP + y];
+    if (nw.nodesByPos) {
+      return nw.nodesByPos[x + NodiEnums.POS_SEP + y];
+    }
   }
 
   static setNodeIDOnGrid(node, x, y, id) {
@@ -294,7 +334,7 @@ export default class NodeWork extends Node {
     let nbNode = NodeWork.getNodeOnGrid(nw, x, y);
     if (nbNode) {
       let nodeClass = NodeWork.getNodeType(nbNode.type);
-      if (nodeClass.reconnect) nodeClass.reconnect(nbNode, nw, [x, y]);
+      if (nodeClass?.reconnect) nodeClass.reconnect(nbNode, nw, [x, y]);
     }
   }
 
@@ -354,40 +394,52 @@ export default class NodeWork extends Node {
   }
 
   static run(nw) {
-    let order = nw.orders.shift();
+    if (nw == null) return;
+    let order = nw?.orders?.shift();
     if (order) {
        NodeWork.engines[nw.engine.name](nw, order);
     }
-    if (nw.engine.name != "browser") return;
+    if (nw.engine?.name != null && nw.engine.name != "browser") return;
     nw.nodes?.forEach((node) => {
       if (!node) return;
       let curType = NodeWork.getNodeType(node.type);
-      if (node.movingTo) {
-        let curPos = new Vector2(node.pos[0], node.pos[1]);
-        let target = new Vector2(node.movingTo[0], node.movingTo[1]);
-        let moveVector = new Vector2(node.movingTo[0] - node.pos[0], node.movingTo[1] - node.pos[1])
-          .normalize()
-          .multiplyScalar(5);
+      if (node.comingFrom) {
+        node.targetPos = new Vector2(node.pos[0], node.pos[1]);
+        let startPos = new Vector2(node.comingFrom[0], node.comingFrom[1]);
+        if (!node.offset) 
+          node.offset = node.targetPos.clone().sub(startPos).negate();
+
+
+        node.currentPos = node.targetPos.clone().sub(node.offset);
+
+        let distance = node.targetPos.clone().sub(node.currentPos);
+        const step = 0.2;
+        let dir = distance.clone().normalize().multiplyScalar(step);
         //console.log("Dist: ", curPos.distanceTo(target));
-        if (curPos.distanceTo(target) > 5) {
-          node.pos[0] += moveVector.x;
-          node.pos[1] += moveVector.y;
+        if (distance.length() > step) {
+          node.offset.sub(dir);
         } else {
-          node.pos[0] = target.x;
-          node.pos[1] = target.y;
-          delete node.movingTo;
+          delete node.offset;
+          delete node.comingFrom;
         }
 
         //io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
         //console.log("JA", moveVector);
       }
 
-      let order = node.orders.shift();
+      let order = node?.orders?.shift();
       if (order) {
-        NodeWork.engines[nw.engine.name](nw, order);
+        NodeWork.engines[nw.engine.name](node, order);
       }
 
-      let results = curType?.run && curType.run(node, nw);
+      let results = [];
+      let runFunc = node.run;
+      if (!runFunc) runFunc = curType?.run;
+      if (runFunc /*&& (curType.type == "basic/connector" || this.checkValueUpdate(node.properties)) : run always*/) {
+        results = runFunc(node, nw);
+        NodeWork.run(node);
+      } 
+
       if (nw.socketOut && results?.length) {
         //console.log(c)
         results.forEach((propName) => {
@@ -395,18 +447,15 @@ export default class NodeWork extends Node {
         });
       }
     });
-
   }
-
 
   static updateProp(node, name, val) {
       node.properties[name].inpValue = val;
-      window.nodes.update(node.nodeID, node.properties);
+      window.update(node.nodeID, node.properties);
   }
 
-  static onMouseUp(node) {
-      window.nodeWork = node;
-      window.canvas.setGraph(node);
+  static reselect(node) {
+      window.currentNodeWork = node;
       window.showParent(true);
       return true;
   }

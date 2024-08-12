@@ -7,7 +7,7 @@ class Inserter : public Node
     public:
     Inserter();
     virtual std::string getType() const override {
-        return "basic/inserter";
+        return "basic/connector";
     }
     virtual Inserter* createInstance() const override {
         return new Inserter(*this); // Create a new instance of the Toggle object

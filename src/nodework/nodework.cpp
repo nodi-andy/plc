@@ -48,16 +48,16 @@ Node *Map::addNode(JsonObject json)
     if (json.containsKey("type") == false)
         return nullptr;
     string type = json["type"].as<std::string>();
-    Serial.printf("[Map:createNode:type] : %s\n", type.c_str());
+    Serial.printf("[Map:addNode:type] : %s\n", type.c_str());
 
-    Node *newNode = RegistryManager::getInstance().createNode(type);
+    Node *newNode = RegistryManager::getInstance().addNode(type);
     if (newNode != nullptr)
     {
         newNode->parent = this;
         newNode->setValues(json["node"]["properties"]);
         newNode->id = json["node"][JSON_NODE_ID].as<int>();
         newNode->type = type;
-        Serial.printf("[Map:createNode:done] id: %d, type: %s\n", newNode->id, newNode->getType().c_str());
+        Serial.printf("[Map:addNode:done] id: %d, type: %s\n", newNode->id, newNode->getType().c_str());
         if (json.containsKey("pos")) {
             addNode(json["pos"][0].as<int>(), json["pos"][1].as<int>(), newNode);
         } else {
@@ -407,19 +407,19 @@ vector<string> Map::run()
                 }
             }
         }
-        else if (eventName == "createNode")
+        else if (eventName == "addNode")
         {
             Node *newNode = addNode(eventData);
             if (newNode)
             {
                 eventData["nodeID"] = newNode->id;
-                Serial.printf("[\"createNode\", %s]\n", djsondoc[1].as<string>().c_str());
+                Serial.printf("[\"addNode\", %s]\n", djsondoc[1].as<string>().c_str());
             }
             else
             {
-                Serial.printf("[event::createNode:error] id: %d\n", djsondoc[1].as<int>());
+                Serial.printf("[event::addNode:error] id: %d\n", djsondoc[1].as<int>());
             }
-            // sendToSocket("createNode", djsondoc[1]);
+            // sendToSocket("addNode", djsondoc[1]);
         }
         else if (eventName == "moveNodeOnGrid")
         {

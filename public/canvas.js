@@ -4,6 +4,7 @@ import NodeWork from "./nodework.mjs";
 import Node from "./node.mjs";
 
 var tmp_area = new Float32Array(4);
+var presstimer = null;
 
 export default class LGraphCanvas {
   constructor(canvas, graph, options) {
@@ -24,7 +25,6 @@ export default class LGraphCanvas {
       output_on: "#7F7",
     };
 
-    this.highquality_render = true;
     this.use_gradients = false; //set to true to render titlebar with gradients
     this.editor_alpha = 1; //used for transition
     this.pause_rendering = false;
@@ -39,29 +39,18 @@ export default class LGraphCanvas {
 
     this.filter = null; //allows to filter to only accept some type of nodes in a graph
 
-    this.set_canvas_dirty_on_mouse_event = true; //forces to redraw the canvas if the mouse does anything
     this.render_shadows = true;
-    this.render_canvas_border = true;
-    this.render_connections_border = true;
-    this.render_curved_connections = false;
-    this.render_connection_arrows = false;
-    this.render_collapsed_slots = false;
-    this.render_execution_order = false;
-    this.render_title_colored = true;
 
-    this.mouse = [0, 0]; //mouse in canvas coordinates, where 0,0 is the top-left corner of the blue rectangle
-    this.graph_mouse = [0, 0]; //mouse in graph coordinates, where 0,0 is the top-left corner of the blue rectangle
+    this.mouse = [0, 0];
+    this.graph_mouse = [0, 0];
     this.grid_mouse = [0, 0]; //mouse in grid coordinates
 
     //callbacks
     this.onMouse = null;
-    this.onDrawForeground = null; //to render foreground objects (above nodes and connections) in the canvas affected by transform
-    this.onSelectionChange = null; //called if the selection changes
 
     this.connections_width = 3;
     this.round_radius = 8;
 
-    this.current_node = null;
     this.Node = Node;
     this.current_node_cbs = [];
     this.node_widget = null; //used for widgets
@@ -73,7 +62,6 @@ export default class LGraphCanvas {
     this.setCanvas(canvas, options.skip_events);
     this.clear();
     this.startRendering();
-    this.setGraph(graph);
     this.autoresize = options.autoresize;
 
     // Reference positions for the start of the transformation.
@@ -171,23 +159,6 @@ export default class LGraphCanvas {
   }
 
   /**
-   * assigns a graph, you can reassign graphs to the same canvas
-   *
-   * @method setGraph
-   * @param {LGraph} graph
-   */
-  setGraph(graph) {
-    if (this.graph == graph) {
-      return;
-    }
-
-    this.graph = graph;
-
-    //remove the graph stack in case a subgraph was open
-    if (this._graph_stack) this._graph_stack = null;
-  }
-
-  /**
    * assigns a canvas
    *
    * @method setCanvas
@@ -262,11 +233,11 @@ export default class LGraphCanvas {
     canvas.addEventListener("mousedown", this.processMouseDown.bind(this), false);
     canvas.addEventListener("mouseup", this.processMouseUp.bind(this), false);
     canvas.addEventListener("mousemove", this.processMouseMove.bind(this), false);
+    canvas.addEventListener("dblclick", this.processNodeDblClicked.bind(this), false);
     canvas.addEventListener("touchstart", this.processMouseDown.bind(this), false);
     canvas.addEventListener("touchmove", this.processMouseMove.bind(this), false);
     canvas.addEventListener("touchend", this.processMouseUp.bind(this), false);
     canvas.addEventListener("mousewheel", this.processMouseWheel.bind(this), false);
-    canvas.addEventListener("contextmenu", this._doNothing);
     canvas.addEventListener("DOMMouseScroll", this.processMouseWheel.bind(this), false);
     canvas.addEventListener("keydown", this.processKey.bind(this), true);
     document.addEventListener("keyup", this.processKey.bind(this), true); //in document, otherwise it doesn't fire keyup
@@ -309,30 +280,17 @@ export default class LGraphCanvas {
         this.draw();
       }
 
-      var window = this.getCanvasWindow();
+      var cwindow = this.getCanvasWindow();
       if (this.is_rendering) {
-        window.requestAnimationFrame(renderFrame.bind(this));
+        cwindow.requestAnimationFrame(renderFrame.bind(this));
       }
     }
   }
-  /**
-   * stops rendering the content of the canvas (to save resources)
-   *
-   * @method stopRendering
-   */
-  stopRendering() {
-    this.is_rendering = false;
-  }
 
-  processMouseDown(e) {
-    if (!this.graph) return;
+  processLongPress(e) {
+    if (!window.currentNodeWork) return;
     if (e.which > 1) return;
-    if (e.touches?.length == 2) {
-      window.scale = window.canvas.ds.scale;
-      // Save these two points as the reference.
-      this.referencePair = new TouchPair(e.touches);
-      return;
-    }
+    if (e.touches?.length == 2) return;
     this.adjustMouseEvent(e);
 
     //console.log("pointerevents: processMouseDown pointerId:"+e.pointerId+" which:"+e.which+" isPrimary:"+e.isPrimary+" :: x y "+x+" "+y);
@@ -341,62 +299,110 @@ export default class LGraphCanvas {
     this.graph_mouse = [e.canvasX, e.canvasY];
     this.last_click_position = [e.clientX, e.clientY];
 
-    var node_mouse = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
+    if (this.selected_nodes.length) {
+      for (let i in this.selected_nodes) {
+        let n = this.selected_nodes[i];
+        var node_type = NodeWork.getNodeType(n.type);
+        if (node_type.moveable) {
+          window.sendToNodework("moveNodeOnGrid", {id: n.nodeID, from: this.grid_selected, to: e.gridPos});
+        }
+      }
+      this.node_dragging = null;
+    }
+  }
+
+  processMouseDown(e) {
+    if (!window.currentNodeWork) return;
+    if (e.which > 1) return;
+    if (e.touches?.length == 2) {
+      window.scale = window.canvas.ds.scale;
+      // Save these two points as the reference.
+      this.referencePair = new TouchPair(e.touches);
+      return;
+    }
+    this.adjustMouseEvent(e);
+    var self = this;
+    presstimer = setTimeout(function() {
+      self.processLongPress(e);
+    }, 200);
+
+    //console.log("pointerevents: processMouseDown pointerId:"+e.pointerId+" which:"+e.which+" isPrimary:"+e.isPrimary+" :: x y "+x+" "+y);
+    this.ds.viewport = this.viewport;
+    this.mouse = [e.clientX, e.clientY];
+    this.graph_mouse = [e.canvasX, e.canvasY];
+    this.last_click_position = [e.clientX, e.clientY];
+
+    var node_mouse = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
     var node_type = NodeWork.getNodeType(node_mouse?.type);
 
     this.canvas.focus();
-    //left button mouse / single finger
+    //multiselect
     if (e.ctrlKey) {
-      //multiselect
       this.dragging_rectangle = new Float32Array(4);
       this.dragging_rectangle[0] = e.canvasX;
       this.dragging_rectangle[1] = e.canvasY;
       this.dragging_rectangle[2] = 1;
       this.dragging_rectangle[3] = 1;
-    } else if (e.altKey && node_mouse != null) {
-      // clone node ALT dragging
+    } 
+    // clone node ALT dragging
+    else if (e.altKey && node_mouse != null) {
       let cloned = Node.clone(node_mouse);
       if (cloned) {
         cloned.pos[0] += 5;
         cloned.pos[1] += 5;
-        this.graph.add(cloned, false, { doCalcSize: false });
+        window.currentNodeWork.add(cloned, false, { doCalcSize: false });
         node_mouse = cloned;
         this.node_dragging = node_mouse;
         if (!this.selected_nodes[node_mouse.nodeID]) {
           this.processNodeSelected(node_mouse, e);
         }
       }
-    } else if (node_mouse != null && window.canvas.copyNode == null) {
-      // select first node
+    }
+    // select node first time
+    else if (node_mouse != null && window.canvas.copyNode == null && node_mouse != window.current_node) {
       this.grid_selected = e.gridPos;
       var gridCorner = NodiEnums.toCanvas(e.gridPos);
       this.nodeDragGripPos = [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]];
 
       // Capture mouse by node gui
-      if (node_type.onMouseDown == null || node_type.onMouseDown(node_mouse, e, pos, this) == false) {
-        this.node_pressed = node_mouse;
-        this.gripped = "node";
-        if (!this.selected_nodes[node_mouse.nodeID]) {
-          this.processNodeSelected(node_mouse, e);
-        }
+      if (node_type.onMouseDown != null) {
+        node_type.onMouseDown(node_mouse, e, this.nodeDragGripPos, this);
       }
-    } else if (window.canvas.copyNode == null && this.grid_selected && (this.grid_selected[0] == e.gridPos[0] && this.grid_selected[1] == e.gridPos[1])) {
-      // unselect
+
+      this.node_pressed = node_mouse;
+      this.gripped = "node";
+      if (!this.selected_nodes[node_mouse.nodeID]) {
+        this.processNodeSelected(node_mouse, e);
+      }
+    } 
+    // grip canvas
+    else if (window.canvas.copyNode == null && node_mouse == null && (this.grid_selected == undefined || (this.grid_selected && (this.grid_selected[0] != e.gridPos[0] || this.grid_selected[1] != e.gridPos[1])))) {
+      this.gripped = "canvas";
+      this.deselectAllNodes();
+    }
+    // reselect the same one
+    else if (node_mouse != null && node_mouse == window.current_node) {
+      let nodeClass = NodeWork.getNodeType(window.current_node?.type);
+      if (nodeClass.reselect) {
+        nodeClass.reselect(window.current_node);
+      }
+      // Capture mouse by node gui
+      if (nodeClass.onMouseDown != null) {
+        nodeClass.onMouseDown(node_mouse, e, this.nodeDragGripPos, this);
+      }
+    }
+    // select another
+    else if (window.canvas.copyNode == null && this.grid_selected && (this.grid_selected[0] == e.gridPos[0] && this.grid_selected[1] == e.gridPos[1])) {
       this.grid_selected = e.gridPos;
-      if(this.current_node) this.current_node.selected = false;
-      this.current_node = null;
+      if(window.current_node) window.current_node.selected = false;
+      window.current_node = null;
       this.deselectAllNodes();
       this.gripped = "cell";
-    } else if (window.canvas.copyNode == null && node_mouse == null && (this.grid_selected == undefined || (this.grid_selected && (this.grid_selected[0] != e.gridPos[0] || this.grid_selected[1] != e.gridPos[1])))) {
-      this.grid_selected = e.gridPos;
-      if(this.current_node) this.current_node.selected = false;
-      this.current_node = null;
-      this.deselectAllNodes();
-      this.gripped = "canvas";
-    } else if (node_mouse == null && window.canvas.copyNode != null) {
-      // add existing node
+    } 
+    // add existing node
+    else if (node_mouse == null && window.canvas.copyNode != null) {
       this.gripped = "copyNode";
-      NodeWork.setNodeOnGrid(window.nodeWork, { nodeID: this.copyNode, pos: e.gridPos });
+      NodeWork.setNodeOnGrid(window.currentNodeWork, { nodeID: this.copyNode, pos: e.gridPos });
     }
 
     this.last_mouse_down = [e.clientX, e.clientY];
@@ -440,11 +446,14 @@ export default class LGraphCanvas {
       return;
     }
 
+    clearTimeout(presstimer);
+
+
     if (this.autoresize) {
       this.resize();
     }
 
-    if (!this.graph) {
+    if (!window.currentNodeWork) {
       return;
     }
 
@@ -455,13 +464,13 @@ export default class LGraphCanvas {
     this.gridPos = NodiEnums.toGrid([e.canvasX, e.canvasY]);
     this.grid_mouse = NodiEnums.toCanvas(this.gridPos);
     //get node over
-    this.node_over = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
+    this.node_over = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
 
     //console.log("processMouseMove " + this.last_mouse_down);
 
     e.dragging = this.last_mouse_dragging;
     if (this.gripped == "node" && this.node_pressed) {
-      NodeWork.setNodeIDOnGrid(this.graph, this.grid_selected.x, this.grid_selected.y, null);
+      NodeWork.setNodeIDOnGrid(window.currentNodeWork, this.grid_selected.x, this.grid_selected.y, null);
       this.canvas.style.cursor = "move";
       this.node_dragging = this.node_pressed;
       this.node_pressed = null;
@@ -473,12 +482,12 @@ export default class LGraphCanvas {
       this.ds.offset[0] += delta[0] / this.ds.scale;
       this.ds.offset[1] += delta[1] / this.ds.scale;
     } else if (this.gripped == "copyNode" && this.node_over == null) {
-      NodeWork.setNodeOnGrid(this.graph, { nodeID: this.copyNode, pos: e.gridPos });
+      NodeWork.setNodeOnGrid(window.currentNodeWork, { nodeID: this.copyNode, pos: e.gridPos });
     } else if (this.gripped == "node" && this.node_dragging) {
       //node being dragged
       if (window.settings?.ownerShip == false || this.node_dragging.owner == window.socketIO.id) {
-        if (delta[0] != 0 && delta[1] != 0) {
-          window.nodes.move(this.node_dragging.nodeID, {
+        if (delta[0] != 0 && delta[1] != 0 && window.move) {
+          window.move(this.node_dragging.nodeID, {
             pos: this.node_dragging.pos,
           });
         }
@@ -514,17 +523,16 @@ export default class LGraphCanvas {
     if (e.touches?.length < 2) {
       this.currentGesture = this.Gestures.NONE;
     }
-
+    var node_mouse = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
+    var node_type = NodeWork.getNodeType(node_mouse?.type);
     //console.log("pointerevents: processMouseUp "+e.pointerId+" "+e.isPrimary+" :: "+e.clientX+" "+e.clientY);
-    if (!this.graph) return;
-
-    var window = this.getCanvasWindow();
+    if (!window.currentNodeWork) return;
 
     this.adjustMouseEvent(e);
     var now = NodiEnums.getTime();
     e.click_time = now - this.last_mouseclick;
     this.last_mouse_dragging = false;
-
+    clearTimeout(presstimer);
     //console.log("pointerevents: processMouseUp which: "+e.which);
     if (e.which > 1) return;
     if (this.node_widget) this.processNodeWidgets(this.node_widget[0], this.graph_mouse, e);
@@ -532,12 +540,12 @@ export default class LGraphCanvas {
     //left button
     this.node_widget = null;
 
-    var node = NodeWork.getNodeOnPos(this.graph, e.canvasX, e.canvasY);
+    var node = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
     if (this.gripped == "canvas") {
       this.dragging_canvas = false;
     } else if (this.dragging_rectangle) {
-      if (this.graph) {
-        var nodes = this.graph.nodes;
+      if (window.currentNodeWork) {
+        var nodes = window.currentNodeWork.nodes;
 
         //compute bounding and flip if left to right
         var w = Math.abs(this.dragging_rectangle[2]);
@@ -575,16 +583,23 @@ export default class LGraphCanvas {
     } else if (this.node_dragging) {
       window.sendToNodework("moveNodeOnGrid", {id: this.node_dragging.nodeID, from: this.grid_selected, to: e.gridPos});
       this.node_dragging = null;
-    } else {
+    }       // deselect all, grip canvas
+    else if (window.canvas.copyNode == null && node_mouse == null && (this.grid_selected == undefined || (this.grid_selected && (this.grid_selected[0] != e.gridPos[0] || this.grid_selected[1] != e.gridPos[1])))) {
+        this.grid_selected = e.gridPos;
+        if(window.current_node) window.current_node.selected = false;
+        window.current_node = null;
+        this.deselectAllNodes();
+        this.gripped = "canvas";
+     } else {
       //no node being dragged
       if (!node && this.selectedLink == null && window.canvas.copyNode == null) {
         this.deselectAllNodes();
       }
-
-      if (node && NodeWork.getNodeType(node.type).onMouseUp) {
+      let nodeClass = NodeWork.getNodeType(node?.type);
+      if (nodeClass.onMouseUp) {
         var gridCorner = NodiEnums.toCanvas(e.gridPos);
 
-        NodeWork.getNodeType(node.type).onMouseUp(
+        nodeClass.onMouseUp(
           this.node_over,
           e,
           [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]],
@@ -610,6 +625,7 @@ export default class LGraphCanvas {
     }
     this.last_click_position = null;
     this.gripped = "";
+    this.grid_selected = e.gridPos;
 
     //console.log("pointerevents: processMouseUp stopPropagation");
     e.stopPropagation();
@@ -656,7 +672,7 @@ export default class LGraphCanvas {
    * @method processMouseWheel
    */
   processMouseWheel(e) {
-    if (!this.graph || !this.allow_dragcanvas) {
+    if (!window.currentNodeWork || !this.allow_dragcanvas) {
       return;
     }
 
@@ -665,22 +681,11 @@ export default class LGraphCanvas {
   }
 
   /**
-   * returns true if a position (in graph space) is on top of a node little corner box
-   * @method isOverNodeBox
-   */
-  isOverNodeBox(node, canvasx, canvasy) {
-    if (Math.isInsideRectangle(canvasx, canvasy, node.pos[0] + 2, node.pos[1] + 2, -4, -4)) {
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * process a key event
    * @method processKey
    */
   processKey(e) {
-    if (!this.graph) {
+    if (!window.currentNodeWork) {
       return;
     }
 
@@ -801,7 +806,7 @@ export default class LGraphCanvas {
     }
     var nodes = [];
     for (let node_data of clipboard_info.nodes) {
-      var node = NodeWork.createNode(node_data.type);
+      var node = NodeWork.addNode(node_data.type);
       if (node) {
         node.setNodework(node_data);
 
@@ -809,7 +814,7 @@ export default class LGraphCanvas {
         node.pos[0] += this.graph_mouse[0] - posMin[0]; //+= 5;
         node.pos[1] += this.graph_mouse[1] - posMin[1]; //+= 5;
 
-        this.graph.add(node, { doProcessChange: false });
+        window.currentNodeWork.add(node, { doProcessChange: false });
 
         nodes.push(node);
       }
@@ -841,7 +846,7 @@ export default class LGraphCanvas {
 
     var pos = [e.canvasX, e.canvasY];
 
-    var node = this.graph ? NodeWork.getNodeOnPos(this.graph, pos[0], pos[1]) : null;
+    var node = window.currentNodeWork ? NodeWork.getNodeOnPos(window.currentNodeWork, pos[0], pos[1]) : null;
 
     if (!node) {
       var r = null;
@@ -901,10 +906,20 @@ export default class LGraphCanvas {
     return false;
   }
 
-  processNodeDblClicked(n) {
-    if (this.onNodeDblClicked) {
-      this.onNodeDblClicked(n);
+  processNodeDblClicked(e) {
+    if (!window.currentNodeWork) return;
+    if (e.which > 1) return;
+    if (e.touches?.length == 2) return;
+
+    this.adjustMouseEvent(e);
+    var node_mouse = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
+    let nodeClass = NodeWork.getNodeType(node_mouse?.type);
+
+    if (node_mouse && nodeClass.primitive == false) {
+      window.currentNodeWork = node_mouse;
+      window.showParent(true);
     }
+    if (this.onNodeDblClicked) this.onNodeDblClicked(n);
   }
 
   processNodeSelected(node, e) {
@@ -913,6 +928,7 @@ export default class LGraphCanvas {
       this.onNodeSelected(node);
     }
   }
+
   /**
    * selects a given node (or adds it to the current selection)
    * @method selectNode
@@ -923,7 +939,7 @@ export default class LGraphCanvas {
     } else {
       this.selectNodes([node], add_to_current_selection);
     }
-    this.current_node = node;
+    window.current_node = node;
   }
   /**
    * selects several nodes (or adds them to the current selection)
@@ -934,7 +950,7 @@ export default class LGraphCanvas {
       this.deselectAllNodes();
     }
 
-    nodes = nodes || this.graph.nodes;
+    nodes = nodes || window.currentNodeWork.nodes;
     if (typeof nodes == "string") nodes = [nodes];
     for (var i in nodes) {
       var node = nodes[i];
@@ -950,6 +966,8 @@ export default class LGraphCanvas {
     }
 
     if (this.onSelectionChange) this.onSelectionChange(this.selected_nodes);
+    window.updateEditDialog(window.current_node);
+
   }
   /**
    * removes a node from the current selection
@@ -973,10 +991,10 @@ export default class LGraphCanvas {
    * @method deselectAllNodes
    */
   deselectAllNodes() {
-    if (!this.graph) {
+    if (!window.currentNodeWork) {
       return;
     }
-    var nodes = this.graph.nodes;
+    var nodes = window.currentNodeWork.nodes;
     for (let node of nodes) {
       if (node) {
         if (node.onDeselected) {
@@ -987,15 +1005,32 @@ export default class LGraphCanvas {
         }
       }
     }
-    this.graph.nodes.forEach((node) => {
+    window.currentNodeWork.nodes.forEach((node) => {
       if (!node) return;
       node.is_selected = false;
     });
 
     this.selected_nodes = [];
-    this.current_node = null;
+    window.current_node = null;
     if (this.onSelectionChange) this.onSelectionChange(this.selected_nodes);
+    window.updateEditDialog(window.current_node);
+
   }
+
+  onSelectionChange (nodes) {
+    if (Object.keys(nodes).length == 1) {
+      let node = nodes[Object.keys(nodes)[0]]; // selected nodes are not indexed correctly
+      window.showRemove(true);
+      window.showRotate(NodeWork.getNodeType(node.type).rotatable);
+      window.showAdd(!(NodeWork.getNodeType(node.type).singleton));
+      console.log("disable");
+    } else {
+      window.showAdd(false);
+      window.showRotate(false);
+      window.showRemove(false);
+      console.log("enable");
+    }
+  };
   /**
    * deletes all nodes in the current selection from the graph
    * @method deleteSelectedNodes
@@ -1004,14 +1039,14 @@ export default class LGraphCanvas {
     for (let node of this.selected_nodes) {
       if (node) {
         if (node.block_delete) continue;
-        this.graph.remove(node);
+        window.currentNodeWork.remove(node);
         if (this.onNodeDeselected) {
           this.onNodeDeselected(node);
         }
       }
     }
     this.selected_nodes = [];
-    this.current_node = null;
+    window.current_node = null;
   }
   /**
    * centers the camera on a given node
@@ -1095,7 +1130,7 @@ export default class LGraphCanvas {
     this.render_time = (now - this.last_draw_time) * 0.001;
     this.last_draw_time = now;
 
-    if (this.graph) {
+    if (window.currentNodeWork) {
       this.ds.computeVisibleArea(this.viewport);
     }
 
@@ -1149,12 +1184,12 @@ export default class LGraphCanvas {
     ctx.stroke(); // Render the path
     ctx.restore();
 
-    if (this.graph?.nodesByPos) {
+    if (window.currentNodeWork?.nodesByPos) {
       if (this.grid_selected) {
         ctx.save();
         this.ds.toCanvasContext(ctx);
         ctx.fillStyle = "rgb(0.2,0,0,0.25)";
-        ctx.fillRect(
+        ctx.strokeRect(
           this.grid_selected[0] * NodiEnums.CANVAS_GRID_SIZE - 4,
           this.grid_selected[1] * NodiEnums.CANVAS_GRID_SIZE - 4,
           NodiEnums.CANVAS_GRID_SIZE + 8,
@@ -1166,21 +1201,18 @@ export default class LGraphCanvas {
       this.ds.toCanvasContext(ctx);
 
       //draw nodes on grid
-      for (var nodeKey of Object.keys(this.graph.nodesByPos)) {
-        var nodeID = this.graph.nodesByPos[nodeKey];
-        var node = this.graph.nodes[nodeID];
+      for (var nodeKey of Object.keys(window.currentNodeWork.nodesByPos)) {
+        var nodeID = window.currentNodeWork.nodesByPos[nodeKey];
+        var node = window.currentNodeWork.nodes[nodeID];
         //transform coords system
         let [x, y] = nodeKey.split(NodiEnums.POS_SEP);
         ctx.save();
         ctx.translate(x * NodiEnums.CANVAS_GRID_SIZE, y * NodiEnums.CANVAS_GRID_SIZE);
+        if (node.offset) ctx.translate(node.offset.x * NodiEnums.CANVAS_GRID_SIZE, node.offset.y * NodiEnums.CANVAS_GRID_SIZE);
 
         //Draw
-        if (NodeWork.getNodeType(node.type).drawBase !== false) {
-          this.drawNode(node, ctx);
-        } else {
-          let nodeDrawFunction = NodeWork.getNodeType(node.type).onDrawForeground;
-          if (nodeDrawFunction) nodeDrawFunction(node, ctx);
-        }
+        this.drawNode(node, ctx);
+
 
         //Restore
         ctx.restore();
@@ -1201,7 +1233,7 @@ export default class LGraphCanvas {
 
       //draw cloning
       if (this.copyNode != null) {
-        this.copyNodeObj = NodeWork.getNodeById(window.nodeWork,this.copyNode);
+        this.copyNodeObj = NodeWork.getNodeById(window.currentNodeWork,this.copyNode);
         ctx.save();
         ctx.translate(this.graph_mouse[0], this.graph_mouse[1]);
         //Draw
@@ -1264,10 +1296,13 @@ export default class LGraphCanvas {
       ctx.shadowColor = "transparent";
     }
 
-    this.drawNodeShape(node, ctx, node.size, color, bgcolor, node.is_selected, node.mouseOver);
-    ctx.shadowColor = "transparent";
+    if (NodeWork.getNodeType(node.type).drawBase !== false) {
+      this.drawNodeShape(node, ctx, node.size, color, bgcolor, node.is_selected, node.mouseOver);
+      ctx.shadowColor = "transparent";
+    }
 
-    let nodeDrawFunction = NodeWork.getNodeType(node.type).onDrawForeground;
+    let nodeDrawFunction = node.onDrawForeground;
+    if (!nodeDrawFunction) nodeDrawFunction = NodeWork.getNodeType(node.type).onDrawForeground;
     if (nodeDrawFunction) nodeDrawFunction(node, ctx, this.visible_rect);
 
     // Draw the title on the node
@@ -1292,8 +1327,13 @@ export default class LGraphCanvas {
     var area = tmp_area;
     area[0] = 0; //x
     area[1] = 0; //y
-    area[2] = size[0]; //w
-    area[3] = size[1]; //h
+    if (size) {
+      area[2] = size[0]; //w
+      area[3] = size[1]; //h
+    } else {
+      area[2] = 1;
+      area[3] = 1;
+    }
 
     //full node shape
     ctx.beginPath();

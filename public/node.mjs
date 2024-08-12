@@ -1,6 +1,6 @@
 
 export default class Node {
-  
+  static onGrid = true;
   /* Creates a clone of this node */
   static clone(node) {
     let data = { ...node };
@@ -11,7 +11,12 @@ export default class Node {
     return node;
   }
 
-
+  static checkValueUpdate(props) {
+    return Object.values(props).some(prop =>
+        prop.inpValue && Object.values(prop.inpValue).some(input => input.update === 1)
+    );
+  }
+  
   static setProperty(properties, name, info) {
     if (!properties) return;
     if (properties[name]) return;

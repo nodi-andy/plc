@@ -3,10 +3,8 @@ import NodeWork from "../../nodework.mjs";
 
 export default class WidgetNumber extends Node {
     static type = "basic/number";
-    static pixels_threshold = 10;
-    static old_y = -1;
-    static _remainder = 0;
-    static _precision = 0;
+    static moveable = false;
+    static drawBase = false;
     static mouse_captured = false;
     static defaultInput = "value";
     static defaultOutput = "value";
@@ -42,6 +40,8 @@ export default class WidgetNumber extends Node {
             props.value.value = maxVal;
             props.value.outValue = {val: props.value.value, update: 1};
             ret.push("value");
+        } else {
+            props.value.outValue.update = 0;
         }
 
         for (const valueInputs of Object.values(props.inc.inpValue)) {
@@ -77,16 +77,17 @@ export default class WidgetNumber extends Node {
         var x = node.size[0] * 0.5;
         var h = node.size[1];
 
-
         ctx.textAlign = "center";
         ctx.font = (h * 0.6).toFixed(1) + "px Arial";
-        ctx.fillStyle = "#EEE";
-        ctx.fillText(node.properties.value.value, x, h * 0.65);
+        ctx.fillStyle = "#000";
+        let text = node.properties.value.value;
+        if (isNaN(text)) text = "∅";
+        ctx.fillText(text, x, h * 0.7);
     }
   
     static updateProp(node, name, val) {
         node.properties[name].inpValue = val;
-        window.nodes.update(node.nodeID, node.properties);
+        window.update(node.nodeID, node.properties);
     }
 }
 

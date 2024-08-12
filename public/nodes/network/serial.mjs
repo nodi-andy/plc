@@ -17,6 +17,14 @@ export default class ComPort extends NodeWork {
 
   static setup(node) {
     let props = node.properties;
+    // serial port
+    navigator.serial?.getPorts().then((ports) => {
+      if (ports.length) {
+        window.serialport = ports[0];
+        window.serialport.status = "closed";
+      }
+      window.load("nodework");
+    });
   }
 
   static run(node) {
