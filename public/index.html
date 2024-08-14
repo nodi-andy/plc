@@ -97,6 +97,10 @@
     localStorage.version = "0.1";
     if (localStorage.files == null) localStorage.files = JSON.stringify({});
     window.time = {tick: 0};
+    window.map = {};
+    window.map.findNodesWithinRange = (base, range) => {
+      return NodeWork.findNodesWithinRange(window.currentNodeWork, base, range);
+    }
     window.load = (filename) => {
       if (localStorage[filename]) {
         window.rootNode = NodeWork.load();
@@ -154,7 +158,7 @@
     window.rootNode = {};
     NodeWork.clear(window.rootNode);
     window.currentNodeWork = window.rootNode; //window.NodeWork.addNode(window.rootNode, {type: "basic/country", pos: [0, 0]}); // {}
-    
+    window.load("nodework");
     // start the loop
     setInterval(() => { 
       NodeWork.run(window.rootNode);  

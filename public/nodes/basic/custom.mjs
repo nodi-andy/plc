@@ -5,34 +5,30 @@ export default class Custom extends Node {
     static type = "basic/custom";
     static drawBase = false;
     static onGrid = false;
+    static movable = true;
+    
+    static funcToString(funcString) {
+        funcString.substring(funcString.indexOf("{") + 1, funcString.lastIndexOf("}"));
+    }
 
     static setup(node) {
-        let props = node.properties;
-        Node.setProperty(props, "value");
+        node.script = {};
         node.type = Custom.type
 
-        node.run = Custom.run.bind(node);
-        props.cv = 0;
-        const runFunctionString = Custom.run.toString();
-        node.runStr = runFunctionString.substring(runFunctionString.indexOf("{") + 1, runFunctionString.lastIndexOf("}"));
+        node.initStr = "let me = this.script;\nme.cv = 0;";
+        node.init = new Function('node', node.initStr);
+        node.init.bind(node);
+        node.init();
+
+        node.runStr = "let me = this.script;\nme.cv++;";
         node.run = new Function('node', node.runStr);
+        node.run.bind(node);
 
-        const drawFunctionString = Custom.onDrawForeground.toString();
-        node.drawStr = drawFunctionString.substring(drawFunctionString.indexOf("{") + 1, drawFunctionString.lastIndexOf("}"));
+        node.drawStr = "let me = this.script;\nctx.fillStyle = 'green';\nctx.fillRect(0, 0, node.size[0], node.size[1]);\nctx.fillText(me.cv, 0, 0);"
         node.onDrawForeground = new Function('node', 'ctx', node.drawStr);
-    } 
-
-    static run(node) {
-        let props = node.properties;
-        props.cv++;
+        node.onDrawForeground.bind(node);
     }
-
-    static onDrawForeground(node, ctx) {
-        let props = node.properties;
-        ctx.fillStyle = 'green';
-        ctx.fillRect(0, 0, node.size[0], node.size[1]);
-        ctx.fillText(props.cv, 0, 0);
-    }
+    
 }
 
 NodeWork.registerNodeType(Custom)

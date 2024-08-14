@@ -46,7 +46,9 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
     <div>
       <React.Fragment key={'right'}>
         <Drawer disableEnforceFocus anchor={'right'} open={showEditMenu} onClose={toggleEditDialog(false)}>
-          <Box sx={{ width: 250 }}  style={{ display: 'flex', flexDirection: 'column' }} role="presentation" onClick={toggleEditDialog(false)} onKeyDown={toggleEditDialog(false)}>
+          <Box 
+            sx={{ width: window.current_node?.type === "basic/custom" ? 600 : 250 }}
+            style={{ display: 'flex', flexDirection: 'column' }} role="presentation" onClick={toggleEditDialog(false)} onKeyDown={toggleEditDialog(false)}>
             { window.current_node?.properties && Object.entries(window.current_node?.properties).map(([key, prop]) => (
               <TextField
                   label = {key}

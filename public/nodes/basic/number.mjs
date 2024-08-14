@@ -3,7 +3,7 @@ import NodeWork from "../../nodework.mjs";
 
 export default class WidgetNumber extends Node {
     static type = "basic/number";
-    static moveable = false;
+    static moveable = true;
     static drawBase = false;
     static mouse_captured = false;
     static defaultInput = "value";

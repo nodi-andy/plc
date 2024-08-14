@@ -115,6 +115,7 @@ export default class NodeWork extends Node {
   static getNodeType(type) {
     return !type || this.registered_node_types[type];
   }
+
   static updateNodeList() {
     window.list = {};
     for (let nodeClassName in NodeWork.registered_node_types) {
@@ -155,6 +156,11 @@ export default class NodeWork extends Node {
   }
 
   static save(nw) {
+    nw.nodes.forEach((n) => {
+      if (n.run) delete n.run;
+      if (n.onDrawForeground) delete n.onDrawForeground;
+      
+    })
     let saveNW = structuredClone(nw);
     NodeWork.processMethodsAndObjects(saveNW, null, "unlink");
       localStorage["nodework"] = JSON.stringify(saveNW); 
@@ -436,6 +442,7 @@ export default class NodeWork extends Node {
       let runFunc = node.run;
       if (!runFunc) runFunc = curType?.run;
       if (runFunc /*&& (curType.type == "basic/connector" || this.checkValueUpdate(node.properties)) : run always*/) {
+        runFunc = runFunc.bind(node);
         results = runFunc(node, nw);
         NodeWork.run(node);
       } 
@@ -459,4 +466,23 @@ export default class NodeWork extends Node {
       window.showParent(true);
       return true;
   }
+  
+  static findNodesWithinRange(nw, targetNode, range) {
+      let nodesWithinRange = [];
+
+      nw.nodes.forEach((node) => {
+        if (node && node.nodeID !== targetNode.nodeID) {
+            let distance = Math.hypot(
+              node.pos[0] - targetNode.pos[0],
+                node.pos[1] - targetNode.pos[1]
+              );
+            if (distance <= range) {
+              nodesWithinRange.push(node);
+            }
+          }
+    });
+    
+    return nodesWithinRange;
+  }
+
 }

@@ -1303,6 +1303,7 @@ export default class LGraphCanvas {
 
     let nodeDrawFunction = node.onDrawForeground;
     if (!nodeDrawFunction) nodeDrawFunction = NodeWork.getNodeType(node.type).onDrawForeground;
+    if (nodeDrawFunction) nodeDrawFunction = nodeDrawFunction.bind(node);
     if (nodeDrawFunction) nodeDrawFunction(node, ctx, this.visible_rect);
 
     // Draw the title on the node
