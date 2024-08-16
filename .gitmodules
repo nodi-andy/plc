@@ -1,0 +1,3 @@
+[submodule "public/minventoryJS"]
+	path = public/minventoryJS
+	url = https://github.com/nodi-andy/minventoryJS
