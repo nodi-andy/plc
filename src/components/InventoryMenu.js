@@ -3,7 +3,7 @@ import React from 'react';
 const InventoryMenu = ({ items, onItemClick }) => {
   return (
     <div style={styles.menuContainer}>
-      {items.map((item, index) => (
+      {items && Object.values(items["basic"]).map((item, index) => (
         <div
           key={index}
           style={{

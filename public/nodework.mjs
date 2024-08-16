@@ -157,15 +157,29 @@ export default class NodeWork extends Node {
 
   static save(nw) {
     nw.nodes.forEach((n) => {
+      if (n.init) delete n.init;
       if (n.run) delete n.run;
       if (n.onDrawForeground) delete n.onDrawForeground;
-      
     })
     let saveNW = structuredClone(nw);
     NodeWork.processMethodsAndObjects(saveNW, null, "unlink");
-      localStorage["nodework"] = JSON.stringify(saveNW); 
+    localStorage["nodework"] = JSON.stringify(saveNW); 
+    nw.nodes.forEach((node) => {
+      node.init = new Function('node', node.initStr);
+      node.init.bind(node);
+      node.init();
+
       
-      window.showSnackbar("Nodework saved in browser");
+      node.init = new Function('node', node.initStr);
+      node.init.bind(node);
+      
+      node.run = new Function('node', node.runStr);
+      node.run.bind(node);
+
+      node.onDrawForeground = new Function('node', 'ctx', node.drawStr);
+      node.onDrawForeground.bind(node);
+    })
+    window.showSnackbar("Nodework saved in browser");
   }
 
   static load() {
@@ -277,6 +291,7 @@ export default class NodeWork extends Node {
       }
       NodeWork.setNodeIDOnGrid(nw, msg.to[0], msg.to[1], msg.id);
     }
+    nw.nodes[msg.id].pos = msg.to;
   }
 
   static removeNode(nw, msg) {
@@ -467,7 +482,7 @@ export default class NodeWork extends Node {
       return true;
   }
   
-  static findNodesWithinRange(nw, targetNode, range) {
+  static findNodes(nw, targetNode, range) {
       let nodesWithinRange = [];
 
       nw.nodes.forEach((node) => {

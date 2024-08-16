@@ -10,6 +10,11 @@ import Header from './components/header/header';
 import RenameDialog from './components/RenameDialog';
 import SelectFileDialog from './components/SelectFileDialog';
 import ConnectionDialog from './components/ConnectionDialog';
+import InventoryMenu from './components/InventoryMenu';
+
+import InboxIcon from '@mui/icons-material/Inbox';
+import DraftsIcon from '@mui/icons-material/Drafts';
+import SendIcon from '@mui/icons-material/Send';
 
 console.log('📦: ' + process.env.REACT_APP_NAME)
 console.log('🚀: ' + process.env.REACT_APP_VERSION)
@@ -28,7 +33,20 @@ function App() {
   const [showFiles, setShowFiles] = useState(false);
   const [showConnection, setShowConnection] = useState(false);
   const [showEditMenu, setShowEditMenu] = useState(false);
+  const [items, setItems] = useState({ 
+    basic: [ {name: 'Bit', icon: <InboxIcon style={{ fontSize: 40, color: '#fff' }} />, quantity: 5, disabled: false} ] ,
+    logic: [ {name: 'Number',  icon: <DraftsIcon style={{ fontSize: 40, color: '#fff' }} />, quantity: 2, disabled: true }],
+    time:  [ {name: 'Connector',  icon: <SendIcon style={{ fontSize: 40, color: '#fff' }} />, quantity: 10, disabled: false }],
+    // Add more items with appropriate categories
+    });
+  
 
+
+  const handleItemClick = (item) => {
+    console.log(`Item clicked: ${item.name}`);
+    // Add your custom logic here
+  };
+  
   useEffect(() => {
     const canvas = document.getElementById('mycanvas');
 
@@ -49,22 +67,31 @@ function App() {
     };
   }, []); // Empty dependency array ensures this effect runs only once
 
+
   return (
     <div>
       <ThemeProvider theme={theme}>
-      <div style={{ position: 'relative', zIndex: 2 }}>
-        <Header setOpenDrawer={setOpenDrawer} showConnection={setShowConnection}  />
-        <NavBar openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} showSaveAsFiles={setShowSaveAsFiles}  showFiles={setShowFiles} showConnection = {showConnection}/>
-        <EditDialog showEditMenu={showEditMenu} setShowEditMenu = {setShowEditMenu} />
-        <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
-        <SelectFileDialog openFD={showFiles}  setOpenFD={setShowFiles}/>
-        <ConnectionDialog openFD={showConnection}  setOpenFD={setShowConnection}/>
-      </div>
+        {/* Move this div out of the zIndex controlled area */}
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <Header setOpenDrawer={setOpenDrawer} showConnection={setShowConnection}  />
+          <NavBar openDrawer={openDrawer} setOpenDrawer={setOpenDrawer} showSaveAsFiles={setShowSaveAsFiles}  showFiles={setShowFiles} showConnection = {showConnection}/>
+          <EditDialog showEditMenu={showEditMenu} setShowEditMenu = {setShowEditMenu} />
+          <RenameDialog visible = {showSaveAsFiles} show = {setShowSaveAsFiles} filename = {localStorage.selected} saveAs = {true}/>
+          <SelectFileDialog openFD={showFiles}  setOpenFD={setShowFiles}/>
+          <ConnectionDialog openFD={showConnection}  setOpenFD={setShowConnection}/>
+        </div>
+
+        {
+        /* 
+          <InventoryMenu items={items} onItemClick={handleItemClick} />
+          */
+        }
 
         <canvas
           id="mycanvas"
           style={{ position: 'absolute', left: 0, top: 0}}
         />
+        
         <Routes>
           {/* Public routes */}
           <Route index element={<Home setShowEditMenu = {setShowEditMenu}/>} />

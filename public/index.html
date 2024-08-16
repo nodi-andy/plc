@@ -74,6 +74,7 @@
   </script>
   <script type="module">
     import NodeWork from "./nodework.mjs";
+    import Inventory from "./minventoryJS/inventory.js";
     window.sendToNodework = (cmd, obj) => NodeWork.cmd(window.currentNodeWork, {cmd: cmd, data: obj});
     
     // why loading the scripts one by one?
@@ -98,13 +99,22 @@
     if (localStorage.files == null) localStorage.files = JSON.stringify({});
     window.time = {tick: 0};
     window.map = {};
-    window.map.findNodesWithinRange = (base, range) => {
-      return NodeWork.findNodesWithinRange(window.currentNodeWork, base, range);
+    window.map.findNodes = (base, range) => {
+      return NodeWork.findNodes(window.currentNodeWork, base, range);
     }
+    window.inv = new Inventory(["energy", "mine"], 2, true);
+    window.inv.packs[1].max = 1000;
+    window.inv.addItem("mine", 8)
     window.load = (filename) => {
       if (localStorage[filename]) {
         window.rootNode = NodeWork.load();
         window.currentNodeWork = window.rootNode;
+        window.rootNode.nodes.forEach((n) => {
+          if (n.drawStr) {
+            n.onDrawForeground = new Function('node', 'ctx', n.drawStr);
+            n.onDrawForeground.bind(n);
+          }
+        })
       }
       window.showSnackbar("Loaded nodework: " + filename);
     };
