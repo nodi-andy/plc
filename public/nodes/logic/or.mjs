@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class LogicOr extends Node {
+export default class LogicOr extends NodeWork {
     static type = "logic/or";
     static title = "OR";
     static defaultInput = "value";
@@ -9,7 +8,7 @@ export default class LogicOr extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value");
+        NodeWork.setProperty(props, "value");
         this.type = LogicOr.type
     }
 

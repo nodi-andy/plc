@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class MathMult extends Node {
+export default class MathMult extends NodeWork {
     static type = "math/mult";
     static title = "X";
     static defaultInput = "value";
@@ -9,9 +8,9 @@ export default class MathMult extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "mult");
-        Node.setProperty(props, "div");
-        Node.setProperty(props, "value");
+        NodeWork.setProperty(props, "mult");
+        NodeWork.setProperty(props, "div");
+        NodeWork.setProperty(props, "value");
     }
 
     static run(node) {

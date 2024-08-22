@@ -79,7 +79,6 @@
     await loadJS("./socket.io.min.js", false);
     await loadJS("./math.js", false);
     await loadJS("./nodework.mjs", false);
-    await loadJS("./node.mjs", false);
     
     // load all nodes
     import { nodeList } from './node_list.mjs';
@@ -87,7 +86,6 @@
         await loadJS("./"+ file, false);
     }
     
-    import Node from "./node.mjs";
     import Canvas from "./canvas.js";
     import { NodiEnums, globalApp } from "./enums.mjs";
     

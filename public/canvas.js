@@ -1,7 +1,6 @@
 import { NodiEnums, globalApp } from "./enums.mjs";
 import View from "./view.js";
 import NodeWork from "./nodework.mjs";
-import Node from "./node.mjs";
 
 var tmp_area = new Float32Array(4);
 var presstimer = null;
@@ -346,7 +345,7 @@ export default class LGraphCanvas {
     } 
     // clone node ALT dragging
     else if (e.altKey && node_mouse != null) {
-      let cloned = Node.clone(node_mouse);
+      let cloned = NodeWork.clone(node_mouse);
       if (cloned) {
         cloned.pos[0] += 5;
         cloned.pos[1] += 5;
@@ -768,7 +767,7 @@ export default class LGraphCanvas {
     }
 
     for (let node of selected_nodes_array) {
-      var cloned = Node.clone(node);
+      var cloned = NodeWork.clone(node);
       if (!cloned) {
         console.warn("node type not found: " + node.type);
         continue;

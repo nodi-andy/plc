@@ -1,8 +1,7 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 import { germanyProvinces } from './germany.js'
 
-export default class Country extends Node {
+export default class Country extends NodeWork {
     static type = "basic/country";
     static drawBase = false;
     static defaultInput = "value";
@@ -15,10 +14,10 @@ export default class Country extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "taxRatio", {value: 0.0003, autoInput: true});
-        Node.setProperty(props, "taxReady", {value: 0, autoInput: true});
-        Node.setProperty(props, "military", {value: 0, autoInput: true});
-        Node.setProperty(props, "militaryOrder", {value: 0, autoInput: true});
+        NodeWork.setProperty(props, "taxRatio", {value: 0.0003, autoInput: true});
+        NodeWork.setProperty(props, "taxReady", {value: 0, autoInput: true});
+        NodeWork.setProperty(props, "military", {value: 0, autoInput: true});
+        NodeWork.setProperty(props, "militaryOrder", {value: 0, autoInput: true});
 
             // startup
         Object.keys(germanyProvinces).forEach(key => {

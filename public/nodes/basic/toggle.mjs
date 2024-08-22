@@ -1,21 +1,20 @@
-import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
-export default class WidgetToggle extends Node {
+export default class WidgetToggle extends NodeWork {
   static type = "basic/toggle";
   static title = "";
   static defaultOutput = "value";
 
   static setup(node) {
     let props = node.properties;
-    Node.setProperty(props, "value", { value: 0, input: false });
-    Node.setProperty(props, "press", { value: 1, input: false, autoInput: true });
-    Node.setProperty(props, "release", {value: 0, input: false, autoInput: true });
-    Node.setProperty(props, "state", { value: 0, autoInput: true});
-    Node.setProperty(props, "toggle");
-    Node.setProperty(props, "label", { value: "", autoInput: true });
-    Node.setProperty(props, "port", {  input: false });
-    Node.setProperty(props, "color", { value: "red", input: false, autoInput: true });
+    NodeWork.setProperty(props, "value", { value: 0, input: false });
+    NodeWork.setProperty(props, "press", { value: 1, input: false, autoInput: true });
+    NodeWork.setProperty(props, "release", {value: 0, input: false, autoInput: true });
+    NodeWork.setProperty(props, "state", { value: 0, autoInput: true});
+    NodeWork.setProperty(props, "toggle");
+    NodeWork.setProperty(props, "label", { value: "", autoInput: true });
+    NodeWork.setProperty(props, "port", {  input: false });
+    NodeWork.setProperty(props, "color", { value: "red", input: false, autoInput: true });
     WidgetToggle.reset(node);
   }
 

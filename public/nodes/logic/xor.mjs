@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class LogicXor extends Node {
+export default class LogicXor extends NodeWork {
     static type = "logic/xor";
     static title = "XOR";
     static defaultInput = "value";
@@ -9,7 +8,7 @@ export default class LogicXor extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value");
+        NodeWork.setProperty(props, "value");
         this.type = LogicXor.type
     }
 

@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class Button extends Node {
+export default class Button extends NodeWork {
   static type = "basic/button";
   static title = " ";
   static margin = 12;
@@ -53,13 +52,13 @@ export default class Button extends Node {
 
   static setup(node) {
     let props = node.properties;
-    Node.setProperty(props, "state");
-    Node.setProperty(props, "press", { value: 1 });
-    Node.setProperty(props, "release", { value: 0 });
-    Node.setProperty(props, "value", { value: null });
-    Node.setProperty(props, "label", { value: ""});
-    Node.setProperty(props, "port", { value: 0, input: false , autoInput: true});
-    Node.setProperty(props, "color", { value: "#222", input: false, autoInput: true });
+    NodeWork.setProperty(props, "state");
+    NodeWork.setProperty(props, "press", { value: 1 });
+    NodeWork.setProperty(props, "release", { value: 0 });
+    NodeWork.setProperty(props, "value", { value: null });
+    NodeWork.setProperty(props, "label", { value: ""});
+    NodeWork.setProperty(props, "port", { value: 0, input: false , autoInput: true});
+    NodeWork.setProperty(props, "color", { value: "#222", input: false, autoInput: true });
   }
 
   static run(node) {

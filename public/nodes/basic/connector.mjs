@@ -1,8 +1,7 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 import { NodiEnums } from "../../enums.mjs";
 
-class Connector extends Node {
+class Connector extends NodeWork {
     static type = "basic/connector";
     static rotatable = true;
     static singleton = true;
@@ -13,9 +12,9 @@ class Connector extends Node {
         node.toNodeID = null;
         node.direction = NodiEnums.RIGHT;
         let props = node.properties;
-        Node.setProperty(props, "from");
-        Node.setProperty(props, "to",);
-        Node.setProperty(props, "value");
+        NodeWork.setProperty(props, "from");
+        NodeWork.setProperty(props, "to",);
+        NodeWork.setProperty(props, "value");
     }
 
     static run(node, nw) {

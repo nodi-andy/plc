@@ -1,17 +1,16 @@
 import { NodiEnums } from "../../enums.mjs";
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class MathIsGreater extends Node {
+export default class MathIsGreater extends NodeWork {
     static type = "math/isgreater";
     static defaultInput = "value";
     static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value");
-        Node.setProperty(props, "yes");
-        Node.setProperty(props, "no");
+        NodeWork.setProperty(props, "value");
+        NodeWork.setProperty(props, "yes");
+        NodeWork.setProperty(props, "no");
     }
 
     static run(node) {

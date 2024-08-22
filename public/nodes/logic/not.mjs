@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class LogicNot extends Node {
+export default class LogicNot extends NodeWork {
     static type = "logic/not";
     static title = "NOT";
     static defaultInput = "value";
@@ -9,7 +8,7 @@ export default class LogicNot extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value");
+        NodeWork.setProperty(props, "value");
         this.type = LogicNot.type
     }
 

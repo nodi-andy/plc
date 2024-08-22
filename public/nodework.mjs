@@ -1,8 +1,6 @@
 import { globalApp, NodiEnums } from "./enums.mjs";
-import Node from "./node.mjs";
-import Vector2 from "./vector2.mjs";
 
-export default class NodeWork extends Node {
+export default class NodeWork {
   static debug = false;
   static registered_node_types = {}; //nodetypes by string
   static Nodes = {}; //node types by classname
@@ -74,9 +72,9 @@ export default class NodeWork extends Node {
     //extend class
     if (base_class.prototype) {
       //is a class
-      for (var i in Node.prototype) {
+      for (var i in NodeWork.prototype) {
         if (!base_class.prototype[i]) {
-          base_class.prototype[i] = Node.prototype[i];
+          base_class.prototype[i] = NodeWork.prototype[i];
         }
       }
     }
@@ -258,10 +256,66 @@ export default class NodeWork extends Node {
     node.properties = {};
     if (node.engine == null) node.engine = {name: "browser"};
   }
+  static setProperty(properties, name, info) {
+    if (!properties) return;
+    if (properties[name]) return;
+    
+    properties[name] = {};
+
+    var prop = properties[name];
+    if (!prop.name) prop.name = name;
+    if (!prop.inpValue) prop.inpValue = {};
+    if (!prop.value) prop.value = null;
+    if (!prop.outValue) prop.outValue = {};
+    for (let i in info) {
+      prop[i] = info[i];
+    }
+  }
+
+  static clone(node) {
+    let data = { ...node };
+    for (let key in data) {
+      node[key] = data[key];
+    }
+
+    return node;
+  }
+
+  static checkValueUpdate(props) {
+    return Object.values(props).some(prop =>
+        prop.inpValue && Object.values(prop.inpValue).some(input => input.update === 1)
+    );
+  }
 
   static setNodeOnGrid(nw, msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
     NodeWork.setNodeIDOnGrid(nw, msg.pos[0], msg.pos[1], msg.nodeID);
+  }
+
+  static updateProp(node, propName, propType, value) {
+    if (!node) return;
+    if (typeof propType === "object") {
+      Object.keys(propType).forEach((subPropName) => {
+        let p = node.properties[propName][subPropName];
+        if (typeof p === "object") {
+          node.properties[propName][subPropName]["user"] = {val: subPropName[propName], update: true};
+        } else {
+          node.properties[propName][subPropName] = subPropName[propName];
+        }
+      })
+    } else {
+      node.properties[propName][propType] = value;
+    }
+  }
+
+
+
+  static updateValues(node, key, prop) {
+    node.properties[key]["value"] = {val: prop["value"], update: 1};
+  }
+
+  static updateOutputs(node, key, prop) {
+    node.properties[key]["outValue"] = {val: prop["outValue"], update: 1};
   }
 
   static moveNodeOnGrid(nw, msg) {
@@ -321,17 +375,19 @@ export default class NodeWork extends Node {
   static updateNode(nw, msg) {
     if (typeof msg.properties == "object" && msg.properties != null) {
       Object.keys(msg.properties).forEach((key) => {
-        Node.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, key, msg.properties[key]);
+        NodeWork.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, key, msg.properties[key]);
       })
     } else {
-      Node.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, "value", msg.properties);
+      NodeWork.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, "value", msg.properties);
     }
   }
 
-  static updateInputs(nw, msg) {
-    Object.keys(msg.properties).forEach((key) => {
-      Node.updateInputs(nw.nodes[msg.nodeID], key, msg.properties[key]);
-    })
+  static updateInputs(node, key, prop) {
+    if (node.properties[key])
+      node.properties[key]["inpValue"]["user"] = {val: prop, update: 1};
+    else {
+      console.log("updateInputs error");
+    }
   }
   
   static getNodeById(nw, id) {

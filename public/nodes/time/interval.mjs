@@ -1,8 +1,7 @@
 import { NodiEnums } from "../../enums.mjs";
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-class TimeInterval extends Node {
+class TimeInterval extends NodeWork {
   static type = "time/interval";
   static title = "T";
   static on_color = "#AAA";
@@ -18,13 +17,13 @@ class TimeInterval extends Node {
 
   static setup(node) {
     let props = node.properties;
-    Node.setProperty(props, "enable", {value: 1, autoInput: true});
-    Node.setProperty(props, "ton", { value: 500 , autoInput: true});
-    Node.setProperty(props, "toff", { value: 500 , autoInput: true});
-    Node.setProperty(props, "value");
-    Node.setProperty(props, "lastOn", { visible: false});
-    Node.setProperty(props, "lastOff", { visible: false});
-    this.type = Node.type;
+    NodeWork.setProperty(props, "enable", {value: 1, autoInput: true});
+    NodeWork.setProperty(props, "ton", { value: 500 , autoInput: true});
+    NodeWork.setProperty(props, "toff", { value: 500 , autoInput: true});
+    NodeWork.setProperty(props, "value");
+    NodeWork.setProperty(props, "lastOn", { visible: false});
+    NodeWork.setProperty(props, "lastOff", { visible: false});
+    this.type = NodeWork.type;
     TimeInterval.reset(node);
   }
 

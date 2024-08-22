@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class Custom extends Node {
+export default class Custom extends NodeWork {
     static type = "basic/custom";
     static drawBase = false;
     static onGrid = false;

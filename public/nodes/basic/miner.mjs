@@ -1,8 +1,7 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 import { globalApp } from "./../../enums.mjs";
 
-export default class Miner extends Node {
+export default class Miner extends NodeWork {
     static type = "basic/miner";
     static drawBase = false;
     static defaultInput = "value";
@@ -15,10 +14,10 @@ export default class Miner extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "hp", {value : 100});
-        Node.setProperty(props, "hpdec", {value : 0});
-        Node.setProperty(props, "dec");
-        Node.setProperty(props, "mines", {value : 0});
+        NodeWork.setProperty(props, "hp", {value : 100});
+        NodeWork.setProperty(props, "hpdec", {value : 0});
+        NodeWork.setProperty(props, "dec");
+        NodeWork.setProperty(props, "mines", {value : 0});
     }
 
     static onDrawForeground(node, ctx) {
@@ -75,7 +74,7 @@ export default class Miner extends Node {
         me.nnids?.forEach((nid) => {
             let n = globalApp.data.nodeContainer[nid];
             if (n?.properties?.value?.value > 0 && me.mines.value < 100) {
-                Node.updateInputs(n, "dec", 1);
+                NodeWork.updateInputs(n, "dec", 1);
                 me.mines.value ++;
                 ret.push("mines");
             }

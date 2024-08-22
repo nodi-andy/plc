@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class MathAdd extends Node {
+export default class MathAdd extends NodeWork {
     static type = "math/add";
     static title = "ADD/SUB";
     static defaultInput = "add";
@@ -9,9 +8,9 @@ export default class MathAdd extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "add");
-        Node.setProperty(props, "sub");
-        Node.setProperty(props, "value");
+        NodeWork.setProperty(props, "add");
+        NodeWork.setProperty(props, "sub");
+        NodeWork.setProperty(props, "value");
     }
 
     static run(node) {

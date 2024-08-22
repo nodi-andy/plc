@@ -1,4 +1,3 @@
-import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 export default class Stepper extends Node{

@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class WidgetBit extends Node {
+export default class WidgetBit extends NodeWork {
     static type = "basic/bit";
     static drawBase = false;
     static defaultInput = "value";
@@ -10,13 +9,13 @@ export default class WidgetBit extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value");
-        Node.setProperty(props, "set");
-        Node.setProperty(props, "clear");
-        Node.setProperty(props, "toggle");
-        Node.setProperty(props, "label");
-        Node.setProperty(props, "port", {value: 2});
-        Node.setProperty(props, "color", {value: "FF3333"});
+        NodeWork.setProperty(props, "value");
+        NodeWork.setProperty(props, "set");
+        NodeWork.setProperty(props, "clear");
+        NodeWork.setProperty(props, "toggle");
+        NodeWork.setProperty(props, "label");
+        NodeWork.setProperty(props, "port", {value: 2});
+        NodeWork.setProperty(props, "color", {value: "FF3333"});
     }
 
     static run(node) {

@@ -1,21 +1,20 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 import { NodiEnums } from "../../enums.mjs";
 
-export default class GDriveFile extends Node {
+export default class GDriveFile extends NodeWork {
     static type = "network/gdrivefile";
     static defaultInput = "value";
     static defaultOutput = "value";
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "value");
-        Node.setProperty(props, "set");
-        Node.setProperty(props, "clear");
-        Node.setProperty(props, "toggle");
-        Node.setProperty(props, "label");
-        Node.setProperty(props, "port", {value: 2});
-        Node.setProperty(props, "color", {value: "FF3333"});
+        NodeWork.setProperty(props, "value");
+        NodeWork.setProperty(props, "set");
+        NodeWork.setProperty(props, "clear");
+        NodeWork.setProperty(props, "toggle");
+        NodeWork.setProperty(props, "label");
+        NodeWork.setProperty(props, "port", {value: 2});
+        NodeWork.setProperty(props, "color", {value: "FF3333"});
     }
 
     static run(node) {

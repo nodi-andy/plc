@@ -1,7 +1,6 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 
-export default class Province extends Node {
+export default class Province extends NodeWork {
     static type = "basic/province";
     static drawBase = false;
     static defaultInput = "value";
@@ -15,10 +14,10 @@ export default class Province extends Node {
     static setup(node) {
         let props = node.properties;
         node.militaryProduction = 0;
-        Node.setProperty(props, "taxRatio", {value: 0.03, autoInput: true});
-        Node.setProperty(props, "taxReady", {value: 0, autoInput: true});
-        Node.setProperty(props, "military", {value: 0, autoInput: true});
-        Node.setProperty(props, "militaryOrder", {value: 0, autoInput: true});
+        NodeWork.setProperty(props, "taxRatio", {value: 0.03, autoInput: true});
+        NodeWork.setProperty(props, "taxReady", {value: 0, autoInput: true});
+        NodeWork.setProperty(props, "military", {value: 0, autoInput: true});
+        NodeWork.setProperty(props, "militaryOrder", {value: 0, autoInput: true});
     }
 
     static onDrawForeground(node, ctx) {

@@ -1,4 +1,3 @@
-import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
 class Selector extends Node{

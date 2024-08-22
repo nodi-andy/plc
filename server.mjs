@@ -4,7 +4,6 @@ import { Server as socketIOServer } from "socket.io";
 import { v4 as uuidv4 } from "uuid"; // To generate random UUIDs
 
 import NodeWork from "./public/nodework.mjs";
-import Node from "./public/node.mjs";
 import { nodeList } from "./public/node_list.mjs";
 import { globalApp } from "./public/enums.mjs";
 
@@ -114,7 +113,7 @@ io.on("connection", (socket) => {
     if (msg.data.nodeID == null) return;
     if (globalApp.data.nodeContainer[msg.data.nodeID] == null) return;
     let prop = Object.keys(msg.data.properties)[0];
-    Node.updateInputs(globalApp.data.nodeContainer[msg.data.nodeID], prop, msg.data.properties[prop].inpValue);
+    NodeWork.updateInputs(globalApp.data.nodeContainer[msg.data.nodeID], prop, msg.data.properties[prop].inpValue);
     //console.log(nodeWorkJSON);
   });
 

@@ -1,8 +1,7 @@
 import NodeWork from "../../nodework.mjs";
-import Node from "../../node.mjs";
 import { globalApp } from "../../enums.mjs";
 
-export default class Rocket extends Node {
+export default class Rocket extends NodeWork {
     static type = "basic/rocket";
     static drawBase = false;
     static defaultInput = "value";
@@ -15,9 +14,9 @@ export default class Rocket extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "hp", {value : 0});
-        Node.setProperty(props, "mines", {value : 0});
-        Node.setProperty(props, "rockets", {value : 0});
+        NodeWork.setProperty(props, "hp", {value : 0});
+        NodeWork.setProperty(props, "mines", {value : 0});
+        NodeWork.setProperty(props, "rockets", {value : 0});
     }
 
     static drawHexagon(ctx, x, y, r) {
@@ -69,7 +68,7 @@ export default class Rocket extends Node {
         me.nnids?.forEach((nid) => {
             let n = globalApp.data.nodeContainer[nid];
             if (n.type == "basic/miner" && n?.properties?.mines?.value > 0 && me.rockets.value < 5) {
-                Node.updateInputs(n, "dec", 1);
+                NodeWork.updateInputs(n, "dec", 1);
                 me.rockets.value ++;
                 ret.push("rockets");
             }
@@ -83,7 +82,7 @@ export default class Rocket extends Node {
 
         if(me.rockets.value > 0 && me.enemies.length > 0) {
             let enemy = globalApp.data.nodeContainer[me.enemies[0]];
-            Node.updateInputs(enemy, "hpdec", 20);
+            NodeWork.updateInputs(enemy, "hpdec", 20);
             me.rockets.value--;
         }
         return ret;

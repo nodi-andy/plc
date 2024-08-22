@@ -1,7 +1,6 @@
-import Node from "../../node.mjs";
 import NodeWork from "../../nodework.mjs";
 
-export default class WidgetNumber extends Node {
+export default class WidgetNumber extends NodeWork {
     static type = "basic/number";
     static moveable = true;
     static drawBase = false;
@@ -16,10 +15,10 @@ export default class WidgetNumber extends Node {
 
     static setup(node) {
         let props = node.properties;
-        Node.setProperty(props, "inc");
-        Node.setProperty(props, "dec");
-        Node.setProperty(props, "value", {value : 0, label:" "});
-        Node.setProperty(props, "read");
+        NodeWork.setProperty(props, "inc");
+        NodeWork.setProperty(props, "dec");
+        NodeWork.setProperty(props, "value", {value : 0, label:" "});
+        NodeWork.setProperty(props, "read");
     }
 
     static run(node) {
