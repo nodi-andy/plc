@@ -43,40 +43,37 @@
 
   </head>
   <script>
-
    
+  const loadJS = (FILE_URL, async = true, type = "module") => {
+    return new Promise((resolve, reject) => {
+      try {
+        const scriptEle = document.createElement("script");
+        scriptEle.type = type;
+        scriptEle.async = async;
+        scriptEle.src = FILE_URL;
 
-    const loadJS = (FILE_URL, async = true, type = "module") => {
-      return new Promise((resolve, reject) => {
-        try {
-          const scriptEle = document.createElement("script");
-          scriptEle.type = type;
-          scriptEle.async = async;
-          scriptEle.src = FILE_URL;
+        scriptEle.addEventListener("load", (ev) => {
+          resolve({ status: true });
+        });
 
-          scriptEle.addEventListener("load", (ev) => {
-            resolve({ status: true });
+        scriptEle.addEventListener("error", (ev) => {
+          reject({
+            status: false,
+            message: `Failed to load the script ${FILE_URL}`,
           });
+        });
 
-          scriptEle.addEventListener("error", (ev) => {
-            reject({
-              status: false,
-              message: `Failed to load the script ${FILE_URL}`,
-            });
-          });
-
-          document.body.appendChild(scriptEle);
-        } catch (error) {
-          reject(error);
-        }
-      });
-    };
+        document.body.appendChild(scriptEle);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
   </script>
   <script type="module">
     import NodeWork from "./nodework.mjs";
     import Inventory from "./minventoryJS/inventory.js";
     window.sendToNodework = (cmd, obj) => NodeWork.cmd(window.currentNodeWork, {cmd: cmd, data: obj});
-    
     // why loading the scripts one by one?
     // Because the IoT device can not keep more than 10 TCP connections open
     await loadJS("./socket.io.min.js", false);
@@ -85,22 +82,31 @@
     await loadJS("./node.mjs", false);
     
     // load all nodes
-    import { nodeList } from './node_list.js'
+    import { nodeList } from './node_list.mjs';
     for (const file of nodeList) {
-        await loadJS(file, false);
+        await loadJS("./"+ file, false);
     }
     
     import Node from "./node.mjs";
     import Canvas from "./canvas.js";
-    import { NodiEnums } from "./enums.mjs";
+    import { NodiEnums, globalApp } from "./enums.mjs";
+    
+    globalApp.data = {}
+
+    globalApp.data = window;
+    globalApp.data.nodeContainer = [];
     
     // save & load
     localStorage.version = "0.1";
     if (localStorage.files == null) localStorage.files = JSON.stringify({});
+    window.currentPlayer = 0;
     window.time = {tick: 0};
     window.map = {};
-    window.map.findNodes = (base, range) => {
-      return NodeWork.findNodes(window.currentNodeWork, base, range);
+    window.map.findNodes = (base, range, filter) => {
+      return NodeWork.findNodes(window.currentNodeWork, base, range, filter);
+    }
+    window.map.removeNodeById = (id) => {
+      return NodeWork.removeNodeById(window.currentNodeWork, id);
     }
     window.inv = new Inventory(["energy", "mine"], 2, true);
     window.inv.packs[1].max = 1000;
@@ -148,12 +154,9 @@
     else window.canvas.copyNode = null;
   };
   
-  window.updateInputs = (id, changedNodeData) => {
+    window.updateInputs = (id, changedNodeData) => {
       //if (isNaN(changedNodeData.inpValue) == false) changedNodeData.inpValue = parseInt(changedNodeData.inpValue);
-      NodeWork.cmd(window.currentNodeWork, {cmd: "updateInputs", data: {
-        nodeID: id,
-        properties: changedNodeData,
-      }});
+      NodeWork.cmd(window.currentNodeWork, {cmd: "updateInputs", data: changedNodeData});
     };
     window.update = (id, changedNodeData) => window.sendToNodework("updateNode", {nodeID: id, properties: changedNodeData});
     
@@ -166,13 +169,26 @@
     window.NodeWork = NodeWork; //make the static class available for reactjs
     NodeWork.updateNodeList();
     window.rootNode = {};
+    window.rootNode.nodeID = NodeWork.getFirstNullIndex(globalApp.nodeContainer);
+    globalApp.data.nodeContainer[rootNode.nodeID] = window.rootNode;
     NodeWork.clear(window.rootNode);
-    window.currentNodeWork = window.rootNode; //window.NodeWork.addNode(window.rootNode, {type: "basic/country", pos: [0, 0]}); // {}
+    window.currentNodeWork = window.rootNode;
+    window.currentNodeWork.platfrom = "Browser";
+    
+    // Check if nodeworkID is present in the URL
+    let nodeworkID = window.location.search.slice(1);
+    if (nodeworkID) {
+      // If nodeworkID is present, send it to the Socket.IO server
+      window.currentNodeWork.uid = new URLSearchParams(window.location.search).get("map");
+      //socket.emit('registerNodework', { uid: nodeworkID });
+    }
+    /*
     window.load("nodework");
+    */
     // start the loop
     setInterval(() => { 
       NodeWork.run(window.rootNode);  
-      window.time.tick++;
+      globalApp.data.time.tick++;
     }, 100);
     await loadJS("./websocket.js", false);
     </script>

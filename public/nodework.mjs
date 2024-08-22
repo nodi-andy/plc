@@ -1,4 +1,4 @@
-import { NodiEnums } from "./enums.mjs";
+import { globalApp, NodiEnums } from "./enums.mjs";
 import Node from "./node.mjs";
 import Vector2 from "./vector2.mjs";
 
@@ -30,22 +30,17 @@ export default class NodeWork extends Node {
                         window.serialwriter.write(encoder.encode(JSON.stringify([order.cmd, order.data])));
                       } 
                       
-                      // if (websocket.send && websocket.readyState == 1) { // send to IoT
-                        //  websocket.send(JSON.stringify([cmd, obj]));
-                        // } 
-                    }
+                    },
+    "socketIO": (node, order) => {
+      console.log("Forward:socketIO : ", order);
+       if (window.socketIO.emit) { // send to IoT
+        window.socketIO.emit(order.cmd, order);
+       } 
+      
+    }
+                    
   }
 
-  constructor(id) {
-    super();
-    if (NodeWork.debug) console.log("Graph created");
-    NodeWork.clear(this);
-    if (id) this.nodeID = id;
-
-    this.socketOut = null;
-    this.type = "basic/subnode";
-    this.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
-  }
 
   static getFirstNullIndex(arr) {
     if (!arr || arr.length == null) return 0;
@@ -202,7 +197,7 @@ export default class NodeWork extends Node {
     if (nw.socketOut) nw.socketOut(event, data);
   }
 
-  static addNode(parentNode, msg, socket) {
+  static addNode(parentNode, msg) {
     let allowNode = true;
     msg.type = msg.type.toLowerCase();
     if (msg.type == "network/serial" && window.serialport) {
@@ -214,7 +209,7 @@ export default class NodeWork extends Node {
     if (allowNode == false) return;
 
     //NodeWork.clear(msg.node);
-    if (msg.nodeID == null) msg.nodeID = NodeWork.getFirstNullIndex(parentNode.nodes);
+    if (msg.nodeID == null) msg.nodeID = NodeWork.getFirstNullIndex(globalApp.data.nodeContainer);
     if (msg.type == "network/serial") {
       window.serialNodeWork = msg.node;
       msg.node.engine = {name: "serial"};
@@ -222,7 +217,7 @@ export default class NodeWork extends Node {
 
     if (msg.node == null) {
       msg.node = {};
-      msg.node.engine = {name:"browser"};
+      msg.node.engine = msg.engine || globalApp.data.engine;
       msg.node.nodesByPos = {};
       msg.node.orders = [];
       msg.node.nodes = [];
@@ -230,16 +225,17 @@ export default class NodeWork extends Node {
       msg.node.type = msg.type;
       msg.node.pos = msg.pos;
       msg.node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
-      msg.node.parent = parentNode;
-      msg.node.owner = socket?.id;
+      msg.node.parent = parentNode.nodeID;
+      msg.node.platform = parentNode.platform || "socketIO";
+      msg.node.owner = msg.owner;
       msg.node.moving = false;
       msg.node.nodeID = msg.nodeID;
       NodeWork.getNodeType(msg.type).setup(msg.node);
-      parentNode.nodes[msg.nodeID] = msg.node;
+      globalApp.data.nodeContainer[msg.nodeID] = msg.node;
+      parentNode.nodes[msg.nodeID] = msg.node.nodeID;
     }
     
     NodeWork.setNodeIDOnGrid(parentNode, msg.pos[0], msg.pos[1], msg.node.nodeID);
-    NodeWork.publish("addNode", msg);
     return msg.node;
   }
 
@@ -275,11 +271,11 @@ export default class NodeWork extends Node {
     if (!node) return;
 
     NodeWork.replaceNodeOnGrid(nw, msg)
-
+/*
     if (NodeWork.getNodeType(node.type).moveable) {
       node.comingFrom = [msg.from[0], msg.from[1]];
       node.pos = [msg.to[0], msg.to[1]];
-    }
+    }*/
     //this.publish("moveNodeOnGrid", msg);
   }
 
@@ -295,17 +291,40 @@ export default class NodeWork extends Node {
   }
 
   static removeNode(nw, msg) {
+    let nid = NodeWork.getNodeIDOnGrid(nw, msg.pos[0], msg.pos[1]);
+    delete nw.nodes[nid];
     NodeWork.setNodeIDOnGrid(nw, msg.pos[0], msg.pos[1], null);
     //this.publish("removeNode", msg);
   }
 
+  static removeNodeById(nw, nodeId) {
+    // Find the node by ID
+    let parent = globalApp.data.nodeContainer[nw];
+    let node = globalApp.data.nodeContainer[nodeId];
+    
+    if (!node) {
+        console.warn(`Node with ID ${nodeId} not found.`);
+        return;
+    }
+
+    // Remove the node from nodes array
+    delete parent[nodeId];
+    delete globalApp.data.nodeContainer[nodeId];
+
+    // Remove the node from nodesByPos
+    delete parent.nodesByPos[node.pos[0] + NodiEnums.POS_SEP + node.pos[1]];
+
+    console.log(`Node with ID ${nodeId} removed.`);
+}
+
+
   static updateNode(nw, msg) {
-    if (typeof msg.properties == "object") {
+    if (typeof msg.properties == "object" && msg.properties != null) {
       Object.keys(msg.properties).forEach((key) => {
-        Node.updateProp(nw.nodes[msg.nodeID], msg.prop, key, msg.properties[key]);
+        Node.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, key, msg.properties[key]);
       })
     } else {
-      Node.updateProp(nw.nodes[msg.nodeID], msg.prop, "value", msg.properties);
+      Node.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, "value", msg.properties);
     }
   }
 
@@ -379,20 +398,17 @@ export default class NodeWork extends Node {
     if (!data) return;
     try {
       //NodeWork.clear(this);
-      for(let nodeID in data.nodes) {
-        // TBD: decide the node structure
-        let node = data.nodes[nodeID];
-        
-        if (data.nodes[nodeID].node) {
-          node = data.nodes[nodeID].node;
-          node.type = data.nodes[nodeID].type;
-        }
+      for(let nodeID of data.nodes) {
+        if (!nodeID) continue;
+        let node = globalApp.data.nodeContainer[nodeID];
+        if (!node) continue;
+      
         if (Object.keys(node).length === 0 || node.type == null) continue;
 
         let curType = NodeWork.getNodeType(node.type);
         curType.setup(node);
 
-        node.parent = nw;
+        node.parent = nw.nodeID;
         node.orders = [];
         node.engine = nw.engine;
         node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
@@ -420,11 +436,12 @@ export default class NodeWork extends Node {
     if (order) {
        NodeWork.engines[nw.engine.name](nw, order);
     }
-    if (nw.engine?.name != null && nw.engine.name != "browser") return;
-    nw.nodes?.forEach((node) => {
+    //if (nw.engine?.name != null && nw.engine.name != "browser") return;
+    nw.nodes?.forEach((nodeID) => {
+      let node = globalApp.data.nodeContainer[nodeID];
       if (!node) return;
       let curType = NodeWork.getNodeType(node.type);
-      if (node.comingFrom) {
+      /*if (node.comingFrom) {
         node.targetPos = new Vector2(node.pos[0], node.pos[1]);
         let startPos = new Vector2(node.comingFrom[0], node.comingFrom[1]);
         if (!node.offset) 
@@ -446,7 +463,7 @@ export default class NodeWork extends Node {
 
         //io.emit("updatePos", { nodeID: node.nodeID, pos: node.pos });
         //console.log("JA", moveVector);
-      }
+      }*/
 
       let order = node?.orders?.shift();
       if (order) {
@@ -456,7 +473,7 @@ export default class NodeWork extends Node {
       let results = [];
       let runFunc = node.run;
       if (!runFunc) runFunc = curType?.run;
-      if (runFunc /*&& (curType.type == "basic/connector" || this.checkValueUpdate(node.properties)) : run always*/) {
+      if (runFunc && node.engine?.name == node.platform) {
         runFunc = runFunc.bind(node);
         results = runFunc(node, nw);
         NodeWork.run(node);
@@ -465,7 +482,7 @@ export default class NodeWork extends Node {
       if (nw.socketOut && results?.length) {
         //console.log(c)
         results.forEach((propName) => {
-          nw.socketOut("updateNode", { nodeID: node.nodeID, prop: propName, properties: this.nodes[node.nodeID].properties[propName] });
+          nw.socketOut("updateNode", {data: { nodeID: node.nodeID, prop: propName, properties: node.properties[propName].value }});
         });
       }
     });
@@ -482,22 +499,35 @@ export default class NodeWork extends Node {
       return true;
   }
   
-  static findNodes(nw, targetNode, range) {
-      let nodesWithinRange = [];
+  static findNodes(nwID, targetNode, range, filterFunc = null) {
+    let nw = globalApp.data.nodeContainer[nwID];
+    if (!nw) return [];
+    let nodesWithinRange = [];
 
-      nw.nodes.forEach((node) => {
+    nw.nodes.forEach((nodeID) => {
+        let node = globalApp.data.nodeContainer[nodeID];
         if (node && node.nodeID !== targetNode.nodeID) {
             let distance = Math.hypot(
-              node.pos[0] - targetNode.pos[0],
+                node.pos[0] - targetNode.pos[0],
                 node.pos[1] - targetNode.pos[1]
-              );
+            );
+
             if (distance <= range) {
-              nodesWithinRange.push(node);
+                // Apply custom filter function if provided
+                if (filterFunc && typeof filterFunc === 'function') {
+                    if (filterFunc(node)) {
+                        nodesWithinRange.push(node.nodeID);
+                    }
+                } else {
+                    nodesWithinRange.push(node.nodeID);
+                }
             }
-          }
+        }
     });
-    
+
     return nodesWithinRange;
-  }
+}
+
+
 
 }

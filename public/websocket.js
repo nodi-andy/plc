@@ -1,3 +1,5 @@
+import { globalApp } from "./enums.mjs";
+
 import NodeWork from "./nodework.mjs";
 import NodiBoxB1 from "./nodes/nodi.box/b1.js";
 import NodiBoxB2 from "./nodes/nodi.box/b2.js";
@@ -40,17 +42,30 @@ if (window.socketIO) {
   window.socketIO.on("connect", () => {
     console.log("Connected to the socketIO server!");
     window.socket = window.socketIO;
-    window.socket.type = "cloud";
-    window.sendToNodework("id");
-    window.sendToNodework("getNodework");
+    if (window.currentNodeWork.uid == undefined) {
+      window.socket.emit("gid" )
+    } else {
+      window.socket.emit("getNode", {roomId: window.currentNodeWork.uid});
+    }
   });
 
   window.socketIO.on("setNodework", (message) => {
-    window.nodeWork.setNodework(message, false);
+    window.currentNodeWork.engine.name = "socketIO";
+    window.socket.type = "cloud";
+    window.NodeWork.setNodework(window.currentNodeWork, message, false);
+    window.rootNode = window.currentNodeWork;
+  });
+
+  window.socketIO.on("setNodelist", (message) => {
+    globalApp.data.nodeContainer = message;
   });
 
   window.socketIO.on("id", () => {
     window.sendToNodework("id", { id: "browser" });
+  });
+
+  window.socketIO.on("gid", (msg) => {
+    window.location.href = window.location.origin + window.location.pathname + '?map=' + msg;
   });
 }
 
@@ -125,7 +140,7 @@ window.order.connectionSettings = (msg) => {
 Object.keys(NodeWork.events).forEach((event) => {
   if (window.socketIO) {
     window.socketIO.on(event, (message) => {
-      if (NodeWork[event]) NodeWork[event](message);
+      if (NodeWork[event]) NodeWork[event](window.currentNodeWork, message.data);
       else window.order[event](message);
     });
   }

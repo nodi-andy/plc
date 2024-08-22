@@ -80,8 +80,7 @@ function SelectNodeDialog({ openND, setOpenND }) {
                     <Button
                       variant="outlined"
                       onClick={() => {
-                        let msg = window.NodeWork.addNode(window.currentNodeWork, {type:`${category}/${label}`, pos: window.canvas.grid_selected});
-                        window.sendToNodework('addNode', msg);
+                        window.sendToNodework('addNode', {type:`${category}/${label}`, pos: window.canvas.grid_selected});
                         setOpenND(false);
                       }}
                     >

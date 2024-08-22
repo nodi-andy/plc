@@ -1,4 +1,4 @@
-import { NodiEnums } from "./enums.mjs";
+import { NodiEnums, globalApp } from "./enums.mjs";
 import View from "./view.js";
 import NodeWork from "./nodework.mjs";
 import Node from "./node.mjs";
@@ -332,7 +332,7 @@ export default class LGraphCanvas {
     this.graph_mouse = [e.canvasX, e.canvasY];
     this.last_click_position = [e.clientX, e.clientY];
 
-    var node_mouse = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
+    var node_mouse = globalApp.data.nodeContainer[NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY)];
     var node_type = NodeWork.getNodeType(node_mouse?.type);
 
     this.canvas.focus();
@@ -991,23 +991,17 @@ export default class LGraphCanvas {
    * @method deselectAllNodes
    */
   deselectAllNodes() {
-    if (!window.currentNodeWork) {
-      return;
-    }
-    var nodes = window.currentNodeWork.nodes;
-    for (let node of nodes) {
-      if (node) {
-        if (node.onDeselected) {
-          node.onDeselected();
-        }
-        if (this.onNodeDeselected) {
-          this.onNodeDeselected(node);
-        }
-      }
-    }
-    window.currentNodeWork.nodes.forEach((node) => {
+    if (!this.selected_nodes) return;
+
+    this.selected_nodes.forEach((node) => {
       if (!node) return;
       node.is_selected = false;
+      if (node.onDeselected) {
+        node.onDeselected();
+      }
+      if (this.onNodeDeselected) {
+        this.onNodeDeselected(node);
+      }
     });
 
     this.selected_nodes = [];
@@ -1203,7 +1197,8 @@ export default class LGraphCanvas {
       //draw nodes on grid
       for (var nodeKey of Object.keys(window.currentNodeWork.nodesByPos)) {
         var nodeID = window.currentNodeWork.nodesByPos[nodeKey];
-        var node = window.currentNodeWork.nodes[nodeID];
+        var node = globalApp.data.nodeContainer[nodeID];
+        if (!node) continue;
         //transform coords system
         let [x, y] = nodeKey.split(NodiEnums.POS_SEP);
         ctx.save();

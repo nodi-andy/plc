@@ -2,7 +2,7 @@ import NodeWork from "../../nodework.mjs";
 import Node from "../../node.mjs";
 
 export default class Custom extends Node {
-    static type = "custom/new";
+    static type = "basic/custom";
     static drawBase = false;
     static onGrid = false;
     static movable = true;
@@ -12,7 +12,6 @@ export default class Custom extends Node {
     }
 
     static setup(node) {
-        node.script = {};
         node.type = Custom.type
 
         node.initStr = "let map = window.map;\nlet me = this.script;\nme.cv = 0;";

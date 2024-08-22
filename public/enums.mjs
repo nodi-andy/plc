@@ -29,6 +29,7 @@ export const NodiEnums = {
   nbVec : [{ x: 1, y: 0 }, { x: 1, y: -1 }, { x: 0, y: -1 }, { x: -1, y: -1 }, { x: -1, y: 0 }, { x: -1, y: 1 }, { x: 0, y: 1 } , { x: 1, y: 1 }]
 };
 
+export var globalApp = {};
 //timer that works everywhere
 if (typeof performance != "undefined") {
   NodiEnums.getTime = performance.now.bind(performance);

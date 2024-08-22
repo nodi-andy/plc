@@ -36,7 +36,7 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
     //if (isNaN(value) == false) value = parseInt(value);
     let msg = {nodeID: window.current_node.nodeID, properties: {}};
     msg.properties[key] = {inpValue: value};
-    window.current_node.properties[key]["inpValue"]["user"] = {val: value, update: 1};
+    window.updateInputs(window.current_node.nodeID, msg);
 
     event.stopPropagation(); // Stop event propagation to prevent closing the drawer
   };

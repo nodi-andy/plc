@@ -23,7 +23,7 @@ export default class Country extends Node {
             // startup
         Object.keys(germanyProvinces).forEach(key => {
             let province = germanyProvinces[key];
-            let newNode = window.NodeWork.addNode(node, {type: "basic/province", pos:province.center});
+            let newNode = window.NodeWork.order(node, {type: "basic/province", pos:province.center});
             newNode.translate = [64 * -province.center[0], 64 * -province.center[1]];
             newNode.path = province.path;
             newNode.color = province.color;

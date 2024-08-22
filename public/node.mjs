@@ -34,6 +34,7 @@ export default class Node {
   }
 
   static updateProp(node, propName, propType, value) {
+    if (!node) return;
     if (typeof propType === "object") {
       Object.keys(propType).forEach((subPropName) => {
         let p = node.properties[propName][subPropName];
@@ -49,7 +50,11 @@ export default class Node {
   }
 
   static updateInputs(node, key, prop) {
-      node.properties[key]["inpValue"]["user"] = {val: prop["inpValue"], update: 1};
+    if (node.properties[key])
+      node.properties[key]["inpValue"]["user"] = {val: prop, update: 1};
+    else {
+      console.log("updateInputs error");
+    }
   }
 
   static updateValues(node, key, prop) {
