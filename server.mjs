@@ -19,6 +19,11 @@ loadNodes(nodeList).catch(error => console.error("Failed to load nodes:", error)
 
 const app = express();
 const server = http.createServer(app);
+const debug = false;
+
+console.dlog = (...args) => { 
+  if (debug) console.log(...args)
+}
 
 var io = new socketIOServer(server, {
   cors: {
@@ -27,10 +32,7 @@ var io = new socketIOServer(server, {
 });
 
 const nodeWorkMap = {};
-globalApp.data = {}
-globalApp.data.engine = {name: "socketIO"};
-globalApp.data.nodeContainer = [];
-globalApp.data.time = {tick: 0};
+globalApp.data = []
 
 var iot = null;
 var settings = { ownerShip: false };
@@ -42,8 +44,8 @@ setInterval(() => {
       const nodeWorkJSON = nodeWorkMap[roomId];
       NodeWork.run(nodeWorkJSON);
     }
+    globalApp.data[roomId].time.tick++;
   }
-  globalApp.data.time.tick++;
 }, 20);
 
 Object.mergeObjects = (objA, objB) => {
@@ -68,7 +70,7 @@ io.on("connection", (socket) => {
 
 
   socket.on("connected", (msg) => {
-    console.log("[connected]", msg);
+    console.dlog("[connected]", msg);
   });
 
   socket.on("setNodework", (msg) => {
@@ -81,7 +83,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("updateProp", (msg) => {
-    console.log("[updateProp]");
+    console.dlog("[updateProp]");
     //console.log(msg);
     if (!msg) return;
 
@@ -94,7 +96,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("updateNode", (msg) => {
-    console.log("[updateNode] ", msg.nodeID, msg.name);
+    console.dlog("[updateNode] ", msg.nodeID, msg.name);
 
     //socket.broadcast.emit('updateNode', msg);
     if (msg.nodeID == null) return;
@@ -106,31 +108,48 @@ io.on("connection", (socket) => {
   });
 
   socket.on("updateInputs", (msg) => {
-    console.log("[updateInputs] ", msg.data.nodeID, msg.data.properties.value);
+    console.dlog("[updateInputs] ", msg.data.nodeID, msg.data.properties);
     let roomId = msg.roomId || socket.roomId; // Use roomId from message or socket
     const nodeWorkJSON = nodeWorkMap[roomId];
 
     if (msg.data.nodeID == null) return;
-    if (globalApp.data.nodeContainer[msg.data.nodeID] == null) return;
-    let prop = Object.keys(msg.data.properties)[0];
-    NodeWork.updateInputs(globalApp.data.nodeContainer[msg.data.nodeID], prop, msg.data.properties[prop].inpValue);
-    //console.log(nodeWorkJSON);
+    let node = globalApp.data[roomId].nodeContainer[msg.data.nodeID];
+    if (!node) return;
+    NodeWork.cmd(nodeWorkJSON, msg);
   });
 
-  socket.on("moveNode", (msg) => {
-    console.log("[moveNode] ", msg);
-    let node = nodeWorkJSON.nodes[msg.nodeID];
+  socket.on("removeNode", (msg) => {
+    console.dlog("[removeNode] ", msg);
+    let roomId = msg.roomId || socket.roomId; // Use roomId from message or socket
+    let node = globalApp.data[roomId].nodeContainer[msg.data.nodeID];
     if (!node) return;
     if (settings.ownerShip && node.owner != socket.id) return;
-    node.pos = msg.moveTo;
-    node.moving = true;
-    socket.to("browser_room").emit("moveNode", msg);
+    NodeWork.cmd(node, msg);
   });
 
+
+  socket.on("moveNodeOnGrid", (msg) => {
+    console.dlog("[moveNodeOnGrid] ", msg);
+    let roomId = msg.roomId || socket.roomId; // Use roomId from message or socket
+    let node = globalApp.data[roomId].nodeContainer[msg.data.id];
+    if (!node) return;
+    if (settings.ownerShip && node.owner != socket.id) return;
+    NodeWork.cmd(node, msg);
+  });
+
+  
+  socket.on("setNodeOnGrid", (msg) => {
+    console.dlog("[setNodeOnGrid] ", msg);
+    let roomId = msg.roomId || socket.roomId; // Use roomId from message or socket
+    let node = globalApp.data[roomId].nodeContainer[msg.data.parentID];
+    if (!node) return;
+    if (settings.ownerShip && node.owner != socket.id) return;
+    NodeWork.cmd(node, msg);
+  });
 
   socket.on("id", (msg) => {
     if (msg == null) return;
-    console.log("[event] ", msg.id);
+    console.dlog("[event] ", msg.id);
     socket.devType = msg.id;
     if (socket.devType == "nodi.box" || socket.devType == "esp32mcu") {
       iot = io;
@@ -145,27 +164,36 @@ io.on("connection", (socket) => {
   });
 
   socket.on("addNode", (msg) => {
-      let roomId = msg.roomId || socket.roomId; // Use roomId from message or socket
+    console.dlog("[addNode] ", msg);
+    let roomId = msg.roomId || socket.roomId; // Use roomId from message or socket
       if (roomId || nodeWorkMap[roomId]) {
         msg.owner = socket?.id;
         msg.data.owner = msg.owner;
-        msg.data.platform = "socketIO";
         msg.data.engine = nodeWorkMap[roomId].engine;
+        msg.data.roomId = roomId;
         NodeWork.addNode(nodeWorkMap[roomId], msg.data);
-        delete msg.data.node;
-        io.to(roomId).emit("addNode", msg);
       }
     }
   )
-  socket.on("gid", (msg) => {
+
+  socket.on("createRoom", (msg) => {
     let roomId = uuidv4();
-    let newNode = {};
-    NodeWork.clear(newNode);
-    newNode.nodeID = NodeWork.getFirstNullIndex(globalApp.data.nodeContainer);
-    globalApp.data.nodeContainer[newNode.nodeID] = newNode;
+    globalApp.data[roomId] = {};
+    globalApp.data[roomId].engine = {name: "server"};
+    globalApp.data[roomId].nodeContainer = [];
+    globalApp.data[roomId].time = {tick: 0};
+    globalApp.data[roomId].roomId = roomId;
+    
+    let newNode = NodeWork.clear();
+    newNode.engine = {name: "server"};
+    newNode.nodeID = NodeWork.getFirstNullIndex(globalApp.data[roomId].nodeContainer);
+    newNode.platform = "server";
+    newNode.roomId = roomId;
+    
+    globalApp.data[roomId].nodeContainer[newNode.nodeID] = newNode;
     nodeWorkMap[roomId] = newNode;
-    newNode.platform = "socketIO";
-    io.to(socket.id).emit("gid", roomId);
+
+    io.to(socket.id).emit("createRoom", roomId);
   });
 
   socket.on("getNode", (msg) => {
@@ -176,10 +204,11 @@ io.on("connection", (socket) => {
       nodeWorkJSON = {};
       NodeWork.clear(nodeWorkJSON);
       nodeWorkJSON.nodeID = NodeWork.getFirstNullIndex(globalApp.nodeContainer);
-      globalApp.data.nodeContainer[nodeWorkJSON.nodeID] = nodeWorkJSON;
+      globalApp.data[roomId].nodeContainer[nodeWorkJSON.nodeID] = nodeWorkJSON;
       nodeWorkMap[roomId] = nodeWorkJSON;
       nodeWorkJSON.roomId = roomId;
-      nodeWorkJSON.engine = {name: "socketIO"};
+      nodeWorkJSON.engine = {name: "server"};
+      nodeWorkJSON.platform = "server";
       console.log(`Created new room with ID: ${roomId}`);
     }
   
@@ -189,14 +218,13 @@ io.on("connection", (socket) => {
   
     // Send the nodeWorkJSON and roomId back to the client
     nodeWorkJSON.socketOut = (...args) => io.to(roomId).emit(...args);
-    io.to(socket.id).emit("setNodelist", globalApp.data.nodeContainer);
-    io.to(socket.id).emit("setNodework", nodeWorkJSON);
+    io.to(socket.id).emit("setNodework", {data: {nodeworkID: nodeWorkJSON.nodeID, nodelist: globalApp.data[roomId].nodeContainer}});
   });
 
 
   io.to(socket.id).emit("id", "");
   //io.to(socket.id).emit("setSettings", settings);
-  console.log("[newClient] ", socket.id);
+  console.dlog("[newClient] ", socket.id);
 });
 
 app.use(express.static("data"));

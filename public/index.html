@@ -93,6 +93,7 @@
 
     globalApp.data = window;
     globalApp.data.nodeContainer = [];
+    globalApp.platform = "client";
     
     // save & load
     localStorage.version = "0.1";
@@ -103,8 +104,8 @@
     window.map.findNodes = (base, range, filter) => {
       return NodeWork.findNodes(window.currentNodeWork, base, range, filter);
     }
-    window.map.removeNodeById = (id) => {
-      return NodeWork.removeNodeById(window.currentNodeWork, id);
+    window.map.removeNode = (id) => {
+      return NodeWork.removeNode(window.currentNodeWork, id);
     }
     window.inv = new Inventory(["energy", "mine"], 2, true);
     window.inv.packs[1].max = 1000;

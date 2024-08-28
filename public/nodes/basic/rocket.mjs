@@ -14,7 +14,7 @@ export default class Rocket extends NodeWork {
 
     static setup(node) {
         let props = node.properties;
-        NodeWork.setProperty(props, "hp", {value : 0});
+        NodeWork.setProperty(props, "hp", {value : 200});
         NodeWork.setProperty(props, "mines", {value : 0});
         NodeWork.setProperty(props, "rockets", {value : 0});
     }
@@ -58,18 +58,31 @@ export default class Rocket extends NodeWork {
         let map = (typeof window !== "undefined" && window.map) || NodeWork;
         let me = node.properties;
         let ret = [];
-        
-        if (globalApp.data.time.tick % 5 != 0) return;
+        let room = globalApp.data[node.roomId];
 
-        me.nnids = map.findNodes(node.parent, node, 5, (n) => n.type == "basic/miner");
+        for (const keyInput of Object.keys(me.hp.inpValue)) {
+            let valueInput = me.hp.inpValue[keyInput];
+            if (valueInput.update == 1) {
+                me.hp.value += valueInput.val;
+                valueInput.update = 0;
+            }
+            delete me.hp.inpValue[keyInput];
+            me.hp.outValue = {val: me.hp.value, update: 1};
+            ret.push("hp");
+        }
+
+        if (room.time.tick % 5 != 0) return;
+
+        me.nnids = map.findNodes(node, 5, (n) => n.type == "basic/miner");
         me.cv = me.nnids.length;
-        me.enemies = map.findNodes(node.parent, node, 5,(n) => n.owner !== node.owner);
+        me.enemies = map.findNodes(node, 5,(n) => n.owner !== node.owner);
 
         me.nnids?.forEach((nid) => {
-            let n = globalApp.data.nodeContainer[nid];
+            let n = room.nodeContainer[nid];
+            if (!n) return;
             if (n.type == "basic/miner" && n?.properties?.mines?.value > 0 && me.rockets.value < 5) {
-                NodeWork.updateInputs(n, "dec", 1);
-                me.rockets.value ++;
+                NodeWork.updateInputs(n, {nodeID :nid, properties:{dec: {inpValue:  1}}});
+                me.mines.value ++;
                 ret.push("rockets");
             }
           }
@@ -81,10 +94,13 @@ export default class Rocket extends NodeWork {
         }
 
         if(me.rockets.value > 0 && me.enemies.length > 0) {
-            let enemy = globalApp.data.nodeContainer[me.enemies[0]];
-            NodeWork.updateInputs(enemy, "hpdec", 20);
+            let enemy = room.nodeContainer[me.enemies[0]];
+            NodeWork.updateInputs(enemy, {nodeID :enemy.nodeID, properties:{hp: {inpValue:  -20}}});
             me.rockets.value--;
         }
+
+        if(me.hp.value <= 0) map.removeNode(room.nodeContainer[node.parent], {nodeID: node.nodeID, parentID: node.parent});
+
         return ret;
     }
 

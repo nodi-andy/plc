@@ -38,7 +38,8 @@ export default class Button extends NodeWork {
     ) {
       //this.properties.state.value = this.properties.press.value;
       //this.properties.state.outValue = this.properties.state.value;
-      window.updateInputs(node.nodeID, { state: { inpValue: 1 } });
+      window.updateInputs(node.nodeID, {nodeID: node.nodeID, properties: { state: { inpValue: 1 } }});
+      
       return true;
     }
 
@@ -46,8 +47,8 @@ export default class Button extends NodeWork {
   }
 
   static onMouseUp(node, e) {
-    window.updateInputs(node.nodeID, { state: { inpValue: 0 } });
-    return true;
+      window.updateInputs(node.nodeID, {nodeID: node.nodeID, properties: { state: { inpValue: 0 } }});
+      return true;
   }
 
   static setup(node) {

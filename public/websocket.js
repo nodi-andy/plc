@@ -43,17 +43,10 @@ if (window.socketIO) {
     console.log("Connected to the socketIO server!");
     window.socket = window.socketIO;
     if (window.currentNodeWork.uid == undefined) {
-      window.socket.emit("gid" )
+      window.socket.emit("createRoom" )
     } else {
       window.socket.emit("getNode", {roomId: window.currentNodeWork.uid});
     }
-  });
-
-  window.socketIO.on("setNodework", (message) => {
-    window.currentNodeWork.engine.name = "socketIO";
-    window.socket.type = "cloud";
-    window.NodeWork.setNodework(window.currentNodeWork, message, false);
-    window.rootNode = window.currentNodeWork;
   });
 
   window.socketIO.on("setNodelist", (message) => {
@@ -64,7 +57,7 @@ if (window.socketIO) {
     window.sendToNodework("id", { id: "browser" });
   });
 
-  window.socketIO.on("gid", (msg) => {
+  window.socketIO.on("createRoom", (msg) => {
     window.location.href = window.location.origin + window.location.pathname + '?map=' + msg;
   });
 }
@@ -140,7 +133,7 @@ window.order.connectionSettings = (msg) => {
 Object.keys(NodeWork.events).forEach((event) => {
   if (window.socketIO) {
     window.socketIO.on(event, (message) => {
-      if (NodeWork[event]) NodeWork[event](window.currentNodeWork, message.data);
+      if (NodeWork[event]) NodeWork[event](window.currentNodeWork, message.data || message);
       else window.order[event](message);
     });
   }

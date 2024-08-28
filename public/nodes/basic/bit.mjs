@@ -81,7 +81,7 @@ export default class WidgetBit extends NodeWork {
             local_pos[1] >  node.size[0] * 0.25 &&
             local_pos[0] < node.size[0] * 0.75 &&
             local_pos[1] < node.size[1] * 0.75) {
-            window.updateInputs(node.nodeID, { toggle: { inpValue: 1 } });
+            window.updateInputs(node.nodeID,  {nodeID: node.nodeID, properties: { toggle: { inpValue: 1 } }});
 
             node.update = true;
 

@@ -331,7 +331,7 @@ export default class LGraphCanvas {
     this.graph_mouse = [e.canvasX, e.canvasY];
     this.last_click_position = [e.clientX, e.clientY];
 
-    var node_mouse = globalApp.data.nodeContainer[NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY)];
+    var node_mouse = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
     var node_type = NodeWork.getNodeType(node_mouse?.type);
 
     this.canvas.focus();
@@ -401,7 +401,7 @@ export default class LGraphCanvas {
     // add existing node
     else if (node_mouse == null && window.canvas.copyNode != null) {
       this.gripped = "copyNode";
-      NodeWork.setNodeOnGrid(window.currentNodeWork, { nodeID: this.copyNode, pos: e.gridPos });
+      NodeWork.cmd(window.currentNodeWork, {cmd: "setNodeOnGrid", data: { nodeID: this.copyNode, pos: e.gridPos }});
     }
 
     this.last_mouse_down = [e.clientX, e.clientY];
@@ -469,7 +469,7 @@ export default class LGraphCanvas {
 
     e.dragging = this.last_mouse_dragging;
     if (this.gripped == "node" && this.node_pressed) {
-      NodeWork.setNodeIDOnGrid(window.currentNodeWork, this.grid_selected.x, this.grid_selected.y, null);
+      NodeWork.cmd(window.currentNodeWork, "setNodeIDOnGrid", {data : {pos: this.grid_selected, node: null}});
       this.canvas.style.cursor = "move";
       this.node_dragging = this.node_pressed;
       this.node_pressed = null;
@@ -481,7 +481,7 @@ export default class LGraphCanvas {
       this.ds.offset[0] += delta[0] / this.ds.scale;
       this.ds.offset[1] += delta[1] / this.ds.scale;
     } else if (this.gripped == "copyNode" && this.node_over == null) {
-      NodeWork.setNodeOnGrid(window.currentNodeWork, { nodeID: this.copyNode, pos: e.gridPos });
+      NodeWork.cmd(window.currentNodeWork, { cmd: "setNodeOnGrid", data: {nodeID: this.copyNode, pos: e.gridPos }});
     } else if (this.gripped == "node" && this.node_dragging) {
       //node being dragged
       if (window.settings?.ownerShip == false || this.node_dragging.owner == window.socketIO.id) {
@@ -949,7 +949,7 @@ export default class LGraphCanvas {
       this.deselectAllNodes();
     }
 
-    nodes = nodes || window.currentNodeWork.nodes;
+    nodes = nodes || window.current_node.nodeID;
     if (typeof nodes == "string") nodes = [nodes];
     for (var i in nodes) {
       var node = nodes[i];

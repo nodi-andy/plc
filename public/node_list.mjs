@@ -1,7 +1,6 @@
 export const basic = [
     "nodes/basic/bit.mjs",
     "nodes/basic/number.mjs",
-    "nodes/basic/subnode.mjs",
     "nodes/basic/connector.mjs",
     "nodes/basic/button.mjs",
     "nodes/basic/custom.mjs",
