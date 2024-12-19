@@ -1,3 +1,6 @@
 [submodule "public/minventoryJS"]
 	path = public/minventoryJS
 	url = https://github.com/nodi-andy/minventoryJS
+[submodule "public/mapGeneratorJS"]
+	path = public/mapGeneratorJS
+	url = https://github.com/nodi-andy/mapGeneratorJS
