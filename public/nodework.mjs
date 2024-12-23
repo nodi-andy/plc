@@ -39,7 +39,6 @@ export default class NodeWork {
                     
   }
 
-
   static getFirstNullIndex(arr) {
     if (!arr || arr.length == null) return 0;
     for (let i = 0; i < arr.length; i++) {
@@ -89,7 +88,6 @@ export default class NodeWork {
       this.Nodes[classname] = base_class;
     }
   }
-
 
   static getNodeType(type) {
     return !type || this.registered_node_types[type];
@@ -175,9 +173,9 @@ export default class NodeWork {
 
   static cmd(nw, msg) {
     if(!msg) return;
+    if (nw?.orders == undefined) nw.orders = [];
     if (nw?.orders) nw.orders.push(msg);
   }
-
 
   static addNode(parentNode, msg) {
     let allowNode = true;
@@ -191,7 +189,7 @@ export default class NodeWork {
     if (allowNode == false) return;
 
     //NodeWork.clear(msg.node);
-    if (msg.nodeID == null) msg.nodeID = NodeWork.getFirstNullIndex(globalApp.data[parentNode.roomId].nodeContainer);
+    if (msg.nodeID == null) msg.nodeID = NodeWork.getFirstNullIndex(globalApp.rooms[parentNode.roomId].nodeContainer);
     if (msg.type == "network/serial") {
       window.serialNodeWork = msg.node;
       msg.node.engine = {name: "serial"};
@@ -207,31 +205,45 @@ export default class NodeWork {
       msg.node.type = msg.type;
       msg.node.pos = msg.pos;
       msg.node.size = [NodiEnums.CANVAS_GRID_SIZE, NodiEnums.CANVAS_GRID_SIZE];
-      msg.node.parent = parentNode.nodeID;
+      msg.node.parentID = parentNode.nodeID || msg.parentID;
       msg.node.platform = parentNode.platform || "server";
       msg.node.owner = msg.owner;
-      msg.node.roomId = msg.roomId;
+      msg.node.roomId = parentNode.roomId || msg.roomId;
       msg.node.moving = false;
       msg.node.nodeID = msg.nodeID;
       NodeWork.getNodeType(msg.type).setup(msg.node);
     }
     
-    parentNode.nodes[msg.nodeID] = msg.node.nodeID;
+    if (parentNode.nodes) parentNode.nodes[msg.nodeID] = msg.node.nodeID;
 
-    let container = globalApp.data[parentNode.roomId]?.nodeContainer;
-    if (!container) container = globalApp.data.nodeContainer;
+    let container = globalApp.rooms[parentNode.roomId]?.nodeContainer;
     container[msg.nodeID] = msg.node;
-    NodeWork.setNodeIDOnGrid(parentNode, msg);
-    if (parentNode.socketOut) parentNode.socketOut("addNode", {data: msg});
+    if (parentNode.socketOut) parentNode.socketOut.to(parentNode.roomId).emit("addNode", {data: msg});
+    NodeWork.setNodeIDOnGrid(parentNode, msg, false);
     return msg.node;
   }
 
-  static rotateNode(nw, msg) {
-    let node = NodeWork.getNodeOnGrid(nw, msg.pos[0], msg.pos[1]);
+  static rotateNode(parentNode, msg) {
+    if (!msg) return;
+
+    let node = null;
+    
+    if (msg.parentID != null) {
+      node = NodeWork.getNodeById(parentNode, msg.nodeID) 
+    } else {
+      node = NodeWork.getNodeOnGrid(parentNode, msg.pos[0], msg.pos[1]);
+    }
+    
+    if (!node) {
+        console.warn(`Node with ID ${parentNode.nodeID} not found.`);
+        return;
+    }
+    
     if (node) {
       node.direction = (node.direction + 1) % 4;
-      NodeWork.updateNBs(nw, msg.pos[0], msg.pos[1]);
+      NodeWork.updateNBs(parentNode, msg.pos[0], msg.pos[1]);
     }
+    if (parentNode.socketOut) parentNode.socketOut.to(parentNode.roomId).emit("rotateNode", {data: msg});
   }
 
   /**
@@ -299,8 +311,6 @@ export default class NodeWork {
     }
   }
 
-
-
   static updateValues(node, key, prop) {
     node.properties[key]["value"] = {val: prop["value"], update: 1};
   }
@@ -309,66 +319,62 @@ export default class NodeWork {
     node.properties[key]["outValue"] = {val: prop["outValue"], update: 1};
   }
 
-  static moveNodeOnGrid(nw, msg) {
+  static moveNodeOnGrid(parentNode, msg) {
     if (!msg) return;
-    let container = globalApp.data[nw.roomId]?.nodeContainer;
-    if (!container) container = globalApp.data.nodeContainer
+    let container = parentNode.nodeContainer;
 
-    let parent = container[msg.parentID];
+    if (!parentNode) return;
 
-    if (!parent) return;
-
-    if (NodeWork.getNodeOnGrid(parent, msg.to[0], msg.to[1]) == null) {
+    if (NodeWork.getNodeOnGrid(parentNode, msg.to[0], msg.to[1]) == null) {
       if (msg.from) {
-        NodeWork.setNodeIDOnGrid(parent, msg);
+        NodeWork.removeNodeFromMap(parentNode, msg.from);
       }
-      NodeWork.setNodeIDOnGrid(parent, msg);
+      msg.pos = msg.to;
+      NodeWork.setNodeIDOnGrid(parentNode, msg, false);
     }
-    container[msg.id].pos = msg.to;
+    container[msg.nodeID].pos = msg.to;
 
-
-    if (parent.socketOut) parent.socketOut("moveNodeOnGrid", {data: msg});
+    if (parentNode.socketOut) parentNode.socketOut.to(parentNode.roomId).emit("moveNodeOnGrid", {data: msg});
 
   }
 
-  static removeNode(nw, msg) {
+  static removeNodeFromMap(nw, pos) {
+    delete nw.nodesByPos[pos[0] + NodiEnums.POS_SEP + pos[1]];
+  }
 
-    let container = globalApp.data[nw.roomId]?.nodeContainer;
-    if (!container) container = globalApp.data.nodeContainer
+  static removeNode(parentNode, msg) {
+
+    let container = parentNode.nodeContainer;
+
+    let nodeID = this.getNodeIDOnGrid(parentNode, msg.pos[0], msg.pos[1]);
+    if (nodeID == null) return;
     // Find the node by ID
-    let parent = container[msg.parentID];
     let node = container[msg.nodeID];
-    
-    if (!node) {
-        console.warn(`Node with ID ${msg.nodeID} not found.`);
-        return;
-    }
 
     // Remove the node from nodesByPos
-    delete parent.nodesByPos[node.pos[0] + NodiEnums.POS_SEP + node.pos[1]];
+    NodeWork.removeNodeFromMap(parentNode, node.pos);
     
     // Remove the node from nodes array
-    delete parent.nodes[msg.nodeID];
-    delete container[msg.nodeID];
+    delete parentNode.nodes[nodeID];
+    delete container[nodeID];
 
-    if (parent.socketOut) parent.socketOut("removeNode", {data: {parentID: msg.parentID, nodeID: msg.nodeID}});
-
-    console.log(`Node with ID ${msg.nodeID} removed.`);
+    if (parentNode.socketOut) parentNode.socketOut.to(parentNode.roomId).emit("removeNode", {data: msg});
+    console.log(`Node with ID ${nodeID} removed.`);
   }
 
   static updateNode(nw, msg) {
     if (typeof msg.properties == "object" && msg.properties != null) {
       Object.keys(msg.properties).forEach((key) => {
-        NodeWork.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, key, msg.properties[key]);
+        NodeWork.updateProp(globalApp.rooms[nw.roomId].nodeContainer[msg.nodeID], msg.prop, key, msg.properties[key]);
       })
     } else {
-      NodeWork.updateProp(globalApp.data.nodeContainer[msg.nodeID], msg.prop, "value", msg.properties);
+      NodeWork.updateProp(globalApp.rooms[nw.roomId].nodeContainer[msg.nodeID], msg.prop, "value", msg.properties);
     }
   }
 
   static updateInputs(nw, msg) {
     console.log("[updateInputs]");
-    let node = globalApp.data[nw.roomId].nodeContainer[msg.nodeID];
+    let node = globalApp.rooms[nw.roomId].nodeContainer[msg.nodeID];
     let key = Object.keys(msg.properties)[0];
     if (node.properties[key])
       node.properties[key]["inpValue"]["user"] = {val: msg.properties[key].inpValue, update: 1};
@@ -379,7 +385,7 @@ export default class NodeWork {
   
   static getNodeById(nw, id) {
     if (id == null) return null;
-    let container = globalApp.data[nw.roomId]?.nodeContainer || globalApp.data.nodeContainer;
+    let container = globalApp.rooms[nw.roomId]?.nodeContainer;
     return container[id];
   }
 
@@ -401,14 +407,14 @@ export default class NodeWork {
     }
   }
 
-  static setNodeIDOnGrid(parentNode, msg) {
+  static setNodeIDOnGrid(parentNode, msg, sync = true) {
     if (msg.nodeID == null) {
       delete parentNode.nodesByPos[msg.pos[0] + NodiEnums.POS_SEP + msg.pos[1]];
     } else {
       parentNode.nodesByPos[msg.pos[0] + NodiEnums.POS_SEP + msg.pos[1]] = msg.nodeID;
     }
     NodeWork.updateNBs(parentNode, msg.pos[0], msg.pos[1]);
-    if (parentNode.socketOut) parentNode.socketOut("setNodeIDOnGrid", msg);
+    if (parentNode.socketOut && sync) parentNode.socketOut.to(parentNode.roomId).emit("setNodeIDOnGrid", msg);
   }
 
   static reconnectByPos(nw, x, y){
@@ -437,12 +443,13 @@ export default class NodeWork {
 
   static setNodework(nw, data) {
     if (!data) return;
-    globalApp.data.nodeContainer = data.nodelist;
-    window.rootNode = globalApp.data.nodeContainer[data.nodeworkID];
-    window.currentNodeWork = window.rootNode;
+    let room = globalApp.rooms[nw.roomId];
+    room.nodeContainer = data.nodeContainer;
+    room.nodesByPos = data.nodesByPos;
+    window.currentNodeWork = room;
     window.currentNodeWork.platform = globalApp.platform;
 
-    data.nodelist.forEach((n) => 
+    data.nodeContainer.forEach((n) => 
     {
       if(!n) return;
       n.platform = globalApp.platform;
@@ -484,15 +491,20 @@ export default class NodeWork {
 
   static run(nw) {
     if (nw == null) return;
-    let order = nw?.orders?.shift();
-    if (order) {
-      order.data.parentID = nw.nodeID;
-       NodeWork.engines[nw.engine.name == nw.platform ? "local" : "socketIO"](nw, order);
+    if(!nw.time) nw.time = {tick:0};
+    nw.time.tick++;
+
+    let order;
+    while ((order = nw?.orders?.shift()) != null) {
+      if (order) {
+        order.data.parentID = nw.nodeID;
+        NodeWork.engines[nw.engine.name === nw.platform ? "local" : "socketIO"](nw, order);
+      }
     }
 
-    if (nw.engine?.name !== nw.platform)  return;
-    nw.nodes?.forEach((nodeID) => {
-      let node = globalApp.data[nw.roomId].nodeContainer[nodeID];
+    //if (nw.engine?.name !== nw.platform)  return;
+    nw.nodeContainer?.forEach((node) => {
+      //let node = nw.nodeContainer[nodeID];
       if (!node) return;
       if (node.engine?.name !== node.platform)  return;
 
@@ -521,9 +533,12 @@ export default class NodeWork {
         //console.log("JA", moveVector);
       }*/
 
-      let order = node?.orders?.shift();
-      if (order) {
-        NodeWork.engines[nw.engine.name == nw.platform ? "local" : "socketIO"](node, order);
+      let order;
+      while ((order = node.orders?.shift()) != null) {
+        if (order) {
+          order.data.parentID = nw.nodeID;
+          NodeWork.engines[nw.engine.name === nw.platform ? "local" : "socketIO"](nw, order);
+        }
       }
 
       let results = [];
@@ -536,9 +551,8 @@ export default class NodeWork {
       } 
 
       if (nw.socketOut && results?.length) {
-        //console.log(c)
         results.forEach((propName) => {
-          nw.socketOut("updateNode", {data: { nodeID: node.nodeID, prop: propName, properties: node.properties[propName].value }});
+          nw.socketOut.to(nw.roomId).emit("updateNode", {data: { nodeID: node.nodeID, prop: propName, properties: node.properties[propName].value }});
         });
       }
     });
@@ -584,8 +598,5 @@ export default class NodeWork {
     });
 
     return nodesWithinRange;
-}
-
-
-
+  }
 }
