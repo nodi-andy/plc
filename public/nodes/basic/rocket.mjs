@@ -51,6 +51,8 @@ export default class Rocket extends NodeWork {
 
         ctx.strokeStyle = "";
         ctx.fillStyle = "black";
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
         ctx.fillText(me.rockets.value, 32 ,32);
     }
 
@@ -75,7 +77,7 @@ export default class Rocket extends NodeWork {
 
         me.nnids = map.findNodes(node, 5, (n) => n.type == "basic/miner");
         me.cv = me.nnids.length;
-        me.enemies = map.findNodes(node, 5,(n) => n.owner !== node.owner);
+        me.enemies = map.findNodes(node, 5, (n) => {return (n.owner !== node.owner && n.type !== "basic/number")});
 
         me.nnids?.forEach((nid) => {
             let n = room.nodeContainer[nid];

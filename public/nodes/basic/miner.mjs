@@ -40,8 +40,10 @@ export default class Miner extends NodeWork {
         ctx.stroke();
 
         ctx.strokeStyle = "";
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
         ctx.fillStyle = "black";
-        ctx.fillText(me.mines.value, 26 ,36);
+        ctx.fillText(me.mines.value, 32 ,32);
     }
 
     static run(node) {

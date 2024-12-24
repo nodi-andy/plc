@@ -303,7 +303,7 @@ export default class LGraphCanvas {
         let n = this.selected_nodes[i];
         var node_type = NodeWork.getNodeType(n.type);
         if (node_type.moveable) {
-          window.sendToNodework("moveNodeOnGrid", {id: n.nodeID, from: this.grid_selected, to: e.gridPos});
+          window.sendToNodework("moveNodeOnGrid", {nodeID: n.nodeID, from: this.grid_selected, to: e.gridPos});
         }
       }
       this.node_dragging = null;
@@ -469,7 +469,7 @@ export default class LGraphCanvas {
 
     e.dragging = this.last_mouse_dragging;
     if (this.gripped == "node" && this.node_pressed) {
-      NodeWork.cmd(window.currentNodeWork, "setNodeIDOnGrid", {data : {pos: this.grid_selected, node: null}});
+      NodeWork.cmd(window.currentNodeWork, { cmd: "setNodeOnGrid", data : {pos: this.grid_selected, node: null}});
       this.canvas.style.cursor = "move";
       this.node_dragging = this.node_pressed;
       this.node_pressed = null;
@@ -580,7 +580,7 @@ export default class LGraphCanvas {
     } else if (this.resizing_node) {
       this.resizing_node = null;
     } else if (this.node_dragging) {
-      window.sendToNodework("moveNodeOnGrid", {id: this.node_dragging.nodeID, from: this.grid_selected, to: e.gridPos});
+      window.sendToNodework("moveNodeOnGrid", {nodeID: this.node_dragging.nodeID, from: this.grid_selected, to: e.gridPos});
       this.node_dragging = null;
     }       // deselect all, grip canvas
     else if (window.canvas.copyNode == null && node_mouse == null && (this.grid_selected == undefined || (this.grid_selected && (this.grid_selected[0] != e.gridPos[0] || this.grid_selected[1] != e.gridPos[1])))) {
@@ -1196,7 +1196,7 @@ export default class LGraphCanvas {
       //draw nodes on grid
       for (var nodeKey of Object.keys(window.currentNodeWork.nodesByPos)) {
         var nodeID = window.currentNodeWork.nodesByPos[nodeKey];
-        var node = globalApp.data.nodeContainer[nodeID];
+        var node = globalApp.rooms[window.currentNodeWork.roomId].nodeContainer[nodeID];
         if (!node) continue;
         //transform coords system
         let [x, y] = nodeKey.split(NodiEnums.POS_SEP);

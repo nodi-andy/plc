@@ -26,7 +26,7 @@ class Connector extends NodeWork {
             if (prop.inpValue !== null) {
                 for (const valueInputs of Object.values(prop.inpValue)) {
                     if (valueInputs.update == 1) {
-                        if (toNode) {
+                        if (toNode && toNode.properties[props.to.value]) {
                             delete toNode.properties[props.to.value].inpValue[node.nodeID];
                         }
                         prop.value = valueInputs.val;

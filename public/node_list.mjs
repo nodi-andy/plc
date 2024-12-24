@@ -3,19 +3,23 @@ export const basic = [
     "nodes/basic/number.mjs",
     "nodes/basic/connector.mjs",
     "nodes/basic/button.mjs",
-    "nodes/basic/custom.mjs",
-    "nodes/basic/miner.mjs",
-    "nodes/basic/rocket.mjs",
+//    "nodes/basic/custom.mjs",
+/*    "nodes/basic/miner.mjs",
+    "nodes/basic/rocket.mjs",*/
     "nodes/time/interval.mjs",
 ];
-//"./nodes/basic/custom.mjs",
-//    "./nodes/basic/province.mjs",
-//    "./nodes/basic/country.mjs",
-export const rest = [
+
+export const logic = [
     "nodes/logic/and.mjs",
     "nodes/logic/or.mjs",
     "nodes/logic/xor.mjs",
-    "nodes/logic/not.mjs",
+    "nodes/logic/not.mjs"
+]
+//"./nodes/basic/custom.mjs",
+//    "./nodes/basic/province.mjs",
+//    "./nodes/basic/country.mjs",
+
+export const rest = [
     "nodes/math/add.mjs",
     "nodes/math/mult.mjs",
     "nodes/math/isequal.mjs",
@@ -37,4 +41,4 @@ export const rest = [
     "nodes/network/gdrivefile.mjs"
     */
 
-export const nodeList = [...basic/*, ...rest*/];
+export const nodeList = [...basic, ...logic/*, ...rest*/];

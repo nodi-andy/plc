@@ -89,10 +89,8 @@
     import Canvas from "./canvas.js";
     import { NodiEnums, globalApp } from "./enums.mjs";
     
-    globalApp.data = {}
+    globalApp.rooms = [];
 
-    globalApp.data = window;
-    globalApp.data.nodeContainer = [];
     globalApp.platform = "client";
     
     // save & load
@@ -112,9 +110,8 @@
     window.inv.addItem("mine", 8)
     window.load = (filename) => {
       if (localStorage[filename]) {
-        window.rootNode = NodeWork.load();
-        window.currentNodeWork = window.rootNode;
-        window.rootNode.nodes.forEach((n) => {
+        window.currentNodeWork = NodeWork.load();
+        window.currentNodeWork.nodes.forEach((n) => {
           if (n.drawStr) {
             n.onDrawForeground = new Function('node', 'ctx', n.drawStr);
             n.onDrawForeground.bind(n);
@@ -139,7 +136,7 @@
     
     // init
     window.canvas = new Canvas("#mycanvas", window.currentNodeWork);
-    window.nodeworkID = window.location.search.slice(1);
+    window.nodeID = window.location.search.slice(1);
     window.toParent = () => {
       window.showParent(false);
       if (window.currentNodeWork.parent != null) {
@@ -167,27 +164,33 @@
     
     window.NodeWork = NodeWork; //make the static class available for reactjs
     NodeWork.updateNodeList();
-    window.rootNode = {};
-    window.rootNode.nodeID = NodeWork.getFirstNullIndex(globalApp.nodeContainer);
-    globalApp.data.nodeContainer[rootNode.nodeID] = window.rootNode;
-    NodeWork.clear(window.rootNode);
-    window.currentNodeWork = window.rootNode;
+    window.currentNodeWork = {};
+    window.currentNodeWork.nodeID = NodeWork.getFirstNullIndex(globalApp.nodeContainer);
+    NodeWork.clear(window.currentNodeWork);
     window.currentNodeWork.platfrom = "Browser";
     
-    // Check if nodeworkID is present in the URL
-    let nodeworkID = window.location.search.slice(1);
-    if (nodeworkID) {
-      // If nodeworkID is present, send it to the Socket.IO server
+    // Check if nodekID is present in the URL
+    let nodeID = window.location.search.slice(1);
+    if (nodeID) {
+      // If nodeID is present, send it to the Socket.IO server
       window.currentNodeWork.uid = new URLSearchParams(window.location.search).get("map");
-      //socket.emit('registerNodework', { uid: nodeworkID });
+      globalApp.rooms[window.currentNodeWork.uid] = window.currentNodeWork;
+      window.currentNodeWork.nodeContainer = [];
+      window.currentNodeWork.nodes = [];
+      window.currentNodeWork.nodesByPos = {};
+      window.currentNodeWork.time = { tick: 0 };
+      window.currentNodeWork.roomId = window.currentNodeWork.uid;
+      window.currentNodeWork.engine = { name: "server" };
+      
+      //socket.emit('registerNodework', { uid: nodeID });
     }
     /*
     window.load("nodework");
     */
     // start the loop
+    
     setInterval(() => { 
-      NodeWork.run(window.rootNode);  
-      globalApp.data.time.tick++;
+      NodeWork.run(window.currentNodeWork);  
     }, 100);
     await loadJS("./websocket.js", false);
     </script>

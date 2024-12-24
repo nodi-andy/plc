@@ -194,7 +194,7 @@ function RightActionButtons({ showNodes, setShowEditMenu }) {
           aria-label="remove"
           disabled={!removeClickable}
           onClick={() => {
-            window.sendToNodework("removeNode", {nodeID: window.current_node.nodeID});
+            window.sendToNodework("removeNode", {pos: window.current_node.pos});
             setShowEditMenu(false);
           }}
         >

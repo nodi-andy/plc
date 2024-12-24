@@ -349,14 +349,24 @@ export default class NodeWork {
     let nodeID = this.getNodeIDOnGrid(parentNode, msg.pos[0], msg.pos[1]);
     if (nodeID == null) return;
     // Find the node by ID
-    let node = container[msg.nodeID];
+    //let node = container[nodeID];
 
     // Remove the node from nodesByPos
-    NodeWork.removeNodeFromMap(parentNode, node.pos);
+    NodeWork.removeNodeFromMap(parentNode, msg.pos);
     
-    // Remove the node from nodes array
-    delete parentNode.nodes[nodeID];
-    delete container[nodeID];
+    // Remove the node from nodes array if there are no other instances of the node in the container
+    let exist = false;
+    for (let key in parentNode.nodesByPos) {
+        if (parentNode.nodesByPos[key] === nodeID) {
+            exist = true;
+            break;
+        }
+    }
+
+    if (exist === false) {
+        delete parentNode.nodes[nodeID];
+        delete container[nodeID];
+    }
 
     if (parentNode.socketOut) parentNode.socketOut.to(parentNode.roomId).emit("removeNode", {data: msg});
     console.log(`Node with ID ${nodeID} removed.`);
