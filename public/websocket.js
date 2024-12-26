@@ -42,11 +42,7 @@ if (window.socketIO) {
   window.socketIO.on("connect", () => {
     console.log("Connected to the socketIO server!");
     window.socket = window.socketIO;
-    if (window.currentNodeWork.uid == undefined) {
-      window.socket.emit("createRoom" )
-    } else {
-      window.socket.emit("getNode", {roomId: window.currentNodeWork.uid});
-    }
+    window.socket.emit("getNode", {roomId: window.currentNodeWork.uid});
   });
 
   window.socketIO.on("setNodelist", (message) => {

@@ -26,22 +26,29 @@ const io = new socketIOServer(server, {
   },
 });
 
+const ONE_WEEK = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
+
+function removeOldRooms() {
+  const now = Date.now();
+  for (const roomId in rooms) {
+    if (rooms[roomId].lastAccessDate && (now - new Date(rooms[roomId].lastAccessDate).getTime()) > ONE_WEEK) {
+      delete rooms[roomId];
+      console.log(`Removed room with ID: ${roomId} due to inactivity.`);
+    }
+  }
+}
+
+// Schedule the removeOldRooms function to run once a day
+setInterval(removeOldRooms, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+
 async function loadNodes(nodes) {
   await Promise.all(nodes.map(nodePath => import("./public/" + nodePath)));
-  console.log("All nodes have been loaded.");
+  console.dlog("All nodes have been loaded.");
 }
 
 // Load nodes on server start
 loadNodes(nodeList).catch(error => console.error("Failed to load nodes:", error));
 
-// Utility function to merge objects
-Object.mergeObjects = (objA, objB) => {
-  const mergedObject = { ...objA };
-  for (const keyA in objB) {
-    mergedObject[keyA] = { ...mergedObject[keyA], ...objB[keyA] };
-  }
-  return mergedObject;
-};
 
 async function processNodeWork() {
   for (const roomId in rooms) {
@@ -49,50 +56,23 @@ async function processNodeWork() {
       NodeWork.run(rooms[roomId]);
     }
   }
-  setTimeout(processNodeWork, 1);
+  setTimeout(processNodeWork, 20);
 }
+
 processNodeWork();
 
-setInterval(() => {
-  for (const roomId in rooms) {
-    rooms[roomId].time.tick++;
-  }
-}, 20);
+function forwardToNodeWork(socket, msg) {
+  console.dlog("[cmd] ", msg);
+  const room = rooms[msg.roomId || socket.roomId];
+  
+  if (room) NodeWork.cmd(room, msg);
+}
 
 io.on("connection", (socket) => {
   console.dlog("[newClient] ", socket.id);
 
   socket.on("connected", (msg) => {
     console.dlog("[connected]", msg);
-  });
-
-  socket.on("createRoom", () => {
-    const roomId = uuidv4();
-    rooms[roomId] = {
-      nodeContainer: [],
-      nodes: [],
-      nodesByPos: {},
-      time: { tick: 0 },
-      roomId,
-      engine: { name: "server" },
-    };
-
-    let nodeWork = NodeWork.clear();
-    nodeWork.engine = { name: "server" };
-    nodeWork.nodeID = 0;
-    nodeWork.platform = "server";
-    nodeWork.roomId = roomId;
-    
-    rooms[roomId].nodeContainer[0] = nodeWork;
-    rooms[roomId].platform = "server";
-    const mapGenerator = new MapGenerator(100, 100, { scale: 100, seed: 12345, min: 70, max: 100 });
-    rooms[roomId].map = mapGenerator.generateMap();
-    
-    socket.join(roomId);
-    socket.roomId = roomId;
-    rooms[roomId].socketOut = io;
-    io.to(socket.id).emit("createRoom", roomId);
-    console.log(`Created new room with ID: ${roomId}`);
   });
 
   socket.on("setNodework", (msg) => {
@@ -130,64 +110,12 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("updateInputs", (msg) => {
-    console.dlog("[updateInputs] ", msg.data.nodeID, msg.data.properties);
-    const roomId = msg.roomId || socket.roomId;
-    const room = rooms[roomId];
+  socket.on("updateInputs", (msg) => forwardToNodeWork(socket, msg));
+  socket.on("removeNode", (msg) => forwardToNodeWork(socket, msg));
+  socket.on("moveNodeOnGrid", (msg) => forwardToNodeWork(socket, msg));
+  socket.on("rotateNode", (msg) => forwardToNodeWork(socket, msg));
+  socket.on("setNodeOnGrid", (msg) => forwardToNodeWork(socket, msg));
 
-    if (room && msg.data.nodeID != null) {
-        NodeWork.cmd(room, msg);
-    }
-  });
-
-  socket.on("removeNode", (msg) => {
-    console.dlog("[removeNode] ", msg);
-    const roomId = msg.roomId || socket.roomId;
-    const room = rooms[roomId];
-
-    if (room && msg.data.pos != null) {
-      NodeWork.cmd(room, msg);
-    }
-  });
-
-  socket.on("moveNodeOnGrid", (msg) => {
-    console.dlog("[moveNodeOnGrid] ", msg);
-    const roomId = msg.roomId || socket.roomId;
-    const room = rooms[roomId];
-
-    if (room && msg.data.nodeID != null) {
-      const node = room.nodeContainer[msg.data.nodeID];
-      if (node /*&& (node.owner == undefined || node.owner === socket.id)*/) {
-        NodeWork.cmd(room, msg);
-      }
-    }
-  });
-
-  socket.on("rotateNode", (msg) => {
-    console.dlog("[rotateNode] ", msg);
-    const roomId = msg.roomId || socket.roomId;
-    const room = rooms[roomId];
-
-    if (room && msg.data.parentID != null) {
-      const node = room.nodeContainer[msg.data.parentID];
-      if (node && (node.owner == undefined || node.owner === socket.id)) {
-        NodeWork.cmd(node, msg);
-      }
-    }
-  });
-
-  socket.on("setNodeOnGrid", (msg) => {
-    console.dlog("[setNodeOnGrid] ", msg);
-    const roomId = msg.roomId || socket.roomId;
-    const room = rooms[roomId];
-
-    if (room && msg.data.parentID != null) {
-      const node = room.nodeContainer[msg.data.parentID];
-      if (node && (node.owner == undefined || node.owner === socket.id)) {
-        NodeWork.cmd(node, msg);
-      }
-    }
-  });
 
   socket.on("addNode", (msg) => {
     const roomId = msg.roomId || socket.roomId;
@@ -201,8 +129,39 @@ io.on("connection", (socket) => {
   });
 
   socket.on("getNode", (msg) => {
-    const roomId = msg.roomId || socket.roomId;
-    if (rooms[roomId]) {
+    let roomId = msg.roomId || socket.roomId;
+    if (!rooms[roomId]) {
+      if (roomId == undefined) {
+        roomId = uuidv4();
+        io.to(socket.id).emit("createRoom", roomId);
+      }
+      rooms[roomId] = {
+        nodeContainer: [],
+        nodes: [],
+        nodesByPos: {},
+        time: { tick: 0 },
+        roomId,
+        engine: { name: "server" },
+        lastAccessDate: new Date()
+      };
+
+      let nodeWork = NodeWork.clear();
+      nodeWork.engine = { name: "server" };
+      nodeWork.nodeID = 0;
+      nodeWork.platform = "server";
+      nodeWork.roomId = roomId;
+      
+      rooms[roomId].nodeContainer[0] = nodeWork;
+      rooms[roomId].platform = "server";
+      const mapGenerator = new MapGenerator(100, 100, { scale: 100, seed: 12345, min: 70, max: 100 });
+      rooms[roomId].map = mapGenerator.generateMap();
+      
+      socket.join(roomId);
+      socket.roomId = roomId;
+      rooms[roomId].socketOut = io;
+
+      console.dlog(`Created new room with ID: ${roomId}`);
+    } else if (rooms[roomId]) {
 
       socket.join(roomId);
       socket.roomId = roomId;
@@ -212,6 +171,7 @@ io.on("connection", (socket) => {
         nodeID: 0
       }
       io.to(socket.id).emit("setNodework", {data: data});
+      rooms[roomId].lastAccessDate = new Date(); // Update last access date
     }
   });
 
@@ -244,5 +204,5 @@ app.get("/:roomId", (req, res) => {
 });
 
 server.listen(8080, () => {
-  console.log("Server listening on port 8080");
+  console.dlog("Server listening on port 8080");
 });

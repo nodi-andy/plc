@@ -72,7 +72,9 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
             <ListItemText primary={'Save'} />
           </ListItemButton>
         </ListItem>
-        <ListItem key='requestSerialPort' disablePadding>
+        { 
+        /*
+              <ListItem key='requestSerialPort' disablePadding>
           <ListItemButton onClick={async () => {
               // Prompt user to select any serial port.
               await navigator.serial.requestPort().then((port) => {
@@ -84,14 +86,14 @@ export default function NavBar({ openDrawer, setOpenDrawer, /*showSaveAsFiles, s
             <ListItemText primary={'Serial Port'} />
           </ListItemButton>
         </ListItem>
-        {
+
         <ListItem key='download_fw' disablePadding>
           <ListItemButton onClick={downloadFirmware}>
             <ListItemIcon><SaveAsOutlinedIcon /></ListItemIcon>
             <ListItemText primary={'Download Firmware'} />
           </ListItemButton>
         </ListItem>
-      /*
+
         <ListSubheader>IoT</ListSubheader>
         <ListItem key='myoffers' disablePadding>
           <ListItemButton onClick={showConnection}>

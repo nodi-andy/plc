@@ -15,26 +15,22 @@ export default class LogicXor extends NodeWork {
     static run(node) {
         let props = node.properties;
         let ret = [];
-        let res = 1;
         let update = false;
-
+    
         for (const valueInputs of Object.values(props.value.inpValue)) {
             if (valueInputs.update) update = true;
         }
-
+    
         if (!update) return ret;
-
-        props.value.value = undefined;
-        let firstVal = undefined;
+    
+        let xorResult = 0;
         for (const valueInputs of Object.values(props.value.inpValue)) {
-            if (firstVal == undefined) firstVal = valueInputs.val;
-            if (firstVal != null && valueInputs.val != firstVal) {
-                res = 0;
-                break;
-            } 
+            if (valueInputs.val != null) {
+                xorResult ^= valueInputs.val;
+            }
         }
-
-        props.value.outValue = {val: res, update: 1};
+    
+        props.value.outValue = { val: xorResult, update: 1 };
         return ret;
     }
 }

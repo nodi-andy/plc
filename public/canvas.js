@@ -330,8 +330,12 @@ export default class LGraphCanvas {
     this.mouse = [e.clientX, e.clientY];
     this.graph_mouse = [e.canvasX, e.canvasY];
     this.last_click_position = [e.clientX, e.clientY];
+    this.gridPos = NodiEnums.toGrid([e.canvasX, e.canvasY]);
 
     var node_mouse = NodeWork.getNodeOnPos(window.currentNodeWork, e.canvasX, e.canvasY);
+    if (node_mouse) {
+      node_mouse.pos = this.gridPos;
+    }
     var node_type = NodeWork.getNodeType(node_mouse?.type);
 
     this.canvas.focus();
@@ -358,7 +362,7 @@ export default class LGraphCanvas {
       }
     }
     // select node first time
-    else if (node_mouse != null && window.canvas.copyNode == null && node_mouse != window.current_node) {
+    else if (node_mouse != null && window.canvas.copyNode == null && (this.grid_selected[0] != this.gridPos[0] || this.grid_selected[1] != this.gridPos[1])) {
       this.grid_selected = e.gridPos;
       var gridCorner = NodiEnums.toCanvas(e.gridPos);
       this.nodeDragGripPos = [e.canvasX - gridCorner[0], e.canvasY - gridCorner[1]];
@@ -939,6 +943,7 @@ export default class LGraphCanvas {
       this.selectNodes([node], add_to_current_selection);
     }
     window.current_node = node;
+    console.log("selectNode: " + node.nodeID + " " + node.pos);
   }
   /**
    * selects several nodes (or adds them to the current selection)

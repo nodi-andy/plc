@@ -2,6 +2,7 @@ export const basic = [
     "nodes/basic/bit.mjs",
     "nodes/basic/number.mjs",
     "nodes/basic/connector.mjs",
+    //"nodes/basic/inserter.mjs",
     "nodes/basic/button.mjs",
 //    "nodes/basic/custom.mjs",
 /*    "nodes/basic/miner.mjs",
