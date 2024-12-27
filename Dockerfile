@@ -13,6 +13,9 @@ RUN npm ci --omit=dev
 # Bundle app source
 COPY . .
 
+# Fetch all git submodules under /public
+RUN git submodule update --init --recursive /public
+
 # Build React interface if not built previously
 RUN if [ ! -d "build" ]; then npm run build; fi
 
