@@ -24,7 +24,7 @@ export default function RenameDialog({visible, show, filename, saveAs}) {
   const textRef = useRef(null);
 
   const handleClose = () => {
-    console.log("SAVEAS"+saveAs)
+    console.dlog("SAVEAS"+saveAs)
     show(false);
   };
 

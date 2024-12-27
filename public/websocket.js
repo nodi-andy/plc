@@ -12,7 +12,7 @@ import esp32mcuB1 from "./nodes/esp32mcu/b1.js";
 import esp32mcuLED from "./nodes/esp32mcu/bit.js";
 
 window.serialline = (msg) => {
-  console.log("uC:", msg);
+  console.dlog("uC:", msg);
   msg = msg.trim();
   try {
     let [cmd, data] = JSON.parse(msg);
@@ -25,7 +25,7 @@ window.serialline = (msg) => {
 
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
 websocket.addEventListener("error", (event) => {
-  console.log("WebSocket error: ", event);
+  console.dlog("WebSocket error: ", event);
 });
 // Connect to IoT
 var uri = window.location.hostname;
@@ -40,7 +40,7 @@ window.order = {};
 if (window.socketIO) {
   // Event handler for when the connection is established
   window.socketIO.on("connect", () => {
-    console.log("Connected to the socketIO server!");
+    console.dlog("Connected to the socketIO server!");
     window.socket = window.socketIO;
     window.socket.emit("getNode", {roomId: window.currentNodeWork.uid});
   });
@@ -96,7 +96,7 @@ window.order.nodeMoved = (msg) => {
   if (window.nodeWork.nodes[msg.nodeID]?.widget == null) return;
   if (msg.moveTo == null) return;
 
-  console.log("[nodeMoved] ", msg);
+  console.dlog("[nodeMoved] ", msg);
   window.nodeWork.nodes[msg.nodeID].pos = msg.moveTo;
 };
 
@@ -112,7 +112,7 @@ window.order.propUpdated = (message) => {
 };
 
 window.order.disconnect = () => {
-  console.log("Disconnected from the server!");
+  console.dlog("Disconnected from the server!");
 };
 
 window.order.updateWiFi = (msg) => {
@@ -137,7 +137,7 @@ Object.keys(NodeWork.events).forEach((event) => {
 
 window.addEventListener("load", () => {
   websocket.onopen = () => {
-    console.log("WebSocket opened");
+    console.dlog("WebSocket opened");
     window.socket = websocket;
     window.socketIO.disconnect();
     window.socket.type = "iot";
@@ -146,15 +146,15 @@ window.addEventListener("load", () => {
   };
 
   websocket.onclose = () => {
-    console.log("WebSocket closed");
+    console.dlog("WebSocket closed");
   };
 
   websocket.onerror = () => {
-    console.log("No websocket");
+    console.dlog("No websocket");
   };
 
   websocket.onmessage = (event) => {
-    console.log("Received message from the server:", event);
+    console.dlog("Received message from the server:", event);
 
     let data = JSON.parse(event.data);
     let cmdName = data[0];

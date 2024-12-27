@@ -12,5 +12,9 @@ RUN npm install
 RUN npm ci --omit=dev
 # Bundle app source
 COPY . .
-EXPOSE 8080
+
+# Build React interface if not built previously
+RUN if [ ! -d "build" ]; then npm run build; fi
+
+EXPOSE 80
 CMD [ "node", "server.mjs" ]

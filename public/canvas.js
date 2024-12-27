@@ -943,7 +943,7 @@ export default class LGraphCanvas {
       this.selectNodes([node], add_to_current_selection);
     }
     window.current_node = node;
-    console.log("selectNode: " + node.nodeID + " " + node.pos);
+    console.dlog("selectNode: " + node.nodeID + " " + node.pos);
   }
   /**
    * selects several nodes (or adds them to the current selection)
@@ -1021,12 +1021,12 @@ export default class LGraphCanvas {
       window.showRemove(true);
       window.showRotate(NodeWork.getNodeType(node.type).rotatable);
       window.showAdd(!(NodeWork.getNodeType(node.type).singleton));
-      console.log("disable");
+      console.dlog("disable");
     } else {
       window.showAdd(false);
       window.showRotate(false);
       window.showRemove(false);
-      console.log("enable");
+      console.dlog("enable");
     }
   };
   /**

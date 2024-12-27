@@ -105,12 +105,12 @@ export default class GDrive extends NodeWork {
         'q': query
       });
     } catch (err) {
-      console.log(err.message);
+      console.dlog(err.message);
       return;
     }
     const files = response.result.files;
     if (!files || files.length == 0) {
-      console.log('No files found.');
+      console.dlog('No files found.');
       return;
     }
     let p = 0;
@@ -137,7 +137,7 @@ export default class GDrive extends NodeWork {
     const output = files.reduce(
         (str, file) => `${str}${file.name} (${file.id})\n`,
         'Files:\n');
-        console.log(output);
+        console.dlog(output);
 }
 
   static run(node) {

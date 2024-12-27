@@ -21,7 +21,7 @@ export default class NodeWork {
                       if(NodeWork[order.cmd]) NodeWork[order.cmd](node, order.data);
                     },
     "serial": (node, order) => {
-                      console.log("Forward:Serial : ", order);
+                      console.dlog("Forward:Serial : ", order);
                       if (window.serialwriter) { // send to server
                         const encoder = new TextEncoder();
                   
@@ -30,7 +30,7 @@ export default class NodeWork {
                       
                     },
     "socketIO": (node, order) => {
-      console.log("Forward:socketIO : ", order);
+      console.dlog("Forward:socketIO : ", order);
        if (window.socketIO.emit) { // send to IoT
         window.socketIO.emit(order.cmd, order);
        } 
@@ -61,7 +61,7 @@ export default class NodeWork {
     base_class.category = categories[0];
     base_class.elementName = categories[1];
     var prev = this.registered_node_types[classType];
-    if (prev) console.log("replacing node type: " + classType);
+    if (prev) console.dlog("replacing node type: " + classType);
     //info.name = name.substr(pos+1,name.length - pos);
 
     //extend class
@@ -75,7 +75,7 @@ export default class NodeWork {
     }
 
     prev = this.registered_node_types[classType];
-    if (prev) console.log("replacing node type: " + classType);
+    if (prev) console.dlog("replacing node type: " + classType);
     else {
       //warnings
       if (base_class.prototype.onPropertyChange) {
@@ -369,7 +369,7 @@ export default class NodeWork {
     }
 
     if (parentNode.socketOut) parentNode.socketOut.to(parentNode.roomId).emit("removeNode", {data: msg});
-    console.log(`Node with ID ${nodeID} removed.`);
+    console.dlog(`Node with ID ${nodeID} removed.`);
   }
 
   static updateNode(nw, msg) {
@@ -383,13 +383,13 @@ export default class NodeWork {
   }
 
   static updateInputs(nw, msg) {
-    console.log("[updateInputs]");
+    console.dlog("[updateInputs]");
     let node = globalApp.rooms[nw.roomId].nodeContainer[msg.nodeID];
     let key = Object.keys(msg.properties)[0];
     if (node.properties[key])
       node.properties[key]["inpValue"]["user"] = {val: msg.properties[key].inpValue, update: 1};
     else {
-      console.log("error");
+      console.dlog("error");
     }
   }
   

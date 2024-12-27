@@ -43,7 +43,7 @@ function App() {
 
 
   const handleItemClick = (item) => {
-    console.log(`Item clicked: ${item.name}`);
+    console.dlog(`Item clicked: ${item.name}`);
     // Add your custom logic here
   };
   

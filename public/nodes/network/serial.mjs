@@ -36,7 +36,7 @@ export default class ComPort extends NodeWork {
     window.serialbuffer = "";
 
     window.serialport?.open({ baudRate: 115200 }).then(() => {
-      console.log('Port is opened!');
+      console.dlog('Port is opened!');
       window.serialport.status = "open";
 
       window.reader = window.serialport.readable.getReader();
@@ -46,7 +46,7 @@ export default class ComPort extends NodeWork {
       const readLoop = () => {
         window.reader.read().then(({ value, done }) => {
               if (done) {
-                  console.log('Stream closed or reader released.');
+                  console.dlog('Stream closed or reader released.');
                   return;
               }
               const receivedData = new TextDecoder().decode(value);

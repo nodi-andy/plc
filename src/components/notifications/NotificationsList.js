@@ -69,7 +69,7 @@ export default function NotificationsList() {
     try {
       const result = await axiosPrivate.delete('/notifications', { data: { id: notificationId } });
       const newData = data?.notifications?.filter((item) => item._id !== notificationId);
-      console.log(newData);
+      console.dlog(newData);
       setData(newData);
       setMessage(result?.data?.message);
       messageRef.current.focus();

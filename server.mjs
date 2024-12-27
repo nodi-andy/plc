@@ -33,7 +33,7 @@ function removeOldRooms() {
   for (const roomId in rooms) {
     if (rooms[roomId].lastAccessDate && (now - new Date(rooms[roomId].lastAccessDate).getTime()) > ONE_WEEK) {
       delete rooms[roomId];
-      console.log(`Removed room with ID: ${roomId} due to inactivity.`);
+      console.dlog(`Removed room with ID: ${roomId} due to inactivity.`);
     }
   }
 }
@@ -203,6 +203,6 @@ app.get("/:roomId", (req, res) => {
   res.sendFile("./public/index.html");
 });
 
-server.listen(8080, () => {
+server.listen(80, () => {
   console.dlog("Server listening on port 8080");
 });

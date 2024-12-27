@@ -38,7 +38,7 @@ export default class View {
     // convert pointerevents to touch event when not available
     if (sMethod == "pointer" && !window.PointerEvent) {
       console.warn("sMethod=='pointer' && !window.PointerEvent");
-      console.log(
+      console.dlog(
         "Converting pointer[" + sEvent + "] : down move up cancel enter TO touchstart touchmove touchend, etc .."
       );
       switch (sEvent) {
@@ -63,7 +63,7 @@ export default class View {
           break;
         }
         case "enter": {
-          console.log("debug: Should I send a move event?"); // ???
+          console.dlog("debug: Should I send a move event?"); // ???
           break;
         }
         // case "over": case "out": not used at now
