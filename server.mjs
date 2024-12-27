@@ -203,6 +203,6 @@ app.get("/:roomId", (req, res) => {
   res.sendFile("./public/index.html");
 });
 
-server.listen(80, () => {
+server.listen(8080, () => {
   console.dlog("Server listening on port 8080");
 });
