@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import NodeWork from "./public/nodework.mjs";
 import { nodeList } from "./public/node_list.mjs";
-import MapGenerator from "./public/mapGeneratorJS/mapGenerator.js";
 import { globalApp } from "./public/enums.mjs";
 
 const app = express();
@@ -152,8 +151,8 @@ io.on("connection", (socket) => {
       
       rooms[roomId].nodeContainer[0] = nodeWork;
       rooms[roomId].platform = "server";
-      const mapGenerator = new MapGenerator(100, 100, { scale: 100, seed: 12345, min: 70, max: 100 });
-      rooms[roomId].map = mapGenerator.generateMap();
+      /*const mapGenerator = new MapGenerator(100, 100, { scale: 100, seed: 12345, min: 70, max: 100 });
+      rooms[roomId].map = mapGenerator.generateMap();*/
       
       socket.join(roomId);
       socket.roomId = roomId;
