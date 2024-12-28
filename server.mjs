@@ -10,10 +10,9 @@ import { globalApp } from "./public/enums.mjs";
 
 const app = express();
 const server = http.createServer(app);
-const debug = false;
 
 console.dlog = (...args) => {
-  if (debug) console.log(...args);
+  if (globalApp.debug) console.log(...args);
 };
 
 // Combined rooms structure to manage all room data and nodes
@@ -200,7 +199,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/:roomId", (req, res) => {
-  res.sendFile("./public/index.html");
+  res.sendFile("./data/index.html");
 });
 
 server.listen(8080, () => {
