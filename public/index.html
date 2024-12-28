@@ -72,7 +72,6 @@
   </script>
   <script type="module">
     import NodeWork from "./nodework.mjs";
-    import Inventory from "./minventoryJS/inventory.js";
     window.sendToNodework = (cmd, obj) => NodeWork.cmd(window.currentNodeWork, {cmd: cmd, data: obj});
     // why loading the scripts one by one?
     // Because the IoT device can not keep more than 10 TCP connections open
@@ -105,9 +104,6 @@
     window.map.removeNode = (id) => {
       return NodeWork.removeNode(window.currentNodeWork, id);
     }
-    window.inv = new Inventory(["energy", "mine"], 2, true);
-    window.inv.packs[1].max = 1000;
-    window.inv.addItem("mine", 8)
     window.load = (filename) => {
       if (localStorage[filename]) {
         window.currentNodeWork = NodeWork.load();
