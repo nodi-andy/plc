@@ -7,4 +7,4 @@ node_modules
 .vscode/launch.json
 .vscode/ipch
 mklittlefs.exe
-data
+build

@@ -151,8 +151,8 @@ io.on("connection", (socket) => {
       
       rooms[roomId].nodeContainer[0] = nodeWork;
       rooms[roomId].platform = "server";
-      /*const mapGenerator = new MapGenerator(100, 100, { scale: 100, seed: 12345, min: 70, max: 100 });
-      rooms[roomId].map = mapGenerator.generateMap();*/
+      //const mapGenerator = new MapGenerator(100, 100, { scale: 100, seed: 12345, min: 70, max: 100 });
+      //rooms[roomId].map = mapGenerator.generateMap();
       
       socket.join(roomId);
       socket.roomId = roomId;
@@ -192,13 +192,13 @@ io.on("connection", (socket) => {
   io.to(socket.id).emit("id", "");
 });
 
-app.use(express.static("data"));
+app.use(express.static("build"));
 app.get("/", (req, res) => {
   res.redirect(`/${uuidv4()}`);
 });
 
 app.get("/:roomId", (req, res) => {
-  res.sendFile("./data/index.html");
+  res.sendFile("./build/index.html");
 });
 
 server.listen(8080, () => {

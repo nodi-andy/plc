@@ -1360,6 +1360,7 @@ export default class LGraphCanvas {
    * @method resize
    */
   resize(width, height) {
+    if (!this.canvas) return;
     if (!width && !height) {
       var parent = this.canvas.parentNode;
       width = parent.offsetWidth;
