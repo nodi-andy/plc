@@ -29,11 +29,25 @@ websocket.addEventListener("error", (event) => {
 });
 // Connect to IoT
 var uri = window.location.hostname;
-if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") uri += ":8080";
 
-// Connect to the socketIO server on cloud
-if (io) window.socketIO = io(uri);
+// Check if running locally or on the cloud
+if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") {
+  uri += ":8080"; // Local development uses `http://` with port 8080
+}
 
+// Determine the WebSocket protocol (ws or wss)
+const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+
+// Construct the WebSocket URL
+uri = `${protocol}//${uri}`;
+
+// Connect to the socketIO server
+if (io) {
+  window.socketIO = io(uri, {
+    transports: ["websocket"], // Ensure WebSocket is the primary transport
+    secure: protocol === "wss:", // Set secure flag
+  });
+}
 
 window.order = {};
 
