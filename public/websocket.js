@@ -22,32 +22,18 @@ window.serialline = (msg) => {
   }
 }
 
-
+/*
 const websocket = new WebSocket(`ws://${window.location.hostname}/ws`);
 websocket.addEventListener("error", (event) => {
   console.dlog("WebSocket error: ", event);
 });
+*/
 // Connect to IoT
 var uri = window.location.hostname;
-
-// Check if running locally or on the cloud
-if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") {
-  uri += ":8080"; // Local development uses `http://` with port 8080
-}
-
-// Determine the WebSocket protocol (ws or wss)
-const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-
-// Construct the WebSocket URL
-uri = `${protocol}//${uri}`;
-
-// Connect to the socketIO server
-if (io) {
-  window.socketIO = io(uri, {
-    transports: ["websocket"], // Ensure WebSocket is the primary transport
-    secure: protocol === "wss:", // Set secure flag
-  });
-}
+//if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1")
+uri += ":8080";
+// Connect to the socketIO server on cloud
+if (io) window.socketIO = io(uri);
 
 window.order = {};
 
@@ -148,7 +134,7 @@ Object.keys(NodeWork.events).forEach((event) => {
     });
   }
 });
-
+/*
 window.addEventListener("load", () => {
   websocket.onopen = () => {
     console.dlog("WebSocket opened");
@@ -176,4 +162,4 @@ window.addEventListener("load", () => {
     if (window.order[cmdName]) window.order[cmdName](args);
   };
 });
-
+*/
