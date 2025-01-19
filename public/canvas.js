@@ -943,6 +943,7 @@ export default class LGraphCanvas {
       this.selectNodes([node], add_to_current_selection);
     }
     window.current_node = node;
+    window.showEdit(window.current_node != null);
     console.dlog("selectNode: " + node.nodeID + " " + node.pos);
   }
   /**
@@ -978,6 +979,7 @@ export default class LGraphCanvas {
    * @method deselectNode
    */
   deselectNode(node) {
+    window.showEdit(true);
     if (!node.is_selected) {
       return;
     }
@@ -1018,11 +1020,13 @@ export default class LGraphCanvas {
   onSelectionChange (nodes) {
     if (Object.keys(nodes).length == 1) {
       let node = nodes[Object.keys(nodes)[0]]; // selected nodes are not indexed correctly
+      window.showEdit(true);
       window.showRemove(true);
       window.showRotate(NodeWork.getNodeType(node.type).rotatable);
       window.showAdd(!(NodeWork.getNodeType(node.type).singleton));
       console.dlog("disable");
     } else {
+      window.showEdit(false);
       window.showAdd(false);
       window.showRotate(false);
       window.showRemove(false);
@@ -1310,7 +1314,7 @@ export default class LGraphCanvas {
     ctx.font = this.inner_text_font;
     ctx.fillStyle = NodiEnums.NODE_TEXT_COLOR;
     let nodeTitle = NodeWork.getNodeType(node.type).title;
-    if (nodeTitle) ctx.fillText(NodeWork.getNodeType(node.type).title, node.size[0] / 2, node.size[1] / 2);
+    if (nodeTitle) ctx.fillText(NodeWork.getNodeType(node.type).title, NodiEnums.CANVAS_GRID_SIZE / 2, NodiEnums.CANVAS_GRID_SIZE * 0.75);
   }
 
   /**

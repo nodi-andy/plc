@@ -71,6 +71,11 @@
   };
   </script>
   <script type="module">
+
+    window.help = () => {
+     console.log("window.list.category[n].enabled = true/false")
+    }
+    
     import NodeWork from "./nodework.mjs";
     window.sendToNodework = (cmd, obj) => NodeWork.cmd(window.currentNodeWork, {cmd: cmd, data: obj});
     // why loading the scripts one by one?
@@ -152,7 +157,7 @@
     };
     window.update = (id, changedNodeData) => window.sendToNodework("updateNode", {nodeID: id, properties: changedNodeData});
     
-    //window.showEdit(true);
+
     
     window.addEventListener("resize", function () {
       canvas.resize();

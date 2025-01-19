@@ -30,7 +30,7 @@ websocket.addEventListener("error", (event) => {
 */
 // Connect to IoT
 var uri = window.location.hostname;
-//if (window.location.hostname.includes(".") == false || window.location.hostname == "127.0.0.1") uri += ":8080";
+if (window.location.hostname == "localhost") uri += ":8080";
 // Connect to the socketIO server on cloud
 if (io) window.socketIO = io(uri);
 

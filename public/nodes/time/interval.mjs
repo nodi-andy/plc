@@ -3,11 +3,12 @@ import NodeWork from "../../nodework.mjs";
 
 class TimeInterval extends NodeWork {
   static type = "time/interval";
-  static title = "T";
+  static title = "🕑";
   static on_color = "#AAA";
   static off_color = "#222";
   static defaultInput = "enable";
   static defaultOutput = "value";
+  static drawBase = false;
 
   constructor() {
     super();
@@ -71,10 +72,16 @@ class TimeInterval extends NodeWork {
     node.properties.lastOff.value = 0;
   }
 
-  onDrawBackground() {
-    this.boxcolor = this.triggered ? TimeInterval.on_color : TimeInterval.off_color;
-    this.triggered = false;
-  }
+  static onDrawForeground(node, ctx) {
+    var x = node.size[0] * 0.5;
+    var h = node.size[1];
+
+    ctx.textAlign = "center";
+    ctx.font = (h * 0.6).toFixed(1) + "px Arial";
+    ctx.fillStyle = "#000";
+    if (this?.title?.length) ctx.fillText(this.title, x, h);
+}
+
 }
 
 NodeWork.registerNodeType(TimeInterval);

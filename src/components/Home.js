@@ -75,19 +75,19 @@ function SelectNodeDialog({ openND, setOpenND }) {
           Object.keys(window.list).map((category, tabIndex) => (
             <TabPanel key={category} value={value} index={tabIndex}>
               <Grid container spacing={2}>
-                {window.list[category].map((label) => (
-                  <Grid key={label} item>
-                    <Button
-                      variant="outlined"
-                      onClick={() => {
-                        window.sendToNodework('addNode', {type:`${category}/${label}`, pos: window.canvas.grid_selected});
-                        setOpenND(false);
-                      }}
-                    >
-                      {label}
-                    </Button>
-                  </Grid>
-                ))}
+                {window.list[category].filter((item) => item.enabled != false).map((label) => (
+                    <Grid key={label.elementName} item>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          window.sendToNodework('addNode', {type:`${category}/${label.elementName}`, pos: window.canvas.grid_selected});
+                          setOpenND(false);
+                        }}
+                      >
+                        {label.elementName}
+                      </Button>
+                    </Grid>
+                  ))}
               </Grid>
             </TabPanel>
           ))}

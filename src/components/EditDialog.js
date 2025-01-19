@@ -1,8 +1,9 @@
-import React, {useState, useRef  } from 'react';
+import React, { useState, useRef } from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Drawer from '@mui/material/Drawer';
 import MenuItem from '@mui/material/MenuItem';
+import Button from '@mui/material/Button';
 
 export default function EditDialog({ showEditMenu, setShowEditMenu }) {
   const [update, setUpdate] = useState(false);
@@ -25,9 +26,18 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
     }
   };
 
-  
+  const handleSave = () => {
+    const data = {
+      nodeID: window.current_node.nodeID,
+      runStr: runTextRef.current?.value,
+      drawStr: drawTextRef.current?.value,
+    };
+    // Send data to the server
+    window.sendToNodework('updateCode', data);
+  };
+
   window.updateEditDialog = () => {
-      setUpdate(!update);
+    setUpdate(!update);
   };
 
   const handlePropertyChange = (event, key, child) => {
@@ -102,7 +112,9 @@ export default function EditDialog({ showEditMenu, setShowEditMenu }) {
                   defaultValue = {window.current_node.drawStr}
                 />
               )}
-
+              <Button variant="contained" color="primary" onClick={handleSave} style={{ position: 'absolute', bottom: 16, right: 16 }}>
+                Save
+              </Button>
           </Box>
         </Drawer>
       </React.Fragment>

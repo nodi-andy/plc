@@ -4,7 +4,7 @@ export const basic = [
     "nodes/basic/connector.mjs",
     //"nodes/basic/inserter.mjs",
     "nodes/basic/button.mjs",
-//    "nodes/basic/custom.mjs",
+    "nodes/basic/custom.mjs",
 /*    "nodes/basic/miner.mjs",
     "nodes/basic/rocket.mjs",*/
     "nodes/time/interval.mjs",

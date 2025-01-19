@@ -13,6 +13,8 @@ export default class NodeWork {
     addNode : NodeWork.addNode,
     updateInputs : NodeWork.updateInputs,
     removeNode : NodeWork.removeNode,
+    updateScript : NodeWork.updateScript,
+    updateCode : NodeWork.updateCode,
     clear : NodeWork.clear
   }
 
@@ -98,7 +100,7 @@ export default class NodeWork {
     for (let nodeClassName in NodeWork.registered_node_types) {
       let nodeClass = NodeWork.registered_node_types[nodeClassName];
       if (window.list[nodeClass.category] == null) window.list[nodeClass.category] = [];
-      window.list[nodeClass.category].push(nodeClass.elementName);
+      window.list[nodeClass.category].push(nodeClass);
     }
   }
 
@@ -211,9 +213,9 @@ export default class NodeWork {
       msg.node.roomId = parentNode.roomId || msg.roomId;
       msg.node.moving = false;
       msg.node.nodeID = msg.nodeID;
-      NodeWork.getNodeType(msg.type).setup(msg.node);
     }
     
+    NodeWork.getNodeType(msg.type).setup(msg.node);
     if (parentNode.nodes) parentNode.nodes[msg.nodeID] = msg.node.nodeID;
 
     let container = globalApp.rooms[parentNode.roomId]?.nodeContainer;
@@ -293,6 +295,20 @@ export default class NodeWork {
   static setNodeOnGrid(nw, msg) {
     if (msg?.nodeID == null || msg?.pos == null) return;
     NodeWork.setNodeIDOnGrid(nw, msg);
+  }
+
+  static updateScript(nw, msg) {
+    if (msg?.nodeID == null) return;
+    if (!nw.nodeContainer[msg.nodeID]) return
+    nw.nodeContainer[msg.nodeID].script = JSON.parse(msg.script);
+  }
+
+  static updateCode(parentNode, msg) {
+    if (msg?.nodeID == null) return;
+    if (!parentNode.nodeContainer[msg.nodeID]) return
+    NodeWork.getNodeType("basic/custom").updateDrawStr(parentNode.nodeContainer[msg.nodeID], msg.drawStr);
+    NodeWork.getNodeType("basic/custom").updateRunStr(parentNode.nodeContainer[msg.nodeID], msg.runStr);
+    if (parentNode.socketOut) parentNode.socketOut.to(parentNode.roomId).emit("updateCode", {data: msg});
   }
 
   static updateProp(node, propName, propType, value) {
@@ -501,8 +517,9 @@ export default class NodeWork {
 
   static run(nw) {
     if (nw == null) return;
-    if(!nw.time) nw.time = {tick:0};
-    nw.time.tick++;
+    if(!nw.script) nw.script = {tick:0};
+    if(isNaN(nw.script.tick)) nw.script.tick = 0;
+    nw.script.tick++;
 
     let order;
     while ((order = nw?.orders?.shift()) != null) {
@@ -556,8 +573,13 @@ export default class NodeWork {
       if (!runFunc) runFunc = curType?.run;
       if (runFunc && node.engine?.name == node.platform) {
         runFunc = runFunc.bind(node);
+        let prescript = JSON.stringify(node.script);
         results = runFunc(node, nw);
+        let postscript = JSON.stringify(node.script);
         NodeWork.run(node);
+        if (prescript != postscript) {
+          nw.socketOut.to(nw.roomId).emit("updateScript", {data: { nodeID: node.nodeID, script: postscript }});
+        }
       } 
 
       if (nw.socketOut && results?.length) {

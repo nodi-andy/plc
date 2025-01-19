@@ -113,6 +113,8 @@ io.on("connection", (socket) => {
   socket.on("moveNodeOnGrid", (msg) => forwardToNodeWork(socket, msg));
   socket.on("rotateNode", (msg) => forwardToNodeWork(socket, msg));
   socket.on("setNodeOnGrid", (msg) => forwardToNodeWork(socket, msg));
+  socket.on("updateScript", (msg) => forwardToNodeWork(socket, msg));
+  socket.on("updateCode", (msg) => forwardToNodeWork(socket, msg));
 
 
   socket.on("addNode", (msg) => {
